@@ -1,0 +1,82 @@
+#pragma once
+
+#include <atomic>
+#include <string>
+
+// EPICS v4 stuff
+#include <pv/pvData.h>
+#include <pv/pvAccess.h>
+
+// For epics::pvAccess::ClientFactory::start()
+#include <pv/clientFactory.h>
+
+//#include <pv/channelProviderLocal.h>
+//#include <pv/caProvider.h>
+//#include <pv/requester.h>
+
+namespace BrightnESS {
+namespace ForwardEpicsToKafka {
+
+class TopicMapping;
+}
+}
+
+
+
+namespace BrightnESS {
+namespace ForwardEpicsToKafka {
+namespace Epics {
+
+
+class MonitorRequester;
+
+
+class monitor_lost_exception : public std::exception {
+};
+
+class epics_channel_failure : public std::exception {
+};
+
+/** \brief
+Monitor a channel which currently has to have a certain type and forward changes in value to a callable.
+
+Needs the name of the channel and the callable.
+If it detects something wrong, it tries to release all EPICS resources and throws.
+*/
+class Monitor {
+public:
+
+/// Initiate the connection to the channel.  As far as EPICS docs tell, it should not block.
+Monitor(TopicMapping & topic_mapping, std::string channel_name);
+~Monitor();
+bool ready();
+void stop();
+
+void go_into_failure_mode();
+
+private:
+friend class MonitorRequester;
+void emit(double);
+
+TopicMapping & topic_mapping;
+
+std::string channel_name;
+epics::pvAccess::ChannelProvider::shared_pointer provider;
+epics::pvAccess::ChannelRequester::shared_pointer cr;
+epics::pvAccess::Channel::shared_pointer ch;
+void initiate_connection();
+void initiate_value_monitoring();
+friend class IntrospectField;
+epics::pvData::MonitorRequester::shared_pointer monr;
+epics::pvData::Monitor::shared_pointer mon;
+
+std::atomic_bool ready_monitor {false};
+
+std::atomic<int> failure_triggered {0};
+
+};
+
+
+}
+}
+}
