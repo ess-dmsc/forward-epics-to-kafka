@@ -19,7 +19,7 @@ void dwlog(int level, char const * fmt, char const * file, int line, char const 
 	int const N1 = 8000;
 	char buf1[N1];
 	//int x = snprintf(buf1, N1, "## %s:%d [%s]\n%s\n", file+npre, line, func, fmt);
-	int x = snprintf(buf1, N1, "### {%d} %s:%d [%lx]\n%s\n\n", level, file+npre, line, std::this_thread::get_id(), fmt);
+	int x = snprintf(buf1, N1, "### {%d} %s:%d\n%s\n\n", level, file+npre, line, fmt);
 	if (x >= N1) {
 		snprintf(buf1, N1, "[ERR IN LOG FORMAT]\n");
 	}

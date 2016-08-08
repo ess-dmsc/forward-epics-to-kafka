@@ -37,11 +37,16 @@ void produce(BufRange buf);
 // Should make a friend method out of this..
 void error_from_kafka_callback();
 
+Instance & instance();
+bool healthy();
+std::string & topic_name();
+
 private:
 Instance & ins;
 // Used by Producer
 rd_kafka_topic_t * rkt = 0;
 friend class Producer;
+std::string topic_name_;
 };
 
 
@@ -60,12 +65,12 @@ rd_kafka_t * rk = 0;
 // Invoked from callback.  Should make it a friend.
 void error_from_kafka_callback();
 
-sptr<Topic> create_topic(std::string topic_name);
+sptr<Topic> get_or_create_topic(std::string topic_name);
 
 void check_topic_health();
 std::atomic_bool error_from_kafka_callback_flag {false};
 
-std::vector<sptr<Topic>> topics;
+std::vector<std::weak_ptr<Topic>> topics;
 
 private:
 // Should prevent all default five

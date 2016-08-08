@@ -2,6 +2,8 @@
 #include "logger.h"
 #include "config.h"
 
+#include <algorithm>
+
 // Kafka uses LOG_DEBUG as defined here:
 #include <syslog.h>
 
@@ -30,9 +32,10 @@ Load is currently defined as topic count, even though that might not reflect the
 */
 sptr<Instance> InstanceSet::instance() {
 	auto it1 = instances.end();
-	size_t min = 0-1;
+	auto LIM = std::numeric_limits<size_t>::max();
+	size_t min = LIM;
 	for (auto it2 = instances.begin(); it2 != instances.end(); ++it2) {
-		if ((*it2)->topics.size() < min  ||  min == (0-1)) {
+		if ((*it2)->topics.size() < min  ||  min == LIM) {
 			min = (*it2)->topics.size();
 			it1 = it2;
 		}
@@ -189,23 +192,51 @@ void Instance::error_from_kafka_callback() {
 }
 
 
-
-sptr<Topic> Instance::create_topic(std::string topic_name) {
+sptr<Topic> Instance::get_or_create_topic(std::string topic_name) {
 	// NOTE
 	// Not thread safe.
 	// But only called from the main setup thread.
-	topics.push_back(sptr<Topic>(new Topic(*this, topic_name)));
-	return topics.back();
+	check_topic_health();
+	for (auto & x : topics) {
+		if (auto sp = x.lock()) {
+			if (sp->topic_name() == topic_name) {
+				LOG(3, "reuse topic \"%s\", using %lu so far", topic_name.c_str(), topics.size());
+				return sp;
+			}
+		}
+	}
+	auto sp = sptr<Topic>(new Topic(*this, topic_name));
+	topics.push_back(std::weak_ptr<Topic>(sp));
+	return sp;
 }
 
 
 
+
+// Check if the pointers to the topics are still valid,
+// removes the expired ones.
+
 void Instance::check_topic_health() {
-	for (auto & t1 : topics) {
+	auto it2 = std::remove_if(topics.begin(), topics.end(), [](std::weak_ptr<Topic> const & t1){
 		// TODO
 		// Need to relate somehow the errors to a topic, or?
 		// For the errors from the message callback it is possible.
-	}
+		auto top = t1.lock();
+		if (not top) {
+			// Expired pointer should be the only reason why we do not get a lock
+			if (not t1.expired()) {
+				LOG(9, "WEIRD, shouldnt that be expired?");
+			}
+			LOG(3, "No producer.  Already dtored?");
+			return true;
+		}
+		if (t1.lock() == nullptr && not t1.expired()) {
+			LOG(9, "ERROR weak ptr: no lock(), but not expired() either");
+			return true;
+		}
+		return false;
+	});
+	topics.erase(it2, topics.end());
 }
 
 
@@ -231,12 +262,8 @@ void Instance::check_health() {
 
 
 Topic::Topic(Instance & ins, std::string topic_name)
-: ins(ins)
+: ins(ins), topic_name_(topic_name)
 {
-	int const msg_max_len = 10 * 1024 * 1024;
-
-	int const N1 = 512;
-	char buf1[N1];
 	// librdkafka API sometimes wants to write errors into a buffer:
 	int const errstr_N = 512;
 	char errstr[errstr_N];
@@ -264,6 +291,7 @@ Topic::~Topic() {
 }
 
 
+Instance & Topic::instance() { return ins; }
 
 
 void Topic::produce(BufRange buf) {
@@ -292,6 +320,17 @@ void Topic::produce(BufRange buf) {
 
 	LOG(0, "sending to topic %s partition %i", rd_kafka_topic_name(rkt), partition);
 }
+
+
+
+
+std::string & Topic::topic_name() { return topic_name_; }
+
+bool Topic::healthy() {
+	// TODO
+	return true;
+}
+
 
 
 

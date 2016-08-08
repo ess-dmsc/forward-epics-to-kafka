@@ -54,6 +54,31 @@ find_library(path_lib_epics_pvAccess NAMES pvAccess PATHS
  /opt/epics/modules/pvAccessCPP/${epics_modules_version}/${epics_base_version}/lib/${epics_arch}
 )
 
+find_path(path_include_jansson NAMES jansson.h PATHS
+ "$ENV{jansson_dir}/include"
+ /opt/local/jansson-2.7-install/lib
+)
+
+find_library(path_lib_jansson NAMES jansson PATHS
+ "$ENV{jansson_dir}/lib"
+ /opt/local/jansson-2.7-install/lib
+)
+
+find_path(path_include_rdkafka NAMES librdkafka/rdkafka.h PATHS
+ "$ENV{librdkafka_dir}/include"
+ /usr/local/include
+)
+
+find_library(path_lib_rdkafka NAMES rdkafka PATHS
+ "$ENV{librdkafka_dir}/lib"
+ /usr/local/lib/librdkafka
+)
+
+find_path(path_include_flatbuffers NAMES flatbuffers/flatbuffers.h PATHS
+ "$ENV{flatbuffers_dir}/include"
+ /usr/local/include
+)
+
 
 set(cmake_include_current_dir on)
 
@@ -75,6 +100,7 @@ endforeach()
 add_custom_target(flatbuffers_generate ALL DEPENDS ${flatbuffers_generated_headers})
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -O0 -std=c++11 -Wall -fPIC")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-inline -fno-omit-frame-pointer")
 
 #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fprofile-arcs -ftest-coverage")
 #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pg")
@@ -84,8 +110,6 @@ else ()
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fdiagnostics-color=auto")
 endif()
 
-set(librdkafka_dir   $ENV{librdkafka_dir})
-set(jansson_dir      $ENV{jansson_dir})
 
 add_library(epicsbase SHARED IMPORTED)
 set_property(TARGET epicsbase PROPERTY IMPORTED_LOCATION ${path_lib_epics_ca})
@@ -97,10 +121,10 @@ add_library(libpvAccess SHARED IMPORTED)
 set_property(TARGET libpvAccess PROPERTY IMPORTED_LOCATION ${path_lib_epics_pvAccess})
 
 add_library(librdkafka SHARED IMPORTED)
-set_property(TARGET librdkafka PROPERTY IMPORTED_LOCATION "${librdkafka_dir}/lib/librdkafka.so")
+set_property(TARGET librdkafka PROPERTY IMPORTED_LOCATION ${path_lib_rdkafka})
 
 add_library(jansson SHARED IMPORTED)
-set_property(TARGET jansson PROPERTY IMPORTED_LOCATION "${jansson_dir}/lib/libjansson.so")
+set_property(TARGET jansson PROPERTY IMPORTED_LOCATION ${path_lib_jansson})
 
 
 
@@ -108,6 +132,7 @@ set_property(TARGET jansson PROPERTY IMPORTED_LOCATION "${jansson_dir}/lib/libja
 
 
 add_executable(forward-epics-to-kafka
+helper.cxx
 logger.cxx
 configuration.cxx
 TopicMapping.cxx
@@ -122,11 +147,13 @@ set_property(TARGET forward-epics-to-kafka APPEND PROPERTY INCLUDE_DIRECTORIES $
 set_property(TARGET forward-epics-to-kafka APPEND PROPERTY INCLUDE_DIRECTORIES ${path_include_epics_base}/compiler/gcc)
 set_property(TARGET forward-epics-to-kafka APPEND PROPERTY INCLUDE_DIRECTORIES ${path_include_epics_pvData})
 set_property(TARGET forward-epics-to-kafka APPEND PROPERTY INCLUDE_DIRECTORIES ${path_include_epics_pvAccess})
-#set_property(TARGET forward-epics-to-kafka APPEND PROPERTY INCLUDE_DIRECTORIES "${epicsv4_dir}/pvDataCPP/include")
-#set_property(TARGET forward-epics-to-kafka APPEND PROPERTY INCLUDE_DIRECTORIES "${epicsv4_dir}/pvAccessCPP/include")
-#set_property(TARGET forward-epics-to-kafka APPEND PROPERTY INCLUDE_DIRECTORIES "${epicsv4_dir}/pvDatabaseCPP/include")
-set_property(TARGET forward-epics-to-kafka APPEND PROPERTY INCLUDE_DIRECTORIES "${librdkafka_dir}/include")
-set_property(TARGET forward-epics-to-kafka APPEND PROPERTY INCLUDE_DIRECTORIES "${jansson_dir}/include")
+set_property(TARGET forward-epics-to-kafka APPEND PROPERTY INCLUDE_DIRECTORIES ${path_include_rdkafka})
+set_property(TARGET forward-epics-to-kafka APPEND PROPERTY INCLUDE_DIRECTORIES ${path_include_jansson})
+set_property(TARGET forward-epics-to-kafka APPEND PROPERTY INCLUDE_DIRECTORIES ${path_include_flatbuffers})
+
+# Find the generated flat buffer
+set_property(TARGET forward-epics-to-kafka APPEND PROPERTY INCLUDE_DIRECTORIES ${CMAKE_CURRENT_BINARY_DIR})
+
 
 add_dependencies(forward-epics-to-kafka flatbuffers_generate)
 
@@ -135,3 +162,43 @@ target_link_libraries(forward-epics-to-kafka libpvData)
 target_link_libraries(forward-epics-to-kafka libpvAccess)
 target_link_libraries(forward-epics-to-kafka librdkafka)
 target_link_libraries(forward-epics-to-kafka jansson)
+
+
+
+
+add_executable(read-buffer
+helper.cxx
+logger.cxx
+read-buffer.cxx
+)
+set_property(TARGET read-buffer APPEND PROPERTY INCLUDE_DIRECTORIES ${path_include_flatbuffers})
+set_property(TARGET read-buffer APPEND PROPERTY INCLUDE_DIRECTORIES ${CMAKE_CURRENT_BINARY_DIR})
+add_dependencies(read-buffer flatbuffers_generate)
+
+
+
+set(tgt config-msg)
+add_executable(config-msg
+helper.cxx
+logger.cxx
+config-msg.cxx
+)
+set_property(TARGET ${tgt} APPEND PROPERTY INCLUDE_DIRECTORIES ${path_include_jansson})
+set_property(TARGET ${tgt} APPEND PROPERTY INCLUDE_DIRECTORIES ${path_include_rdkafka})
+target_link_libraries(${tgt} jansson)
+target_link_libraries(${tgt} librdkafka)
+
+
+
+#set(files-copy "")
+#list(APPEND files-copy test-adding-removing.rb)
+
+set(x test-adding-removing.rb)
+add_custom_command(
+OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${x}
+COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/${x} ${CMAKE_CURRENT_BINARY_DIR}/${x}
+DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${x})
+
+add_custom_target(copy_files ALL DEPENDS
+"${CMAKE_CURRENT_BINARY_DIR}/test-adding-removing.rb"
+)

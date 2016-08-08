@@ -70,8 +70,6 @@ Listener::Listener(KafkaSettings settings) {
 	static_assert(0 == RD_KAFKA_RESP_ERR_NO_ERROR, "0 == RD_KAFKA_RESP_ERR_NO_ERROR");
 
 	int err;
-	int const N1 = 512;
-	char buf1[N1];
 	// librdkafka API sometimes wants to write errors into a buffer:
 	int const errstr_N = 512;
 	char errstr[errstr_N];
@@ -106,7 +104,7 @@ Listener::Listener(KafkaSettings settings) {
 
 	//rd_kafka_conf_set_dr_msg_cb(conf, msg_delivered_cb);
 	rd_kafka_conf_set_error_cb(conf, kafka_error_cb);
-	//rd_kafka_conf_set_stats_cb(conf, stats_cb);
+	rd_kafka_conf_set_stats_cb(conf, stats_cb);
 	rd_kafka_conf_set_rebalance_cb(conf, rebalance_cb);
 	//rd_kafka_conf_set_opaque(conf, this);
 
@@ -127,6 +125,12 @@ Listener::Listener(KafkaSettings settings) {
 
 	rd_kafka_poll_set_consumer(rk);
 
+	// TODO
+	// When exactly to use _subscribe or _assign ?
+	// Currently, it listens on partition 0, but when dumping the list of current subscriptions
+	// in the poll(), it's empty.  Must be better way.
+	// Currently, setting partition to -1 (all) does not work!
+
 	// Listen to all partitions
 	int partition = RD_KAFKA_PARTITION_UA;
 	partition = 0;
@@ -136,8 +140,6 @@ Listener::Listener(KafkaSettings settings) {
 	LOG(3, "Adding topic: %s", settings.topic.c_str());
 	rd_kafka_topic_partition_list_add(plist, settings.topic.c_str(), partition);
 
-	// TODO
-	// Why does it not work to use subscribe???
 	//err = rd_kafka_subscribe(rk, plist);
 	err = rd_kafka_assign(rk, plist);
 	KERR(err);
@@ -163,8 +165,9 @@ Listener::~Listener() {
 
 
 
-void Listener::poll(Callback & cb) {
-	if (false) {
+
+void Listener::kafka_connection_information() {
+	if (true) {
 		// Dump current subscription:
 		rd_kafka_topic_partition_list_t * l1 = 0;
 		rd_kafka_subscription(rk, &l1);
@@ -176,16 +179,19 @@ void Listener::poll(Callback & cb) {
 		}
 	}
 
-	if (false) {
+	if (true) {
 		rd_kafka_dump(stdout, rk);
 	}
 
-	if (false) {
+	if (true) {
 		// only do this if not redirected
 		int n1 = rd_kafka_poll(rk, 0);
 		LOG(1, "config list poll served %d events", n1);
 	}
+}
 
+
+void Listener::poll(Callback & cb) {
 	// Arbitrary limit configuration messages processed in one go:
 	for (int i1 = 0; i1 < 10; ++i1) {
 		rd_kafka_message_t * msg;

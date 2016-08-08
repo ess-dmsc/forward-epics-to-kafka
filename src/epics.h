@@ -1,6 +1,7 @@
 #pragma once
 
 #include <atomic>
+#include <mutex>
 #include <string>
 
 // EPICS v4 stuff
@@ -9,6 +10,8 @@
 
 // For epics::pvAccess::ClientFactory::start()
 #include <pv/clientFactory.h>
+
+#include "fbhelper.h"
 
 //#include <pv/channelProviderLocal.h>
 //#include <pv/caProvider.h>
@@ -45,20 +48,26 @@ If it detects something wrong, it tries to release all EPICS resources and throw
 */
 class Monitor {
 public:
+using wptr = std::weak_ptr<Monitor>;
 
 /// Initiate the connection to the channel.  As far as EPICS docs tell, it should not block.
-Monitor(TopicMapping & topic_mapping, std::string channel_name);
+Monitor(TopicMapping * topic_mapping, std::string channel_name);
+void init(std::shared_ptr<Monitor> self);
 ~Monitor();
 bool ready();
 void stop();
 
 void go_into_failure_mode();
 
+void topic_mapping_gone();
+
 private:
 friend class MonitorRequester;
-void emit(double);
+friend class IntrospectField;
+friend class StartMonitorChannel;
+void emit(FBBptr fbuf);
 
-TopicMapping & topic_mapping;
+TopicMapping * topic_mapping;
 
 std::string channel_name;
 epics::pvAccess::ChannelProvider::shared_pointer provider;
@@ -66,13 +75,17 @@ epics::pvAccess::ChannelRequester::shared_pointer cr;
 epics::pvAccess::Channel::shared_pointer ch;
 void initiate_connection();
 void initiate_value_monitoring();
-friend class IntrospectField;
 epics::pvData::MonitorRequester::shared_pointer monr;
 epics::pvData::Monitor::shared_pointer mon;
+
+Monitor::wptr self;
 
 std::atomic_bool ready_monitor {false};
 
 std::atomic<int> failure_triggered {0};
+
+std::recursive_mutex m_mutex_emitter;
+using RMLG = std::lock_guard<std::recursive_mutex>;
 
 };
 

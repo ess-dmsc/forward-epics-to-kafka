@@ -1,4 +1,5 @@
-cmake_minimum_required(VERSION 3.5.0)
+cmake_minimum_required(VERSION 2.8.11)
+#cmake_minimum_required(VERSION 3.5.0)
 add_subdirectory(src)
 
 option(RUN_DOXYGEN "Run doxygen" TRUE)

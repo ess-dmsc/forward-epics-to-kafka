@@ -6,6 +6,7 @@
 #include <thread>
 #include <array>
 #include "tools.h"
+#include "helper.h"
 
 namespace BrightnESS {
 namespace ForwardEpicsToKafka {
@@ -36,9 +37,10 @@ bool wait(int time, std::function<bool()> predicate) {
 
 
 TopicMapping::TopicMapping(Kafka::InstanceSet & kset, TopicMappingSettings topic_mapping_settings, uint32_t id) :
+	id(id),
 	topic_mapping_settings(topic_mapping_settings),
 	ts_init(std::chrono::system_clock::now()),
-	id(id)
+	rnd((uint32_t)id)
 {
 	// If we do not want to start immediately, we should initialize
 	// the epics monitor such that it does not yet poll.
@@ -48,17 +50,21 @@ TopicMapping::TopicMapping(Kafka::InstanceSet & kset, TopicMappingSettings topic
 
 TopicMapping::~TopicMapping() {
 	LOG(1, "TopicMapping %d dtor", id);
+	if (epics_monitor) {
+		epics_monitor->topic_mapping_gone();
+	}
 	stop_forwarding();
 }
 
 
 bool TopicMapping::zombie_can_be_cleaned() {
 	auto now = std::chrono::system_clock::now();
-	return std::chrono::duration_cast<std::chrono::seconds>(now - ts_failure).count() > 10;
+	return std::chrono::duration_cast<std::chrono::seconds>(now - ts_failure).count() > 30;
 }
 
 
 void TopicMapping::go_into_failure_mode() {
+	LOG(3, "failure mode for topic mapping %d", id);
 	stop_forwarding();
 	state = State::FAILURE;
 	ts_failure = std::chrono::system_clock::now();
@@ -72,10 +78,12 @@ void TopicMapping::start_forwarding(Kafka::InstanceSet & kset) {
 	// We can loan a pointer to the topic as long as we keep the instance alive.
 	// But the topic can go away if the instance notices that something bad happened.
 
-	this->topic = std::weak_ptr<Kafka::Topic>(kset.instance()->create_topic(topic_name()));
+	//this->topic = std::weak_ptr<Kafka::Topic>(kset.instance()->get_or_create_topic(topic_name()));
+	this->topic = kset.instance()->get_or_create_topic(topic_name());
 
 	LOG(0, "Start Epics monitor for %s", channel_name().c_str());
-	epics_monitor.reset(new Epics::Monitor(*this, channel_name()));
+	epics_monitor.reset(new Epics::Monitor(this, channel_name()));
+	epics_monitor->init(epics_monitor);
 }
 
 
@@ -83,40 +91,84 @@ void TopicMapping::stop_forwarding() {
 	// NOTE
 	// Can be called even while we are in start_forwarding() in case
 	// of an error condition.
+	forwarding = false;
 	if (epics_monitor) {
 		epics_monitor->stop();
 	}
 }
 
-void TopicMapping::emit(double x) {
+void TopicMapping::emit(ForwardEpicsToKafka::Epics::FBBptr fbuf) {
+	if (not forwarding) {
+		LOG(3, "WARNING emit called despite not forwarding");
+		return;
+	}
 	if (state == State::INIT) {
 		LOG(0, "not yet ready");
 		return;
 	}
 	if (state != State::READY) {
-		LOG(0, "looks like trouble");
+		LOG(3, "looks like trouble");
 		go_into_failure_mode();
 		break1();
 		return;
 	}
-	LOG(0, "emitting % e", x);
 
-	auto top = topic.lock();
-	if (!top) {
-		// Expired pointer should be the only reason why we do not get a lock
-		if (!topic.expired()) {
-			LOG(9, "WEIRD, shouldnt that be expired?");
-		}
-		LOG(0, "No producer.  Already dtored?");
+	if (not topic->healthy()) {
 		go_into_failure_mode();
 		return;
 	}
 
-	// TODO
-	// Right now, Kafka will take its own copy.  Change in the future.
-	std::array<char, 256> buf1;
-	int n1 = snprintf(buf1.data(), buf1.size(), "[tm: %6u v: % .3e]", id, x);
-	top->produce({buf1.data(), n1});
+	auto & top = topic;
+
+	bool debug_messages = false;
+	if (not debug_messages) {
+		//LOG(5, "TM %d producing size %lu", id, fbuf->GetSize());
+		// Produce the actual payload
+		top->produce({reinterpret_cast<char*>(fbuf->GetBufferPointer()), fbuf->GetSize()});
+		//auto hex = binary_to_hex(reinterpret_cast<char*>(fbuf->GetBufferPointer()), fbuf->GetSize());
+		//LOG(5, "packet in hex %d: %.*s", fbuf->GetSize(), hex.size(), hex.data());
+	}
+
+	else {
+		// What follows is testing code to produce a pseudo random sequence
+		// which can be checked in the verification end.
+
+		// TODO
+		// Right now, Kafka will take its own copy.  Change in the future.
+		static std::array<char, 8*1024> buf1;
+		static std::array<char, 8*1024> buf2;
+		static int flag1 = 1;
+		if (flag1) {
+			buf1.fill('-');
+			buf2.fill('-');
+			flag1 = 0;
+		}
+		if (false) {
+			top->produce({buf2.data(), 800});
+		}
+		if (true) {
+			auto prod = [this, &top](uint32_t sid, uint32_t val) {
+				auto n1 = snprintf(buf1.data(), buf1.size(), "sid %12u val %12u  topic %32.32s", sid, val, topic_name().c_str());
+				// Artifical payload:
+				*(buf1.data()+n1) = '-';
+				n1 = 4 * 1024;
+				top->produce({buf1.data(), size_t(n1)});
+				//LOG(3, "prod: %s", buf1.data());
+			};
+			if (sid == 0) {
+				// send initializer first.  Kafka fortunately guarantees order within a partition.
+				prod(0, 0);
+			}
+			uint32_t val;
+			while (true) { val = rnd(); if (val != 0) break; }
+			if (false) {
+				// Provoke some error:
+				if (sid > 1000) val += 1;
+			}
+			prod(sid, val);
+			sid += 1;
+		}
+	}
 }
 
 
@@ -124,8 +176,8 @@ TopicMapping::State TopicMapping::health_state() const { return state; }
 
 
 void TopicMapping::health_selfcheck() {
-	LOG(0, "Current state: %d", state);
 	if (state == State::INIT) {
+		LOG(0, "still in INIT");
 		if (epics_monitor) {
 			if (epics_monitor->ready()) {
 				state = State::READY;
@@ -141,9 +193,6 @@ void TopicMapping::health_selfcheck() {
 		}
 	}
 	else if (state == State::READY) {
-		if (topic.lock() == nullptr && !topic.expired()) {
-			LOG(9, "ERROR weak ptr: no lock(), but not expired() either");
-		}
 		if (!epics_monitor) {
 			LOG(1, "not healthy because we have no epics monitor");
 			go_into_failure_mode();
@@ -154,13 +203,14 @@ void TopicMapping::health_selfcheck() {
 			go_into_failure_mode();
 			return;
 		}
-		if (topic.expired()) {
+		if (not topic->healthy()) {
 			LOG(1, "not healthy because topic handle expired");
 			go_into_failure_mode();
 			return;
 		}
 	}
 	else if (state == State::FAILURE) {
+		LOG(1, "in FAILURE");
 		return;
 	}
 }

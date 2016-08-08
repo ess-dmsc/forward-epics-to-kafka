@@ -34,6 +34,7 @@ public:
 Listener(KafkaSettings settings);
 ~Listener();
 void poll(Callback & cb);
+void kafka_connection_information();
 private:
 rd_kafka_t * rk = nullptr;
 //rd_kafka_topic_t * rkt = nullptr;
