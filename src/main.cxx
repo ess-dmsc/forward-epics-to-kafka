@@ -17,6 +17,7 @@
 #include "jansson.h"
 
 #include <unistd.h>
+#include <getopt.h>
 
 
 int const n_pv_forward = 0;
@@ -29,23 +30,17 @@ using std::string;
 using std::vector;
 
 
-/*
-TODO
-Why not embed a python interpreter?
-At least, automatize the parsing and RPC stuff.
 
-{"cmd": "mapping_add", "channel": "IOC:m1.DRBV", "topic": "IOC.m1.DRBV"}
-{"cmd": "mapping_add", "channel": "IOC:m3.DRBV", "topic": "IOC.m3.DRBV"}
-{"cmd": "mapping_remove_topic", "topic": "IOC.m1.DRBV"}
-{"cmd": "mapping_remove_topic", "topic": "IOC.m3.DRBV"}
-*/
-
+struct MainOpt {
+string broker_configuration_address = "localhost:9092";
+string broker_configuration_topic = "configuration.global";
+};
 
 
 class Main {
 public:
-Main() : kafka_instance_set(Kafka::InstanceSet::Set())  { }
-void forward_epics_to_kafka(std::string config_file);
+Main(MainOpt opt) : main_opt(opt), kafka_instance_set(Kafka::InstanceSet::Set()) { }
+void forward_epics_to_kafka();
 void mapping_add(string channel, string topic);
 void mapping_start(TopicMappingSettings tmsettings);
 void mapping_remove_topic(string topic);
@@ -53,6 +48,7 @@ void mapping_list();
 void forwarding_exit();
 void start_some_test_mappings(int n1);
 private:
+MainOpt main_opt;
 std::list<TopicMappingSettings> tms_to_start;
 std::recursive_mutex m_tms_mutex;
 std::recursive_mutex m_tms_zombies_mutex;
@@ -94,10 +90,7 @@ Main & main;
 
 void ConfigCB::operator() (std::string const & msg) {
 	using std::string;
-	LOG(0, "do something...: %s", msg.c_str());
-
-	// TODO
-	// Parse JSON commands
+	LOG(0, "Command received: %s", msg.c_str());
 
 	auto j1 = json_loads(msg.c_str(), 0, nullptr);
 	if (!j1) {
@@ -116,13 +109,6 @@ void ConfigCB::operator() (std::string const & msg) {
 		LOG(3, "error cmd has no value!");
 		return;
 	}
-
-	// TODO
-	// Need a schema parser / validator.
-	// Automate the testing if the structure is valid.
-	// - test for nulls...
-
-	LOG(0, "Got cmd: %s", cmd);
 
 	if (string("add") == cmd) {
 		auto channel = json_string_value(json_object_get(j1, "channel"));
@@ -151,6 +137,9 @@ void ConfigCB::operator() (std::string const & msg) {
 
 
 
+/*
+Start some default mappings for testing purposes.
+*/
 void Main::start_some_test_mappings(int n1) {
 	for (int i1 = 0; i1 < n1; ++i1) {
 		int const N1 = 32;
@@ -162,15 +151,14 @@ void Main::start_some_test_mappings(int n1) {
 }
 
 
-void Main::forward_epics_to_kafka(std::string config_file) {
-	start_some_test_mappings(32);
+void Main::forward_epics_to_kafka() {
 	bool do_release_memory = true;
-	int memory_release_grace_time = 30;
+	int memory_release_grace_time = 40;
 
-	Config::Listener config_listener({"localhost:9092", "configuration.global"});
+	Config::Listener config_listener({main_opt.broker_configuration_address, main_opt.broker_configuration_topic});
 	ConfigCB config_cb(*this);
 
-	int init_pool_max = 200;
+	int init_pool_max = 64;
 
 	while (forwarding_run) {
 
@@ -288,11 +276,9 @@ void Main::forward_epics_to_kafka(std::string config_file) {
 				LOG(5, "ERROR nullptr, should never happen");
 				continue;
 			}
+			// TODO
+			// Is this still needed?
 			tm->health_selfcheck();
-			if (! tm->healthy()) {
-				LOG(6, "Channel Mapping is not healthy");
-
-			}
 		}
 
 		config_listener.poll(config_cb);
@@ -311,8 +297,6 @@ void Main::forward_epics_to_kafka(std::string config_file) {
 			);
 		}
 		std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-		//if (i1 > 10000) break;
-		//++i1;
 	}
 }
 
@@ -374,15 +358,41 @@ void Main::forwarding_exit() {
 
 
 int main(int argc, char ** argv) {
-	LOG(3, "continue with main c++");
-	if (false && argc < 2) {
-		LOG(6, "You need to specify the path to the configuration file");
-		return 1;
+	BrightnESS::ForwardEpicsToKafka::MainOpt opt;
+	static struct option long_options[] = {
+		{"broker-configuration-address",    required_argument,        0,  0 },
+		{"broker-configuration-topic",      required_argument,        0,  0 },
+		{0, 0, 0, 0},
+	};
+	std::string cmd;
+	int option_index = 0;
+	while (true) {
+		int c = getopt_long(argc, argv, "", long_options, &option_index);
+		if (c == -1) break;
+		//printf("at option %s\n", long_options[option_index].name);
+		auto lname = long_options[option_index].name;
+		switch (c) {
+		case 0:
+			// long option without short equivalent:
+			if (std::string("broker-configuration-address") == lname) {
+				opt.broker_configuration_address = optarg;
+			}
+			if (std::string("broker-configuration-topic") == lname) {
+				opt.broker_configuration_topic = optarg;
+			}
+		}
+		// TODO catch error from missing argument
+		// TODO print a command help
 	}
-	BrightnESS::ForwardEpicsToKafka::Main main;
+	if (optind < argc) {
+		printf("Left-over commandline options:\n");
+		for (int i1 = optind; i1 < argc; ++i1) {
+			printf("%2d %s\n", i1, argv[i1]);
+		}
+	}
+	BrightnESS::ForwardEpicsToKafka::Main main(opt);
 	try {
-		main.start_some_test_mappings(n_pv_forward);
-		main.forward_epics_to_kafka("NO-CONFIG");
+		main.forward_epics_to_kafka();
 	}
 	catch (std::runtime_error & e) {
 		LOG(6, "CATCH runtime error in main watchdog thread: %s", e.what());
