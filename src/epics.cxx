@@ -193,10 +193,24 @@ public:
 using FBT = FBBptr;
 using ptr = std::unique_ptr<PVStructureToFlatBuffer>;
 static ptr create(epics::pvData::PVStructure::shared_pointer pvstr);
-virtual FBT convert(epics::pvData::PVStructure::shared_pointer & pvstr) = 0;
+virtual FBT convert(std::string & channel_name, epics::pvData::PVStructure::shared_pointer & pvstr) = 0;
 };
 
 namespace PVStructureToFlatBufferN {
+
+
+void add_name_timeStamp(flatbuffers::FlatBufferBuilder & b1, EpicsPVBuilder & b2, std::string & channel_name, epics::pvData::PVStructure::shared_pointer & pvstr) {
+	b2.add_name(b1.CreateString(channel_name));
+	auto ts = pvstr->getSubField<epics::pvData::PVStructure>("timeStamp");
+	timeStamp_t timeStamp(
+		ts->getSubField<epics::pvData::PVScalarValue<long>>("secondsPastEpoch")->get(),
+		ts->getSubField<epics::pvData::PVScalarValue<int>>("nanoseconds")->get()
+	);
+	//LOG(5, "secondsPastEpoch: %20ld", timeStamp.secondsPastEpoch());
+	//LOG(5, "nanoseconds:      %20ld", timeStamp.nanoseconds());
+	b2.add_timeStamp(&timeStamp);
+}
+
 
 
 struct Enum_PV_Base {
@@ -255,7 +269,7 @@ using T1 = typename std::conditional<
 	>::type
 	>::type;
 
-FBT convert(epics::pvData::PVStructure::shared_pointer & pvstr) override {
+FBT convert(std::string & channel_name, epics::pvData::PVStructure::shared_pointer & pvstr) override {
 	auto builder = FBT(new flatbuffers::FlatBufferBuilder);
 	T1 scalar_builder(*builder);
 	{
@@ -272,23 +286,12 @@ FBT convert(epics::pvData::PVStructure::shared_pointer & pvstr) override {
 	auto scalar_fin = scalar_builder.Finish();
 
 	EpicsPVBuilder pv_builder(*builder);
-	add_timeStamp(pv_builder, pvstr);
+	add_name_timeStamp(*builder, pv_builder, channel_name, pvstr);
 	pv_builder.add_pv_type(BuilderType_to_Enum_PV<T1>::v());
 	pv_builder.add_pv(scalar_fin.Union());
 	builder->Finish(pv_builder.Finish());
 
 	return builder;
-}
-
-void add_timeStamp(EpicsPVBuilder & b2, epics::pvData::PVStructure::shared_pointer & pvstr) {
-	auto ts = pvstr->getSubField<epics::pvData::PVStructure>("timeStamp");
-	timeStamp_t timeStamp(
-		ts->getSubField<epics::pvData::PVScalarValue<long>>("secondsPastEpoch")->get(),
-		ts->getSubField<epics::pvData::PVScalarValue<int>>("nanoseconds")->get()
-	);
-	//LOG(5, "secondsPastEpoch: %20ld", timeStamp.secondsPastEpoch());
-	//LOG(5, "nanoseconds:      %20ld", timeStamp.nanoseconds());
-	b2.add_timeStamp(&timeStamp);
 }
 
 };
@@ -369,7 +372,7 @@ using T3 = typename std::conditional<
 	>::type;
 
 
-FBT convert(epics::pvData::PVStructure::shared_pointer & pvstr) override {
+FBT convert(std::string & channel_name, epics::pvData::PVStructure::shared_pointer & pvstr) override {
 	static_assert(FLATBUFFERS_LITTLEENDIAN, "Optimization relies on little endianness");
 	static_assert(sizeof(T0) == sizeof(T3), "Numeric types not compatible");
 	// Build the flat buffer from scratch
@@ -391,23 +394,12 @@ FBT convert(epics::pvData::PVStructure::shared_pointer & pvstr) override {
 	}
 
 	EpicsPVBuilder pv_builder(*builder);
-	add_timeStamp(pv_builder, pvstr);
+	add_name_timeStamp(*builder, pv_builder, channel_name, pvstr);
 	pv_builder.add_pv_type(BuilderType_to_Enum_PV<T1>::v());
 	pv_builder.add_pv(array_fin.Union());
 	builder->Finish(pv_builder.Finish());
 
 	return builder;
-}
-
-void add_timeStamp(EpicsPVBuilder & b2, epics::pvData::PVStructure::shared_pointer & pvstr) {
-	auto ts = pvstr->getSubField<epics::pvData::PVStructure>("timeStamp");
-	timeStamp_t timeStamp(
-		ts->getSubField<epics::pvData::PVScalarValue<long>>("secondsPastEpoch")->get(),
-		ts->getSubField<epics::pvData::PVScalarValue<int>>("nanoseconds")->get()
-	);
-	//LOG(5, "secondsPastEpoch: %20ld", timeStamp.secondsPastEpoch());
-	//LOG(5, "nanoseconds:      %20ld", timeStamp.nanoseconds());
-	b2.add_timeStamp(&timeStamp);
 }
 
 };
@@ -748,7 +740,7 @@ void GetFieldRequesterForAction::getDone(epics::pvData::Status const & status, e
 
 class MonitorRequester : public ::epics::pvData::MonitorRequester {
 public:
-MonitorRequester(Monitor::wptr monitor_HL);
+MonitorRequester(std::string channel_name, Monitor::wptr monitor_HL);
 ~MonitorRequester();
 string getRequesterName() override;
 void message(string const & msg, epics::pvData::MessageType msgT) override;
@@ -762,9 +754,11 @@ private:
 //epics::pvData::MonitorPtr monitor;
 Monitor::wptr monitor_HL;
 PVStructureToFlatBuffer::ptr conv_to_flatbuffer;
+std::string m_channel_name;
 };
 
-MonitorRequester::MonitorRequester(Monitor::wptr monitor_HL) :
+MonitorRequester::MonitorRequester(std::string channel_name, Monitor::wptr monitor_HL) :
+	m_channel_name(channel_name),
 	monitor_HL(monitor_HL)
 {
 }
@@ -845,7 +839,7 @@ void MonitorRequester::monitorEvent(epics::pvData::MonitorPtr const & monitor) {
 		// A more robust solution in the future should actually investigate the PVStructure.
 		// Open question:  Could EPICS suddenly change the type during runtime?
 		if (not conv_to_flatbuffer) conv_to_flatbuffer = PVStructureToFlatBuffer::create(pvstr);
-		auto flat_buffer = conv_to_flatbuffer->convert(pvstr);
+		auto flat_buffer = conv_to_flatbuffer->convert(m_channel_name, pvstr);
 		monitor_HL->emit(std::move(flat_buffer));
 		monitor->release(ele);
 	}
@@ -1031,7 +1025,7 @@ void Monitor::initiate_value_monitoring() {
 	RMLG lg(m_mutex_emitter);
 	if (!topic_mapping) return;
 	if (!topic_mapping->forwarding) return;
-	monr.reset(new MonitorRequester(self));
+	monr.reset(new MonitorRequester(channel_name, self));
 
 	// Leaving it empty seems to be the full channel, including name.  That's good.
 	// Can also specify subfields, e.g. "value, timeStamp"  or also "field(value)"
