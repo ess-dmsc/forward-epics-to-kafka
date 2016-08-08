@@ -60,7 +60,7 @@ find_library(path_lib_epics_pvAccess NAMES pvAccess PATHS
 
 find_path(path_include_jansson NAMES jansson.h PATHS
  "$ENV{jansson_dir}/include"
- /opt/local/jansson-2.7-install/lib
+ /opt/local/jansson-2.7-install/include
 )
 
 find_library(path_lib_jansson NAMES jansson PATHS
