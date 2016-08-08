@@ -43,7 +43,7 @@ find_path(path_include_epics_pvData NAMES pv/pvData.h PATHS
  /opt/epics/modules/pvDataCPP/${epics_pvData_version}/${epics_base_version}/include
 )
 
-find_library(path_lib_epics_pvData NAMES pvData PATHS
+find_library(path_lib_epics_pvData NAMES pvData pvDataCPP PATHS
  "$ENV{epicsv4_dir}/pvDataCPP/lib/linux-x86_64"
  /opt/epics/modules/pvDataCPP/${epics_pvData_version}/${epics_base_version}/lib/${epics_arch}
 )
@@ -53,7 +53,7 @@ find_path(path_include_epics_pvAccess NAMES pv/pvAccess.h PATHS
  /opt/epics/modules/pvAccessCPP/${epics_pvAccess_version}/${epics_base_version}/include
 )
 
-find_library(path_lib_epics_pvAccess NAMES pvAccess PATHS
+find_library(path_lib_epics_pvAccess NAMES pvAccess pvAccessCPP PATHS
  "$ENV{epicsv4_dir}/pvAccessCPP/lib/linux-x86_64"
  /opt/epics/modules/pvAccessCPP/${epics_pvAccess_version}/${epics_base_version}/lib/${epics_arch}
 )
