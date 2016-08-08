@@ -17,7 +17,11 @@ find_program(flatc flatc PATHS "$ENV{flatc}" "$ENV{HOME}/.tools")
 # Using 3.15.2 because the v4 modules do not show headers yet for the more recent 3.15.4
 set(epics_arch centos7-x86_64)
 set(epics_base_version 3.15.2)
-set(epics_modules_version 5.0.2)
+
+# TODO
+# Should these versions be pinned here in the cmake file, or should we allow wildcard?
+set(epics_pvData_version   5.0.2)
+set(epics_pvAccess_version 4.1.2)
 
 
 # os/Linux/epicsMath.h
@@ -36,22 +40,22 @@ find_library(path_lib_epics_ca NAMES ca PATHS
 
 find_path(path_include_epics_pvData NAMES pv/pvData.h PATHS
  "$ENV{epicsv4_dir}/pvDataCPP/include"
- /opt/epics/modules/pvDataCPP/${epics_modules_version}/${epics_base_version}/include
+ /opt/epics/modules/pvDataCPP/${epics_pvData_version}/${epics_base_version}/include
 )
 
 find_library(path_lib_epics_pvData NAMES pvData PATHS
  "$ENV{epicsv4_dir}/pvDataCPP/lib/linux-x86_64"
- /opt/epics/modules/pvDataCPP/${epics_modules_version}/${epics_base_version}/lib/${epics_arch}
+ /opt/epics/modules/pvDataCPP/${epics_pvData_version}/${epics_base_version}/lib/${epics_arch}
 )
 
 find_path(path_include_epics_pvAccess NAMES pv/pvAccess.h PATHS
  "$ENV{epicsv4_dir}/pvAccessCPP/include"
- /opt/epics/modules/pvAccessCPP/${epics_modules_version}/${epics_base_version}/include
+ /opt/epics/modules/pvAccessCPP/${epics_pvAccess_version}/${epics_base_version}/include
 )
 
 find_library(path_lib_epics_pvAccess NAMES pvAccess PATHS
  "$ENV{epicsv4_dir}/pvAccessCPP/lib/linux-x86_64"
- /opt/epics/modules/pvAccessCPP/${epics_modules_version}/${epics_base_version}/lib/${epics_arch}
+ /opt/epics/modules/pvAccessCPP/${epics_pvAccess_version}/${epics_base_version}/lib/${epics_arch}
 )
 
 find_path(path_include_jansson NAMES jansson.h PATHS
