@@ -200,7 +200,6 @@ namespace PVStructureToFlatBufferN {
 
 
 void add_name_timeStamp(flatbuffers::FlatBufferBuilder & b1, EpicsPVBuilder & b2, std::string & channel_name, epics::pvData::PVStructure::shared_pointer & pvstr) {
-	b2.add_name(b1.CreateString(channel_name));
 	auto ts = pvstr->getSubField<epics::pvData::PVStructure>("timeStamp");
 	timeStamp_t timeStamp(
 		ts->getSubField<epics::pvData::PVScalarValue<long>>("secondsPastEpoch")->get(),
@@ -285,7 +284,14 @@ FBT convert(std::string & channel_name, epics::pvData::PVStructure::shared_point
 	}
 	auto scalar_fin = scalar_builder.Finish();
 
+	// Adding name not moved yet into the add_name_timeStamp, because CreateString would be nested.
+	// Therefore, create that string first.
+	auto off_name = builder->CreateString(channel_name);
+
 	EpicsPVBuilder pv_builder(*builder);
+
+	pv_builder.add_name(off_name);
+
 	add_name_timeStamp(*builder, pv_builder, channel_name, pvstr);
 	pv_builder.add_pv_type(BuilderType_to_Enum_PV<T1>::v());
 	pv_builder.add_pv(scalar_fin.Union());
@@ -393,7 +399,14 @@ FBT convert(std::string & channel_name, epics::pvData::PVStructure::shared_point
 		array_fin = array_builder.Finish();
 	}
 
+	// Adding name not moved yet into the add_name_timeStamp, because CreateString would be nested.
+	// Therefore, create that string first.
+	auto off_name = builder->CreateString(channel_name);
+
 	EpicsPVBuilder pv_builder(*builder);
+
+	pv_builder.add_name(off_name);
+
 	add_name_timeStamp(*builder, pv_builder, channel_name, pvstr);
 	pv_builder.add_pv_type(BuilderType_to_Enum_PV<T1>::v());
 	pv_builder.add_pv(array_fin.Union());
