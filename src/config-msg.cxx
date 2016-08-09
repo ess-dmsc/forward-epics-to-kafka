@@ -286,11 +286,7 @@ int main(int argc, char ** argv) {
 		}
 	}
 	if (true && optind < argc) {
-		// This won't work in all cases, because optind could also point
-		// to some left-over argument to an option in the middle of already
-		// parsed options.
-		// Or does getopt reorder that?
-		printf("Still stuff to read:\n");
+		printf("Left-over options?\n");
 		for (int i1 = optind; i1 < argc; ++i1) {
 			printf("%2d %s\n", i1, argv[i1]);
 		}

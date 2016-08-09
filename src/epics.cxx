@@ -641,51 +641,6 @@ void ChannelRequester::channelStateChange(Channel::shared_pointer const & channe
 	}
 
 	action->operator()(channel);
-
-		#if 0
-		if (true) {
-			// Initiate a single channel get
-
-			// TODO why not just pass the channel if we have it anyway?
-			// And what do we use ChannelGetRequesterDW for anyway???
-			cgr.reset(new ChannelGetRequesterDW());
-			//ChannelGetRequesterDW * cgri = dynamic_cast<ChannelGetRequesterDW*>(cgr.get());
-
-			// Is this some magic string?!?!??
-			// Yes.  Not yet sure about how it works.
-			// If I specify 'value' I get the same as with an empty string.
-			// A null errors.
-			// 'alarm' gives me the alarm structure, and my inspect routine sees it.
-			// But how do I inspect everything in that channel if I do not know that e.g. 'alarm' exists???
-
-			// The channel->getField() can do that, see above.  That will return the full
-			// introspection data and I can see all the primary fields of the channel.
-
-			// Is there no way to do a wildcard request at this point ??
-
-			string request = "value,timeStamp";
-			PVStructure::shared_pointer pvreq;
-			pvreq = epics::pvData::CreateRequest::create()->createRequest(request);
-			if (pvreq == nullptr) {
-				LOG0("can not create a pv request");
-				throw exception();
-			}
-
-			// Must keep the returned channel get instance alive
-			cg = channel->createChannelGet(cgr, pvreq);
-		}
-
-
-		if (false) {
-			// Initiate a monitor on the channel
-			monr.reset(new MonitorRequester);
-			string request = "";
-			PVStructure::shared_pointer pvreq;
-			pvreq = epics::pvData::CreateRequest::create()->createRequest(request);
-			mon = channel->createMonitor(monr, pvreq);
-		}
-		#endif
-
 }
 
 
@@ -812,10 +767,6 @@ void MonitorRequester::monitorConnect(epics::pvData::Status const & status, epic
 
 
 
-// And again, the docs are basically non-existent.
-// But according to the example, we must release the 'element' in the end.
-// TODO
-// Is it possible to miss events if we poll() only once per 'monitorEvent' ?
 
 void MonitorRequester::monitorEvent(epics::pvData::MonitorPtr const & monitor) {
 	LOG(0, "got event");
