@@ -29,7 +29,7 @@ class Instance;
 
 class Topic {
 public:
-Topic(Instance & ins, std::string topic_name);
+Topic(sptr<Instance> ins, std::string topic_name);
 ~Topic();
 
 void produce(BufRange buf);
@@ -37,12 +37,13 @@ void produce(BufRange buf);
 // Should make a friend method out of this..
 void error_from_kafka_callback();
 
-Instance & instance();
 bool healthy();
 std::string & topic_name();
 
+std::atomic_bool failure {false};
+
 private:
-Instance & ins;
+sptr<Instance> ins;
 // Used by Producer
 rd_kafka_topic_t * rkt = 0;
 friend class Producer;
@@ -72,11 +73,15 @@ std::atomic_bool error_from_kafka_callback_flag {false};
 
 std::vector<std::weak_ptr<Topic>> topics;
 
+bool instance_failure();
+
 private:
 // Should prevent all default five
 Instance(Instance const &&) = delete;
 Instance();
 void init();
+
+std::weak_ptr<Instance> self;
 
 char const * brokers = "localhost:9092";
 
@@ -86,7 +91,8 @@ void poll_stop();
 std::thread poll_thread;
 std::atomic_bool do_poll {false};
 std::atomic_bool ready_kafka {false};
-std::atomic_bool signal_error {false};
+std::atomic_bool m_instance_failure {false};
+std::atomic_int id {0};
 };
 
 

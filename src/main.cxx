@@ -166,8 +166,8 @@ void Main::forward_epics_to_kafka() {
 		if (do_release_memory) {
 			RMLG lg2(m_tms_zombies_mutex);
 			auto & l1 = tms_zombies;
-			auto it2 = std::remove_if(l1.begin(), l1.end(), [](decltype(tms_zombies)::value_type & x){
-				return x->zombie_can_be_cleaned();
+			auto it2 = std::remove_if(l1.begin(), l1.end(), [memory_release_grace_time](decltype(tms_zombies)::value_type & x){
+				return x->zombie_can_be_cleaned(memory_release_grace_time);
 			});
 			l1.erase(it2, l1.end());
 		}
@@ -247,12 +247,17 @@ void Main::forward_epics_to_kafka() {
 		// TODO
 		// Check all Kafka instances.
 		// If one dies, we need to remove all TopicMapping from there as well.
+		/*
+		-	Remove all affected topic mappings (mark them failed via the usual mechanism)
+		-	TopicMappings hold a shared pointer to the Instance
+			Therefore, Instance will be only dtored after all Topics are gone.
+		*/
 		{
 			int i1 = 0;
 			auto & l1 = kafka_instance_set.instances;
 			auto it2 = l1.before_begin();
 			for (auto it1 = l1.begin(); it1 != l1.end(); ++it1) {
-				if (it1->get()->error_from_kafka_callback_flag) {
+				if (it1->get()->instance_failure()) {
 					LOG(6, "Instance has issues");
 					l1.erase_after(it2);
 					it1 = it2;

@@ -72,7 +72,7 @@ void go_into_failure_mode();
 uint32_t id;
 
 /// Should return true if we waited long enough so that this zombie can be cleaned up
-bool zombie_can_be_cleaned();
+bool zombie_can_be_cleaned(int grace_time);
 
 std::atomic_bool forwarding {true};
 

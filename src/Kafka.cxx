@@ -35,13 +35,19 @@ sptr<Instance> InstanceSet::instance() {
 	auto LIM = std::numeric_limits<size_t>::max();
 	size_t min = LIM;
 	for (auto it2 = instances.begin(); it2 != instances.end(); ++it2) {
-		if ((*it2)->topics.size() < min  ||  min == LIM) {
-			min = (*it2)->topics.size();
-			it1 = it2;
+		if (not (*it2)->instance_failure()) {
+			if ((*it2)->topics.size() < min  ||  min == LIM) {
+				min = (*it2)->topics.size();
+				it1 = it2;
+			}
 		}
 	}
 	if (it1 == instances.end()) {
-		throw std::runtime_error("error no instances available?");
+		// TODO
+		// Need to throttle the creation of instances in case of permanent failure
+		instances.push_front(Instance::create());
+		return instances.front();
+		//throw std::runtime_error("error no instances available?");
 	}
 	return *it1;
 }
@@ -98,10 +104,14 @@ static int stats_cb(rd_kafka_t * rk, char * json, size_t json_len, void * opaque
 
 
 Instance::Instance() {
+	static int id_ = 0;
+	id = id_++;
+	LOG(5, "Instance %d created.", id.load());
 	init();
 }
 
 Instance::~Instance() {
+	LOG(5, "Instance %d goes away.", id.load());
 	poll_stop();
 	if (rk) {
 		LOG(3, "try to destroy kafka");
@@ -111,7 +121,9 @@ Instance::~Instance() {
 
 
 sptr<Instance> Instance::create() {
-	return sptr<Instance>(new Instance);
+	auto ret = sptr<Instance>(new Instance);
+	ret->self = std::weak_ptr<Instance>(ret);
+	return ret;
 }
 
 
@@ -188,11 +200,20 @@ void Instance::poll_stop() {
 
 
 void Instance::error_from_kafka_callback() {
-	error_from_kafka_callback_flag = true;
+	if (not error_from_kafka_callback_flag.exchange(true)) {
+		for (auto & tmw : topics) {
+			if (auto tm = tmw.lock()) {
+				tm->failure = true;
+			}
+		}
+	}
 }
 
 
 sptr<Topic> Instance::get_or_create_topic(std::string topic_name) {
+	if (instance_failure()) {
+		return nullptr;
+	}
 	// NOTE
 	// Not thread safe.
 	// But only called from the main setup thread.
@@ -205,7 +226,12 @@ sptr<Topic> Instance::get_or_create_topic(std::string topic_name) {
 			}
 		}
 	}
-	auto sp = sptr<Topic>(new Topic(*this, topic_name));
+	auto ins = self.lock();
+	if (not ins) {
+		LOG(3, "ERROR self is no longer alive");
+		return nullptr;
+	}
+	auto sp = sptr<Topic>(new Topic(ins, topic_name));
 	topics.push_back(std::weak_ptr<Topic>(sp));
 	return sp;
 }
@@ -213,8 +239,10 @@ sptr<Topic> Instance::get_or_create_topic(std::string topic_name) {
 
 
 
-// Check if the pointers to the topics are still valid,
-// removes the expired ones.
+/**
+Check if the pointers to the topics are still valid, removes the expired ones.
+Periodically called only from the main watchdog.
+*/
 
 void Instance::check_topic_health() {
 	auto it2 = std::remove_if(topics.begin(), topics.end(), [](std::weak_ptr<Topic> const & t1){
@@ -241,27 +269,15 @@ void Instance::check_topic_health() {
 
 
 
-#if 0
-void Instance::check_health() {
-	bool healthy = true;
-	if (error_from_kafka_callback_flag) {
-		healthy = false;
-	}
-	if (!ready_kafka) {
-		healthy = false;
-	}
-	if (!healthy) {
-		do_poll = false;
-		ready_kafka = false;
-	}
+bool Instance::instance_failure() {
+	return m_instance_failure || error_from_kafka_callback_flag;
 }
-#endif
 
 
 
 
 
-Topic::Topic(Instance & ins, std::string topic_name)
+Topic::Topic(sptr<Instance> ins, std::string topic_name)
 : ins(ins), topic_name_(topic_name)
 {
 	// librdkafka API sometimes wants to write errors into a buffer:
@@ -272,7 +288,7 @@ Topic::Topic(Instance & ins, std::string topic_name)
 	rd_kafka_topic_conf_set(topic_conf, "produce.offset.report", "true", errstr, errstr_N);
 	rd_kafka_topic_conf_set(topic_conf, "message.timeout.ms", "2000", errstr, errstr_N);
 
-	rkt = rd_kafka_topic_new(ins.rk, topic_name.c_str(), topic_conf);
+	rkt = rd_kafka_topic_new(ins->rk, topic_name.c_str(), topic_conf);
 	if (rkt == nullptr) {
 		// Seems like Kafka uses the system error code?
 		auto errstr = rd_kafka_err2str(rd_kafka_errno2err(errno));
@@ -290,8 +306,6 @@ Topic::~Topic() {
 	}
 }
 
-
-Instance & Topic::instance() { return ins; }
 
 
 void Topic::produce(BufRange buf) {
@@ -327,8 +341,7 @@ void Topic::produce(BufRange buf) {
 std::string & Topic::topic_name() { return topic_name_; }
 
 bool Topic::healthy() {
-	// TODO
-	return true;
+	return !failure;
 }
 
 

@@ -57,9 +57,9 @@ TopicMapping::~TopicMapping() {
 }
 
 
-bool TopicMapping::zombie_can_be_cleaned() {
+bool TopicMapping::zombie_can_be_cleaned(int grace_time) {
 	auto now = std::chrono::system_clock::now();
-	return std::chrono::duration_cast<std::chrono::seconds>(now - ts_failure).count() > 30;
+	return std::chrono::duration_cast<std::chrono::seconds>(now - ts_failure).count() > grace_time;
 }
 
 
