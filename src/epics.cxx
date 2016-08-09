@@ -719,10 +719,10 @@ void monitorEvent(epics::pvData::MonitorPtr const & monitor) override;
 void unlisten(epics::pvData::MonitorPtr const & monitor) override;
 
 private:
+std::string m_channel_name;
 //epics::pvData::MonitorPtr monitor;
 Monitor::wptr monitor_HL;
 PVStructureToFlatBuffer::ptr conv_to_flatbuffer;
-std::string m_channel_name;
 };
 
 MonitorRequester::MonitorRequester(std::string channel_name, Monitor::wptr monitor_HL) :

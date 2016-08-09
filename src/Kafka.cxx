@@ -270,7 +270,7 @@ void Instance::check_topic_health() {
 
 
 bool Instance::instance_failure() {
-	return m_instance_failure || error_from_kafka_callback_flag;
+	return error_from_kafka_callback_flag;
 }
 
 

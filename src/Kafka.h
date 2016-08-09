@@ -91,7 +91,6 @@ void poll_stop();
 std::thread poll_thread;
 std::atomic_bool do_poll {false};
 std::atomic_bool ready_kafka {false};
-std::atomic_bool m_instance_failure {false};
 std::atomic_int id {0};
 };
 
