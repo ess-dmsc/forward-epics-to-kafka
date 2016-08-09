@@ -153,7 +153,7 @@ void Main::start_some_test_mappings(int n1) {
 
 void Main::forward_epics_to_kafka() {
 	bool do_release_memory = true;
-	int memory_release_grace_time = 40;
+	int memory_release_grace_time = 2;
 
 	Config::Listener config_listener({main_opt.broker_configuration_address, main_opt.broker_configuration_topic});
 	ConfigCB config_cb(*this);
