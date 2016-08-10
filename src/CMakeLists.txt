@@ -202,7 +202,9 @@ add_executable(config-msg
 helper.cxx
 logger.cxx
 config-msg.cxx
+${CMAKE_CURRENT_BINARY_DIR}/git_commit_current.cxx
 )
+add_dependencies(forward-epics-to-kafka git_commit_current)
 set_property(TARGET ${tgt} APPEND PROPERTY INCLUDE_DIRECTORIES ${path_include_jansson})
 set_property(TARGET ${tgt} APPEND PROPERTY INCLUDE_DIRECTORIES ${path_include_rdkafka})
 target_link_libraries(${tgt} jansson)

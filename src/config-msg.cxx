@@ -8,11 +8,12 @@
 #include <cstring>
 #include <unistd.h>
 #include <getopt.h>
-
-
+#include "git_commit_current.h"
 #include "logger.h"
 #include "jansson.h"
 #include <librdkafka/rdkafka.h>
+
+using std::string;
 
 
 class JSONMsg {
@@ -21,7 +22,7 @@ json_t * json = nullptr;
 char * m_msgbuf = nullptr;
 std::string msgbuf() {
 	if (not m_msgbuf) {
-		m_msgbuf = json_dumps(json, JSON_INDENT(2) | JSON_SORT_KEYS);
+		m_msgbuf = json_dumps(json, JSON_COMPACT | JSON_SORT_KEYS);
 	}
 	return m_msgbuf;
 }
@@ -38,7 +39,9 @@ std::string msgbuf() {
 
 class MainOpt {
 public:
-std::unique_ptr<JSONMsg> msg;
+string broker_configuration_address = "localhost:9092";
+string broker_configuration_topic = "configuration.global";
+bool help = false;
 int verbose = 0;
 std::string channel;
 std::string topic;
@@ -90,14 +93,13 @@ std::unique_ptr<JSONMsg> create_msg_exit() {
 
 class KafkaProducer {
 public:
-char const * brokers = "localhost:9092";
-std::string topic_name = "configuration.global";
 rd_kafka_t * rk = nullptr;
 rd_kafka_topic_t * rkt = nullptr;
 rd_kafka_conf_t * conf = nullptr;
 rd_kafka_topic_conf_t * topic_conf = nullptr;
+MainOpt main_opt;
 
-KafkaProducer() {
+KafkaProducer(MainOpt main_opt) : main_opt(main_opt) {
 	init_kafka();
 }
 
@@ -187,7 +189,7 @@ void init_kafka() {
 	}
 	LOG(3, "Name of the new Kafka handle: %s", rd_kafka_name(rk));
 	rd_kafka_set_log_level(rk, 10);
-	if (rd_kafka_brokers_add(rk, brokers) == 0) {
+	if (rd_kafka_brokers_add(rk, main_opt.broker_configuration_address.c_str()) == 0) {
 		LOG(7, "ERROR could not add brokers");
 		throw std::runtime_error("can not add brokers");
 	}
@@ -196,7 +198,7 @@ void init_kafka() {
 	rd_kafka_topic_conf_set(topic_conf, "produce.offset.report", "true", errstr, errstr_N);
 	rd_kafka_topic_conf_set(topic_conf, "message.timeout.ms", "2000", errstr, errstr_N);
 
-	rkt = rd_kafka_topic_new(rk, topic_name.c_str(), topic_conf);
+	rkt = rd_kafka_topic_new(rk, main_opt.broker_configuration_topic.c_str(), topic_conf);
 	if (rkt == nullptr) {
 		// Seems like Kafka uses the system error code?
 		auto errstr = rd_kafka_err2str(rd_kafka_errno2err(errno));
@@ -222,6 +224,8 @@ void msg(std::string msg) {
 	void * callback_data = NULL;
 	int msgflags = RD_KAFKA_MSG_F_COPY; // 0, RD_KAFKA_MSG_F_COPY, RD_KAFKA_MSG_F_FREE
 
+	LOG(1, "Sending: %s", msg.c_str());
+
 	x = rd_kafka_produce(rkt, partition, msgflags, (void*)msg.c_str(), msg.size(), key, key_len, callback_data);
 	if (x != 0) {
 		LOG(7, "ERROR on produce topic %s  partition %i: %s", rd_kafka_topic_name(rkt), partition, rd_kafka_err2str(rd_kafka_last_error()));
@@ -246,6 +250,9 @@ void wait_queue_out() {
 int main(int argc, char ** argv) {
 	MainOpt opt;
 	static struct option long_options[] = {
+		{"help",                            no_argument,              0,  0 },
+		{"broker-configuration-address",    required_argument,        0,  0 },
+		{"broker-configuration-topic",      required_argument,        0,  0 },
 		{"verbose", no_argument,        &opt.verbose, 1},
 		{"list",    no_argument,        0,  0 },
 		{"add",     no_argument,        0,  0 },
@@ -257,14 +264,28 @@ int main(int argc, char ** argv) {
 	};
 	std::string cmd;
 	int option_index = 0;
+	bool getopt_error = false;
 	while (true) {
 		int c = getopt_long(argc, argv, "", long_options, &option_index);
 		if (c == -1) break;
+		if (c == '?') {
+			//LOG(5, "option argument missing");
+			getopt_error = true;
+		}
 		//printf("at option %s\n", long_options[option_index].name);
 		auto lname = long_options[option_index].name;
 		switch (c) {
 		case 0:
 			// long option without short equivalent:
+			if (std::string("help") == lname) {
+				opt.help = true;
+			}
+			if (std::string("broker-configuration-address") == lname) {
+				opt.broker_configuration_address = optarg;
+			}
+			if (std::string("broker-configuration-topic") == lname) {
+				opt.broker_configuration_topic = optarg;
+			}
 			if (std::string("topic") == lname) {
 				opt.topic = optarg;
 			}
@@ -292,23 +313,61 @@ int main(int argc, char ** argv) {
 		}
 	}
 
-	if (cmd == "list") {
-		opt.msg = create_msg_list();
-	}
-	else if (cmd == "add") {
-		opt.msg = create_msg_add(opt.channel.c_str(), opt.topic.c_str());
-	}
-	else if (cmd == "remove") {
-		opt.msg = create_msg_remove(opt.channel.c_str());
-	}
-	else if (cmd == "exit") {
-		opt.msg = create_msg_exit();
+	if (getopt_error) {
+		LOG(5, "ERROR parsing command line options");
+		opt.help = true;
+		return 1;
 	}
 
-	KafkaProducer p;
-	if (opt.msg) {
-		p.msg(opt.msg->msgbuf());
+	printf("forward-epics-to-kafka-0.0.1  [%s]   (ESS, BrightnESS)\n", GIT_COMMIT);
+	puts("  Contact: dominik.werder@psi.ch");
+	puts("");
+
+	if (opt.help) {
+		puts("Forwards EPICS process variables to Kafka topics.");
+		puts("Controlled via JSON packets sent over the configuration topic.");
+		puts("");
+		puts("");
+		puts("config-msg");
+		puts("  --help");
+		puts("");
+		puts("  --broker-configuration-address    host:port,host:port,...");
+		puts("      Kafka brokers to connect with for configuration updates.");
+		puts("      Default: localhost:9092");
+		puts("");
+		puts("  --broker-configuration-topic      <topic-name>");
+		puts("      Topic name to listen to for configuration updates.");
+		puts("      Default: configuration.global");
+		puts("");
+		puts("  --add --channel <EPICS-channel-name> --topic <Kafka-topic-name>");
+		puts("");
+		puts("  --remove --channel <EPICS-channel-name>");
+		puts("");
+		puts("  --exit");
+		puts("      Shut down the forwarding service.");
+		puts("");
+		return 1;
 	}
-	p.wait_queue_out();
+
+	std::unique_ptr<JSONMsg> msg;
+
+	if (cmd == "list") {
+		msg = create_msg_list();
+	}
+	else if (cmd == "add") {
+		msg = create_msg_add(opt.channel.c_str(), opt.topic.c_str());
+	}
+	else if (cmd == "remove") {
+		msg = create_msg_remove(opt.channel.c_str());
+	}
+	else if (cmd == "exit") {
+		msg = create_msg_exit();
+	}
+
+	if (msg) {
+		KafkaProducer p(opt);
+		p.msg(msg->msgbuf());
+		p.wait_queue_out();
+	}
 	return 0;
 }
