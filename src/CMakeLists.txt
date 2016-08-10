@@ -6,12 +6,12 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ..)
 file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/git_commit_current.cxx "empty\n")
 
 add_custom_target(git_commit_now
-COMMAND echo 'extern \"C\" char const GIT_COMMIT[] = \"'`git-rev-parse HEAD`'\"\;' > ${CMAKE_CURRENT_BINARY_DIR}/git_commit_now
+COMMAND echo 'extern \"C\" char const GIT_COMMIT[] = \"'`git rev-parse HEAD`'\"\;' > ${CMAKE_CURRENT_BINARY_DIR}/git_commit_now
 WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
 add_custom_target(git_commit_current
-COMMAND git-diff --name-only --no-index ${CMAKE_CURRENT_BINARY_DIR}/git_commit_now ${CMAKE_CURRENT_BINARY_DIR}/git_commit_current.cxx || cp ${CMAKE_CURRENT_BINARY_DIR}/git_commit_now ${CMAKE_CURRENT_BINARY_DIR}/git_commit_current.cxx
+COMMAND git diff --name-only --no-index ${CMAKE_CURRENT_BINARY_DIR}/git_commit_now ${CMAKE_CURRENT_BINARY_DIR}/git_commit_current.cxx || cp ${CMAKE_CURRENT_BINARY_DIR}/git_commit_now ${CMAKE_CURRENT_BINARY_DIR}/git_commit_current.cxx
 DEPENDS git_commit_now
 )
 
@@ -71,11 +71,13 @@ find_library(path_lib_epics_pvAccess NAMES pvAccess pvAccessCPP PATHS
 )
 
 find_path(path_include_jansson NAMES jansson.h PATHS
+ /usr/include
  "$ENV{jansson_dir}/include"
  /opt/local/jansson-2.7-install/include
 )
 
 find_library(path_lib_jansson NAMES jansson PATHS
+ /usr/lib64
  "$ENV{jansson_dir}/lib"
  /opt/local/jansson-2.7-install/lib
 )
