@@ -1,0 +1,4 @@
+---
+- hosts: forward_epics_to_kafka
+  roles:
+  - forward_epics_to_kafka

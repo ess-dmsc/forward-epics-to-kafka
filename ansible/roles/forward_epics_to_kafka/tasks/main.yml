@@ -1,0 +1,8 @@
+---
+- name: Prepare build directory
+  file: path={{path_libs_build}} state=directory  owner={{ansible_user_id}}  group={{ansible_user_gid}}
+  become: yes
+
+#- include: jansson.yml
+- include: jansson_yum.yml
+- include: forward-epics-to-kafka.yml
