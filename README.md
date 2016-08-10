@@ -19,11 +19,13 @@ Uses cmake.
 These libraries are expected in the ESS dev default locations or set via
 environment variables (see src/CMakeLists.txt) and are so far not installed
 by the ansible playbook:
+
 - EPICS v4 (pvData and pvAccess)
 - Flatbuffers (Having flatc in PATH is a compile-time dependency)
 - librdkafka
 
 Installed by the playbook via yum:
+
 - libjansson
 
 Tooling
