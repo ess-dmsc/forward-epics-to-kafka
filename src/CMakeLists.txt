@@ -3,6 +3,18 @@ project(forward-epics-to-kafka)
 # Relative to build root
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ..)
 
+file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/git_commit_current.cxx "empty\n")
+
+add_custom_target(git_commit_now
+COMMAND echo 'extern \"C\" char const GIT_COMMIT[] = \"'`git-rev-parse HEAD`'\"\;' > ${CMAKE_CURRENT_BINARY_DIR}/git_commit_now
+WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+)
+
+add_custom_target(git_commit_current
+COMMAND git-diff --name-only --no-index ${CMAKE_CURRENT_BINARY_DIR}/git_commit_now ${CMAKE_CURRENT_BINARY_DIR}/git_commit_current.cxx || cp ${CMAKE_CURRENT_BINARY_DIR}/git_commit_now ${CMAKE_CURRENT_BINARY_DIR}/git_commit_current.cxx
+DEPENDS git_commit_now
+)
+
 # Different libs use different arch tags.
 # We target x86-64
 set(archs linux-x86_64)
@@ -144,7 +156,9 @@ Kafka.cxx
 epics.cxx
 Config.cxx
 main.cxx
+${CMAKE_CURRENT_BINARY_DIR}/git_commit_current.cxx
 )
+add_dependencies(forward-epics-to-kafka git_commit_current)
 
 set_property(TARGET forward-epics-to-kafka APPEND PROPERTY INCLUDE_DIRECTORIES ${path_include_epics_base})
 set_property(TARGET forward-epics-to-kafka APPEND PROPERTY INCLUDE_DIRECTORIES ${path_include_epics_base}/os/Linux)
