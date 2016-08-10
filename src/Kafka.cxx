@@ -12,17 +12,18 @@ namespace BrightnESS {
 namespace ForwardEpicsToKafka {
 namespace Kafka {
 
-InstanceSet & InstanceSet::Set() {
+InstanceSet & InstanceSet::Set(std::string brokers) {
 	static std::unique_ptr<InstanceSet> kset;
 	if (!kset) {
 		kset.reset(new InstanceSet);
+		kset->brokers = brokers;
 	}
 	return *kset;
 }
 
 InstanceSet::InstanceSet() {
 	for (int i1 = 0; i1 < KAFKA_INSTANCE_COUNT; ++i1) {
-		instances.push_front(Instance::create());
+		instances.push_front(Instance::create(brokers));
 	}
 }
 
@@ -45,7 +46,7 @@ sptr<Instance> InstanceSet::instance() {
 	if (it1 == instances.end()) {
 		// TODO
 		// Need to throttle the creation of instances in case of permanent failure
-		instances.push_front(Instance::create());
+		instances.push_front(Instance::create(brokers));
 		return instances.front();
 		//throw std::runtime_error("error no instances available?");
 	}
@@ -120,8 +121,9 @@ Instance::~Instance() {
 }
 
 
-sptr<Instance> Instance::create() {
+sptr<Instance> Instance::create(std::string brokers) {
 	auto ret = sptr<Instance>(new Instance);
+	ret->brokers = brokers;
 	ret->self = std::weak_ptr<Instance>(ret);
 	return ret;
 }
@@ -167,7 +169,7 @@ void Instance::init() {
 	LOG(3, "Name of the new Kafka handle: %s", rd_kafka_name(rk));
 
 	rd_kafka_set_log_level(rk, LOG_DEBUG);
-	if (rd_kafka_brokers_add(rk, brokers) == 0) {
+	if (rd_kafka_brokers_add(rk, brokers.c_str()) == 0) {
 		LOG(7, "ERROR could not add brokers");
 		throw std::exception();
 	}

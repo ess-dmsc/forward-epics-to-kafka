@@ -53,7 +53,7 @@ std::string topic_name_;
 
 class Instance {
 public:
-static sptr<Instance> create();
+static sptr<Instance> create(std::string brokers);
 
 int load();
 
@@ -83,7 +83,7 @@ void init();
 
 std::weak_ptr<Instance> self;
 
-char const * brokers = "localhost:9092";
+std::string brokers = "localhost:9092";
 
 void poll_start();
 void poll_run();
@@ -97,7 +97,7 @@ std::atomic_int id {0};
 
 class InstanceSet {
 public:
-static InstanceSet & Set();
+static InstanceSet & Set(std::string brokers);
 sptr<Instance> instance();
 
 std::forward_list<sptr<Instance>> instances;
@@ -106,6 +106,7 @@ private:
 // Prevent ctor
 InstanceSet(InstanceSet const &&) = delete;
 InstanceSet();
+std::string brokers;
 };
 
 

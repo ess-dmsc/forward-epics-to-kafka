@@ -19,6 +19,8 @@
 #include <unistd.h>
 #include <getopt.h>
 
+#include "git_commit_current.h"
+
 
 int const n_pv_forward = 0;
 
@@ -34,12 +36,14 @@ using std::vector;
 struct MainOpt {
 string broker_configuration_address = "localhost:9092";
 string broker_configuration_topic = "configuration.global";
+string broker_data_address = "localhost:9092";
+bool help = false;
 };
 
 
 class Main {
 public:
-Main(MainOpt opt) : main_opt(opt), kafka_instance_set(Kafka::InstanceSet::Set()) { }
+Main(MainOpt opt) : main_opt(opt), kafka_instance_set(Kafka::InstanceSet::Set(opt.broker_data_address)) { }
 void forward_epics_to_kafka();
 void mapping_add(string channel, string topic);
 void mapping_start(TopicMappingSettings tmsettings);
@@ -122,12 +126,16 @@ void ConfigCB::operator() (std::string const & msg) {
 	if (string("add") == cmd) {
 		auto channel = json_string_value(json_object_get(j1, "channel"));
 		auto topic   = json_string_value(json_object_get(j1, "topic"));
-		main.mapping_add(channel, topic);
+		if (channel and topic) {
+			main.mapping_add(channel, topic);
+		}
 	}
 
 	else if (string("remove") == cmd) {
 		auto channel = json_string_value(json_object_get(j1, "channel"));
-		main.mapping_remove_topic(channel);
+		if (channel) {
+			main.mapping_remove_topic(channel);
+		}
 	}
 
 	else if (string("list") == cmd) {
@@ -388,25 +396,40 @@ void Main::forwarding_exit() {
 int main(int argc, char ** argv) {
 	BrightnESS::ForwardEpicsToKafka::MainOpt opt;
 	static struct option long_options[] = {
+		{"help",                            no_argument,              0,  0 },
 		{"broker-configuration-address",    required_argument,        0,  0 },
 		{"broker-configuration-topic",      required_argument,        0,  0 },
+		{"broker-data-address",             required_argument,        0,  0 },
 		{0, 0, 0, 0},
 	};
 	std::string cmd;
 	int option_index = 0;
+	bool getopt_error = false;
 	while (true) {
 		int c = getopt_long(argc, argv, "", long_options, &option_index);
+		//LOG(5, "c getopt %d", c);
 		if (c == -1) break;
+		if (c == '?') {
+			//LOG(5, "option argument missing");
+			getopt_error = true;
+		}
 		//printf("at option %s\n", long_options[option_index].name);
 		auto lname = long_options[option_index].name;
 		switch (c) {
 		case 0:
+			//LOG(5, "lname: %s", lname);
 			// long option without short equivalent:
+			if (std::string("help") == lname) {
+				opt.help = true;
+			}
 			if (std::string("broker-configuration-address") == lname) {
 				opt.broker_configuration_address = optarg;
 			}
 			if (std::string("broker-configuration-topic") == lname) {
 				opt.broker_configuration_topic = optarg;
+			}
+			if (std::string("broker-data-address") == lname) {
+				opt.broker_data_address = optarg;
 			}
 		}
 		// TODO catch error from missing argument
@@ -418,6 +441,41 @@ int main(int argc, char ** argv) {
 			printf("%2d %s\n", i1, argv[i1]);
 		}
 	}
+
+	if (getopt_error) {
+		LOG(5, "ERROR parsing command line options");
+		opt.help = true;
+		return 1;
+	}
+
+	printf("forward-epics-to-kafka-0.0.1  [%s]   (ESS, BrightnESS)\n", GIT_COMMIT);
+	puts("  Contact: dominik.werder@psi.ch");
+	puts("");
+	return 0;
+
+	if (opt.help) {
+		puts("Forwards EPICS process variables to Kafka topics.");
+		puts("Controlled via JSON packets sent over the configuration topic.");
+		puts("");
+		puts("");
+		puts("forward-epics-to-kafka");
+		puts("  --help");
+		puts("");
+		puts("  --broker-configuration-address    host:port,host:port,...");
+		puts("      Kafka brokers to connect with for configuration updates.");
+		puts("      Default: localhost:9092");
+		puts("");
+		puts("  --broker-configuration-topic      <topic-name>");
+		puts("      Topic name to listen to for configuration updates.");
+		puts("      Default: configuration.global");
+		puts("");
+		puts("  --broker-data-address             host:port,host:port,...");
+		puts("      Kafka brokers to connect with for configuration updates");
+		puts("      Default: localhost:9092");
+		puts("");
+		return 1;
+	}
+
 	BrightnESS::ForwardEpicsToKafka::Main main(opt);
 	try {
 		main.forward_epics_to_kafka();
