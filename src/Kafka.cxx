@@ -15,13 +15,12 @@ namespace Kafka {
 InstanceSet & InstanceSet::Set(std::string brokers) {
 	static std::unique_ptr<InstanceSet> kset;
 	if (!kset) {
-		kset.reset(new InstanceSet);
-		kset->brokers = brokers;
+		kset.reset(new InstanceSet(brokers));
 	}
 	return *kset;
 }
 
-InstanceSet::InstanceSet() {
+InstanceSet::InstanceSet(std::string brokers) : brokers(brokers) {
 	for (int i1 = 0; i1 < KAFKA_INSTANCE_COUNT; ++i1) {
 		instances.push_front(Instance::create(brokers));
 	}
@@ -108,7 +107,6 @@ Instance::Instance() {
 	static int id_ = 0;
 	id = id_++;
 	LOG(5, "Instance %d created.", id.load());
-	init();
 }
 
 Instance::~Instance() {
@@ -124,6 +122,7 @@ Instance::~Instance() {
 sptr<Instance> Instance::create(std::string brokers) {
 	auto ret = sptr<Instance>(new Instance);
 	ret->brokers = brokers;
+	ret->init();
 	ret->self = std::weak_ptr<Instance>(ret);
 	return ret;
 }
@@ -169,9 +168,11 @@ void Instance::init() {
 	LOG(3, "Name of the new Kafka handle: %s", rd_kafka_name(rk));
 
 	rd_kafka_set_log_level(rk, LOG_DEBUG);
+
+	LOG(3, "Brokers: %s", brokers.c_str());
 	if (rd_kafka_brokers_add(rk, brokers.c_str()) == 0) {
 		LOG(7, "ERROR could not add brokers");
-		throw std::exception();
+		throw std::runtime_error("could not add brokers");
 	}
 
 	poll_start();

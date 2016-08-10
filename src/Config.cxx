@@ -83,21 +83,26 @@ Listener::Listener(KafkaSettings settings) {
 		{"metadata.request.timeout.ms", "2000"},
 		{"socket.timeout.ms", "2000"},
 		{"session.timeout.ms", "2000"},
+		{"metadata.request.timeout.ms", "3000"},
 		{"group.id", "configuration_global_consumer_group"},
 	};
 	for (auto & c : confs) {
 		if (RD_KAFKA_CONF_OK != rd_kafka_conf_set(conf, c.at(0).c_str(), c.at(1).c_str(), errstr, errstr_N)) {
-			LOG(3, "error setting config: %s", c.at(0).c_str());
+			LOG(7, "error setting config: %s", c.at(0).c_str());
 		}
 	}
 
-
-	// TODO
-	// Release this resource later:
 	auto topic_conf = rd_kafka_topic_conf_new();
-	//rd_kafka_topic_conf_set(topic_conf, "produce.offset.report", "true", errstr, errstr_N);
-	//rd_kafka_topic_conf_set(topic_conf, "message.timeout.ms", "2000", errstr, errstr_N);
-	//rd_kafka_topic_conf_set(topic_conf, "offset.store.method", "broker", errstr, errstr_N);
+	{
+		std::vector<std::vector<std::string>> confs = {
+			{"message.timeout.ms", "2000"},
+		};
+		for (auto & c : confs) {
+			if (RD_KAFKA_CONF_OK != rd_kafka_topic_conf_set(topic_conf, c.at(0).c_str(), c.at(1).c_str(), errstr, errstr_N)) {
+				LOG(7, "error setting topic config: %s", c.at(0).c_str());
+			}
+		}
+	}
 
 	// To set a default configuration for regex matched topics:
 	rd_kafka_conf_set_default_topic_conf(conf, topic_conf);
@@ -118,6 +123,7 @@ Listener::Listener(KafkaSettings settings) {
 
 	rd_kafka_set_log_level(rk, LOG_DEBUG);
 
+	LOG(3, "Brokers: %s", settings.brokers.c_str());
 	if (rd_kafka_brokers_add(rk, settings.brokers.c_str()) == 0) {
 		LOG(7, "ERROR could not add brokers");
 		throw std::runtime_error("could not add brokers");

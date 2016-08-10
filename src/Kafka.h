@@ -105,7 +105,7 @@ std::forward_list<sptr<Instance>> instances;
 private:
 // Prevent ctor
 InstanceSet(InstanceSet const &&) = delete;
-InstanceSet();
+InstanceSet(std::string brokers);
 std::string brokers;
 };
 
