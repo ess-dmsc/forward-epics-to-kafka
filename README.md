@@ -1,47 +1,40 @@
 # Forward EPICS to Kafka
 
-Goals are
-
 - Forward EPICS process variables to Kafka topics
-- Receive configuration from Kafka streams
-- Recover from channel or topic failures
-
-## Setup Kafka
-
-Run Kafka broker with:
-```
-auto.create.topics.enable=true
-delete.topic.enable=true
-```
-
-for easier experimenting.
+- Listens to a Kafka topic for add/remove of forward mappings
+- Kafka brokers configured as command line parameters
+- Can forward so far the Epics 'NT' normative types, both scalar and array
+  What else is needed?
 
 
 ## Installation
 
+Ansible playbook in ./ansible even though not all dependencies installed by default
+so far, see below, and in CMakeLists.txt.
+Uses cmake.
+
+
 ### Requirements
 
-- EPICS v4
-- Flatbuffers
+These libraries are expected in the ESS dev default locations or set via
+environment variables (see src/CMakeLists.txt):
+- EPICS v4 (pvData and pvAccess)
+- Flatbuffers (Having flatc in PATH is a compile-time dependency)
 - librdkafka
-- libjansson
+
+So far not in ESS dev:
+- libjansson.  Expected in ```/opt/local/jansson-2.7-install``` which is also
+  where the ansible playbook puts it.
+
+Tooling
 - C++ compiler with c++11 support (Flatbuffers requires that as well)
+- Doxygen if you want to make docs
 
 
 ### Environment variables
 
-For development, I keep these paths quite explicit in environment variables:
-
-$flatc Directory where flatc compiler can be found.
-
-Paths to dependencies:
-
-$epicsbase_dir
-$epicsv4_dir
-$librdkafka_dir
-$jansson_dir
-
-
+Location of compile-time dependencies can be controlled via environment variables
+as well, see CMakeLists.
 
 
 ### Build
@@ -56,12 +49,16 @@ make
 make docs
 ```
 
-### librdkafka
+### Performance
 
-```
-./configure --prefix=/home/scratch/software/librdkafka/../librdkafka-install
+Currently limited by flatbuffer construction.  Optimization ongoing..
 
-# Passing CFLAGS, CXXFLAGS or CPPFLAGS does not work because configure prepends the custom ones!
-# Luckily, the configure script shows the result..
-./configure --prefix=/home/scratch/software/librdkafka/../librdkafka-install --disable-optimization
-```
+
+
+## Features planned for the future
+
+Please send any feature requests you have.
+
+- More efficient threading
+- Optimization of flat buffer creation
+- Forward arbitrary Epics pvStructures
