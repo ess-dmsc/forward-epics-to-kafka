@@ -17,14 +17,14 @@ Uses cmake.
 ### Requirements
 
 These libraries are expected in the ESS dev default locations or set via
-environment variables (see src/CMakeLists.txt):
+environment variables (see src/CMakeLists.txt) and are so far not installed
+by the ansible playbook:
 - EPICS v4 (pvData and pvAccess)
 - Flatbuffers (Having flatc in PATH is a compile-time dependency)
 - librdkafka
 
-So far not in ESS dev:
-- libjansson.  Expected in ```/opt/local/jansson-2.7-install``` which is also
-  where the ansible playbook puts it.
+Installed by the playbook via yum:
+- libjansson
 
 Tooling
 - C++ compiler with c++11 support (Flatbuffers requires that as well)
@@ -55,10 +55,24 @@ Currently limited by flatbuffer construction.  Optimization ongoing..
 
 
 
+## Usage
+
+A ```forward-epics-to-kafka --help``` shows the available options.
+The forwarder will listen to a Kafka topic for configuration updates.
+Configuration updates are JSON messages:
+
+- Add a topic: ```{"cmd":"add", "channel":"[Epics-channel-name]", "topic":"[Kafka-topic-name]"}```
+- Remove a topic: ```{"cmd":"remove", "channel":"[Epics-channel-name]"}```
+- Exit the program: ```{"cmd":"exit"}```
+- more to come
+
+
+
 ## Features planned for the future
 
-Please send any feature requests you have.
+Please send any feature requests you have (dominik.werder@psi.ch).
 
 - More efficient threading
 - Optimization of flat buffer creation
+- Statistics and log
 - Forward arbitrary Epics pvStructures
