@@ -451,7 +451,6 @@ int main(int argc, char ** argv) {
 	printf("forward-epics-to-kafka-0.0.1  [%s]   (ESS, BrightnESS)\n", GIT_COMMIT);
 	puts("  Contact: dominik.werder@psi.ch");
 	puts("");
-	return 0;
 
 	if (opt.help) {
 		puts("Forwards EPICS process variables to Kafka topics.");
