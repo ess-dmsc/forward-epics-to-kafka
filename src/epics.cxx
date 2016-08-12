@@ -182,17 +182,11 @@ void inspect_PVStructure(epics::pvData::PVStructure const & pvstr, int level) {
 
 
 
-struct FBpack {
-char * data;
-size_t len;
-};
-
-
 class PVStructureToFlatBuffer {
 public:
 using FBT = FBBptr;
 using ptr = std::unique_ptr<PVStructureToFlatBuffer>;
-static ptr create(epics::pvData::PVStructure::shared_pointer pvstr);
+static ptr create(epics::pvData::PVStructure::shared_pointer & pvstr);
 virtual FBT convert(std::string & channel_name, epics::pvData::PVStructure::shared_pointer & pvstr) = 0;
 };
 
@@ -417,109 +411,96 @@ FBT convert(std::string & channel_name, epics::pvData::PVStructure::shared_point
 
 };
 
-
-
-
-
-// Want partial specialization, therefore struct
-
-using IN  = epics::pvData::PVField *;
-using RET = PVStructureToFlatBuffer::ptr;
-
-template <typename ...TX> struct Impl;
-
-template <typename T0, typename T1, typename ...TX>
-struct Impl<T0, T1, TX...> {
-static RET create_ntscalar(IN f1) {
-	if (auto x = Impl<T0>::create_ntscalar(f1)) return x;
-	else return Impl<T1, TX...>::create_ntscalar(f1);
 }
-};
 
+
+
+template <typename ...TX>
+struct PVStructureToFlatBuffer_create;
 
 template <typename T0>
-struct Impl<T0> {
-static RET create_ntscalar(IN f1) {
-	return RET(new NTScalar<T0>);
-}
-};
-
-
-/*
-template <>
-struct Impl<float> {
-using T0 = float;
-static RET create_ntscalar(IN f1) {
-	// TODO remove, do not need specialization here...
-	return nullptr;
-}
-};
-*/
-
-
-template <>
-struct Impl<> {
-static RET create_ntscalar(IN f1) {
-	//static_assert(false, "should not use this template");
-	throw std::runtime_error("ERROR should not get invoked");
-}
-};
-
-
-}
-
-
-
-/*template <typename T0>
-static PVStructureToFlatBuffer::ptr create_ntscalar<double>(epics::pvData::PVField * f1) {
-	if (auto x = dynamic_cast<epics::pvData::PVScalarValue<T0>*>(f1)) {
+struct PVStructureToFlatBuffer_create<T0> {
+static PVStructureToFlatBuffer::ptr impl(epics::pvData::PVField::shared_pointer & pv_value) {
+	if (dynamic_cast<epics::pvData::PVScalarValue<T0>*>(pv_value.get())) {
 		return PVStructureToFlatBuffer::ptr(new PVStructureToFlatBufferN::NTScalar<T0>);
 	}
 	return nullptr;
-}*/
+}
+};
+
+template <typename T0, typename T1, typename ...TX>
+struct PVStructureToFlatBuffer_create<T0, T1, TX...> {
+static PVStructureToFlatBuffer::ptr impl(epics::pvData::PVField::shared_pointer & pv_value) {
+	if (auto x = PVStructureToFlatBuffer_create<T0>::impl(pv_value)) return x;
+	return PVStructureToFlatBuffer_create<T1, TX...>::impl(pv_value);
+}
+};
 
 
-PVStructureToFlatBuffer::ptr PVStructureToFlatBuffer::create(epics::pvData::PVStructure::shared_pointer pvstr) {
-	auto id = pvstr->getField()->getID();
-	if (id == "epics:nt/NTScalar:1.0") {
-		if (auto pv_value = pvstr->getSubField("value")) {
-			#define MA(T) \
-				if (dynamic_cast<epics::pvData::PVScalarValue<T>*>(pv_value.get())) { \
-					return PVStructureToFlatBuffer::ptr(new PVStructureToFlatBufferN::NTScalar<T>); \
-				}
-			MA(         char  )
-			MA(unsigned char  )
-			MA(         short )
-			MA(unsigned short )
-			MA(         int   )
-			MA(unsigned int   )
-			MA(         long  )
-			MA(unsigned long  )
-			MA(         float )
-			MA(         double)
-			#undef MA
-		}
-		throw std::runtime_error("ERROR can not convert this NTScalar");
+
+template <typename ...TX>
+struct PVStructureToFlatBuffer_create_array;
+
+template <typename T0>
+struct PVStructureToFlatBuffer_create_array<T0> {
+static PVStructureToFlatBuffer::ptr impl(epics::pvData::PVField::shared_pointer & pv_value) {
+	if (dynamic_cast<epics::pvData::PVValueArray<T0>*>(pv_value.get())) {
+		return PVStructureToFlatBuffer::ptr(new PVStructureToFlatBufferN::NTScalarArray<T0>);
 	}
-	if (id == "epics:nt/NTScalarArray:1.0") {
-		if (auto pv_value = pvstr->getSubField("value")) {
-			#define MA(T) \
-				if (dynamic_cast<epics::pvData::PVValueArray<T>*>(pv_value.get())) { \
-					return PVStructureToFlatBuffer::ptr(new PVStructureToFlatBufferN::NTScalarArray<T>); \
-				}
-			MA(         char  )
-			MA(unsigned char  )
-			MA(         short )
-			MA(unsigned short )
-			MA(         int   )
-			MA(unsigned int   )
-			MA(         long  )
-			MA(unsigned long  )
-			MA(         float )
-			MA(         double)
-			#undef MA
+	return nullptr;
+}
+};
+
+template <typename T0, typename T1, typename ...TX>
+struct PVStructureToFlatBuffer_create_array<T0, T1, TX...> {
+static PVStructureToFlatBuffer::ptr impl(epics::pvData::PVField::shared_pointer & pv_value) {
+	if (auto x = PVStructureToFlatBuffer_create_array<T0>::impl(pv_value)) return x;
+	return PVStructureToFlatBuffer_create_array<T1, TX...>::impl(pv_value);
+}
+};
+
+
+
+PVStructureToFlatBuffer::ptr PVStructureToFlatBuffer::create(epics::pvData::PVStructure::shared_pointer & pvstr) {
+	auto id = pvstr->getField()->getID();
+	auto pv_value = pvstr->getSubField("value");
+	if (not pv_value) {
+		LOG(5, "ERROR PVField has no subfield 'value'");
+		return nullptr;
+	}
+	if (id == "epics:nt/NTScalar:1.0") {
+		if (auto x = PVStructureToFlatBuffer_create<
+			         char,
+			unsigned char,
+			         short,
+			unsigned short,
+			         int,
+			unsigned int,
+			         long,
+			unsigned long,
+			         float,
+			         double
+			>::impl(pv_value)) {
+			return x;
 		}
-		throw std::runtime_error("ERROR can not convert this NTScalar");
+		LOG(5, "ERROR unknown NTScalar type");
+	}
+	else if (id == "epics:nt/NTScalarArray:1.0") {
+		if (auto x = PVStructureToFlatBuffer_create_array<
+			         char,
+			unsigned char,
+			         short,
+			unsigned short,
+			         int,
+			unsigned int,
+			         long,
+			unsigned long,
+			         float,
+			         double
+			>::impl(pv_value)) {
+			return x;
+		}
+		LOG(5, "ERROR unknown NTScalarArray type");
 	}
 	return nullptr;
 }
@@ -803,9 +784,15 @@ void MonitorRequester::monitorEvent(epics::pvData::MonitorPtr const & monitor) {
 		// A more robust solution in the future should actually investigate the PVStructure.
 		// Open question:  Could EPICS suddenly change the type during runtime?
 		if (not conv_to_flatbuffer) conv_to_flatbuffer = PVStructureToFlatBuffer::create(pvstr);
-		auto flat_buffer = conv_to_flatbuffer->convert(m_channel_name, pvstr);
-		monitor_HL->emit(std::move(flat_buffer));
-		monitor->release(ele);
+		if (not conv_to_flatbuffer) {
+			LOG(5, "ERROR can not create a converter to produce flat buffers for this field");
+			monitor_HL->go_into_failure_mode();
+		}
+		else {
+			auto flat_buffer = conv_to_flatbuffer->convert(m_channel_name, pvstr);
+			monitor_HL->emit(std::move(flat_buffer));
+			monitor->release(ele);
+		}
 	}
 }
 
