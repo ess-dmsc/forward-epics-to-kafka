@@ -3,6 +3,12 @@ project(forward-epics-to-kafka)
 # Relative to build root
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ..)
 
+if (NOT CMAKE_BUILD_TYPE)
+set(CMAKE_BUILD_TYPE Release)
+endif()
+message("Build type used: ${CMAKE_BUILD_TYPE}")
+
+
 file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/git_commit_current.cxx "empty\n")
 
 add_custom_target(git_commit_now
@@ -117,7 +123,10 @@ endforeach()
 
 add_custom_target(flatbuffers_generate ALL DEPENDS ${flatbuffers_generated_headers})
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -O3 -std=c++11 -Wall -fPIC")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -fPIC -g")
+set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0 -fno-inline")
+set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3")
+#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fomit-frame-pointer")
 #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-inline -fno-omit-frame-pointer")
 #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fprofile-arcs -ftest-coverage")
 #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pg")
