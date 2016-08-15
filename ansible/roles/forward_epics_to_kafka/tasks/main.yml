@@ -5,4 +5,5 @@
 
 #- include: jansson.yml
 - include: jansson_yum.yml
+- include: flatbuffers.yml
 - include: forward-epics-to-kafka.yml
