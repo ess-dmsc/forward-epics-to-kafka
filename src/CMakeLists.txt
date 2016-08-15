@@ -9,7 +9,7 @@ endif()
 message("Build type used: ${CMAKE_BUILD_TYPE}")
 
 
-file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/git_commit_current.cxx "empty\n")
+file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/git_commit_current.cxx "extern \"C\" char const GIT_COMMIT[] = \"NOTSET\";\n")
 
 add_custom_target(git_commit_now
 COMMAND echo 'extern \"C\" char const GIT_COMMIT[] = \"'`git rev-parse HEAD`'\"\;' > ${CMAKE_CURRENT_BINARY_DIR}/git_commit_now
@@ -27,7 +27,7 @@ set(archs linux-x86_64)
 
 # Set e.g. environment $flatc to the directory where flatc resides.
 #unset(flatc CACHE)
-find_program(flatc flatc PATHS "$ENV{flatc}" "$ENV{HOME}/.tools")
+find_program(flatc flatc PATHS "$ENV{flatc}" "$ENV{HOME}/.tools" "/opt/local/flatbuffers")
 
 # find_path(path_epics_base_lib NAMES libca.so PATHS "$ENV{epicsbase_dir}/lib/linux-x86_64")
 
@@ -90,17 +90,17 @@ find_library(path_lib_jansson NAMES jansson PATHS
 
 find_path(path_include_rdkafka NAMES librdkafka/rdkafka.h PATHS
  "$ENV{librdkafka_dir}/include"
- /usr/local/include
+ /opt/local/rdkafka/install/include
 )
 
 find_library(path_lib_rdkafka NAMES rdkafka PATHS
  "$ENV{librdkafka_dir}/lib"
- /usr/local/lib/librdkafka
+ /opt/local/rdkafka/install/lib
 )
 
 find_path(path_include_flatbuffers NAMES flatbuffers/flatbuffers.h PATHS
  "$ENV{flatbuffers_dir}/include"
- /usr/local/include
+ /opt/local/flatbuffers.git/include
 )
 
 
