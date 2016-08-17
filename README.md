@@ -3,15 +3,14 @@
 - Forward EPICS process variables to Kafka topics
 - Listens to a Kafka topic for add/remove of forward mappings
 - Kafka brokers configured as command line parameters
-- Can forward so far the Epics 'NT' normative types, both scalar and array
+- Can forward so far the Epics 'NT' normative types, both scalar and array.
   What else is needed?
 
 
 ## Installation
 
-Ansible playbook in ./ansible even though not all dependencies installed by default
-so far, see below, and in CMakeLists.txt.
-Uses cmake.
+Ansible playbook in ```./ansible``` even though not all dependencies are installed by
+the playbook so far, see below, and in ```CMakeLists.txt```.
 
 
 ### Requirements
@@ -21,14 +20,18 @@ environment variables (see src/CMakeLists.txt) and are so far not installed
 by the ansible playbook:
 
 - EPICS v4 (pvData and pvAccess)
-- Flatbuffers (Having flatc in PATH is a compile-time dependency)
-- librdkafka
 
 Installed by the playbook via yum:
 
 - libjansson
 
+Installed by the playbook currently under /opt/local until standardized:
+
+- librdkafka
+- flatbuffers
+
 Tooling
+
 - C++ compiler with c++11 support (Flatbuffers requires that as well)
 - Doxygen if you want to make docs
 
@@ -39,7 +42,7 @@ Location of compile-time dependencies can be controlled via environment variable
 as well, see CMakeLists.
 
 
-### Build
+### Build (without playbook)
 
 Optional, set CC and CXX environment to your liking.
 
