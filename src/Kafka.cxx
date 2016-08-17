@@ -130,7 +130,11 @@ sptr<Instance> Instance::create(std::string brokers) {
 
 
 void Instance::init() {
-	int const msg_max_len = 10 * 1024 * 1024;
+	int const message_max_bytes                = 10 * 1024 * 1024;
+	int const fetch_message_max_bytes          =  1 * 1024 * 1024;
+	int const receive_message_max_bytes        = 10 * 1024 * 1024;
+	int const queue_buffering_max_messages     = 2048;
+	int const batch_num_messages               =  128;
 
 	int const N1 = 512;
 	char buf1[N1];
@@ -151,13 +155,25 @@ void Instance::init() {
 	// TODO
 	// Do we want a logger callback via rd_kafka_conf_set_log_cb() ?
 
-	snprintf(buf1, N1, "%d", msg_max_len);
+	snprintf(buf1, N1, "%d", message_max_bytes);
 	rd_kafka_conf_set(conf, "message.max.bytes", buf1, errstr, errstr_N);
+
+	snprintf(buf1, N1, "%d", fetch_message_max_bytes);
 	rd_kafka_conf_set(conf, "fetch.message.max.bytes", buf1, errstr, errstr_N);
+
+	snprintf(buf1, N1, "%d", receive_message_max_bytes);
+	rd_kafka_conf_set(conf, "receive.message.max.bytes", buf1, errstr, errstr_N);
+
+	snprintf(buf1, N1, "%d", queue_buffering_max_messages);
+	rd_kafka_conf_set(conf, "queue.buffering.max.messages", buf1, errstr, errstr_N);
+
+	snprintf(buf1, N1, "%d", batch_num_messages);
+	rd_kafka_conf_set(conf, "batch.num.messages", buf1, errstr, errstr_N);
+
 	rd_kafka_conf_set(conf, "statistics.interval.ms", "10000", errstr, errstr_N);
-	rd_kafka_conf_set(conf, "metadata.request.timeout.ms", "2000", errstr, errstr_N);
-	rd_kafka_conf_set(conf, "socket.timeout.ms", "2000", errstr, errstr_N);
-	rd_kafka_conf_set(conf, "session.timeout.ms", "2000", errstr, errstr_N);
+	rd_kafka_conf_set(conf, "metadata.request.timeout.ms", "4000", errstr, errstr_N);
+	rd_kafka_conf_set(conf, "socket.timeout.ms", "4000", errstr, errstr_N);
+	rd_kafka_conf_set(conf, "session.timeout.ms", "4000", errstr, errstr_N);
 
 	rk = rd_kafka_new(RD_KAFKA_PRODUCER, conf, errstr, errstr_N);
 	if (!rk) {
@@ -289,7 +305,7 @@ Topic::Topic(sptr<Instance> ins, std::string topic_name)
 
 	rd_kafka_topic_conf_t * topic_conf = rd_kafka_topic_conf_new();
 	rd_kafka_topic_conf_set(topic_conf, "produce.offset.report", "true", errstr, errstr_N);
-	rd_kafka_topic_conf_set(topic_conf, "message.timeout.ms", "2000", errstr, errstr_N);
+	rd_kafka_topic_conf_set(topic_conf, "message.timeout.ms", "4000", errstr, errstr_N);
 
 	rkt = rd_kafka_topic_new(ins->rk, topic_name.c_str(), topic_conf);
 	if (rkt == nullptr) {
