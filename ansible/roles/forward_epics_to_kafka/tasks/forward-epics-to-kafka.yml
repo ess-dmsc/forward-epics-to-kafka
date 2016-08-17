@@ -1,18 +1,17 @@
 ---
 - include_vars: forward-epics-to-kafka.yml
 
-- name: Install dep cmake
-  yum: name=cmake  state=latest
-  become: true
-
-- name: Fetch code...
-  git: repo={{repository_url}}  dest=/opt/local/forward-epics-to-kafka.git  version={{version}}  depth=1
-
-- name: mkdir build
+- name: forward-epics-to-kafka mkdir build
   file: path=/opt/local/forward-epics-to-kafka  state=directory  owner={{ansible_user_id}}  group={{ansible_user_gid}}
 
-- name: cmake
-  shell: cmake /opt/local/forward-epics-to-kafka.git   chdir=/opt/local/forward-epics-to-kafka
+- name: forward-epics-to-kafka fetch repository
+  git: repo={{repository_url}}  dest=/opt/local/forward-epics-to-kafka.git  version={{version}}  depth=1
+  register: gitclone
 
-- name: make
+- name: forward-epics-to-kafka cmake
+  shell: cmake /opt/local/forward-epics-to-kafka.git   chdir=/opt/local/forward-epics-to-kafka
+  when: gitclone.changed
+
+- name: forward-epics-to-kafka make
   shell: make   chdir=/opt/local/forward-epics-to-kafka
+  when: gitclone.changed

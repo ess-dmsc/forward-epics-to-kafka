@@ -5,5 +5,17 @@
 
 #- include: jansson.yml
 - include: jansson_yum.yml
+
+- include: cmake.yml
+
+- include: rdkafka.yml
+  tags:
+  - rdkafka
+
 - include: flatbuffers.yml
+  tags:
+  - flatbuffers
+
 - include: forward-epics-to-kafka.yml
+  tags:
+  - fwd

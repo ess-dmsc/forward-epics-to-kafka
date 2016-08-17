@@ -1,0 +1,4 @@
+---
+- name: Install dep cmake
+  yum: name=cmake  state=latest
+  become: true

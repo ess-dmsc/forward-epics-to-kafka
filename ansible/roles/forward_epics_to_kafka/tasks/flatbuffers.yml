@@ -1,16 +1,15 @@
 ---
-- name: Install dep cmake
-  yum: name=cmake  state=latest
-  become: true
-
-- name: Flatbuffers repository
-  git: repo=https://github.com/google/flatbuffers.git  dest=/opt/local/flatbuffers.git  depth=1
-
 - name: mkdir build
   file: path=/opt/local/flatbuffers  state=directory  owner={{ansible_user_id}}  group={{ansible_user_gid}}
 
+- name: Flatbuffers repository
+  git: repo=https://github.com/google/flatbuffers.git  dest=/opt/local/flatbuffers.git  depth=1
+  register: gitclone
+
 - name: cmake
   shell: cmake /opt/local/flatbuffers.git   chdir=/opt/local/flatbuffers
+  when: gitclone.changed
 
 - name: make
   shell: make   chdir=/opt/local/flatbuffers
+  when: gitclone.changed
