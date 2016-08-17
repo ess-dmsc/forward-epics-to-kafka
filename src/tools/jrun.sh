@@ -1,7 +1,7 @@
-JAVA=/usr/lib/jvm/java-1.8.0-openjdk.x86_64/bin/java
-JAVA=java
-#KAFKA_LIBS=/opt/kafka/libs
-$JAVA -cp \
+# NOTE
+# KAFKA_LIBS must be set such that libraries are found.
+
+java -cp \
 $KAFKA_LIBS/zkclient-0.8.jar:\
 $KAFKA_LIBS/zookeeper-3.4.6.jar:\
 $KAFKA_LIBS/kafka_2.11-0.10.0.0.jar:\
@@ -13,4 +13,4 @@ $KAFKA_LIBS/slf4j-api-1.7.21.jar:\
 $KAFKA_LIBS/scala-library-2.11.8.jar:\
 $KAFKA_LIBS/scala-parser-combinators_2.11-1.0.4.jar:\
 . \
-KafkaCreateTopics
+KafkaCreateTopics "$@"

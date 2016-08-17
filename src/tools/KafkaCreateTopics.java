@@ -1,3 +1,7 @@
+// First commandline argument is the host:   host:port  e.g. localhost:2181
+
+import java.util.List;
+import java.util.ArrayList;
 import java.util.Properties;
 import kafka.admin.AdminUtils;
 import kafka.utils.ZKStringSerializer$;
@@ -13,6 +17,8 @@ public class KafkaCreateTopics {
 		try {
 			// Comma separated list
 			String zookeeperHosts = "localhost:2181";
+			if (args.length >= 1) zookeeperHosts = args[0];
+			System.out.println("Connect to host: " + zookeeperHosts);
 			int sessionTimeOutInMs = 15 * 1000; // 15 secs
 			int connectionTimeOutInMs = 10 * 1000; // 10 secs
 
@@ -23,18 +29,19 @@ public class KafkaCreateTopics {
 			int noOfReplication = 1;
 			Properties topicConfiguration = new Properties();
 
-			try {
-				AdminUtils.createTopic(zkUtils, "configuration.global", noOfPartitions, noOfReplication, topicConfiguration, RackAwareMode.Enforced$.MODULE$);
-			}
-			catch (kafka.common.TopicExistsException e) {
-			}
-
+			List<String> topics = new ArrayList<String>();
+			topics.add("configuration.global");
 			for (int i1 = 0; i1 < 32; ++i1) {
 				String topicName = String.format("pv.%06d", i1);
+				topics.add(topicName);
+			}
+
+			for (String topic_name : topics) {
 				try {
-					AdminUtils.createTopic(zkUtils, topicName, noOfPartitions, noOfReplication, topicConfiguration, RackAwareMode.Enforced$.MODULE$);
+					AdminUtils.createTopic(zkUtils, topic_name, noOfPartitions, noOfReplication, topicConfiguration, RackAwareMode.Enforced$.MODULE$);
 				}
 				catch (kafka.common.TopicExistsException e) {
+					System.out.println("Exception: " + e);
 				}
 			}
 
