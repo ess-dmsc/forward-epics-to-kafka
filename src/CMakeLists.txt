@@ -25,11 +25,8 @@ DEPENDS git_commit_now
 # We target x86-64
 set(archs linux-x86_64)
 
-# Set e.g. environment $flatc to the directory where flatc resides.
-#unset(flatc CACHE)
+# Search the dev env standard locations, but it will also look in PATH
 find_program(flatc flatc PATHS "$ENV{flatc}" "$ENV{HOME}/.tools" "/opt/local/flatbuffers")
-
-# find_path(path_epics_base_lib NAMES libca.so PATHS "$ENV{epicsbase_dir}/lib/linux-x86_64")
 
 
 # Using 3.15.2 because the v4 modules do not show headers yet for the more recent 3.15.4
