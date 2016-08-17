@@ -6,7 +6,7 @@
   become: true
 
 - name: Fetch code...
-  git: repo={{repository_url}}  dest=/opt/local/forward-epics-to-kafka.git  depth=1
+  git: repo={{repository_url}}  dest=/opt/local/forward-epics-to-kafka.git  version={{version}}  depth=1
 
 - name: mkdir build
   file: path=/opt/local/forward-epics-to-kafka  state=directory  owner={{ansible_user_id}}  group={{ansible_user_gid}}
