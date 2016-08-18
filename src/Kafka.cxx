@@ -13,6 +13,7 @@ namespace ForwardEpicsToKafka {
 namespace Kafka {
 
 InstanceSet & InstanceSet::Set(std::string brokers) {
+	LOG(3, "Kafka InstanceSet with rdkafka version: %s", rd_kafka_version_str());
 	static std::unique_ptr<InstanceSet> kset;
 	if (!kset) {
 		kset.reset(new InstanceSet(brokers));
@@ -78,8 +79,11 @@ static void msg_delivered_cb(
 		LOG(0, "OK delivered (%zd bytes, offset %ld, partition %d): %.*s\n",
 			rkmessage->len, rkmessage->offset, rkmessage->partition, (int)rkmessage->len, (const char *)rkmessage->payload);
 	}
+	auto fbuf = static_cast<Epics::FBBptr::pointer>(rkmessage->_private);
+	if (fbuf) {
+		delete fbuf;
+	}
 }
-
 
 static void kafka_error_cb(rd_kafka_t * rk, int err_i, const char * reason, void * opaque) {
 	// cast necessary because of Kafka API design
@@ -94,8 +98,8 @@ static void kafka_error_cb(rd_kafka_t * rk, int err_i, const char * reason, void
 
 
 
-static int stats_cb(rd_kafka_t * rk, char * json, size_t json_len, void * opaque) {
-	//LOG(3, "INFO stats_cb length %d", json_len);
+static int stats_cb_kafka(rd_kafka_t * rk, char * json, size_t json_len, void * opaque) {
+	LOG(3, "INFO stats_cb length %d   %.*s", json_len, json_len, json);
 	// TODO
 	// What does Kafka want us to return from this callback?
 	return 0;
@@ -130,11 +134,11 @@ sptr<Instance> Instance::create(std::string brokers) {
 
 
 void Instance::init() {
-	int const message_max_bytes                = 10 * 1024 * 1024;
+	int const message_max_bytes                =  1 * 1024 * 1024;
 	int const fetch_message_max_bytes          =  1 * 1024 * 1024;
-	int const receive_message_max_bytes        = 10 * 1024 * 1024;
-	int const queue_buffering_max_messages     = 2048;
-	int const batch_num_messages               =  128;
+	int const receive_message_max_bytes        =  2 * 1024 * 1024;
+	int const queue_buffering_max_messages     = 1024;
+	int const batch_num_messages               =   64;
 
 	int const N1 = 512;
 	char buf1[N1];
@@ -142,11 +146,13 @@ void Instance::init() {
 	int const errstr_N = 512;
 	char errstr[errstr_N];
 
+	int x;
+
 	rd_kafka_conf_t * conf = 0;
 	conf = rd_kafka_conf_new();
 	rd_kafka_conf_set_dr_msg_cb(conf, msg_delivered_cb);
 	rd_kafka_conf_set_error_cb(conf, kafka_error_cb);
-	rd_kafka_conf_set_stats_cb(conf, stats_cb);
+	rd_kafka_conf_set_stats_cb(conf, stats_cb_kafka);
 
 	// Let compiler check type first:
 	KafkaOpaqueType * op1 = this;
@@ -170,7 +176,11 @@ void Instance::init() {
 	snprintf(buf1, N1, "%d", batch_num_messages);
 	rd_kafka_conf_set(conf, "batch.num.messages", buf1, errstr, errstr_N);
 
-	rd_kafka_conf_set(conf, "statistics.interval.ms", "10000", errstr, errstr_N);
+	x = rd_kafka_conf_set(conf, "statistics.interval.ms", "12000", errstr, errstr_N);
+	if (x) {
+		LOG(7, "ERROR can not set callback");
+	}
+
 	rd_kafka_conf_set(conf, "metadata.request.timeout.ms", "4000", errstr, errstr_N);
 	rd_kafka_conf_set(conf, "socket.timeout.ms", "4000", errstr, errstr_N);
 	rd_kafka_conf_set(conf, "session.timeout.ms", "4000", errstr, errstr_N);
@@ -327,7 +337,7 @@ Topic::~Topic() {
 
 
 
-void Topic::produce(BufRange buf) {
+void Topic::produce(Epics::FBBptr fbuf) {
 	int x;
 	int32_t partition = RD_KAFKA_PARTITION_UA;
 
@@ -335,23 +345,29 @@ void Topic::produce(BufRange buf) {
 	void const * key = NULL;
 	size_t key_len = 0;
 
-	// TODO
-	// Encapuslate the payload in my own classes so that I can free them in the callback
-	void * callback_data = NULL;
+	void * callback_data = fbuf.get();
 	// no flags means that we reown our buffer when Kafka calls our callback.
-	int msgflags = RD_KAFKA_MSG_F_COPY; // 0, RD_KAFKA_MSG_F_COPY, RD_KAFKA_MSG_F_FREE
+	int msgflags = 0; // 0, RD_KAFKA_MSG_F_COPY, RD_KAFKA_MSG_F_FREE
 
 	// TODO
 	// How does Kafka report the error?
 	// API docs state that error codes are given in 'errno'
 	// Check that this is thread safe ?!?
-	x = rd_kafka_produce(rkt, partition, msgflags, buf.begin, buf.size, key, key_len, callback_data);
+
+	//x = rd_kafka_produce(rkt, partition, msgflags, buf.begin, buf.size, key, key_len, callback_data);
+	x = rd_kafka_produce(rkt, partition, msgflags, fbuf->GetBufferPointer(), fbuf->GetSize(), key, key_len, callback_data);
 	if (x != 0) {
 		LOG(7, "ERROR on produce topic %s  partition %i: %s", rd_kafka_topic_name(rkt), partition, rd_kafka_err2str(rd_kafka_last_error()));
 		throw std::runtime_error("ERROR on message send");
+		// even when taking out exception in future, return here
+		return;
 	}
 
-	LOG(0, "sending to topic %s partition %i", rd_kafka_topic_name(rkt), partition);
+	// After no Kafka error was reported on produce, we borrow the object to Kafka
+	// until the callback is called.
+	fbuf.release();
+
+	//LOG(0, "sent to topic %s partition %i", rd_kafka_topic_name(rkt), partition);
 }
 
 

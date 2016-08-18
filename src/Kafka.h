@@ -17,6 +17,7 @@ Simple load balance over the available producers.
 #include "tools.h"
 
 #include <librdkafka/rdkafka.h>
+#include "fbhelper.h"
 
 
 namespace BrightnESS {
@@ -32,7 +33,7 @@ public:
 Topic(sptr<Instance> ins, std::string topic_name);
 ~Topic();
 
-void produce(BufRange buf);
+void produce(Epics::FBBptr fbuf);
 
 // Should make a friend method out of this..
 void error_from_kafka_callback();

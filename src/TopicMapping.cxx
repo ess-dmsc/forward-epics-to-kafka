@@ -124,7 +124,8 @@ void TopicMapping::emit(ForwardEpicsToKafka::Epics::FBBptr fbuf) {
 	if (not debug_messages) {
 		//LOG(5, "TM %d producing size %lu", id, fbuf->GetSize());
 		// Produce the actual payload
-		top->produce({reinterpret_cast<char*>(fbuf->GetBufferPointer()), fbuf->GetSize()});
+		//top->produce({reinterpret_cast<char*>(fbuf->GetBufferPointer()), fbuf->GetSize()});
+		top->produce(std::move(fbuf));
 		//auto hex = binary_to_hex(reinterpret_cast<char*>(fbuf->GetBufferPointer()), fbuf->GetSize());
 		//LOG(5, "packet in hex %d: %.*s", fbuf->GetSize(), hex.size(), hex.data());
 	}
@@ -135,24 +136,20 @@ void TopicMapping::emit(ForwardEpicsToKafka::Epics::FBBptr fbuf) {
 
 		// TODO
 		// Right now, Kafka will take its own copy.  Change in the future.
-		static std::array<char, 8*1024> buf1;
-		static std::array<char, 8*1024> buf2;
-		static int flag1 = 1;
-		if (flag1) {
-			buf1.fill('-');
-			buf2.fill('-');
-			flag1 = 0;
-		}
-		if (false) {
-			top->produce({buf2.data(), 800});
-		}
+		static std::vector<char> buf1(8*1024, '-');
+		static std::vector<char> buf2(8*1024, '-');
 		if (true) {
 			auto prod = [this, &top](uint32_t sid, uint32_t val) {
 				auto n1 = snprintf(buf1.data(), buf1.size(), "sid %12u val %12u  topic %32.32s", sid, val, topic_name().c_str());
 				// Artifical payload:
 				*(buf1.data()+n1) = '-';
 				n1 = 4 * 1024;
-				top->produce({buf1.data(), size_t(n1)});
+
+				// Right now, can not produce because we limit to FBBptr because of memory management
+				// TODO
+				//top->produce({buf1.data(), size_t(n1)});
+
+
 				//LOG(3, "prod: %s", buf1.data());
 			};
 			if (sid == 0) {
