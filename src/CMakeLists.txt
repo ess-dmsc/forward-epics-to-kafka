@@ -162,7 +162,8 @@ set_property(TARGET jansson PROPERTY IMPORTED_LOCATION ${path_lib_jansson})
 
 
 
-add_executable(forward-epics-to-kafka
+set(tgt forward-epics-to-kafka)
+add_executable(${tgt}
 helper.cxx
 logger.cxx
 configuration.cxx
@@ -173,67 +174,52 @@ Config.cxx
 main.cxx
 ${CMAKE_CURRENT_BINARY_DIR}/git_commit_current.cxx
 )
-add_dependencies(forward-epics-to-kafka git_commit_current)
+add_dependencies(${tgt} git_commit_current)
 
-set_property(TARGET forward-epics-to-kafka APPEND PROPERTY INCLUDE_DIRECTORIES ${path_include_epics_base})
-set_property(TARGET forward-epics-to-kafka APPEND PROPERTY INCLUDE_DIRECTORIES ${path_include_epics_base}/os/Linux)
-set_property(TARGET forward-epics-to-kafka APPEND PROPERTY INCLUDE_DIRECTORIES ${path_include_epics_base}/compiler/gcc)
-set_property(TARGET forward-epics-to-kafka APPEND PROPERTY INCLUDE_DIRECTORIES ${path_include_epics_pvData})
-set_property(TARGET forward-epics-to-kafka APPEND PROPERTY INCLUDE_DIRECTORIES ${path_include_epics_pvAccess})
-set_property(TARGET forward-epics-to-kafka APPEND PROPERTY INCLUDE_DIRECTORIES ${path_include_rdkafka})
-set_property(TARGET forward-epics-to-kafka APPEND PROPERTY INCLUDE_DIRECTORIES ${path_include_jansson})
-set_property(TARGET forward-epics-to-kafka APPEND PROPERTY INCLUDE_DIRECTORIES ${path_include_flatbuffers})
+set_property(TARGET ${tgt} APPEND PROPERTY INCLUDE_DIRECTORIES ${path_include_epics_base})
+set_property(TARGET ${tgt} APPEND PROPERTY INCLUDE_DIRECTORIES ${path_include_epics_base}/os/Linux)
+set_property(TARGET ${tgt} APPEND PROPERTY INCLUDE_DIRECTORIES ${path_include_epics_base}/compiler/gcc)
+set_property(TARGET ${tgt} APPEND PROPERTY INCLUDE_DIRECTORIES ${path_include_epics_pvData})
+set_property(TARGET ${tgt} APPEND PROPERTY INCLUDE_DIRECTORIES ${path_include_epics_pvAccess})
+set_property(TARGET ${tgt} APPEND PROPERTY INCLUDE_DIRECTORIES ${path_include_rdkafka})
+set_property(TARGET ${tgt} APPEND PROPERTY INCLUDE_DIRECTORIES ${path_include_jansson})
+set_property(TARGET ${tgt} APPEND PROPERTY INCLUDE_DIRECTORIES ${path_include_flatbuffers})
 
 # Find the generated flat buffer
-set_property(TARGET forward-epics-to-kafka APPEND PROPERTY INCLUDE_DIRECTORIES ${CMAKE_CURRENT_BINARY_DIR})
+set_property(TARGET ${tgt} APPEND PROPERTY INCLUDE_DIRECTORIES ${CMAKE_CURRENT_BINARY_DIR})
 
 
-add_dependencies(forward-epics-to-kafka flatbuffers_generate)
+add_dependencies(${tgt} flatbuffers_generate)
 
-target_link_libraries(forward-epics-to-kafka epicsbase)
-target_link_libraries(forward-epics-to-kafka libpvData)
-target_link_libraries(forward-epics-to-kafka libpvAccess)
-target_link_libraries(forward-epics-to-kafka librdkafka)
-target_link_libraries(forward-epics-to-kafka jansson)
-
-
+target_link_libraries(${tgt} epicsbase)
+target_link_libraries(${tgt} libpvData)
+target_link_libraries(${tgt} libpvAccess)
+target_link_libraries(${tgt} librdkafka)
+target_link_libraries(${tgt} jansson)
 
 
-add_executable(read-buffer
+
+set(tgt read-buffer)
+add_executable(${tgt}
 helper.cxx
 logger.cxx
 read-buffer.cxx
 )
-set_property(TARGET read-buffer APPEND PROPERTY INCLUDE_DIRECTORIES ${path_include_flatbuffers})
-set_property(TARGET read-buffer APPEND PROPERTY INCLUDE_DIRECTORIES ${CMAKE_CURRENT_BINARY_DIR})
-add_dependencies(read-buffer flatbuffers_generate)
+set_property(TARGET ${tgt} APPEND PROPERTY INCLUDE_DIRECTORIES ${path_include_flatbuffers})
+set_property(TARGET ${tgt} APPEND PROPERTY INCLUDE_DIRECTORIES ${CMAKE_CURRENT_BINARY_DIR})
+add_dependencies(${tgt} flatbuffers_generate)
 
 
 
 set(tgt config-msg)
-add_executable(config-msg
+add_executable(${tgt}
 helper.cxx
 logger.cxx
 config-msg.cxx
 ${CMAKE_CURRENT_BINARY_DIR}/git_commit_current.cxx
 )
-add_dependencies(forward-epics-to-kafka git_commit_current)
+add_dependencies(${tgt} git_commit_current)
 set_property(TARGET ${tgt} APPEND PROPERTY INCLUDE_DIRECTORIES ${path_include_jansson})
 set_property(TARGET ${tgt} APPEND PROPERTY INCLUDE_DIRECTORIES ${path_include_rdkafka})
 target_link_libraries(${tgt} jansson)
 target_link_libraries(${tgt} librdkafka)
-
-
-
-#set(files-copy "")
-#list(APPEND files-copy test-adding-removing.rb)
-
-set(x test-adding-removing.rb)
-add_custom_command(
-OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${x}
-COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/${x} ${CMAKE_CURRENT_BINARY_DIR}/${x}
-DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${x})
-
-add_custom_target(copy_files ALL DEPENDS
-"${CMAKE_CURRENT_BINARY_DIR}/test-adding-removing.rb"
-)
