@@ -147,8 +147,6 @@ void Instance::init() {
 	int const errstr_N = 512;
 	char errstr[errstr_N];
 
-	int x;
-
 	rd_kafka_conf_t * conf = 0;
 	conf = rd_kafka_conf_new();
 	rd_kafka_conf_set_dr_msg_cb(conf, msg_delivered_cb);
@@ -162,29 +160,32 @@ void Instance::init() {
 	// TODO
 	// Do we want a logger callback via rd_kafka_conf_set_log_cb() ?
 
-	snprintf(buf1, N1, "%d", message_max_bytes);
-	rd_kafka_conf_set(conf, "message.max.bytes", buf1, errstr, errstr_N);
+	{
+		std::vector<std::vector<std::string>> confs = {
+			//{"queued.min.messages", "10"},
+			{"statistics.interval.ms", "20000"},
+			{"metadata.request.timeout.ms", "15000"},
+			{"socket.timeout.ms", "4000"},
+			{"session.timeout.ms", "15000"},
+		};
 
-	snprintf(buf1, N1, "%d", fetch_message_max_bytes);
-	rd_kafka_conf_set(conf, "fetch.message.max.bytes", buf1, errstr, errstr_N);
+		auto set_int = [&buf1, &N1, &confs](char const * name, int value){
+			snprintf(buf1, N1, "%d", value);
+			confs.push_back({(char*)name, (char*)buf1});
+		};
 
-	snprintf(buf1, N1, "%d", receive_message_max_bytes);
-	rd_kafka_conf_set(conf, "receive.message.max.bytes", buf1, errstr, errstr_N);
+		set_int("message.max.bytes", message_max_bytes);
+		set_int("fetch.message.max.bytes", fetch_message_max_bytes);
+		set_int("receive.message.max.bytes", receive_message_max_bytes);
+		set_int("queue.buffering.max.messages", queue_buffering_max_messages);
+		set_int("batch.num.messages", batch_num_messages);
 
-	snprintf(buf1, N1, "%d", queue_buffering_max_messages);
-	rd_kafka_conf_set(conf, "queue.buffering.max.messages", buf1, errstr, errstr_N);
-
-	snprintf(buf1, N1, "%d", batch_num_messages);
-	rd_kafka_conf_set(conf, "batch.num.messages", buf1, errstr, errstr_N);
-
-	x = rd_kafka_conf_set(conf, "statistics.interval.ms", "12000", errstr, errstr_N);
-	if (x) {
-		LOG(7, "ERROR can not set callback");
+		for (auto & c : confs) {
+			if (RD_KAFKA_CONF_OK != rd_kafka_conf_set(conf, c.at(0).c_str(), c.at(1).c_str(), errstr, errstr_N)) {
+				LOG(7, "error setting config: %s", c.at(0).c_str());
+			}
+		}
 	}
-
-	rd_kafka_conf_set(conf, "metadata.request.timeout.ms", "4000", errstr, errstr_N);
-	rd_kafka_conf_set(conf, "socket.timeout.ms", "4000", errstr, errstr_N);
-	rd_kafka_conf_set(conf, "session.timeout.ms", "4000", errstr, errstr_N);
 
 	rk = rd_kafka_new(RD_KAFKA_PRODUCER, conf, errstr, errstr_N);
 	if (!rk) {
@@ -315,8 +316,18 @@ Topic::Topic(sptr<Instance> ins, std::string topic_name)
 	char errstr[errstr_N];
 
 	rd_kafka_topic_conf_t * topic_conf = rd_kafka_topic_conf_new();
-	rd_kafka_topic_conf_set(topic_conf, "produce.offset.report", "true", errstr, errstr_N);
-	rd_kafka_topic_conf_set(topic_conf, "message.timeout.ms", "4000", errstr, errstr_N);
+	{
+		std::vector<std::vector<std::string>> confs = {
+			{"produce.offset.report", "false"},
+			{"request.required.acks", "0"},
+			{"message.timeout.ms", "15000"},
+		};
+		for (auto & c : confs) {
+			if (RD_KAFKA_CONF_OK != rd_kafka_topic_conf_set(topic_conf, c.at(0).c_str(), c.at(1).c_str(), errstr, errstr_N)) {
+				LOG(7, "error setting config: %s", c.at(0).c_str());
+			}
+		}
+	}
 
 	rkt = rd_kafka_topic_new(ins->rk, topic_name.c_str(), topic_conf);
 	if (rkt == nullptr) {
