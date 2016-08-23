@@ -1,0 +1,4 @@
+---
+# Header-only lib
+- name: RapidJSON
+  git: repo=https://github.com/miloyip/rapidjson.git  dest=/opt/local/rapidjson.git  depth=1

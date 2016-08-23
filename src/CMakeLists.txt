@@ -109,6 +109,11 @@ find_path(path_include_flatbuffers NAMES flatbuffers/flatbuffers.h PATHS
  /opt/local/flatbuffers.git/include
 )
 
+find_path(path_include_rapidjson NAMES rapidjson/document.h PATHS
+ "$ENV{rapidjson_dir}/include"
+ /opt/local/rapidjson.git/include
+)
+
 
 set(cmake_include_current_dir on)
 
@@ -186,6 +191,7 @@ set_property(TARGET ${tgt} APPEND PROPERTY INCLUDE_DIRECTORIES ${path_include_ep
 set_property(TARGET ${tgt} APPEND PROPERTY INCLUDE_DIRECTORIES ${path_include_rdkafka})
 set_property(TARGET ${tgt} APPEND PROPERTY INCLUDE_DIRECTORIES ${path_include_jansson})
 set_property(TARGET ${tgt} APPEND PROPERTY INCLUDE_DIRECTORIES ${path_include_flatbuffers})
+set_property(TARGET ${tgt} APPEND PROPERTY INCLUDE_DIRECTORIES ${path_include_rapidjson})
 
 # Find the generated flat buffer
 set_property(TARGET ${tgt} APPEND PROPERTY INCLUDE_DIRECTORIES ${CMAKE_CURRENT_BINARY_DIR})

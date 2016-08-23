@@ -16,6 +16,10 @@
 
 #include "jansson.h"
 
+#include "rapidjson/document.h"
+#include "rapidjson/writer.h"
+#include "rapidjson/stringbuffer.h"
+
 #include <unistd.h>
 #include <getopt.h>
 
@@ -103,53 +107,29 @@ Main & main;
 
 void ConfigCB::operator() (std::string const & msg) {
 	using std::string;
+	using namespace rapidjson;
 	LOG(0, "Command received: %s", msg.c_str());
-
-	auto j1 = json_loads(msg.c_str(), 0, nullptr);
-	if (!j1) {
-		LOG(3, "error can not parse json");
-		return;
-	}
-
-	auto j_cmd = json_object_get(j1, "cmd");
-	if (!j_cmd) {
-		LOG(3, "error payload has no cmd");
-		return;
-	}
-
-	auto cmd = json_string_value(j_cmd);
-	if (!cmd) {
-		LOG(3, "error cmd has no value!");
-		return;
-	}
-
-	if (string("add") == cmd) {
-		auto channel = json_string_value(json_object_get(j1, "channel"));
-		auto topic   = json_string_value(json_object_get(j1, "topic"));
+	Document j0;
+	j0.Parse(msg.c_str());
+	if (j0["cmd"] == "add") {
+		auto channel = j0["channel"].GetString();
+		auto topic   = j0["topic"].GetString();
 		if (channel and topic) {
 			main.mapping_add(channel, topic);
 		}
 	}
-
-	else if (string("remove") == cmd) {
-		auto channel = json_string_value(json_object_get(j1, "channel"));
+	if (j0["cmd"] == "remove") {
+		auto channel = j0["channel"].GetString();
 		if (channel) {
 			main.mapping_remove_topic(channel);
 		}
 	}
-
-	else if (string("list") == cmd) {
+	if (j0["cmd"] == "list") {
 		main.mapping_list();
 	}
-
-	else if (string("exit") == cmd) {
+	if (j0["cmd"] == "exit") {
 		main.forwarding_exit();
 	}
-
-	else {
-	}
-
-	json_decref(j1);
 }
 
 
