@@ -71,13 +71,14 @@ static void msg_delivered_cb(
 
 	// TODO
 	// Use callback to reuse our message buffers
-	LOG(0, "delivery: %s   offset %ld", rd_kafka_message_errstr(rkmessage), rkmessage->offset);
 	if (rkmessage->err) {
-		LOG(6, "ERROR on delivery, topic %s, %s", rd_kafka_topic_name(rkmessage->rkt), rd_kafka_err2str(rkmessage->err));
+		LOG(6, "ERROR on delivery, topic %s, %s, %s", rd_kafka_topic_name(rkmessage->rkt), rd_kafka_err2str(rkmessage->err), rd_kafka_message_errstr(rkmessage));
 	}
 	else {
-		LOG(0, "OK delivered (%zd bytes, offset %ld, partition %d): %.*s\n",
-			rkmessage->len, rkmessage->offset, rkmessage->partition, (int)rkmessage->len, (const char *)rkmessage->payload);
+		//LOG(3, "OK delivered (%zd bytes, offset %ld, partition %d): %.*s\n",
+		//	rkmessage->len, rkmessage->offset, rkmessage->partition, (int)rkmessage->len, (const char *)rkmessage->payload);
+		//LOG(3, "OK delivered (%zd bytes, offset %ld, partition %d)",
+		//	rkmessage->len, rkmessage->offset, rkmessage->partition);
 	}
 	auto fbuf = static_cast<Epics::FBBptr::pointer>(rkmessage->_private);
 	if (fbuf) {
