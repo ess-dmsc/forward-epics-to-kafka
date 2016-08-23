@@ -26,6 +26,7 @@ void dwlog(int level, char const * fmt, char const * file, int line, char const 
 
 	vfprintf(f1, buf1, ap);
 	va_end(ap);
+	fflush(f1);
 }
 
 void break1() {
