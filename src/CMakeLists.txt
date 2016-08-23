@@ -95,11 +95,13 @@ find_library(path_lib_jansson NAMES jansson PATHS
 find_path(path_include_rdkafka NAMES librdkafka/rdkafka.h PATHS
  "$ENV{librdkafka_dir}/include"
  /opt/local/rdkafka/install/include
+ /usr/local/include
 )
 
 find_library(path_lib_rdkafka NAMES rdkafka PATHS
  "$ENV{librdkafka_dir}/lib"
  /opt/local/rdkafka/install/lib
+ /usr/local/lib
 )
 
 find_path(path_include_flatbuffers NAMES flatbuffers/flatbuffers.h PATHS
