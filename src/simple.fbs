@@ -54,6 +54,7 @@ table EpicsPV {
 	name: string;
 	pv: PV;
 	timeStamp: timeStamp_t;
+	d2: [float];
 }
 
 root_type EpicsPV;

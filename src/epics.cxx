@@ -15,6 +15,7 @@ watchdog thread.
 #include <type_traits>
 #include "config.h"
 #include "helper.h"
+#include <vector>
 
 
 namespace BrightnESS {
@@ -398,6 +399,19 @@ FBT convert(std::string & channel_name, epics::pvData::PVStructure::shared_point
 	auto off_name = builder->CreateString(channel_name);
 
 	EpicsPVBuilder pv_builder(*builder);
+
+	#if PAYLOAD_TESTING
+	// Dummy payload for testing:
+	class dummypayload : public std::vector<float> {
+	public:
+		dummypayload() {
+			resize(256 * 1024);
+		}
+	};
+	static dummypayload d2;
+	auto off_d2 = builder->CreateVector(d2.data(), d2.size());
+	pv_builder.add_d2(off_d2);
+	#endif
 
 	pv_builder.add_name(off_name);
 
