@@ -10,27 +10,28 @@
 #include <getopt.h>
 #include "git_commit_current.h"
 #include "logger.h"
-#include "jansson.h"
 #include <librdkafka/rdkafka.h>
+#include "rapidjson/document.h"
+#include "rapidjson/writer.h"
+#include "rapidjson/stringbuffer.h"
 
 using std::string;
 
 
 class JSONMsg {
 public:
-json_t * json = nullptr;
-char * m_msgbuf = nullptr;
+std::unique_ptr<rapidjson::Document> json = nullptr;
+std::string m_msgbuf;
 std::string msgbuf() {
-	if (not m_msgbuf) {
-		m_msgbuf = json_dumps(json, JSON_COMPACT | JSON_SORT_KEYS);
+	using namespace rapidjson;
+	if (m_msgbuf.size() == 0 and json) {
+		StringBuffer buffer;
+		Writer<StringBuffer> writer(buffer);
+		json->Accept(writer);
+		//m_msgbuf = json->GetString();
+		m_msgbuf = buffer.GetString();
 	}
 	return m_msgbuf;
-}
-~JSONMsg() {
-	if (m_msgbuf) {
-		free(m_msgbuf);
-		m_msgbuf = nullptr;
-	}
 }
 };
 
@@ -50,39 +51,53 @@ std::string topic;
 
 
 std::unique_ptr<JSONMsg> create_msg_list() {
-	auto j0 = json_object();
-	json_object_set(j0, "cmd", json_string("list"));
+	using namespace rapidjson;
 	auto ret = std::unique_ptr<JSONMsg>(new JSONMsg);
-	ret->json = j0;
+	ret->json.reset(new rapidjson::Document);
+	auto & j0 = *ret->json;
+	auto & allo = j0.GetAllocator();
+	j0.SetObject();
+	j0.AddMember("cmd", "list", allo);
 	return ret;
 }
 
 std::unique_ptr<JSONMsg> create_msg_add(char const * channel, char const * topic) {
-	auto j0 = json_object();
-	json_object_set(j0, "cmd", json_string("add"));
-	json_object_set(j0, "channel", json_string(channel));
-	json_object_set(j0, "topic", json_string(topic));
+	using namespace rapidjson;
 	auto ret = std::unique_ptr<JSONMsg>(new JSONMsg);
-	ret->json = j0;
+	ret->json.reset(new rapidjson::Document);
+	auto & j0 = *ret->json;
+	auto & allo = j0.GetAllocator();
+	j0.SetObject();
+	j0.AddMember("cmd", Value().SetString("add"), allo);
+	j0.AddMember("channel", Value(channel, allo), allo);
+	j0.AddMember("topic", Value(topic, allo), allo);
 	return ret;
 }
 
 std::unique_ptr<JSONMsg> create_msg_remove(char const * channel) {
-	auto j0 = json_object();
-	json_object_set(j0, "cmd", json_string("remove"));
-	json_object_set(j0, "channel", json_string(channel));
+	using namespace rapidjson;
 	auto ret = std::unique_ptr<JSONMsg>(new JSONMsg);
-	ret->json = j0;
+	ret->json.reset(new rapidjson::Document);
+	auto & j0 = *ret->json;
+	auto & allo = j0.GetAllocator();
+	j0.SetObject();
+	j0.AddMember("cmd", "remove", allo);
+	j0.AddMember("channel1", Value(channel, allo).Move(), allo);
+	j0.AddMember("channel2", Value().SetString(channel, allo), allo);
+	j0.AddMember("channel3", Value().SetString(channel, allo).Move(), allo);
 	return ret;
 }
 
 
 
 std::unique_ptr<JSONMsg> create_msg_exit() {
-	auto j0 = json_object();
-	json_object_set(j0, "cmd", json_string("exit"));
+	using namespace rapidjson;
 	auto ret = std::unique_ptr<JSONMsg>(new JSONMsg);
-	ret->json = j0;
+	ret->json.reset(new rapidjson::Document);
+	auto & j0 = *ret->json;
+	auto & allo = j0.GetAllocator();
+	j0.SetObject();
+	j0.AddMember("cmd", "exit", allo);
 	return ret;
 }
 

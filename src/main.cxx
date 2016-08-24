@@ -14,8 +14,6 @@
 #include "TopicMapping.h"
 #include "Config.h"
 
-#include "jansson.h"
-
 #include "rapidjson/document.h"
 #include "rapidjson/writer.h"
 #include "rapidjson/stringbuffer.h"

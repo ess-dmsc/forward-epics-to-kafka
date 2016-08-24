@@ -229,5 +229,6 @@ ${CMAKE_CURRENT_BINARY_DIR}/git_commit_current.cxx
 add_dependencies(${tgt} git_commit_current)
 set_property(TARGET ${tgt} APPEND PROPERTY INCLUDE_DIRECTORIES ${path_include_jansson})
 set_property(TARGET ${tgt} APPEND PROPERTY INCLUDE_DIRECTORIES ${path_include_rdkafka})
+set_property(TARGET ${tgt} APPEND PROPERTY INCLUDE_DIRECTORIES ${path_include_rapidjson})
 target_link_libraries(${tgt} jansson)
 target_link_libraries(${tgt} librdkafka)

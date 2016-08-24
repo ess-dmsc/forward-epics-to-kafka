@@ -23,14 +23,6 @@ static void kafka_error_cb(rd_kafka_t * rk, int err_i, const char * reason, void
 
 
 
-static int stats_cb(rd_kafka_t * rk, char * json, size_t json_len, void * opaque) {
-	//LOG(3, "INFO stats_cb length %d", json_len);
-	// TODO
-	// What does Kafka want us to return from this callback?
-	return 0;
-}
-
-
 static void rebalance_cb(
 	rd_kafka_t *rk,
 	rd_kafka_resp_err_t err,
@@ -79,7 +71,7 @@ Listener::Listener(KafkaSettings settings) {
 	std::vector<std::vector<std::string>> confs = {
 		{"message.max.bytes", "100000"},
 		{"fetch.message.max.bytes", "100000"},
-		{"statistics.interval.ms", "10000"},
+		//{"statistics.interval.ms", "10000"},
 		{"metadata.request.timeout.ms", "2000"},
 		{"socket.timeout.ms", "2000"},
 		{"session.timeout.ms", "2000"},
@@ -109,7 +101,7 @@ Listener::Listener(KafkaSettings settings) {
 
 	//rd_kafka_conf_set_dr_msg_cb(conf, msg_delivered_cb);
 	rd_kafka_conf_set_error_cb(conf, kafka_error_cb);
-	rd_kafka_conf_set_stats_cb(conf, stats_cb);
+	//rd_kafka_conf_set_stats_cb(conf, stats_cb);
 	rd_kafka_conf_set_rebalance_cb(conf, rebalance_cb);
 	//rd_kafka_conf_set_opaque(conf, this);
 
