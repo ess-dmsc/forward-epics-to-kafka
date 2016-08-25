@@ -10,13 +10,10 @@ message("Build type used: ${CMAKE_BUILD_TYPE}")
 
 
 
-# This does not yet work with cmake 2.8.11 as on the ESS dev env.
-# GIT_COMMIT will not be set properly.
-
 file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/git_commit_current.cxx "extern \"C\" char const GIT_COMMIT[] = \"NOTSET\";\n")
 
 add_custom_target(git_commit_now ALL
-COMMAND echo 'extern \"C\" char const GIT_COMMIT[] = \"'`pwd`::`git rev-parse HEAD`'\"\;' > ${CMAKE_CURRENT_BINARY_DIR}/git_commit_now
+COMMAND echo 'extern \"C\" char const GIT_COMMIT[] = \"'`git rev-parse HEAD`'\"\;' > ${CMAKE_CURRENT_BINARY_DIR}/git_commit_now
 WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
 )
 

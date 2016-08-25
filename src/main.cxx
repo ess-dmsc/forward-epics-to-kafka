@@ -426,7 +426,8 @@ int main(int argc, char ** argv) {
 		return 1;
 	}
 
-	printf("forward-epics-to-kafka-0.0.1  [%s]   (ESS, BrightnESS)\n", GIT_COMMIT);
+	printf("forward-epics-to-kafka-0.0.1  (ESS, BrightnESS)\n");
+	printf("  %s\n", GIT_COMMIT);
 	puts("  Contact: dominik.werder@psi.ch");
 	puts("");
 
