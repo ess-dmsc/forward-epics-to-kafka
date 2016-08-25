@@ -1,4 +1,0 @@
----
-N: jansson-2.7
-dbuild: "{{path_libs_build}}/{{N}}-build"
-dinstall: "{{path_libs_build}}/{{N}}-install"

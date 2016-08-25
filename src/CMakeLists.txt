@@ -80,18 +80,6 @@ find_library(path_lib_epics_pvAccess NAMES pvAccess pvAccessCPP PATHS
  /opt/epics/modules/pvAccessCPP/${epics_pvAccess_version}/${epics_base_version}/lib/${epics_arch}
 )
 
-find_path(path_include_jansson NAMES jansson.h PATHS
- /usr/include
- "$ENV{jansson_dir}/include"
- /opt/local/jansson-2.7-install/include
-)
-
-find_library(path_lib_jansson NAMES jansson PATHS
- /usr/lib64
- "$ENV{jansson_dir}/lib"
- /opt/local/jansson-2.7-install/lib
-)
-
 find_path(path_include_rdkafka NAMES librdkafka/rdkafka.h PATHS
  "$ENV{librdkafka_dir}/include"
  /opt/local/rdkafka/install/include
@@ -161,9 +149,6 @@ set_property(TARGET libpvAccess PROPERTY IMPORTED_LOCATION ${path_lib_epics_pvAc
 add_library(librdkafka SHARED IMPORTED)
 set_property(TARGET librdkafka PROPERTY IMPORTED_LOCATION ${path_lib_rdkafka})
 
-add_library(jansson SHARED IMPORTED)
-set_property(TARGET jansson PROPERTY IMPORTED_LOCATION ${path_lib_jansson})
-
 
 
 
@@ -189,7 +174,6 @@ set_property(TARGET ${tgt} APPEND PROPERTY INCLUDE_DIRECTORIES ${path_include_ep
 set_property(TARGET ${tgt} APPEND PROPERTY INCLUDE_DIRECTORIES ${path_include_epics_pvData})
 set_property(TARGET ${tgt} APPEND PROPERTY INCLUDE_DIRECTORIES ${path_include_epics_pvAccess})
 set_property(TARGET ${tgt} APPEND PROPERTY INCLUDE_DIRECTORIES ${path_include_rdkafka})
-set_property(TARGET ${tgt} APPEND PROPERTY INCLUDE_DIRECTORIES ${path_include_jansson})
 set_property(TARGET ${tgt} APPEND PROPERTY INCLUDE_DIRECTORIES ${path_include_flatbuffers})
 set_property(TARGET ${tgt} APPEND PROPERTY INCLUDE_DIRECTORIES ${path_include_rapidjson})
 
@@ -203,7 +187,6 @@ target_link_libraries(${tgt} epicsbase)
 target_link_libraries(${tgt} libpvData)
 target_link_libraries(${tgt} libpvAccess)
 target_link_libraries(${tgt} librdkafka)
-target_link_libraries(${tgt} jansson)
 
 
 
@@ -227,8 +210,6 @@ config-msg.cxx
 ${CMAKE_CURRENT_BINARY_DIR}/git_commit_current.cxx
 )
 add_dependencies(${tgt} git_commit_current)
-set_property(TARGET ${tgt} APPEND PROPERTY INCLUDE_DIRECTORIES ${path_include_jansson})
 set_property(TARGET ${tgt} APPEND PROPERTY INCLUDE_DIRECTORIES ${path_include_rdkafka})
 set_property(TARGET ${tgt} APPEND PROPERTY INCLUDE_DIRECTORIES ${path_include_rapidjson})
-target_link_libraries(${tgt} jansson)
 target_link_libraries(${tgt} librdkafka)

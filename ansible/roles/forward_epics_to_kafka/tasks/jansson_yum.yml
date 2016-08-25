@@ -1,8 +1,0 @@
----
-- name: Install jansson via yum
-  yum: name=jansson  state=latest
-  become: true
-
-- name: Install jansson-devel via yum
-  yum: name=jansson-devel  state=latest
-  become: true

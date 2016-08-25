@@ -23,12 +23,13 @@ by the ansible playbook:
 
 Installed by the playbook via yum:
 
-- libjansson
+- cmake
 
 Installed by the playbook currently under /opt/local until standardized:
 
 - librdkafka
 - flatbuffers
+- RapidJSON
 
 Tooling
 
