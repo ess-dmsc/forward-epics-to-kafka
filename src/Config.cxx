@@ -1,6 +1,12 @@
 #include "Config.h"
 #include "logger.h"
-#include <syslog.h>
+
+
+#ifdef _MSC_VER
+	#define LOG_DEBUG 7
+#else
+	#include <syslog.h>
+#endif
 
 namespace BrightnESS {
 namespace ForwardEpicsToKafka {

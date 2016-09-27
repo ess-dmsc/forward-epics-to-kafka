@@ -13,7 +13,7 @@ watchdog thread.
 #include <exception>
 #include <random>
 #include <type_traits>
-#include "config.h"
+#include "local_config.h"
 #include "helper.h"
 #include <vector>
 

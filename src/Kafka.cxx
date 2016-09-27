@@ -1,11 +1,15 @@
 #include "Kafka.h"
 #include "logger.h"
-#include "config.h"
+#include "local_config.h"
 
 #include <algorithm>
 
 // Kafka uses LOG_DEBUG as defined here:
-#include <syslog.h>
+#ifdef _MSC_VER
+	#define LOG_DEBUG 7
+#else
+	#include <syslog.h>
+#endif
 
 
 namespace BrightnESS {
@@ -36,7 +40,7 @@ sptr<Instance> InstanceSet::instance() {
 	auto LIM = std::numeric_limits<size_t>::max();
 	size_t min = LIM;
 	for (auto it2 = instances.begin(); it2 != instances.end(); ++it2) {
-		if (not (*it2)->instance_failure()) {
+		if (!(*it2)->instance_failure()) {
 			if ((*it2)->topics.size() < min  ||  min == LIM) {
 				min = (*it2)->topics.size();
 				it1 = it2;
@@ -231,7 +235,7 @@ void Instance::poll_stop() {
 
 
 void Instance::error_from_kafka_callback() {
-	if (not error_from_kafka_callback_flag.exchange(true)) {
+	if (!error_from_kafka_callback_flag.exchange(true)) {
 		for (auto & tmw : topics) {
 			if (auto tm = tmw.lock()) {
 				tm->failure = true;
@@ -258,7 +262,7 @@ sptr<Topic> Instance::get_or_create_topic(std::string topic_name) {
 		}
 	}
 	auto ins = self.lock();
-	if (not ins) {
+	if (!ins) {
 		LOG(3, "ERROR self is no longer alive");
 		return nullptr;
 	}
@@ -281,15 +285,15 @@ void Instance::check_topic_health() {
 		// Need to relate somehow the errors to a topic, or?
 		// For the errors from the message callback it is possible.
 		auto top = t1.lock();
-		if (not top) {
+		if (!top) {
 			// Expired pointer should be the only reason why we do not get a lock
-			if (not t1.expired()) {
+			if (!t1.expired()) {
 				LOG(9, "WEIRD, shouldnt that be expired?");
 			}
 			LOG(3, "No producer.  Already dtored?");
 			return true;
 		}
-		if (t1.lock() == nullptr && not t1.expired()) {
+		if (t1.lock() == nullptr && !t1.expired()) {
 			LOG(9, "ERROR weak ptr: no lock(), but not expired() either");
 			return true;
 		}

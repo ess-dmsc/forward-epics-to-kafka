@@ -18,8 +18,13 @@
 #include "rapidjson/writer.h"
 #include "rapidjson/stringbuffer.h"
 
-#include <unistd.h>
-#include <getopt.h>
+#ifdef _MSC_VER
+	#include "wingetopt.h"
+#elif _AIX
+	#include <unistd.h>
+#else
+	#include <getopt.h>
+#endif
 
 #include "git_commit_current.h"
 
@@ -112,7 +117,7 @@ void ConfigCB::operator() (std::string const & msg) {
 	if (j0["cmd"] == "add") {
 		auto channel = j0["channel"].GetString();
 		auto topic   = j0["topic"].GetString();
-		if (channel and topic) {
+		if (channel && topic) {
 			main.mapping_add(channel, topic);
 		}
 	}
@@ -171,7 +176,7 @@ void Main::forward_epics_to_kafka() {
 
 void Main::release_deleted_mappings() {
 	// House keeping.  After some grace period, clean up the zombies.
-	if (not do_release_memory) return;
+	if (!do_release_memory) return;
 
 	{
 		RMLG lg1(m_tms_zombies_mutex);
@@ -201,7 +206,7 @@ void Main::move_failed_to_startup_queue() {
 	// Add failed back into the queue
 	for (auto & x : tms_failed) {
 		mapping_add(x->channel_name(), x->topic_name());
-		if (not x) {
+		if (!x) {
 			LOG(5, "ERROR null TopicMapping in tms_failed");
 		}
 		else {
