@@ -61,8 +61,12 @@ char const * channel_state_name(epics::pvAccess::Channel::ConnectionState x) {
 }
 
 
-// Use a leight-weight LOG for the inspection
-#define FLOG(level, fmt, args...) printf("%*s" fmt "\n", 2*level, "", ## args);
+// Use a light-weight LOG for the inspection
+#ifdef _MSC_VER
+	#define FLOG(level, fmt, ...) { printf("%*s" fmt "\n", 2*level, "", __VA_ARGS__); }
+#else
+	#define FLOG(level, fmt, args...) printf("%*s" fmt "\n", 2*level, "", ## args);
+#endif
 
 
 char const * pv_scalar_type_name(epics::pvData::ScalarType type) {
@@ -478,7 +482,7 @@ static PVStructureToFlatBuffer::ptr impl(epics::pvData::PVField::shared_pointer 
 PVStructureToFlatBuffer::ptr PVStructureToFlatBuffer::create(epics::pvData::PVStructure::shared_pointer & pvstr) {
 	auto id = pvstr->getField()->getID();
 	auto pv_value = pvstr->getSubField("value");
-	if (not pv_value) {
+	if (!pv_value) {
 		LOG(5, "ERROR PVField has no subfield 'value'");
 		return nullptr;
 	}
@@ -767,7 +771,7 @@ void MonitorRequester::monitorEvent(epics::pvData::MonitorPtr const & monitor) {
 	LOG(0, "got event");
 
 	auto monitor_HL = this->monitor_HL.lock();
-	if (not monitor_HL) {
+	if (!monitor_HL) {
 		LOG(5, "monitor_HL already gone");
 		return;
 	}
@@ -797,8 +801,8 @@ void MonitorRequester::monitorEvent(epics::pvData::MonitorPtr const & monitor) {
 		// based on the naming scheme what type it contains.
 		// A more robust solution in the future should actually investigate the PVStructure.
 		// Open question:  Could EPICS suddenly change the type during runtime?
-		if (not conv_to_flatbuffer) conv_to_flatbuffer = PVStructureToFlatBuffer::create(pvstr);
-		if (not conv_to_flatbuffer) {
+		if (!conv_to_flatbuffer) conv_to_flatbuffer = PVStructureToFlatBuffer::create(pvstr);
+		if (!conv_to_flatbuffer) {
 			LOG(5, "ERROR can not create a converter to produce flat buffers for this field");
 			monitor_HL->go_into_failure_mode();
 		}
