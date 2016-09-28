@@ -252,8 +252,8 @@ using T1 = typename std::conditional<
 	std::is_same<T0, unsigned short >::value, NTScalarUShortBuilder, typename std::conditional<
 	std::is_same<T0,          int   >::value, NTScalarIntBuilder,    typename std::conditional<
 	std::is_same<T0, unsigned int   >::value, NTScalarUIntBuilder,   typename std::conditional<
-	std::is_same<T0,          long  >::value, NTScalarLongBuilder,   typename std::conditional<
-	std::is_same<T0, unsigned long  >::value, NTScalarULongBuilder,  typename std::conditional<
+	std::is_same<T0, int64_t  >::value, NTScalarLongBuilder,   typename std::conditional<
+	std::is_same<T0, uint64_t  >::value, NTScalarULongBuilder,  typename std::conditional<
 	std::is_same<T0,          float >::value, NTScalarFloatBuilder,  typename std::conditional<
 	std::is_same<T0,          double>::value, NTScalarDoubleBuilder, nullptr_t
 	>::type
@@ -314,8 +314,8 @@ using T1 = typename std::conditional<
 	std::is_same<T0, unsigned short >::value, NTScalarArrayUShortBuilder, typename std::conditional<
 	std::is_same<T0,          int   >::value, NTScalarArrayIntBuilder,    typename std::conditional<
 	std::is_same<T0, unsigned int   >::value, NTScalarArrayUIntBuilder,   typename std::conditional<
-	std::is_same<T0,          long  >::value, NTScalarArrayLongBuilder,   typename std::conditional<
-	std::is_same<T0, unsigned long  >::value, NTScalarArrayULongBuilder,  typename std::conditional<
+	std::is_same<T0, int64_t  >::value, NTScalarArrayLongBuilder,   typename std::conditional<
+	std::is_same<T0, uint64_t  >::value, NTScalarArrayULongBuilder,  typename std::conditional<
 	std::is_same<T0,          float >::value, NTScalarArrayFloatBuilder,  typename std::conditional<
 	std::is_same<T0,          double>::value, NTScalarArrayDoubleBuilder, nullptr_t
 	>::type
@@ -336,8 +336,8 @@ using T2 = typename std::conditional<
 	std::is_same<T0, unsigned short >::value, flatbuffers::Offset<BrightnESS::ForwardEpicsToKafka::Epics::NTScalarArrayUShort>, typename std::conditional<
 	std::is_same<T0,          int   >::value, flatbuffers::Offset<BrightnESS::ForwardEpicsToKafka::Epics::NTScalarArrayInt>,    typename std::conditional<
 	std::is_same<T0, unsigned int   >::value, flatbuffers::Offset<BrightnESS::ForwardEpicsToKafka::Epics::NTScalarArrayUInt>,   typename std::conditional<
-	std::is_same<T0,          long  >::value, flatbuffers::Offset<BrightnESS::ForwardEpicsToKafka::Epics::NTScalarArrayLong>,   typename std::conditional<
-	std::is_same<T0, unsigned long  >::value, flatbuffers::Offset<BrightnESS::ForwardEpicsToKafka::Epics::NTScalarArrayULong>,  typename std::conditional<
+	std::is_same<T0, int64_t  >::value, flatbuffers::Offset<BrightnESS::ForwardEpicsToKafka::Epics::NTScalarArrayLong>,   typename std::conditional<
+	std::is_same<T0, uint64_t  >::value, flatbuffers::Offset<BrightnESS::ForwardEpicsToKafka::Epics::NTScalarArrayULong>,  typename std::conditional<
 	std::is_same<T0,          float >::value, flatbuffers::Offset<BrightnESS::ForwardEpicsToKafka::Epics::NTScalarArrayFloat>,  typename std::conditional<
 	std::is_same<T0,          double>::value, flatbuffers::Offset<BrightnESS::ForwardEpicsToKafka::Epics::NTScalarArrayDouble>, nullptr_t
 	>::type
@@ -361,8 +361,8 @@ using T3 = typename std::conditional<
 	std::is_same<T0, unsigned short >::value, uint16_t,  typename std::conditional<
 	std::is_same<T0,          int   >::value,  int32_t,  typename std::conditional<
 	std::is_same<T0, unsigned int   >::value, uint32_t,  typename std::conditional<
-	std::is_same<T0,          long  >::value,  int64_t,  typename std::conditional<
-	std::is_same<T0, unsigned long  >::value, uint64_t,  typename std::conditional<
+	std::is_same<T0, int64_t  >::value,  int64_t,  typename std::conditional<
+	std::is_same<T0, uint64_t  >::value, uint64_t,  typename std::conditional<
 	std::is_same<T0,          float >::value,    float,  typename std::conditional<
 	std::is_same<T0,          double>::value,   double,  nullptr_t
 	>::type
@@ -494,8 +494,8 @@ PVStructureToFlatBuffer::ptr PVStructureToFlatBuffer::create(epics::pvData::PVSt
 			unsigned short,
 			         int,
 			unsigned int,
-			         long,
-			unsigned long,
+			int64_t,
+			uint64_t,
 			         float,
 			         double
 			>::impl(pv_value)) {
@@ -511,8 +511,8 @@ PVStructureToFlatBuffer::ptr PVStructureToFlatBuffer::create(epics::pvData::PVSt
 			unsigned short,
 			         int,
 			unsigned int,
-			         long,
-			unsigned long,
+			int64_t,
+			uint64_t,
 			         float,
 			         double
 			>::impl(pv_value)) {
