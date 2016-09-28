@@ -201,7 +201,7 @@ namespace PVStructureToFlatBufferN {
 void add_name_timeStamp(flatbuffers::FlatBufferBuilder & b1, EpicsPVBuilder & b2, std::string & channel_name, epics::pvData::PVStructure::shared_pointer & pvstr) {
 	auto ts = pvstr->getSubField<epics::pvData::PVStructure>("timeStamp");
 	timeStamp_t timeStamp(
-		ts->getSubField<epics::pvData::PVScalarValue<long>>("secondsPastEpoch")->get(),
+		ts->getSubField<epics::pvData::PVScalarValue<int64_t>>("secondsPastEpoch")->get(),
 		ts->getSubField<epics::pvData::PVScalarValue<int>>("nanoseconds")->get()
 	);
 	//LOG(5, "secondsPastEpoch: %20ld", timeStamp.secondsPastEpoch());
