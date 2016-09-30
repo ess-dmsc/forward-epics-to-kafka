@@ -13,7 +13,7 @@ watchdog thread.
 #include <exception>
 #include <random>
 #include <type_traits>
-#include "config.h"
+#include "local_config.h"
 #include "helper.h"
 #include <vector>
 
@@ -61,8 +61,12 @@ char const * channel_state_name(epics::pvAccess::Channel::ConnectionState x) {
 }
 
 
-// Use a leight-weight LOG for the inspection
-#define FLOG(level, fmt, args...) printf("%*s" fmt "\n", 2*level, "", ## args);
+// Use a light-weight LOG for the inspection
+#ifdef _MSC_VER
+	#define FLOG(level, fmt, ...) { printf("%*s" fmt "\n", 2*level, "", __VA_ARGS__); }
+#else
+	#define FLOG(level, fmt, args...) printf("%*s" fmt "\n", 2*level, "", ## args);
+#endif
 
 
 char const * pv_scalar_type_name(epics::pvData::ScalarType type) {
@@ -197,7 +201,7 @@ namespace PVStructureToFlatBufferN {
 void add_name_timeStamp(flatbuffers::FlatBufferBuilder & b1, EpicsPVBuilder & b2, std::string & channel_name, epics::pvData::PVStructure::shared_pointer & pvstr) {
 	auto ts = pvstr->getSubField<epics::pvData::PVStructure>("timeStamp");
 	timeStamp_t timeStamp(
-		ts->getSubField<epics::pvData::PVScalarValue<long>>("secondsPastEpoch")->get(),
+		ts->getSubField<epics::pvData::PVScalarValue<int64_t>>("secondsPastEpoch")->get(),
 		ts->getSubField<epics::pvData::PVScalarValue<int>>("nanoseconds")->get()
 	);
 	//LOG(5, "secondsPastEpoch: %20ld", timeStamp.secondsPastEpoch());
@@ -248,8 +252,8 @@ using T1 = typename std::conditional<
 	std::is_same<T0, unsigned short >::value, NTScalarUShortBuilder, typename std::conditional<
 	std::is_same<T0,          int   >::value, NTScalarIntBuilder,    typename std::conditional<
 	std::is_same<T0, unsigned int   >::value, NTScalarUIntBuilder,   typename std::conditional<
-	std::is_same<T0,          long  >::value, NTScalarLongBuilder,   typename std::conditional<
-	std::is_same<T0, unsigned long  >::value, NTScalarULongBuilder,  typename std::conditional<
+	std::is_same<T0, int64_t  >::value, NTScalarLongBuilder,   typename std::conditional<
+	std::is_same<T0, uint64_t  >::value, NTScalarULongBuilder,  typename std::conditional<
 	std::is_same<T0,          float >::value, NTScalarFloatBuilder,  typename std::conditional<
 	std::is_same<T0,          double>::value, NTScalarDoubleBuilder, nullptr_t
 	>::type
@@ -310,8 +314,8 @@ using T1 = typename std::conditional<
 	std::is_same<T0, unsigned short >::value, NTScalarArrayUShortBuilder, typename std::conditional<
 	std::is_same<T0,          int   >::value, NTScalarArrayIntBuilder,    typename std::conditional<
 	std::is_same<T0, unsigned int   >::value, NTScalarArrayUIntBuilder,   typename std::conditional<
-	std::is_same<T0,          long  >::value, NTScalarArrayLongBuilder,   typename std::conditional<
-	std::is_same<T0, unsigned long  >::value, NTScalarArrayULongBuilder,  typename std::conditional<
+	std::is_same<T0, int64_t  >::value, NTScalarArrayLongBuilder,   typename std::conditional<
+	std::is_same<T0, uint64_t  >::value, NTScalarArrayULongBuilder,  typename std::conditional<
 	std::is_same<T0,          float >::value, NTScalarArrayFloatBuilder,  typename std::conditional<
 	std::is_same<T0,          double>::value, NTScalarArrayDoubleBuilder, nullptr_t
 	>::type
@@ -332,8 +336,8 @@ using T2 = typename std::conditional<
 	std::is_same<T0, unsigned short >::value, flatbuffers::Offset<BrightnESS::ForwardEpicsToKafka::Epics::NTScalarArrayUShort>, typename std::conditional<
 	std::is_same<T0,          int   >::value, flatbuffers::Offset<BrightnESS::ForwardEpicsToKafka::Epics::NTScalarArrayInt>,    typename std::conditional<
 	std::is_same<T0, unsigned int   >::value, flatbuffers::Offset<BrightnESS::ForwardEpicsToKafka::Epics::NTScalarArrayUInt>,   typename std::conditional<
-	std::is_same<T0,          long  >::value, flatbuffers::Offset<BrightnESS::ForwardEpicsToKafka::Epics::NTScalarArrayLong>,   typename std::conditional<
-	std::is_same<T0, unsigned long  >::value, flatbuffers::Offset<BrightnESS::ForwardEpicsToKafka::Epics::NTScalarArrayULong>,  typename std::conditional<
+	std::is_same<T0, int64_t  >::value, flatbuffers::Offset<BrightnESS::ForwardEpicsToKafka::Epics::NTScalarArrayLong>,   typename std::conditional<
+	std::is_same<T0, uint64_t  >::value, flatbuffers::Offset<BrightnESS::ForwardEpicsToKafka::Epics::NTScalarArrayULong>,  typename std::conditional<
 	std::is_same<T0,          float >::value, flatbuffers::Offset<BrightnESS::ForwardEpicsToKafka::Epics::NTScalarArrayFloat>,  typename std::conditional<
 	std::is_same<T0,          double>::value, flatbuffers::Offset<BrightnESS::ForwardEpicsToKafka::Epics::NTScalarArrayDouble>, nullptr_t
 	>::type
@@ -357,8 +361,8 @@ using T3 = typename std::conditional<
 	std::is_same<T0, unsigned short >::value, uint16_t,  typename std::conditional<
 	std::is_same<T0,          int   >::value,  int32_t,  typename std::conditional<
 	std::is_same<T0, unsigned int   >::value, uint32_t,  typename std::conditional<
-	std::is_same<T0,          long  >::value,  int64_t,  typename std::conditional<
-	std::is_same<T0, unsigned long  >::value, uint64_t,  typename std::conditional<
+	std::is_same<T0, int64_t  >::value,  int64_t,  typename std::conditional<
+	std::is_same<T0, uint64_t  >::value, uint64_t,  typename std::conditional<
 	std::is_same<T0,          float >::value,    float,  typename std::conditional<
 	std::is_same<T0,          double>::value,   double,  nullptr_t
 	>::type
@@ -478,7 +482,7 @@ static PVStructureToFlatBuffer::ptr impl(epics::pvData::PVField::shared_pointer 
 PVStructureToFlatBuffer::ptr PVStructureToFlatBuffer::create(epics::pvData::PVStructure::shared_pointer & pvstr) {
 	auto id = pvstr->getField()->getID();
 	auto pv_value = pvstr->getSubField("value");
-	if (not pv_value) {
+	if (!pv_value) {
 		LOG(5, "ERROR PVField has no subfield 'value'");
 		return nullptr;
 	}
@@ -490,8 +494,8 @@ PVStructureToFlatBuffer::ptr PVStructureToFlatBuffer::create(epics::pvData::PVSt
 			unsigned short,
 			         int,
 			unsigned int,
-			         long,
-			unsigned long,
+			int64_t,
+			uint64_t,
 			         float,
 			         double
 			>::impl(pv_value)) {
@@ -507,8 +511,8 @@ PVStructureToFlatBuffer::ptr PVStructureToFlatBuffer::create(epics::pvData::PVSt
 			unsigned short,
 			         int,
 			unsigned int,
-			         long,
-			unsigned long,
+			int64_t,
+			uint64_t,
 			         float,
 			         double
 			>::impl(pv_value)) {
@@ -767,7 +771,7 @@ void MonitorRequester::monitorEvent(epics::pvData::MonitorPtr const & monitor) {
 	LOG(0, "got event");
 
 	auto monitor_HL = this->monitor_HL.lock();
-	if (not monitor_HL) {
+	if (!monitor_HL) {
 		LOG(5, "monitor_HL already gone");
 		return;
 	}
@@ -797,8 +801,8 @@ void MonitorRequester::monitorEvent(epics::pvData::MonitorPtr const & monitor) {
 		// based on the naming scheme what type it contains.
 		// A more robust solution in the future should actually investigate the PVStructure.
 		// Open question:  Could EPICS suddenly change the type during runtime?
-		if (not conv_to_flatbuffer) conv_to_flatbuffer = PVStructureToFlatBuffer::create(pvstr);
-		if (not conv_to_flatbuffer) {
+		if (!conv_to_flatbuffer) conv_to_flatbuffer = PVStructureToFlatBuffer::create(pvstr);
+		if (!conv_to_flatbuffer) {
 			LOG(5, "ERROR can not create a converter to produce flat buffers for this field");
 			monitor_HL->go_into_failure_mode();
 		}

@@ -98,7 +98,7 @@ void TopicMapping::stop_forwarding() {
 }
 
 void TopicMapping::emit(ForwardEpicsToKafka::Epics::FBBptr fbuf) {
-	if (not forwarding) {
+	if (!forwarding) {
 		LOG(3, "WARNING emit called despite not forwarding");
 		return;
 	}
@@ -113,7 +113,7 @@ void TopicMapping::emit(ForwardEpicsToKafka::Epics::FBBptr fbuf) {
 		return;
 	}
 
-	if (not topic->healthy()) {
+	if (!topic->healthy()) {
 		go_into_failure_mode();
 		return;
 	}
@@ -121,7 +121,7 @@ void TopicMapping::emit(ForwardEpicsToKafka::Epics::FBBptr fbuf) {
 	auto & top = topic;
 
 	bool debug_messages = false;
-	if (not debug_messages) {
+	if (!debug_messages) {
 		//LOG(5, "TM %d producing size %lu", id, fbuf->GetSize());
 		// Produce the actual payload
 		//top->produce({reinterpret_cast<char*>(fbuf->GetBufferPointer()), fbuf->GetSize()});
@@ -200,7 +200,7 @@ void TopicMapping::health_selfcheck() {
 			go_into_failure_mode();
 			return;
 		}
-		if (not topic->healthy()) {
+		if (!topic->healthy()) {
 			LOG(1, "not healthy because topic handle expired");
 			go_into_failure_mode();
 			return;

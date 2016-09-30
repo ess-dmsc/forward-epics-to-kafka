@@ -147,12 +147,9 @@ add_library(librdkafka SHARED IMPORTED)
 set_property(TARGET librdkafka PROPERTY IMPORTED_LOCATION ${path_lib_rdkafka})
 
 
-
-
-
-
 set(tgt forward-epics-to-kafka)
-add_executable(${tgt}
+
+set (SOURCES 
 helper.cxx
 logger.cxx
 configuration.cxx
@@ -161,8 +158,19 @@ Kafka.cxx
 epics.cxx
 Config.cxx
 main.cxx
+)
+
+if (WIN32)
+set(SOURCES ${SOURCES} wingetopt.c)
+endif (WIN32)
+
+add_executable(${tgt}
+${SOURCES}
 ${CMAKE_CURRENT_BINARY_DIR}/git_commit_current.cxx
 )
+
+
+
 add_dependencies(${tgt} git_commit_current)
 
 set_property(TARGET ${tgt} APPEND PROPERTY INCLUDE_DIRECTORIES ${path_include_epics_base})
