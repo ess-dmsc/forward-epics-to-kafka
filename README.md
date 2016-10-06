@@ -13,6 +13,12 @@ Ansible playbook in ```./ansible``` even though not all dependencies are install
 the playbook so far, see below, and in ```CMakeLists.txt```.
 
 
+## Install together with configuration manager
+
+- yum install gtest gtest-devel zeromq3 zeromq3-devel
+- Note that as user of the library we still currently depend on redox as well
+
+
 ### Requirements
 
 These libraries are expected in the ESS dev default locations or set via

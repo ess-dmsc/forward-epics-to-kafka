@@ -100,6 +100,22 @@ find_path(path_include_rapidjson NAMES rapidjson/document.h PATHS
 )
 
 
+# TODO
+# Change search paths as soon as the official default location has been specified.
+find_path(path_include_configuration_manager NAMES configuration.hpp PATHS
+/home/scratch/configuration-manager/client
+)
+# Config manager is currently a static library
+find_library(path_lib_configuration_manager NAMES libconfigmanager.a PATHS
+/home/scratch/configuration-manager-build
+)
+find_library(path_lib_redox NAMES redox PATHS
+/home/scratch/configuration-manager-build/redox
+)
+#message(STATUS ${path_include_configuration_manager})
+#message(STATUS ${path_lib_configuration_manager})
+
+
 set(cmake_include_current_dir on)
 
 set(flatbuffers_schemata "simple")
@@ -146,6 +162,9 @@ set_property(TARGET libpvAccess PROPERTY IMPORTED_LOCATION ${path_lib_epics_pvAc
 add_library(librdkafka SHARED IMPORTED)
 set_property(TARGET librdkafka PROPERTY IMPORTED_LOCATION ${path_lib_rdkafka})
 
+add_library(libpath_lib_redox SHARED IMPORTED)
+set_property(TARGET libpath_lib_redox PROPERTY IMPORTED_LOCATION ${path_lib_redox})
+
 
 set(tgt forward-epics-to-kafka)
 
@@ -185,6 +204,12 @@ set_property(TARGET ${tgt} APPEND PROPERTY INCLUDE_DIRECTORIES ${path_include_ra
 # Find the generated flat buffer
 set_property(TARGET ${tgt} APPEND PROPERTY INCLUDE_DIRECTORIES ${CMAKE_CURRENT_BINARY_DIR})
 
+if (NOT ${path_include_configuration_manager} STREQUAL "path_include_configuration_manager-NOTFOUND")
+set_property(TARGET ${tgt} APPEND PROPERTY INCLUDE_DIRECTORIES ${path_include_configuration_manager})
+set_property(TARGET ${tgt} APPEND PROPERTY INCLUDE_DIRECTORIES ${path_include_configuration_manager}/redox/include)
+set_property(TARGET ${tgt} APPEND PROPERTY INCLUDE_DIRECTORIES ${path_include_configuration_manager}/cppzmq)
+endif()
+
 
 add_dependencies(${tgt} flatbuffers_generate)
 
@@ -192,6 +217,11 @@ target_link_libraries(${tgt} epicsbase)
 target_link_libraries(${tgt} libpvData)
 target_link_libraries(${tgt} libpvAccess)
 target_link_libraries(${tgt} librdkafka)
+target_link_libraries(${tgt} libpath_lib_redox)
+
+if (NOT ${path_lib_configuration_manager} STREQUAL "path_lib_configuration_manager-NOTFOUND")
+target_link_libraries(${tgt} ${path_lib_configuration_manager})
+endif()
 
 
 

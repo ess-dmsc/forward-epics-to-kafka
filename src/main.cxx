@@ -376,7 +376,21 @@ void Main::forwarding_exit() {
 
 
 
+#include <configuration.hpp>
+#include <redox.hpp>
+
+void test_config_manager() {
+	using CM = configuration::communicator::RedisCommunicator;
+	using DM = configuration::data::RedisDataManager<CM>;
+	using Configuration = configuration::ConfigurationManager<DM,CM>;
+	Configuration cs("localhost", 6379, "localhost", 6379);
+	cs.Update("some_test2", "kehrgoifd");
+}
+
+
 int main(int argc, char ** argv) {
+	test_config_manager();
+	return 1;
 	BrightnESS::ForwardEpicsToKafka::MainOpt opt;
 	static struct option long_options[] = {
 		{"help",                            no_argument,              0,  0 },
