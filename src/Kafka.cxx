@@ -138,12 +138,17 @@ sptr<Instance> Instance::create(std::string brokers) {
 
 
 
+
+
+
+
+
 void Instance::init() {
-	int const message_max_bytes                =  1 * 1024 * 1024;
-	int const fetch_message_max_bytes          =  1 * 1024 * 1024;
-	int const receive_message_max_bytes        =  2 * 1024 * 1024;
-	int const queue_buffering_max_messages     = 1024;
-	int const batch_num_messages               =   64;
+	int const message_max_bytes                = 100 * 1024 * 1024;
+	int const fetch_message_max_bytes          = 256 * 1024 * 1024;
+	int const receive_message_max_bytes        = 256 * 1024 * 1024;
+	int const queue_buffering_max_messages     = 2*1024;
+	int const batch_num_messages               = 60;
 
 	int const N1 = 512;
 	char buf1[N1];
