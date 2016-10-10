@@ -17,6 +17,7 @@
 #include "rapidjson/document.h"
 #include "rapidjson/writer.h"
 #include "rapidjson/stringbuffer.h"
+#include <rapidjson/filereadstream.h>
 
 #ifdef _MSC_VER
 	#include "wingetopt.h"
@@ -45,7 +46,37 @@ string broker_configuration_address = "localhost:9092";
 string broker_configuration_topic = "configuration.global";
 string broker_data_address = "localhost:9092";
 bool help = false;
+string config_file;
+
+void parse_json(string config_file);
 };
+
+
+void MainOpt::parse_json(string config_file) {
+	if (config_file == "") {
+		LOG(3, "ERROR given config filename is empty");
+		return;
+	}
+	this->config_file = config_file;
+	using namespace rapidjson;
+	// Parse the JSON configuration and extract parameters.
+	// Currently, these parameters take precedence over what is given on the command line.
+	FILE * f1 = fopen(config_file.c_str(), "rb");
+	int const N1 = 4000;
+	char buf1[N1];
+	FileReadStream is(f1, buf1, N1);
+	Document d;
+	d.ParseStream<0, UTF8<>, FileReadStream>(is);
+	if (d.HasMember("broker-configuration-address")) {
+		broker_configuration_address = d["broker-configuration-address"].GetString();
+	}
+	if (d.HasMember("broker-configuration-topic")) {
+		broker_configuration_topic   = d["broker-configuration-topic"].GetString();
+	}
+	if (d.HasMember("broker-data-address")) {
+		broker_data_address          = d["broker-data-address"].GetString();
+	}
+}
 
 
 class Main {
@@ -389,14 +420,14 @@ void test_config_manager() {
 
 
 int main(int argc, char ** argv) {
-	test_config_manager();
-	return 1;
+	//test_config_manager(); return 1;
 	BrightnESS::ForwardEpicsToKafka::MainOpt opt;
 	static struct option long_options[] = {
 		{"help",                            no_argument,              0,  0 },
 		{"broker-configuration-address",    required_argument,        0,  0 },
 		{"broker-configuration-topic",      required_argument,        0,  0 },
 		{"broker-data-address",             required_argument,        0,  0 },
+		{"config-file",                     required_argument,        0,  0 },
 		{0, 0, 0, 0},
 	};
 	std::string cmd;
@@ -418,6 +449,9 @@ int main(int argc, char ** argv) {
 			// long option without short equivalent:
 			if (std::string("help") == lname) {
 				opt.help = true;
+			}
+			if (std::string("config-file") == lname) {
+				opt.parse_json(optarg);
 			}
 			if (std::string("broker-configuration-address") == lname) {
 				opt.broker_configuration_address = optarg;
@@ -457,6 +491,10 @@ int main(int argc, char ** argv) {
 		puts("");
 		puts("forward-epics-to-kafka");
 		puts("  --help");
+		puts("");
+		puts("  --config-file                     <file>");
+		puts("      Configuration file in JSON format.");
+		puts("      To overwrite the options in config-file, specify them later on the command line.");
 		puts("");
 		puts("  --broker-configuration-address    host:port,host:port,...");
 		puts("      Kafka brokers to connect with for configuration updates.");
