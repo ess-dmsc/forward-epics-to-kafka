@@ -17,6 +17,15 @@ namespace BrightnESS {
 namespace ForwardEpicsToKafka {
 namespace Config {
 
+
+// Interfaces with the new lib
+class Service {
+public:
+Service();
+};
+
+
+
 struct KafkaSettings {
 KafkaSettings(std::string brokers, std::string topic);
 std::string brokers = "localhost:9092";
