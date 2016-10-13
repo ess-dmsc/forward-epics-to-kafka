@@ -33,6 +33,22 @@ using epics::pvAccess::Channel;
 #define STRINGIFY2(x) #x
 #define STRINGIFY(x) STRINGIFY2(x)
 
+template <typename T> char const * type_name();
+//template <> char const * type_name<uint32_t>() { return "uint32_t"; }
+// Unstringification not possible, so not possible to give white space..
+#define M(x) template <> char const * type_name<x>() { return STRINGIFY(x); }
+M( int8_t)
+M(uint8_t)
+M( int16_t)
+M(uint16_t)
+M( int32_t)
+M(uint32_t)
+M( int64_t)
+M(uint64_t)
+M(float)
+M(double)
+#undef M
+
 
 char const * field_type_name(epics::pvData::Type x) {
 #define DWTN1(N) DWTN2(N, STRINGIFY(N))
@@ -128,6 +144,23 @@ void inspect_Structure(epics::pvData::Structure const & str, int level) {
 void inspect_PVStructure(epics::pvData::PVStructure const & pvstr, int level = 0);
 
 
+
+template <typename T>
+bool inspect_PVField_a(epics::pvData::PVField const & field, int level, char const * fmt) {
+	if (auto p1 = dynamic_cast<epics::pvData::PVValueArray<T> const *>(&field)) {
+		FLOG(level, "[ %s[%d] ]", type_name<T>(), p1->getLength());
+		char buf1[16];
+		snprintf(buf1, 16, "%%*s[%%d] = %s\n", fmt);
+		for (size_t i1 = 0; i1 < p1->getLength() and i1 < 7; ++i1) {
+			// FLOG does not handle non-literal format strings
+			//FLOG(level+1, buf1, i1, p1->view().at(i1));
+			printf(buf1, 2*level, "", i1, p1->view().at(i1));
+		}
+		return true;
+	}
+	return false;
+}
+
 void inspect_PVField(epics::pvData::PVField const & field, int level = 0) {
 	// TODO
 	// After this initial 'getting-to-know-Epics' refactor into polymorphic access
@@ -145,6 +178,9 @@ void inspect_PVField(epics::pvData::PVField const & field, int level = 0) {
 			LOG(0, "%lx", p1->getField().get());
 			LOG(0, "ele->pvStructurePtr->getField()->getID(): %s", p1->getField()->getID().c_str());
 		}
+	}
+	else if (auto p1 = dynamic_cast<epics::pvData::PVScalarValue<float> const *>(&field)) {
+		FLOG(level, "[   float == % e]", p1->get());
 	}
 	else if (auto p1 = dynamic_cast<epics::pvData::PVScalarValue<double> const *>(&field)) {
 		FLOG(level, "[  double == % e]", p1->get());
@@ -164,6 +200,18 @@ void inspect_PVField(epics::pvData::PVField const & field, int level = 0) {
 	else if (auto p1 = dynamic_cast<epics::pvData::PVScalarValue<std::string> const *>(&field)) {
 		FLOG(level, "[  string == %s]", p1->get().c_str());
 	}
+
+	// Care about array types:
+	else if (inspect_PVField_a< float>  (field, level, "% e")) {}
+	else if (inspect_PVField_a< double> (field, level, "% e")) {}
+	else if (inspect_PVField_a<uint8_t> (field, level, "%u")) {}
+	else if (inspect_PVField_a< int8_t> (field, level, "% d")) {}
+	else if (inspect_PVField_a<uint16_t>(field, level, "%u")) {}
+	else if (inspect_PVField_a< int16_t>(field, level, "% d")) {}
+	else if (inspect_PVField_a<uint32_t>(field, level, "%u")) {}
+	else if (inspect_PVField_a< int32_t>(field, level, "% d")) {}
+	else if (inspect_PVField_a<uint64_t>(field, level, "%lu")) {}
+	else if (inspect_PVField_a< int64_t>(field, level, "% ld")) {}
 	else {
 		FLOG(level, "[can not handle this]");
 	}
