@@ -4,7 +4,6 @@
 #include <atomic>
 #include <thread>
 #include <vector>
-#include <vector>
 #include <forward_list>
 #include <string>
 

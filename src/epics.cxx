@@ -529,6 +529,7 @@ static PVStructureToFlatBuffer::ptr impl(epics::pvData::PVField::shared_pointer 
 
 PVStructureToFlatBuffer::ptr PVStructureToFlatBuffer::create(epics::pvData::PVStructure::shared_pointer & pvstr) {
 	auto id = pvstr->getField()->getID();
+	LOG(9, "pvstr->getField()->getID(): %s", id.c_str());
 	auto pv_value = pvstr->getSubField("value");
 	if (!pv_value) {
 		LOG(5, "ERROR PVField has no subfield 'value'");
@@ -552,6 +553,7 @@ PVStructureToFlatBuffer::ptr PVStructureToFlatBuffer::create(epics::pvData::PVSt
 		LOG(5, "ERROR unknown NTScalar type");
 	}
 	else if (id == "epics:nt/NTScalarArray:1.0") {
+		//LOG(9, "epics:nt/NTScalarArray:1.0");
 		if (auto x = PVStructureToFlatBuffer_create_array<
 			         char,
 			unsigned char,
@@ -638,30 +640,33 @@ from which the channel creation was initiated.
 
 void ChannelRequester::channelCreated(epics::pvData::Status const & status, Channel::shared_pointer const & channel) {
 	auto monitor = action->monitor.lock();
+	if (not monitor) {
+		LOG(9, "ERROR Assertion failed:  Expect to get a shared_ptr to the monitor");
+	}
 	#if TEST_RANDOM_FAILURES
 		std::mt19937 rnd(std::chrono::system_clock::now().time_since_epoch().count());
 		if (rnd() < 0.1 * 0xffffffff) {
 			if (monitor) monitor->go_into_failure_mode();
 		}
 	#endif
+	LOG(0, "ChannelRequester::channelCreated:  (int)status.isOK(): %d", (int)status.isOK());
+	if (!status.isOK() or !status.isSuccess()) {
+		// quick fix until decided on logging system..
+		std::ostringstream s1;
+		s1 << status;
+		LOG(3, "WARNING ChannelRequester::channelCreated:  %s", s1.str().c_str());
+	}
 	if (!status.isSuccess()) {
 		// quick fix until decided on logging system..
 		std::ostringstream s1;
 		s1 << status;
-		LOG(6, "failure: %s", s1.str().c_str());
+		LOG(6, "ChannelRequester::channelCreated:  failure: %s", s1.str().c_str());
 		if (channel) {
 			// Yes, take a copy
 			std::string cname = channel->getChannelName();
 			LOG(6, "  failure is in channel: %s", cname.c_str());
 		}
 		if (monitor) monitor->go_into_failure_mode();
-	}
-	LOG(0, "success (%d)", (int)status.isOK());
-	if (!status.isOK()) {
-		// quick fix until decided on logging system..
-		std::ostringstream s1;
-		s1 << status;
-		LOG(3, "WARNING %s", s1.str().c_str());
 	}
 }
 

@@ -173,6 +173,12 @@ TopicMapping::State TopicMapping::health_state() const { return state; }
 
 
 void TopicMapping::health_selfcheck() {
+	if (topic) {
+		LOG(0, "topic.healthy(): %d", topic->healthy());
+	}
+	else {
+		LOG(0, "topic == nullptr");
+	}
 	if (state == State::INIT) {
 		LOG(0, "still in INIT");
 		if (epics_monitor) {
