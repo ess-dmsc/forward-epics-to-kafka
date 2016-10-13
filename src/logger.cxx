@@ -5,8 +5,10 @@
 #include <cstring>
 #include <thread>
 
+int log_level = 3;
+
 void dwlog(int level, char const * fmt, char const * file, int line, char const * func, ...) {
-	if (level < 1) return;
+	if (level < log_level) return;
 
 	FILE * f1 = stdout;
 

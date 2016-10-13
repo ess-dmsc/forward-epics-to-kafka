@@ -46,6 +46,7 @@ string broker_configuration_address = "localhost:9092";
 string broker_configuration_topic = "configuration.global";
 string broker_data_address = "localhost:9092";
 bool help = false;
+bool verbose = false;
 string config_file;
 
 // When parsing options, we keep the json document because it may also contain
@@ -203,9 +204,10 @@ Main::Main(MainOpt opt) : main_opt(opt), kafka_instance_set(Kafka::InstanceSet::
 							string(channel) + ".ActSpd",
 							string(topic) + ".ActSpd"
 						});
-						//mapping_add(TopicMappingType::EPICS_CA_VALUE,
-						//	string(channel) + ".TDCE",
-						//	string(topic) + ".TDCE");
+						mapping_add({TopicMappingType::EPICS_CA_VALUE,
+							string(channel) + ".TDCE",
+							string(topic) + ".TDCE"
+						});
 					}
 					else if (type == "EPICS_PVA_NT") {
 						mapping_add({
@@ -477,24 +479,37 @@ int main(int argc, char ** argv) {
 		{"broker-configuration-topic",      required_argument,        0,  0 },
 		{"broker-data-address",             required_argument,        0,  0 },
 		{"config-file",                     required_argument,        0,  0 },
+		{"verbose",                         no_argument,              0, 'v'},
 		{0, 0, 0, 0},
 	};
 	std::string cmd;
 	int option_index = 0;
 	bool getopt_error = false;
 	while (true) {
-		int c = getopt_long(argc, argv, "", long_options, &option_index);
+		int c = getopt_long(argc, argv, "v", long_options, &option_index);
 		//LOG(5, "c getopt %d", c);
 		if (c == -1) break;
 		if (c == '?') {
 			//LOG(5, "option argument missing");
 			getopt_error = true;
 		}
-		//printf("at option %s\n", long_options[option_index].name);
-		auto lname = long_options[option_index].name;
+		if (false) {
+			if (c == 0) {
+				printf("at long  option %d [%1c] %s\n", option_index, c, long_options[option_index].name);
+			}
+			else {
+				printf("at short option %d [%1c]\n", option_index, c);
+			}
+		}
 		switch (c) {
+		case 'v':
+			// Do nothing, purpose is to fall through to long-option handling
+			LOG(9, "verbose");
+			opt.verbose = true;
+			log_level = std::max(0, log_level - 1);
+			break;
 		case 0:
-			//LOG(5, "lname: %s", lname);
+			auto lname = long_options[option_index].name;
 			// long option without short equivalent:
 			if (std::string("help") == lname) {
 				opt.help = true;
@@ -556,6 +571,8 @@ int main(int argc, char ** argv) {
 		puts("  --broker-data-address             host:port,host:port,...");
 		puts("      Kafka brokers to connect with for configuration updates");
 		puts("      Default: localhost:9092");
+		puts("");
+		puts("  --verbose");
 		puts("");
 		return 1;
 	}

@@ -20,6 +20,8 @@
 
 
 
+extern int log_level;
+
 void dwlog(int level, char const * fmt, char const * file, int line, char const * func, ...);
 
 void break1();
