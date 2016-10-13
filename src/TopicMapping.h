@@ -23,6 +23,17 @@ class Topic;
 
 
 
+// If we get many different such combinations, maybe better to factor
+// this even more, but currently, this seems like the best choice.
+enum class TopicMappingType {
+	EPICS_PVA_NT,       // currently the default
+	EPICS_CA_VALUE,     // TODO do I need an extra waveform, or can that be introspected?
+};
+
+
+/**
+This class is meant to have trivial copy ctor.
+*/
 class TopicMappingSettings {
 public:
 TopicMappingSettings(std::string channel, std::string topic)
@@ -30,6 +41,13 @@ TopicMappingSettings(std::string channel, std::string topic)
 	topic(topic)
 { }
 
+TopicMappingSettings(TopicMappingType type, std::string channel, std::string topic)
+:	type(type),
+	channel(channel),
+	topic(topic)
+{ }
+
+TopicMappingType type {TopicMappingType::EPICS_PVA_NT};
 std::string channel;
 std::string topic;
 };
@@ -79,8 +97,9 @@ std::atomic_bool forwarding {true};
 // TODO make private
 std::chrono::system_clock::time_point ts_removed;
 
-private:
 TopicMappingSettings topic_mapping_settings;
+
+private:
 // Weak ptr to allow the topic instance go away on failure
 std::shared_ptr<Kafka::Topic> topic;
 std::condition_variable cv1;

@@ -11,6 +11,10 @@
 // For epics::pvAccess::ClientFactory::start()
 #include <pv/clientFactory.h>
 
+// EPICS 4 supports access via the channel access protocol as well,
+// and we need it because some hardware speaks EPICS base.
+#include <pv/caProvider.h>
+
 #include "fbhelper.h"
 
 //#include <pv/channelProviderLocal.h>

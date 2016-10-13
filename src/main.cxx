@@ -48,6 +48,9 @@ string broker_data_address = "localhost:9092";
 bool help = false;
 string config_file;
 
+// When parsing options, we keep the json document because it may also contain
+// some topic mappings which are read by the Main.
+std::shared_ptr<rapidjson::Document> json = nullptr;
 void parse_json(string config_file);
 };
 
@@ -62,10 +65,15 @@ void MainOpt::parse_json(string config_file) {
 	// Parse the JSON configuration and extract parameters.
 	// Currently, these parameters take precedence over what is given on the command line.
 	FILE * f1 = fopen(config_file.c_str(), "rb");
+	if (not f1) {
+		LOG(9, "ERROR can not find the requested config-file");
+		return;
+	}
 	int const N1 = 4000;
 	char buf1[N1];
 	FileReadStream is(f1, buf1, N1);
-	Document d;
+	json = std::shared_ptr<Document>(new Document);
+	auto & d = *json;
 	d.ParseStream<0, UTF8<>, FileReadStream>(is);
 	if (d.HasMember("broker-configuration-address")) {
 		broker_configuration_address = d["broker-configuration-address"].GetString();
@@ -81,9 +89,11 @@ void MainOpt::parse_json(string config_file) {
 
 class Main {
 public:
-Main(MainOpt opt) : main_opt(opt), kafka_instance_set(Kafka::InstanceSet::Set(opt.broker_data_address)) { }
+Main(MainOpt opt);
 void forward_epics_to_kafka();
 void mapping_add(string channel, string topic);
+void mapping_add(TopicMappingType type, string channel, string topic);
+void mapping_add(TopicMappingSettings tmsettings);
 void mapping_start(TopicMappingSettings tmsettings);
 void mapping_remove_topic(string topic);
 void mapping_list();
@@ -98,7 +108,7 @@ void release_deleted_mappings();
 private:
 int const init_pool_max = 64;
 bool const do_release_memory = true;
-int const memory_release_grace_time = 2;
+int const memory_release_grace_time = 45;
 MainOpt main_opt;
 std::list<TopicMappingSettings> tms_to_start;
 std::recursive_mutex m_tms_mutex;
@@ -163,6 +173,50 @@ void ConfigCB::operator() (std::string const & msg) {
 	}
 	if (j0["cmd"] == "exit") {
 		main.forwarding_exit();
+	}
+}
+
+
+Main::Main(MainOpt opt) : main_opt(opt), kafka_instance_set(Kafka::InstanceSet::Set(opt.broker_data_address)) {
+	if (main_opt.json) {
+		if (main_opt.json->HasMember("mappings")) {
+			auto & ms = (*main_opt.json)["mappings"];
+			if (ms.IsArray()) {
+				for (auto & m : ms.GetArray()) {
+					LOG(3, "LOOP OVER ONE ARRAY ENTRY");
+					auto type_1 = m["type"].GetString();
+					if (not type_1) type_1 = "EPICS_PVA_NT";
+					string type(type_1);
+					LOG(9, "entry %s   %s", type_1, type.c_str());
+					if (type == "chopper") {
+						auto channel = m["channel"].GetString();
+						auto topic = m["topic"].GetString();
+						if (channel == nullptr or topic == nullptr) {
+							LOG(9, "ERROR expect 'channel' and 'topic' configuration settings for a chopper");
+							continue;
+						}
+
+						// One chopper consists of multiple EPICS PVs.
+						// We add thos PVs individually because their are unrelated from EPICS point of view.
+						mapping_add({
+							TopicMappingType::EPICS_CA_VALUE,
+							string(channel) + ".ActSpd",
+							string(topic) + ".ActSpd"
+						});
+						//mapping_add(TopicMappingType::EPICS_CA_VALUE,
+						//	string(channel) + ".TDCE",
+						//	string(topic) + ".TDCE");
+					}
+					else if (type == "EPICS_PVA_NT") {
+						mapping_add({
+							TopicMappingType::EPICS_PVA_NT,
+							m["channel"].GetString(),
+							m["topic"].GetString()
+						});
+					}
+				}
+			}
+		}
 	}
 }
 
@@ -236,7 +290,7 @@ void Main::release_deleted_mappings() {
 void Main::move_failed_to_startup_queue() {
 	// Add failed back into the queue
 	for (auto & x : tms_failed) {
-		mapping_add(x->channel_name(), x->topic_name());
+		mapping_add(x->topic_mapping_settings);
 		if (!x) {
 			LOG(5, "ERROR null TopicMapping in tms_failed");
 		}
@@ -355,6 +409,11 @@ void Main::report_stats(int started_in_current_round) {
 void Main::mapping_add(string channel, string topic) {
 	RMLG lg(m_tms_to_start_mutex);
 	tms_to_start.emplace_back(channel, topic);
+}
+
+void Main::mapping_add(TopicMappingSettings tmsettings) {
+	RMLG lg(m_tms_to_start_mutex);
+	tms_to_start.push_back(tmsettings);
 }
 
 void Main::mapping_start(TopicMappingSettings tmsettings) {

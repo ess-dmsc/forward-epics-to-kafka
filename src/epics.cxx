@@ -148,7 +148,7 @@ void inspect_PVStructure(epics::pvData::PVStructure const & pvstr, int level = 0
 template <typename T>
 bool inspect_PVField_a(epics::pvData::PVField const & field, int level, char const * fmt) {
 	if (auto p1 = dynamic_cast<epics::pvData::PVValueArray<T> const *>(&field)) {
-		FLOG(level, "[ %s[%d] ]", type_name<T>(), p1->getLength());
+		FLOG(level, "[ %s[%lu] ]", type_name<T>(), p1->getLength());
 		char buf1[16];
 		snprintf(buf1, 16, "%%*s[%%d] = %s\n", fmt);
 		for (size_t i1 = 0; i1 < p1->getLength() and i1 < 7; ++i1) {
@@ -248,6 +248,10 @@ namespace PVStructureToFlatBufferN {
 
 void add_name_timeStamp(flatbuffers::FlatBufferBuilder & b1, EpicsPVBuilder & b2, std::string & channel_name, epics::pvData::PVStructure::shared_pointer & pvstr) {
 	auto ts = pvstr->getSubField<epics::pvData::PVStructure>("timeStamp");
+	if (not ts) {
+		LOG(0, "timeStamp not available");
+		return;
+	}
 	timeStamp_t timeStamp(
 		ts->getSubField<epics::pvData::PVScalarValue<int64_t>>("secondsPastEpoch")->get(),
 		ts->getSubField<epics::pvData::PVScalarValue<int>>("nanoseconds")->get()
@@ -860,9 +864,15 @@ void MonitorRequester::monitorEvent(epics::pvData::MonitorPtr const & monitor) {
 			monitor_HL->go_into_failure_mode();
 		}
 		else {
+			auto & t = monitor_HL->topic_mapping->topic_mapping_settings.type;
 			auto flat_buffer = conv_to_flatbuffer->convert(m_channel_name, pvstr);
 			monitor_HL->emit(std::move(flat_buffer));
 			monitor->release(ele);
+			if (false and t == TopicMappingType::EPICS_CA_VALUE) {
+				// This caused sometimes segfault in epics thread when the database went on/off
+				LOG(9, "reading a EPICS_CA_VALUE");
+				inspect_PVStructure(*pvstr);
+			}
 		}
 	}
 }
@@ -1024,14 +1034,31 @@ void Monitor::go_into_failure_mode() {
 
 
 void Monitor::initiate_connection() {
-	// TODO
-	// Does it do any harm to call this multiple times per thread/process?
-	static bool do_init = true;
+	static bool do_init_factory_pva { true };
+	static bool do_init_factory_ca  { true };
 	//static epics::pvAccess::ChannelProviderRegistry::shared_pointer provider;
-	if (do_init) {
-		epics::pvAccess::ClientFactory::start();
+
+	// Not yet clear how many codepaths will depend on this
+	auto & t = topic_mapping->topic_mapping_settings.type;
+	using T = TopicMappingType;
+
+
+
+	if      (t == T::EPICS_PVA_NT) {
+		if (do_init_factory_pva) {
+			epics::pvAccess::ClientFactory::start();
+			do_init_factory_pva = false;
+		}
 		provider = epics::pvAccess::getChannelProviderRegistry()
 			->getProvider("pva");
+	}
+	else if (t == T::EPICS_CA_VALUE) {
+		if (do_init_factory_ca) {
+			epics::pvAccess::ca::CAClientFactory::start();
+			do_init_factory_ca = true;
+		}
+		provider = epics::pvAccess::getChannelProviderRegistry()
+			->getProvider("ca");
 	}
 	if (provider == nullptr) {
 		LOG(3, "ERROR could not create a provider");
