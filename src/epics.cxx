@@ -441,10 +441,17 @@ FBT convert(TopicMappingSettings & tms, epics::pvData::PVStructure::shared_point
 		// Epics server will not silently change type.
 		auto f1 = pvstr->getSubField<epics::pvData::PVValueArray<T0>>("value");
 		auto svec = f1->view();
+		auto nlen = svec.size();
 		//auto hex = binary_to_hex((char*)svec.data(), svec.size() * sizeof(T0));
 		//LOG(1, "packing %s array: %.*s", typeid(T0).name(), hex.size(), hex.data());
+
+		if (tms.is_chopper_TDCE) {
+			nlen = svec.at(0) + 2;
+			LOG(0, "Note: TDCE nlen: %lu", nlen);
+		}
+
 		// Silence warning about char vs. signed char
-		auto off_vec = builder->CreateVector((T3*)svec.data(), svec.size());
+		auto off_vec = builder->CreateVector((T3*)svec.data(), nlen);
 		T1 array_builder(*builder);
 		array_builder.add_value(off_vec);
 		array_fin = array_builder.Finish();

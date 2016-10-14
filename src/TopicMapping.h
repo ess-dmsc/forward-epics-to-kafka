@@ -50,6 +50,8 @@ TopicMappingSettings(TopicMappingType type, std::string channel, std::string top
 TopicMappingType type {TopicMappingType::EPICS_PVA_NT};
 std::string channel;
 std::string topic;
+
+bool is_chopper_TDCE { false };
 };
 
 

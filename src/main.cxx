@@ -204,10 +204,12 @@ Main::Main(MainOpt opt) : main_opt(opt), kafka_instance_set(Kafka::InstanceSet::
 							string(channel) + ".ActSpd",
 							string(topic) + ".ActSpd"
 						});
-						mapping_add({TopicMappingType::EPICS_CA_VALUE,
+						auto tms = TopicMappingSettings({TopicMappingType::EPICS_CA_VALUE,
 							string(channel) + ".TDCE",
 							string(topic) + ".TDCE"
 						});
+						tms.is_chopper_TDCE = true;
+						mapping_add(tms);
 					}
 					else if (type == "EPICS_PVA_NT") {
 						mapping_add({
