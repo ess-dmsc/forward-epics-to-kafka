@@ -472,8 +472,7 @@ void Main::forwarding_exit() {
 
 
 int main(int argc, char ** argv) {
-	BrightnESS::ForwardEpicsToKafka::Config::Service s1;
-
+	//BrightnESS::ForwardEpicsToKafka::Config::Service s1;
 	BrightnESS::ForwardEpicsToKafka::MainOpt opt;
 	static struct option long_options[] = {
 		{"help",                            no_argument,              0,  0 },
