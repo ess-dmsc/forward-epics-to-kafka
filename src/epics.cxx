@@ -298,16 +298,18 @@ template <typename T0>
 class NTScalar : public PVStructureToFlatBuffer {
 public:
 using T1 = typename std::conditional<
-	std::is_same<T0,          char  >::value, NTScalarByteBuilder,   typename std::conditional<
-	std::is_same<T0, unsigned char  >::value, NTScalarUByteBuilder,  typename std::conditional<
-	std::is_same<T0,          short >::value, NTScalarShortBuilder,  typename std::conditional<
-	std::is_same<T0, unsigned short >::value, NTScalarUShortBuilder, typename std::conditional<
-	std::is_same<T0,          int   >::value, NTScalarIntBuilder,    typename std::conditional<
-	std::is_same<T0, unsigned int   >::value, NTScalarUIntBuilder,   typename std::conditional<
-	std::is_same<T0, int64_t  >::value, NTScalarLongBuilder,   typename std::conditional<
-	std::is_same<T0, uint64_t  >::value, NTScalarULongBuilder,  typename std::conditional<
-	std::is_same<T0,          float >::value, NTScalarFloatBuilder,  typename std::conditional<
-	std::is_same<T0,          double>::value, NTScalarDoubleBuilder, nullptr_t
+	std::is_same<T0, epics::pvData::boolean >::value, NTScalarByteBuilder, typename std::conditional<
+	std::is_same<T0,    int8_t   >::value, NTScalarByteBuilder,   typename std::conditional<
+	std::is_same<T0,    int16_t  >::value, NTScalarShortBuilder,  typename std::conditional<
+	std::is_same<T0,    int32_t  >::value, NTScalarIntBuilder,    typename std::conditional<
+	std::is_same<T0,    int64_t  >::value, NTScalarLongBuilder,   typename std::conditional<
+	std::is_same<T0,   uint8_t   >::value, NTScalarUByteBuilder,  typename std::conditional<
+	std::is_same<T0,   uint16_t  >::value, NTScalarUShortBuilder, typename std::conditional<
+	std::is_same<T0,   uint32_t  >::value, NTScalarUIntBuilder,   typename std::conditional<
+	std::is_same<T0,   uint64_t  >::value, NTScalarULongBuilder,  typename std::conditional<
+	std::is_same<T0,   float     >::value, NTScalarFloatBuilder,  typename std::conditional<
+	std::is_same<T0,   double    >::value, NTScalarDoubleBuilder, nullptr_t
+	>::type
 	>::type
 	>::type
 	>::type
@@ -355,21 +357,22 @@ FBT convert(TopicMappingSettings & tms, epics::pvData::PVStructure::shared_point
 
 
 
-
 template <typename T0>
 class NTScalarArray : public PVStructureToFlatBuffer {
 public:
 using T1 = typename std::conditional<
-	std::is_same<T0,          char  >::value, NTScalarArrayByteBuilder,   typename std::conditional<
-	std::is_same<T0, unsigned char  >::value, NTScalarArrayUByteBuilder,  typename std::conditional<
-	std::is_same<T0,          short >::value, NTScalarArrayShortBuilder,  typename std::conditional<
-	std::is_same<T0, unsigned short >::value, NTScalarArrayUShortBuilder, typename std::conditional<
-	std::is_same<T0,          int   >::value, NTScalarArrayIntBuilder,    typename std::conditional<
-	std::is_same<T0, unsigned int   >::value, NTScalarArrayUIntBuilder,   typename std::conditional<
-	std::is_same<T0, int64_t  >::value, NTScalarArrayLongBuilder,   typename std::conditional<
-	std::is_same<T0, uint64_t  >::value, NTScalarArrayULongBuilder,  typename std::conditional<
-	std::is_same<T0,          float >::value, NTScalarArrayFloatBuilder,  typename std::conditional<
-	std::is_same<T0,          double>::value, NTScalarArrayDoubleBuilder, nullptr_t
+	std::is_same<T0, epics::pvData::boolean>::value, NTScalarArrayByteBuilder, typename std::conditional<
+	std::is_same<T0,  int8_t >::value, NTScalarArrayByteBuilder,    typename std::conditional<
+	std::is_same<T0,  int16_t>::value, NTScalarArrayShortBuilder,   typename std::conditional<
+	std::is_same<T0,  int32_t>::value, NTScalarArrayIntBuilder,     typename std::conditional<
+	std::is_same<T0,  int64_t>::value, NTScalarArrayLongBuilder,    typename std::conditional<
+	std::is_same<T0, uint8_t >::value, NTScalarArrayUByteBuilder,   typename std::conditional<
+	std::is_same<T0, uint16_t>::value, NTScalarArrayUShortBuilder,  typename std::conditional<
+	std::is_same<T0, uint32_t>::value, NTScalarArrayUIntBuilder,    typename std::conditional<
+	std::is_same<T0, uint64_t>::value, NTScalarArrayULongBuilder,   typename std::conditional<
+	std::is_same<T0, float   >::value, NTScalarArrayFloatBuilder,   typename std::conditional<
+	std::is_same<T0, double  >::value, NTScalarArrayDoubleBuilder,  nullptr_t
+	>::type
 	>::type
 	>::type
 	>::type
@@ -381,17 +384,22 @@ using T1 = typename std::conditional<
 	>::type
 	>::type;
 
+template <typename T> using _O = flatbuffers::Offset<T>;
+#define _F BrightnESS::ForwardEpicsToKafka::Epics
 using T2 = typename std::conditional<
-	std::is_same<T0,          char  >::value, flatbuffers::Offset<BrightnESS::ForwardEpicsToKafka::Epics::NTScalarArrayByte>,   typename std::conditional<
-	std::is_same<T0, unsigned char  >::value, flatbuffers::Offset<BrightnESS::ForwardEpicsToKafka::Epics::NTScalarArrayUByte>,  typename std::conditional<
-	std::is_same<T0,          short >::value, flatbuffers::Offset<BrightnESS::ForwardEpicsToKafka::Epics::NTScalarArrayShort>,  typename std::conditional<
-	std::is_same<T0, unsigned short >::value, flatbuffers::Offset<BrightnESS::ForwardEpicsToKafka::Epics::NTScalarArrayUShort>, typename std::conditional<
-	std::is_same<T0,          int   >::value, flatbuffers::Offset<BrightnESS::ForwardEpicsToKafka::Epics::NTScalarArrayInt>,    typename std::conditional<
-	std::is_same<T0, unsigned int   >::value, flatbuffers::Offset<BrightnESS::ForwardEpicsToKafka::Epics::NTScalarArrayUInt>,   typename std::conditional<
-	std::is_same<T0, int64_t  >::value, flatbuffers::Offset<BrightnESS::ForwardEpicsToKafka::Epics::NTScalarArrayLong>,   typename std::conditional<
-	std::is_same<T0, uint64_t  >::value, flatbuffers::Offset<BrightnESS::ForwardEpicsToKafka::Epics::NTScalarArrayULong>,  typename std::conditional<
-	std::is_same<T0,          float >::value, flatbuffers::Offset<BrightnESS::ForwardEpicsToKafka::Epics::NTScalarArrayFloat>,  typename std::conditional<
-	std::is_same<T0,          double>::value, flatbuffers::Offset<BrightnESS::ForwardEpicsToKafka::Epics::NTScalarArrayDouble>, nullptr_t
+	std::is_same<T0, epics::pvData::boolean>::value, flatbuffers::Offset<BrightnESS::ForwardEpicsToKafka::Epics::NTScalarArrayByte>, typename std::conditional<
+	std::is_same<T0,  int8_t >::value, _O<_F::NTScalarArrayByte>,   typename std::conditional<
+	std::is_same<T0,  int16_t>::value, _O<_F::NTScalarArrayShort>,   typename std::conditional<
+	std::is_same<T0,  int32_t>::value, _O<_F::NTScalarArrayInt>,   typename std::conditional<
+	std::is_same<T0,  int64_t>::value, _O<_F::NTScalarArrayLong>,   typename std::conditional<
+	std::is_same<T0, uint8_t >::value, _O<_F::NTScalarArrayUByte>,   typename std::conditional<
+	std::is_same<T0, uint16_t>::value, _O<_F::NTScalarArrayUShort>,   typename std::conditional<
+	std::is_same<T0, uint32_t>::value, _O<_F::NTScalarArrayUInt>,   typename std::conditional<
+	std::is_same<T0, uint64_t>::value, _O<_F::NTScalarArrayULong>,   typename std::conditional<
+	std::is_same<T0, float   >::value, _O<_F::NTScalarArrayFloat>,  typename std::conditional<
+	std::is_same<T0, double  >::value, _O<_F::NTScalarArrayDouble>, nullptr_t
+#undef _F
+	>::type
 	>::type
 	>::type
 	>::type
@@ -407,16 +415,18 @@ using T2 = typename std::conditional<
 // Flat buffers is explicit about the number types.  Epics not.  Need to translate.
 // static_assert below keeps us sane.
 using T3 = typename std::conditional<
-	std::is_same<T0,          char  >::value,  int8_t,   typename std::conditional<
-	std::is_same<T0, unsigned char  >::value, uint8_t,   typename std::conditional<
-	std::is_same<T0,          short >::value,  int16_t,  typename std::conditional<
-	std::is_same<T0, unsigned short >::value, uint16_t,  typename std::conditional<
-	std::is_same<T0,          int   >::value,  int32_t,  typename std::conditional<
-	std::is_same<T0, unsigned int   >::value, uint32_t,  typename std::conditional<
-	std::is_same<T0, int64_t  >::value,  int64_t,  typename std::conditional<
-	std::is_same<T0, uint64_t  >::value, uint64_t,  typename std::conditional<
-	std::is_same<T0,          float >::value,    float,  typename std::conditional<
-	std::is_same<T0,          double>::value,   double,  nullptr_t
+	std::is_same<T0, epics::pvData::boolean>::value,  int8_t,   typename std::conditional<
+	std::is_same<T0,  int8_t >::value,  int8_t ,   typename std::conditional<
+	std::is_same<T0,  int16_t>::value,  int16_t,   typename std::conditional<
+	std::is_same<T0,  int32_t>::value,  int32_t,   typename std::conditional<
+	std::is_same<T0,  int64_t>::value,  int64_t,   typename std::conditional<
+	std::is_same<T0, uint8_t >::value, uint8_t ,   typename std::conditional<
+	std::is_same<T0, uint16_t>::value, uint16_t,   typename std::conditional<
+	std::is_same<T0, uint32_t>::value, uint32_t,   typename std::conditional<
+	std::is_same<T0, uint64_t>::value, uint64_t,   typename std::conditional<
+	std::is_same<T0,    float>::value,    float,   typename std::conditional<
+	std::is_same<T0,   double>::value,   double,   nullptr_t
+	>::type
 	>::type
 	>::type
 	>::type
@@ -546,38 +556,43 @@ PVStructureToFlatBuffer::ptr PVStructureToFlatBuffer::create(epics::pvData::PVSt
 		LOG(5, "ERROR PVField has no subfield 'value'");
 		return nullptr;
 	}
+	// Pull in the epics::pvData::boolean type:
+	using namespace epics::pvData;
 	if (id == "epics:nt/NTScalar:1.0") {
 		if (auto x = PVStructureToFlatBuffer_create<
-			         char,
-			unsigned char,
-			         short,
-			unsigned short,
-			         int,
-			unsigned int,
-			int64_t,
+			// List of types from EPICS pv/pvData.h , search for PVUByte
+			 int8_t,
+			 int16_t,
+			 int32_t,
+			 int64_t,
+			uint8_t,
+			uint16_t,
+			uint32_t,
 			uint64_t,
-			         float,
-			         double
+			float,
+			double,
+			boolean
 			>::impl(pv_value)) {
-			return x;
+				return x;
 		}
 		LOG(5, "ERROR unknown NTScalar type");
 	}
 	else if (id == "epics:nt/NTScalarArray:1.0") {
 		//LOG(9, "epics:nt/NTScalarArray:1.0");
 		if (auto x = PVStructureToFlatBuffer_create_array<
-			         char,
-			unsigned char,
-			         short,
-			unsigned short,
-			         int,
-			unsigned int,
-			int64_t,
+			 int8_t,
+			 int16_t,
+			 int32_t,
+			 int64_t,
+			uint8_t,
+			uint16_t,
+			uint32_t,
 			uint64_t,
-			         float,
-			         double
+			float,
+			double,
+			boolean
 			>::impl(pv_value)) {
-			return x;
+				return x;
 		}
 		LOG(5, "ERROR unknown NTScalarArray type");
 	}
