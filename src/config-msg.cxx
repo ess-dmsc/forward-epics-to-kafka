@@ -190,6 +190,7 @@ void init_kafka() {
 	rd_kafka_conf_set_error_cb(conf, &KafkaProducer::kafka_error_cb);
 	rd_kafka_conf_set_stats_cb(conf, &KafkaProducer::stats_cb);
 
+	//rd_kafka_conf_set(conf, "debug", "all", errstr, errstr_N);
 	rd_kafka_conf_set(conf, "message.max.bytes", "100000", errstr, errstr_N);
 	rd_kafka_conf_set(conf, "fetch.message.max.bytes", "100000", errstr, errstr_N);
 	rd_kafka_conf_set(conf, "statistics.interval.ms", "10000", errstr, errstr_N);
@@ -210,7 +211,7 @@ void init_kafka() {
 	}
 
 	topic_conf = rd_kafka_topic_conf_new();
-	rd_kafka_topic_conf_set(topic_conf, "produce.offset.report", "true", errstr, errstr_N);
+	 //rd_kafka_topic_conf_set(topic_conf, "produce.offset.report", "true", errstr, errstr_N);
 	rd_kafka_topic_conf_set(topic_conf, "message.timeout.ms", "2000", errstr, errstr_N);
 
 	rkt = rd_kafka_topic_new(rk, main_opt.broker_configuration_topic.c_str(), topic_conf);
