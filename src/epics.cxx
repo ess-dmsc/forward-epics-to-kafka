@@ -240,7 +240,7 @@ public:
 using FBT = FBBptr;
 using ptr = std::unique_ptr<PVStructureToFlatBuffer>;
 static ptr create(epics::pvData::PVStructure::shared_pointer & pvstr);
-virtual FBT convert(std::string & channel_name, epics::pvData::PVStructure::shared_pointer & pvstr) = 0;
+virtual FBT convert(TopicMappingSettings & channel_name, epics::pvData::PVStructure::shared_pointer & pvstr) = 0;
 };
 
 namespace PVStructureToFlatBufferN {
@@ -319,7 +319,7 @@ using T1 = typename std::conditional<
 	>::type
 	>::type;
 
-FBT convert(std::string & channel_name, epics::pvData::PVStructure::shared_pointer & pvstr) override {
+FBT convert(TopicMappingSettings & tms, epics::pvData::PVStructure::shared_pointer & pvstr) override {
 	auto builder = FBT(new flatbuffers::FlatBufferBuilder);
 	T1 scalar_builder(*builder);
 	{
@@ -337,13 +337,13 @@ FBT convert(std::string & channel_name, epics::pvData::PVStructure::shared_point
 
 	// Adding name not moved yet into the add_name_timeStamp, because CreateString would be nested.
 	// Therefore, create that string first.
-	auto off_name = builder->CreateString(channel_name);
+	auto off_name = builder->CreateString(tms.channel);
 
 	EpicsPVBuilder pv_builder(*builder);
 
 	pv_builder.add_name(off_name);
 
-	add_name_timeStamp(*builder, pv_builder, channel_name, pvstr);
+	add_name_timeStamp(*builder, pv_builder, tms.channel, pvstr);
 	pv_builder.add_pv_type(BuilderType_to_Enum_PV<T1>::v());
 	pv_builder.add_pv(scalar_fin.Union());
 	builder->Finish(pv_builder.Finish());
@@ -429,7 +429,7 @@ using T3 = typename std::conditional<
 	>::type;
 
 
-FBT convert(std::string & channel_name, epics::pvData::PVStructure::shared_pointer & pvstr) override {
+FBT convert(TopicMappingSettings & tms, epics::pvData::PVStructure::shared_pointer & pvstr) override {
 	static_assert(FLATBUFFERS_LITTLEENDIAN, "Optimization relies on little endianness");
 	static_assert(sizeof(T0) == sizeof(T3), "Numeric types not compatible");
 	// Build the flat buffer from scratch
@@ -452,7 +452,7 @@ FBT convert(std::string & channel_name, epics::pvData::PVStructure::shared_point
 
 	// Adding name not moved yet into the add_name_timeStamp, because CreateString would be nested.
 	// Therefore, create that string first.
-	auto off_name = builder->CreateString(channel_name);
+	auto off_name = builder->CreateString(tms.channel);
 
 	EpicsPVBuilder pv_builder(*builder);
 
@@ -471,7 +471,7 @@ FBT convert(std::string & channel_name, epics::pvData::PVStructure::shared_point
 
 	pv_builder.add_name(off_name);
 
-	add_name_timeStamp(*builder, pv_builder, channel_name, pvstr);
+	add_name_timeStamp(*builder, pv_builder, tms.channel, pvstr);
 	pv_builder.add_pv_type(BuilderType_to_Enum_PV<T1>::v());
 	pv_builder.add_pv(array_fin.Union());
 	builder->Finish(pv_builder.Finish());
@@ -865,7 +865,7 @@ void MonitorRequester::monitorEvent(epics::pvData::MonitorPtr const & monitor) {
 		}
 		else {
 			auto & t = monitor_HL->topic_mapping->topic_mapping_settings.type;
-			auto flat_buffer = conv_to_flatbuffer->convert(m_channel_name, pvstr);
+			auto flat_buffer = conv_to_flatbuffer->convert(monitor_HL->topic_mapping->topic_mapping_settings, pvstr);
 			monitor_HL->emit(std::move(flat_buffer));
 			monitor->release(ele);
 			if (false and t == TopicMappingType::EPICS_CA_VALUE) {
