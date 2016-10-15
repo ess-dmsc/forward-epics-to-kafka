@@ -217,9 +217,9 @@ target_link_libraries(${tgt} epicsbase)
 target_link_libraries(${tgt} libpvData)
 target_link_libraries(${tgt} libpvAccess)
 target_link_libraries(${tgt} librdkafka)
-target_link_libraries(${tgt} libpath_lib_redox)
 
 if (NOT ${path_lib_configuration_manager} STREQUAL "path_lib_configuration_manager-NOTFOUND")
+target_link_libraries(${tgt} libpath_lib_redox)
 target_link_libraries(${tgt} ${path_lib_configuration_manager})
 endif()
 
