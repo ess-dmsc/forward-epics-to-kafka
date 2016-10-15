@@ -6,7 +6,7 @@
   file: path=/opt/local/rdkafka/install  state=directory  owner={{ansible_user_id}}  group={{ansible_user_gid}}
 
 - name: rdkafka fetch repository
-  git: repo=https://github.com/edenhill/librdkafka.git  dest=/opt/local/rdkafka/repo  depth=3  force=true
+  git: repo=https://github.com/edenhill/librdkafka.git  version=0.9.1  dest=/opt/local/rdkafka/repo  force=true
   register: gitclone
 
 # out of source build seems not to work properly

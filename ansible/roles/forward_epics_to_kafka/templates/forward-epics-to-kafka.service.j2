@@ -1,0 +1,12 @@
+[Unit]
+Description=Forward EPICS to Kafka
+After=rc-local.service
+
+[Service]
+ExecStart=/opt/local/forward-epics-to-kafka/forward-epics-to-kafka
+KillMode=control-group
+KillSignal=SIGINT
+TimeoutStopSec=5
+
+[Install]
+WantedBy=multi-user.target

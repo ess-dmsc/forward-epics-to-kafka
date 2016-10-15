@@ -3,7 +3,7 @@
   file: path=/opt/local/flatbuffers  state=directory  owner={{ansible_user_id}}  group={{ansible_user_gid}}
 
 - name: Flatbuffers repository
-  git: repo=https://github.com/google/flatbuffers.git  dest=/opt/local/flatbuffers.git  depth=1
+  git: repo=https://github.com/google/flatbuffers.git  version=v1.4.0  dest=/opt/local/flatbuffers.git
   register: gitclone
 
 - name: cmake
