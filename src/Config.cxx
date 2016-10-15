@@ -1,8 +1,10 @@
 #include "Config.h"
 #include "logger.h"
 
-#include <configuration.hpp>
-#include <redox.hpp>
+
+// Not yet available on staging:
+//#include <configuration.hpp>
+//#include <redox.hpp>
 
 
 #ifdef _MSC_VER
@@ -18,11 +20,13 @@ namespace Config {
 
 // Uses the new lib
 Service::Service() {
+	/*
 	using CM = configuration::communicator::RedisCommunicator;
 	using DM = configuration::data::RedisDataManager<CM>;
 	using Configuration = configuration::ConfigurationManager<DM,CM>;
 	Configuration cs("localhost", 6379, "localhost", 6379);
 	cs.Update("some_test", "garbage-value-here");
+	*/
 }
 
 
