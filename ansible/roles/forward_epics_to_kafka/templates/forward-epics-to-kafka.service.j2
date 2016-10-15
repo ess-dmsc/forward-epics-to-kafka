@@ -3,7 +3,7 @@ Description=Forward EPICS to Kafka
 After=rc-local.service
 
 [Service]
-ExecStart=/opt/local/forward-epics-to-kafka/forward-epics-to-kafka
+ExecStart=/opt/local/forward-epics-to-kafka/forward-epics-to-kafka --config-file /opt/amor/etc/chopper-ess-facade-for-sinq.conf
 KillMode=control-group
 KillSignal=SIGINT
 TimeoutStopSec=5

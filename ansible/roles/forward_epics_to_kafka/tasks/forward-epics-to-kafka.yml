@@ -8,11 +8,11 @@
 
 - name: forward-epics-to-kafka cmake
   shell: cmake /opt/local/forward-epics-to-kafka.git   chdir=/opt/local/forward-epics-to-kafka
-  #when: gitclone.changed
+  when: gitclone.changed or force_recompilation
 
 - name: forward-epics-to-kafka make
   shell: make   chdir=/opt/local/forward-epics-to-kafka
-  #when: gitclone.changed
+  when: gitclone.changed or force_recompilation
 
 - name: forward-epics-to-kafka install service
   template:
