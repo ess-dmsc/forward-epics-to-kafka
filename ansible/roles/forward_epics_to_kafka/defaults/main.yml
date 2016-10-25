@@ -1,4 +1,4 @@
 path_libs_build: /opt/local
-force_recompilation: false
+force_recompilation: true
 repository_url: https://bitbucket.org/europeanspallationsource/forward-epics-to-kafka
 version: release-latest
