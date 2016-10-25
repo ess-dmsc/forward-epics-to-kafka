@@ -1,20 +1,24 @@
----
-- name: forward-epics-to-kafka mkdir build
+- name: mkdir build
   file: path=/opt/local/forward-epics-to-kafka  state=directory  owner={{ansible_user_id}}  group={{ansible_user_gid}}
+  become: true
 
-- name: forward-epics-to-kafka fetch repository
+- name: mkdir repo
+  file: path=/opt/local/forward-epics-to-kafka  state=directory  owner={{ansible_user_id}}  group={{ansible_user_gid}}
+  become: true
+
+- name: fetch repo
   git: repo={{repository_url}}  dest=/opt/local/forward-epics-to-kafka.git  version={{version}}
   register: gitclone
 
-- name: forward-epics-to-kafka cmake
+- name: cmake
   shell: cmake /opt/local/forward-epics-to-kafka.git   chdir=/opt/local/forward-epics-to-kafka
   when: gitclone.changed or force_recompilation
 
-- name: forward-epics-to-kafka make
+- name: make
   shell: make   chdir=/opt/local/forward-epics-to-kafka
   when: gitclone.changed or force_recompilation
 
-- name: forward-epics-to-kafka install service
+- name: install service
   template:
     src: forward-epics-to-kafka.service.j2
     dest: /usr/lib/systemd/system/forward-epics-to-kafka.service
