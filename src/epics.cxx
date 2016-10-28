@@ -50,20 +50,6 @@ M(double)
 #undef M
 
 
-char const * field_type_name(epics::pvData::Type x) {
-#define DWTN1(N) DWTN2(N, STRINGIFY(N))
-#define DWTN2(N, S) if (x == epics::pvData::N) { return S; }
-	DWTN1(scalar);
-	DWTN1(scalarArray);
-	DWTN1(structure);
-	DWTN1(structureArray);
-	DWTN2(union_, "union");
-	DWTN1(unionArray);
-#undef DWTN1
-#undef DWTN2
-	return "[unknown]";
-}
-
 char const * channel_state_name(epics::pvAccess::Channel::ConnectionState x) {
 #define DWTN1(N) DWTN2(N, STRINGIFY(N))
 #define DWTN2(N, S) if (x == epics::pvAccess::Channel::ConnectionState::N) { return S; }
@@ -75,164 +61,6 @@ char const * channel_state_name(epics::pvAccess::Channel::ConnectionState x) {
 #undef DWTN2
 	return "[unknown]";
 }
-
-
-// Use a light-weight LOG for the inspection
-#ifdef _MSC_VER
-	#define FLOG(level, fmt, ...) { printf("%*s" fmt "\n", 2*level, "", __VA_ARGS__); }
-#else
-	#define FLOG(level, fmt, args...) printf("%*s" fmt "\n", 2*level, "", ## args);
-#endif
-
-
-char const * pv_scalar_type_name(epics::pvData::ScalarType type) {
-	#define M(T) if (type == epics::pvData::T) return STRINGIFY(T);
-	M(pvBoolean);
-	M(pvByte);
-	M(pvShort);
-	M(pvInt);
-	M(pvLong);
-	M(pvUByte);
-	M(pvUShort);
-	M(pvUInt);
-	M(pvULong);
-	M(pvFloat);
-	M(pvDouble);
-	M(pvString);
-	#undef M
-	return "unknown";
-}
-
-
-void inspect_Structure(Structure const & str, int level = 0);
-
-
-void inspect_Field(epics::pvData::Field const & field, int level = 0) {
-	using namespace epics::pvData;
-	FLOG(level, "inspect_Field  getID(): %s   getType(): %s",
-		field.getID().c_str(), field_type_name(field.getType()));
-	if (auto p1 = dynamic_cast<Structure const *>(&field)) {
-		inspect_Structure(*p1, level);
-	}
-	else if (auto p1 = dynamic_cast<epics::pvData::Scalar const *>(&field)) {
-		FLOG(level, "{scalar : %s}", pv_scalar_type_name(p1->getScalarType()));
-	}
-	else {
-		FLOG(level, "[not handled]");
-	}
-}
-
-
-void inspect_Structure(epics::pvData::Structure const & str, int level) {
-	auto & subfields = str.getFields();
-	FLOG(level, "inspect_Structure  getNumberFields: %lu  subfields.size(): %lu",
-		str.getNumberFields(),
-		subfields.size()
-	);
-	int i1 = 0;
-	for (auto & f1sptr : subfields) {
-		auto & f1 = *f1sptr.get();
-		FLOG(level, "now inspect subfield [%s]", str.getFieldName(i1).c_str());
-		inspect_Field(f1, 1+level);
-		++i1;
-	}
-}
-
-
-
-
-void inspect_PVStructure(epics::pvData::PVStructure const & pvstr, int level = 0);
-
-
-
-template <typename T>
-bool inspect_PVField_a(epics::pvData::PVField const & field, int level, char const * fmt) {
-	if (auto p1 = dynamic_cast<epics::pvData::PVValueArray<T> const *>(&field)) {
-		FLOG(level, "[ %s[%lu] ]", type_name<T>(), p1->getLength());
-		char buf1[16];
-		snprintf(buf1, 16, "%%*s[%%d] = %s\n", fmt);
-		for (size_t i1 = 0; i1 < p1->getLength() and i1 < 7; ++i1) {
-			// FLOG does not handle non-literal format strings
-			//FLOG(level+1, buf1, i1, p1->view().at(i1));
-			printf(buf1, 2*level, "", i1, p1->view().at(i1));
-		}
-		return true;
-	}
-	return false;
-}
-
-void inspect_PVField(epics::pvData::PVField const & field, int level = 0) {
-	// TODO
-	// After this initial 'getting-to-know-Epics' refactor into polymorphic access
-	FLOG(level, "inspect_PVField  getFieldName: %s  getFullName: %s  getField()->getID(): %s  getNumberFields: %lu",
-		field.getFieldName().c_str(),
-		field.getFullName().c_str(),
-		field.getField()->getID().c_str(),
-		field.getNumberFields()
-	);
-	if (auto p1 = dynamic_cast<PVStructure const *>(&field)) {
-		inspect_PVStructure(*p1, level);
-		if (false) {
-			// Older tests:
-			// One possibility:  get the Field
-			LOG(0, "%lx", p1->getField().get());
-			LOG(0, "ele->pvStructurePtr->getField()->getID(): %s", p1->getField()->getID().c_str());
-		}
-	}
-	else if (auto p1 = dynamic_cast<epics::pvData::PVScalarValue<float> const *>(&field)) {
-		FLOG(level, "[   float == % e]", p1->get());
-	}
-	else if (auto p1 = dynamic_cast<epics::pvData::PVScalarValue<double> const *>(&field)) {
-		FLOG(level, "[  double == % e]", p1->get());
-	}
-	else if (auto p1 = dynamic_cast<epics::pvData::PVScalarValue< int32_t> const *>(&field)) {
-		FLOG(level, "[ int32_t == % d]", p1->get());
-	}
-	else if (auto p1 = dynamic_cast<epics::pvData::PVScalarValue<uint32_t> const *>(&field)) {
-		FLOG(level, "[uint32_t == % d]", p1->get());
-	}
-	else if (auto p1 = dynamic_cast<epics::pvData::PVScalarValue< int64_t> const *>(&field)) {
-		FLOG(level, "[ int64_t == % ld]", p1->get());
-	}
-	else if (auto p1 = dynamic_cast<epics::pvData::PVScalarValue<uint64_t> const *>(&field)) {
-		FLOG(level, "[uint64_t == % ld]", p1->get());
-	}
-	else if (auto p1 = dynamic_cast<epics::pvData::PVScalarValue<std::string> const *>(&field)) {
-		FLOG(level, "[  string == %s]", p1->get().c_str());
-	}
-
-	// Care about array types:
-	else if (inspect_PVField_a< float>  (field, level, "% e")) {}
-	else if (inspect_PVField_a< double> (field, level, "% e")) {}
-	else if (inspect_PVField_a<uint8_t> (field, level, "%u")) {}
-	else if (inspect_PVField_a< int8_t> (field, level, "% d")) {}
-	else if (inspect_PVField_a<uint16_t>(field, level, "%u")) {}
-	else if (inspect_PVField_a< int16_t>(field, level, "% d")) {}
-	else if (inspect_PVField_a<uint32_t>(field, level, "%u")) {}
-	else if (inspect_PVField_a< int32_t>(field, level, "% d")) {}
-	else if (inspect_PVField_a<uint64_t>(field, level, "%lu")) {}
-	else if (inspect_PVField_a< int64_t>(field, level, "% ld")) {}
-	else {
-		FLOG(level, "[can not handle this]");
-	}
-}
-
-
-
-
-void inspect_PVStructure(epics::pvData::PVStructure const & pvstr, int level) {
-	FLOG(level, "inspect_PVStructure");
-	// getStructure is only on PVStructure, not on PVField
-	//auto & str = *pvstr.getStructure();
-
-	auto & subfields = pvstr.getPVFields();
-	FLOG(level, "subfields.size(): %lu", subfields.size());
-	for (auto & f1ptr : subfields) {
-		auto & f1 = *f1ptr;
-		inspect_PVField(f1, 1+level);
-	}
-}
-
 
 
 class PVStructureToFlatBuffer {
@@ -871,7 +699,6 @@ void MonitorRequester::monitorEvent(epics::pvData::MonitorPtr const & monitor) {
 		// Does that mean that we never get a scalar here directly??
 
 		auto & pvstr = ele->pvStructurePtr;
-		if (false) inspect_PVField(*pvstr);
 
 		// NOTE
 		// One assumption is currently that we stream only certain types from EPICS,
@@ -886,15 +713,9 @@ void MonitorRequester::monitorEvent(epics::pvData::MonitorPtr const & monitor) {
 			monitor_HL->go_into_failure_mode();
 		}
 		else {
-			auto & t = monitor_HL->topic_mapping->topic_mapping_settings.type;
 			auto flat_buffer = conv_to_flatbuffer->convert(monitor_HL->topic_mapping->topic_mapping_settings, pvstr);
 			monitor_HL->emit(std::move(flat_buffer));
 			monitor->release(ele);
-			if (false and t == TopicMappingType::EPICS_CA_VALUE) {
-				// This caused sometimes segfault in epics thread when the database went on/off
-				LOG(9, "reading a EPICS_CA_VALUE");
-				inspect_PVStructure(*pvstr);
-			}
 		}
 	}
 }
@@ -903,25 +724,6 @@ void MonitorRequester::unlisten(epics::pvData::MonitorPtr const & monitor) {
 	LOG(3, "monitor source no longer available");
 }
 
-
-
-
-
-
-
-
-
-class IntrospectField : public ActionOnField {
-public:
-IntrospectField(Monitor::wptr monitor) : ActionOnField(monitor) { }
-void operator () (Field const & field) override {
-	// TODO
-	// Check that we understand the field content.
-	// Need to discuss possible constraints?
-	LOG(3, "inspecting field");
-	inspect_Field(field);
-}
-};
 
 
 
@@ -939,24 +741,6 @@ void operator () (epics::pvAccess::Channel::shared_pointer const & channel) over
 	if (monitor) {
 		monitor->initiate_value_monitoring();
 	}
-	return;
-
-	// The remainder is optional, used for testing:
-	// It demonstrated the getField() on a channel, which requests a specific
-	// subfield.
-
-	// Channel::getField is used to get the introspection information.
-	// It is not necessary if we are only interested in the value itself.
-	gfr.reset(new GetFieldRequesterForAction(channel, std::unique_ptr<IntrospectField>(new IntrospectField(monitor) )));
-
-	// 2nd parameter:
-	// http://epics-pvdata.sourceforge.net/docbuild/pvAccessCPP/tip/documentation/html/classepics_1_1pvAccess_1_1Channel.html#a506309575eed705e97cf686bd04f5c04
-
-	// 2nd argument does maybe specify the subfield, not tested yet.  NOTE: *sub*-field!
-	// 'pvinfo' actually uses an empty string here.
-	// Is empty string then 'the whole channel itself' ?  Apparently yes.
-	// "" is the full field
-	channel->getField(gfr, "");
 }
 
 private:
