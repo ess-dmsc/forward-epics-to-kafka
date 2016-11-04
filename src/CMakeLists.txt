@@ -247,13 +247,19 @@ set_property(TARGET ${tgt} APPEND PROPERTY INCLUDE_DIRECTORIES ${path_include_fl
 set_property(TARGET ${tgt} APPEND PROPERTY INCLUDE_DIRECTORIES ${CMAKE_CURRENT_BINARY_DIR})
 add_dependencies(${tgt} flatbuffers_generate)
 
-
-
-set(tgt config-msg)
-add_executable(${tgt}
+set (SOURCES 
 helper.cxx
 logger.cxx
 config-msg.cxx
+)
+
+if (WIN32)
+set(SOURCES ${SOURCES} wingetopt.c)
+endif (WIN32)
+
+set(tgt config-msg)
+add_executable(${tgt}
+${SOURCES}
 ${path_include_fmt}/fmt/format.cc
 ${CMAKE_CURRENT_BINARY_DIR}/git_commit_current.cxx
 )
