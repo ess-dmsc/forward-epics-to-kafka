@@ -399,7 +399,7 @@ PVStructureToFlatBuffer::ptr PVStructureToFlatBuffer::create(epics::pvData::PVSt
 			uint64_t,
 			float,
 			double,
-			boolean
+			epics::pvData::boolean
 			>::impl(pv_value)) {
 				return x;
 		}
@@ -418,7 +418,7 @@ PVStructureToFlatBuffer::ptr PVStructureToFlatBuffer::create(epics::pvData::PVSt
 			uint64_t,
 			float,
 			double,
-			boolean
+			epics::pvData::boolean
 			>::impl(pv_value)) {
 				return x;
 		}

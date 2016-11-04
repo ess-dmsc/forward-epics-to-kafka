@@ -6,8 +6,15 @@
 #include <memory>
 #include <string>
 #include <cstring>
+
+#ifdef _MSC_VER
+#include "wingetopt.h"
+#elif _AIX
 #include <unistd.h>
+#else
 #include <getopt.h>
+#endif
+
 #include "git_commit_current.h"
 #include "logger.h"
 #include <librdkafka/rdkafka.h>
