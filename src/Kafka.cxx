@@ -232,8 +232,10 @@ void Instance::poll_run() {
 		if (i1 % 10 == 0) {
 			//LOG(3, "Polling, queue length {}", rd_kafka_outq_len(rk));
 		}
-		int n1 = rd_kafka_poll(rk, 100);
-		//LOG(0, "poll served callbacks: {}  queue: {}", n1, rd_kafka_outq_len(rk));
+		if (false) {
+			int n1 = rd_kafka_poll(rk, 100);
+			LOG(0, "poll served callbacks: {}  queue: {}", n1, rd_kafka_outq_len(rk));
+		}
 		i1 += 1;
 	}
 	LOG(3, "Poll finished");
