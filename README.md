@@ -36,6 +36,9 @@ Installed by the playbook currently under /opt/local until standardized:
 - librdkafka
 - flatbuffers
 - RapidJSON
+- fmt
+  The EPEL in dev-env does not have it, so we assume the fmt git repository in /opt/local
+  or wherever ENV[fmt_dir] points to.
 
 Tooling
 
