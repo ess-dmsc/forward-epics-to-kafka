@@ -1,20 +1,22 @@
----
 - name: Prepare build directory
   file: path={{path_libs_build}} state=directory  owner={{ansible_user_id}}  group={{ansible_user_gid}}
   become: yes
 
-- include: cmake.yml
+- name: yum cmake
+  yum: name=cmake  state=latest
+  become: true
+
+# Unfortunately not in EPEL on dev-env
+#- name: yum fmt
+#  yum: name={{item}}  state=latest
+#  with_items:
+#    - fmt
+#    - fmt-devel
+#  become: true
+
+- include: fmt.yml
 
 - include: rapidjson.yml
-
 - include: rdkafka.yml
-  tags:
-  - rdkafka
-
 - include: flatbuffers.yml
-  tags:
-  - flatbuffers
-
 - include: forward-epics-to-kafka.yml
-  tags:
-  - fwd

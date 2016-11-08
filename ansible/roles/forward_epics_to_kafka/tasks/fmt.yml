@@ -1,0 +1,10 @@
+# The EPEL is pinned to some version where fmt is not available :-(
+# So have to fetch myself...
+
+- name: mkdir
+  file: path=/opt/local/fmt  state=directory  owner={{ansible_user_id}}  group={{ansible_user_gid}}
+  become: true
+
+- name: repos
+  git: repo=https://github.com/fmtlib/fmt  version=master  dest=/opt/local/fmt
+  register: gitclone
