@@ -43,7 +43,7 @@ KafkaSettings::KafkaSettings(std::string brokers, std::string topic)
 static void kafka_error_cb(rd_kafka_t * rk, int err_i, const char * reason, void * opaque) {
 	// cast necessary because of Kafka API design
 	rd_kafka_resp_err_t err = (rd_kafka_resp_err_t) err_i;
-	LOG(7, "ERROR Kafka Config: %d, %s, %s, %s", err_i, rd_kafka_err2name(err), rd_kafka_err2str(err), reason);
+	LOG(7, "ERROR Kafka Config: {}, {}, {}, {}", err_i, rd_kafka_err2name(err), rd_kafka_err2str(err), reason);
 }
 
 
@@ -70,7 +70,7 @@ static void rebalance_cb(
 		//wait_eof = 0;
 		break;
 	default:
-		LOG(3, "failed: %s", rd_kafka_err2str(err));
+		LOG(3, "failed: {}", rd_kafka_err2str(err));
 		rd_kafka_assign(rk, NULL);
 		break;
 	}
@@ -79,7 +79,7 @@ static void rebalance_cb(
 
 
 
-#define KERR(err) if (err != 0) { LOG(1, "Kafka error code: %d", err); }
+#define KERR(err) if (err != 0) { LOG(1, "Kafka error code: {}", err); }
 
 
 
@@ -105,7 +105,7 @@ Listener::Listener(KafkaSettings settings) {
 	};
 	for (auto & c : confs) {
 		if (RD_KAFKA_CONF_OK != rd_kafka_conf_set(conf, c.at(0).c_str(), c.at(1).c_str(), errstr, errstr_N)) {
-			LOG(7, "error setting config: %s", c.at(0).c_str());
+			LOG(7, "error setting config: {}", c.at(0).c_str());
 		}
 	}
 
@@ -116,7 +116,7 @@ Listener::Listener(KafkaSettings settings) {
 		};
 		for (auto & c : confs) {
 			if (RD_KAFKA_CONF_OK != rd_kafka_topic_conf_set(topic_conf, c.at(0).c_str(), c.at(1).c_str(), errstr, errstr_N)) {
-				LOG(7, "error setting topic config: %s", c.at(0).c_str());
+				LOG(7, "error setting topic config: {}", c.at(0).c_str());
 			}
 		}
 	}
@@ -132,15 +132,15 @@ Listener::Listener(KafkaSettings settings) {
 
 	rk = rd_kafka_new(RD_KAFKA_CONSUMER, conf, errstr, errstr_N);
 	if (!rk) {
-		LOG(7, "ERROR can not create kafka handle: %s", errstr);
+		LOG(7, "ERROR can not create kafka handle: {}", errstr);
 		throw std::runtime_error("can not create Kafka handle");
 	}
 
-	LOG(3, "Name of the new Kafka handle: %s", rd_kafka_name(rk));
+	LOG(3, "Name of the new Kafka handle: {}", rd_kafka_name(rk));
 
 	rd_kafka_set_log_level(rk, LOG_DEBUG);
 
-	LOG(3, "Brokers: %s", settings.brokers.c_str());
+	LOG(3, "Brokers: {}", settings.brokers.c_str());
 	if (rd_kafka_brokers_add(rk, settings.brokers.c_str()) == 0) {
 		LOG(7, "ERROR could not add brokers");
 		throw std::runtime_error("could not add brokers");
@@ -160,7 +160,7 @@ Listener::Listener(KafkaSettings settings) {
 
 	plist = rd_kafka_topic_partition_list_new(32);
 
-	LOG(3, "Adding topic: %s", settings.topic.c_str());
+	LOG(3, "Adding topic: {}", settings.topic.c_str());
 	rd_kafka_topic_partition_list_add(plist, settings.topic.c_str(), partition);
 
 	//err = rd_kafka_subscribe(rk, plist);
@@ -196,7 +196,7 @@ void Listener::kafka_connection_information() {
 		rd_kafka_subscription(rk, &l1);
 		if (l1) {
 			for (int i1 = 0; i1 < l1->cnt; ++i1) {
-				LOG(1, "subscribed topics: %s  %s  off %d", l1->elems[i1].topic, rd_kafka_err2str(l1->elems[i1].err), l1->elems[i1].offset);
+				LOG(1, "subscribed topics: {}  {}  off {}", l1->elems[i1].topic, rd_kafka_err2str(l1->elems[i1].err), l1->elems[i1].offset);
 			}
 			rd_kafka_topic_partition_list_destroy(l1);
 		}
@@ -209,7 +209,7 @@ void Listener::kafka_connection_information() {
 	if (true) {
 		// only do this if not redirected
 		int n1 = rd_kafka_poll(rk, 0);
-		LOG(1, "config list poll served %d events", n1);
+		LOG(1, "config list poll served {} events", n1);
 	}
 }
 
@@ -244,7 +244,7 @@ void Listener::poll(Callback & cb) {
 				LOG(3, "WARNING broker will go away");
 			}
 			else {
-				LOG(1, "ERROR unhandled msg error: %s %s", rd_kafka_err2name(msg->err), rd_kafka_err2str(msg->err));
+				LOG(1, "ERROR unhandled msg error: {} {}", rd_kafka_err2name(msg->err), rd_kafka_err2str(msg->err));
 				throw std::runtime_error("unhandled error");
 			}
 		}

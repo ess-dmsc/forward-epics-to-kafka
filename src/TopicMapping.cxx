@@ -27,7 +27,7 @@ bool wait(int time, std::function<bool()> predicate) {
 	int i2 = 1;
 	for (int i1 = 0; i1 < n; ++i1) {
 		int x = i2 * time / fr + 1;
-		LOG(0, "sleeping for %d", x);
+		LOG(0, "sleeping for {}", x);
 		std::this_thread::sleep_for(std::chrono::milliseconds(x));
 		if (predicate()) return true;
 		i2 *= 2;
@@ -49,7 +49,7 @@ TopicMapping::TopicMapping(Kafka::InstanceSet & kset, TopicMappingSettings topic
 }
 
 TopicMapping::~TopicMapping() {
-	LOG(1, "TopicMapping %d dtor", id);
+	LOG(1, "TopicMapping {} dtor", id);
 	if (epics_monitor) {
 		epics_monitor->topic_mapping_gone();
 	}
@@ -64,11 +64,11 @@ bool TopicMapping::zombie_can_be_cleaned(int grace_time) {
 
 
 void TopicMapping::go_into_failure_mode() {
-	LOG(3, "failure mode for topic mapping %d", id);
+	LOG(3, "failure mode for topic mapping {}", id);
 	stop_forwarding();
 	state = State::FAILURE;
 	ts_failure = std::chrono::system_clock::now();
-	//LOG(1, "ts fail: %lu", ts_failure.time_since_epoch().count());
+	//LOG(1, "ts fail: {}", ts_failure.time_since_epoch().count());
 }
 
 
@@ -81,7 +81,7 @@ void TopicMapping::start_forwarding(Kafka::InstanceSet & kset) {
 	//this->topic = std::weak_ptr<Kafka::Topic>(kset.instance()->get_or_create_topic(topic_name()));
 	this->topic = kset.instance()->get_or_create_topic(topic_name());
 
-	LOG(0, "Start Epics monitor for %s", channel_name().c_str());
+	LOG(0, "Start Epics monitor for {}", channel_name().c_str());
 	epics_monitor.reset(new Epics::Monitor(this, channel_name()));
 	epics_monitor->init(epics_monitor);
 }
@@ -122,12 +122,12 @@ void TopicMapping::emit(ForwardEpicsToKafka::Epics::FBBptr fbuf) {
 
 	bool debug_messages = false;
 	if (!debug_messages) {
-		//LOG(5, "TM %d producing size %lu", id, fbuf->GetSize());
+		//LOG(5, "TM {} producing size {}", id, fbuf->GetSize());
 		// Produce the actual payload
 		//top->produce({reinterpret_cast<char*>(fbuf->GetBufferPointer()), fbuf->GetSize()});
 		top->produce(std::move(fbuf));
 		//auto hex = binary_to_hex(reinterpret_cast<char*>(fbuf->GetBufferPointer()), fbuf->GetSize());
-		//LOG(5, "packet in hex %d: %.*s", fbuf->GetSize(), hex.size(), hex.data());
+		//LOG(5, "packet in hex {}: {:.{}}", fbuf->GetSize(), hex.data(), hex.size());
 	}
 
 	else {
@@ -150,7 +150,7 @@ void TopicMapping::emit(ForwardEpicsToKafka::Epics::FBBptr fbuf) {
 				//top->produce({buf1.data(), size_t(n1)});
 
 
-				//LOG(3, "prod: %s", buf1.data());
+				//LOG(3, "prod: {}", buf1.data());
 			};
 			if (sid == 0) {
 				// send initializer first.  Kafka fortunately guarantees order within a partition.
@@ -174,7 +174,7 @@ TopicMapping::State TopicMapping::health_state() const { return state; }
 
 void TopicMapping::health_selfcheck() {
 	if (topic) {
-		LOG(0, "topic.healthy(): %d", topic->healthy());
+		LOG(0, "topic.healthy(): {}", topic->healthy());
 	}
 	else {
 		LOG(0, "topic == nullptr");
@@ -190,7 +190,7 @@ void TopicMapping::health_selfcheck() {
 		// Check whether we are already too long in INIT state
 		auto a = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now() - ts_init).count();
 		if (a > 4) {
-			LOG(1, "ERROR init took too long: %d", a);
+			LOG(1, "ERROR init took too long: {}", a);
 			go_into_failure_mode();
 			return;
 		}

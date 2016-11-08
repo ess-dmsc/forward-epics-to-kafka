@@ -84,8 +84,8 @@ void add_name_timeStamp(flatbuffers::FlatBufferBuilder & b1, EpicsPVBuilder & b2
 		ts->getSubField<epics::pvData::PVScalarValue<int64_t>>("secondsPastEpoch")->get(),
 		ts->getSubField<epics::pvData::PVScalarValue<int>>("nanoseconds")->get()
 	);
-	//LOG(5, "secondsPastEpoch: %20ld", timeStamp.secondsPastEpoch());
-	//LOG(5, "nanoseconds:      %20ld", timeStamp.nanoseconds());
+	//LOG(5, "secondsPastEpoch: {:20}", timeStamp.secondsPastEpoch());
+	//LOG(5, "nanoseconds:      {:20}", timeStamp.nanoseconds());
 	b2.add_timeStamp(&timeStamp);
 }
 
@@ -160,7 +160,7 @@ FBT convert(TopicMappingSettings & tms, epics::pvData::PVStructure::shared_point
 		auto f2 = static_cast<epics::pvData::PVScalarValue<T0>*>(f1.get());
 		T0 val = f2->get();
 		//auto hex = binary_to_hex((char*)&val, sizeof(T0));
-		//LOG(1, "packing %s: %.*s", typeid(T0).name(), hex.size(), hex.data());
+		//LOG(1, "packing {}: {:.{}}", typeid(T0).name(), hex.data(), hex.size());
 		scalar_builder.add_value(val);
 	}
 	auto scalar_fin = scalar_builder.Finish();
@@ -281,11 +281,11 @@ FBT convert(TopicMappingSettings & tms, epics::pvData::PVStructure::shared_point
 		auto svec = f1->view();
 		auto nlen = svec.size();
 		//auto hex = binary_to_hex((char*)svec.data(), svec.size() * sizeof(T0));
-		//LOG(1, "packing %s array: %.*s", typeid(T0).name(), hex.size(), hex.data());
+		//LOG(1, "packing {} array: {:.{}}", typeid(T0).name(), hex.data(), hex.size());
 
 		if (tms.is_chopper_TDCE) {
 			nlen = svec.at(0) + 2;
-			LOG(0, "Note: TDCE nlen: %lu", nlen);
+			LOG(0, "Note: TDCE nlen: {}", nlen);
 		}
 
 		// Silence warning about char vs. signed char
@@ -378,7 +378,7 @@ static PVStructureToFlatBuffer::ptr impl(epics::pvData::PVField::shared_pointer 
 
 PVStructureToFlatBuffer::ptr PVStructureToFlatBuffer::create(epics::pvData::PVStructure::shared_pointer & pvstr) {
 	auto id = pvstr->getField()->getID();
-	LOG(9, "pvstr->getField()->getID(): %s", id.c_str());
+	LOG(9, "pvstr->getField()->getID(): {}", id.c_str());
 	auto pv_value = pvstr->getSubField("value");
 	if (!pv_value) {
 		LOG(5, "ERROR PVField has no subfield 'value'");
@@ -481,7 +481,7 @@ string ChannelRequester::getRequesterName() {
 }
 
 void ChannelRequester::message(std::string const & message, MessageType messageType) {
-	LOG(3, "Message for: %s  msg: %s  msgtype: %s", getRequesterName().c_str(), message.c_str(), getMessageTypeName(messageType).c_str());
+	LOG(3, "Message for: {}  msg: {}  msgtype: {}", getRequesterName().c_str(), message.c_str(), getMessageTypeName(messageType).c_str());
 }
 
 
@@ -503,22 +503,22 @@ void ChannelRequester::channelCreated(epics::pvData::Status const & status, Chan
 			if (monitor) monitor->go_into_failure_mode();
 		}
 	#endif
-	LOG(0, "ChannelRequester::channelCreated:  (int)status.isOK(): %d", (int)status.isOK());
+	LOG(0, "ChannelRequester::channelCreated:  (int)status.isOK(): {}", (int)status.isOK());
 	if (!status.isOK() or !status.isSuccess()) {
 		// quick fix until decided on logging system..
 		std::ostringstream s1;
 		s1 << status;
-		LOG(3, "WARNING ChannelRequester::channelCreated:  %s", s1.str().c_str());
+		LOG(3, "WARNING ChannelRequester::channelCreated:  {}", s1.str().c_str());
 	}
 	if (!status.isSuccess()) {
 		// quick fix until decided on logging system..
 		std::ostringstream s1;
 		s1 << status;
-		LOG(6, "ChannelRequester::channelCreated:  failure: %s", s1.str().c_str());
+		LOG(6, "ChannelRequester::channelCreated:  failure: {}", s1.str().c_str());
 		if (channel) {
 			// Yes, take a copy
 			std::string cname = channel->getChannelName();
-			LOG(6, "  failure is in channel: %s", cname.c_str());
+			LOG(6, "  failure is in channel: {}", cname.c_str());
 		}
 		if (monitor) monitor->go_into_failure_mode();
 	}
@@ -526,7 +526,7 @@ void ChannelRequester::channelCreated(epics::pvData::Status const & status, Chan
 
 void ChannelRequester::channelStateChange(Channel::shared_pointer const & channel, Channel::ConnectionState cstate) {
 	auto monitor = action->monitor.lock();
-	LOG(0, "channel state change: %s", Channel::ConnectionStateNames[cstate]);
+	LOG(0, "channel state change: {}", Channel::ConnectionStateNames[cstate]);
 	if (cstate == Channel::DISCONNECTED) {
 		LOG(1, "Epics channel disconnect");
 		if (monitor) monitor->go_into_failure_mode();
@@ -538,11 +538,11 @@ void ChannelRequester::channelStateChange(Channel::shared_pointer const & channe
 		return;
 	}
 	else if (cstate != Channel::CONNECTED) {
-		LOG(6, "Unhandled channel state change: %s", channel_state_name(cstate));
+		LOG(6, "Unhandled channel state change: {}", channel_state_name(cstate));
 		if (monitor) monitor->go_into_failure_mode();
 	}
 	if (!channel) {
-		LOG(6, "ERROR no channel, even though we should have.  state: %s", channel_state_name(cstate));
+		LOG(6, "ERROR no channel, even though we should have.  state: {}", channel_state_name(cstate));
 		if (monitor) monitor->go_into_failure_mode();
 	}
 
@@ -581,7 +581,7 @@ GetFieldRequesterForAction::GetFieldRequesterForAction(epics::pvAccess::Channel:
 string GetFieldRequesterForAction::getRequesterName() { return STRINGIFY(GetFieldRequesterForAction); }
 
 void GetFieldRequesterForAction::message(string const & msg, epics::pvData::MessageType msgT) {
-	LOG(3, "%s", msg.c_str());
+	LOG(3, "GetFieldRequesterForAction::message: {}", msg.c_str());
 }
 
 void GetFieldRequesterForAction::getDone(epics::pvData::Status const & status, epics::pvData::FieldConstPtr const & field) {
@@ -645,7 +645,7 @@ MonitorRequester::~MonitorRequester() {
 string MonitorRequester::getRequesterName() { return "MonitorRequester"; }
 
 void MonitorRequester::message(string const & msg, epics::pvData::MessageType msgT) {
-	LOG(3, "%s", msg.c_str());
+	LOG(3, "MonitorRequester::message: {}", msg.c_str());
 }
 
 
@@ -781,7 +781,7 @@ void Monitor::stop() {
 	RMLG lg(m_mutex_emitter);
 	try {
 		if (mon) {
-			//LOG(5, "stopping monitor for TM %d", topic_mapping->id);
+			//LOG(5, "stopping monitor for TM {}", topic_mapping->id);
 
 			// TODO
 			// After some debugging, it seems to me that even though we call stop() on Epics
@@ -801,7 +801,7 @@ void Monitor::stop() {
 		}
 	}
 	catch (std::runtime_error & e) {
-		LOG(5, "Runtime error from Epics: %s", e.what());
+		LOG(5, "Runtime error from Epics: {}", e.what());
 		go_into_failure_mode();
 	}
 }

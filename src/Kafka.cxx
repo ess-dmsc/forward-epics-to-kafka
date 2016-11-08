@@ -17,7 +17,7 @@ namespace ForwardEpicsToKafka {
 namespace Kafka {
 
 InstanceSet & InstanceSet::Set(std::string brokers) {
-	LOG(3, "Kafka InstanceSet with rdkafka version: %s", rd_kafka_version_str());
+	LOG(3, "Kafka InstanceSet with rdkafka version: {}", rd_kafka_version_str());
 	static std::unique_ptr<InstanceSet> kset;
 	if (!kset) {
 		kset.reset(new InstanceSet(brokers));
@@ -76,13 +76,15 @@ static void msg_delivered_cb(
 	// TODO
 	// Use callback to reuse our message buffers
 	if (rkmessage->err) {
-		LOG(6, "ERROR on delivery, topic %s, %s, %s", rd_kafka_topic_name(rkmessage->rkt), rd_kafka_err2str(rkmessage->err), rd_kafka_message_errstr(rkmessage));
+		LOG(6, "ERROR on delivery, topic {}, {}, {}",
+			rd_kafka_topic_name(rkmessage->rkt),
+			rd_kafka_err2str(rkmessage->err),
+			rd_kafka_message_errstr(rkmessage));
 	}
 	else {
-		//LOG(3, "OK delivered (%zd bytes, offset %ld, partition %d): %.*s\n",
-		//	rkmessage->len, rkmessage->offset, rkmessage->partition, (int)rkmessage->len, (const char *)rkmessage->payload);
-		//LOG(3, "OK delivered (%zd bytes, offset %ld, partition %d)",
-		//	rkmessage->len, rkmessage->offset, rkmessage->partition);
+		//LOG(3, "OK delivered ({} bytes, offset {}, partition {}): {:.{}}\n",
+		//	rkmessage->len, rkmessage->offset, rkmessage->partition,
+		//	(const char *)rkmessage->payload, (int)rkmessage->len);
 	}
 	auto fbuf = static_cast<Epics::FBBptr::pointer>(rkmessage->_private);
 	if (fbuf) {
@@ -93,7 +95,7 @@ static void msg_delivered_cb(
 static void kafka_error_cb(rd_kafka_t * rk, int err_i, const char * reason, void * opaque) {
 	// cast necessary because of Kafka API design
 	rd_kafka_resp_err_t err = (rd_kafka_resp_err_t) err_i;
-	LOG(7, "ERROR Kafka: %d, %s, %s, %s", err_i, rd_kafka_err2name(err), rd_kafka_err2str(err), reason);
+	LOG(7, "ERROR Kafka: {}, {}, {}, {}", err_i, rd_kafka_err2name(err), rd_kafka_err2str(err), reason);
 
 	// Can not throw, as it's Kafka's thread.
 	// Must notify my watchdog though.
@@ -104,7 +106,7 @@ static void kafka_error_cb(rd_kafka_t * rk, int err_i, const char * reason, void
 
 
 static int stats_cb_kafka(rd_kafka_t * rk, char * json, size_t json_len, void * opaque) {
-	LOG(3, "INFO stats_cb length %d   %.*s", json_len, json_len, json);
+	LOG(3, "INFO stats_cb length {}   {:.{}}", json_len, json, json_len);
 	// TODO
 	// What does Kafka want us to return from this callback?
 	return 0;
@@ -115,11 +117,11 @@ static int stats_cb_kafka(rd_kafka_t * rk, char * json, size_t json_len, void * 
 Instance::Instance() {
 	static int id_ = 0;
 	id = id_++;
-	LOG(5, "Instance %d created.", id.load());
+	LOG(5, "Instance {} created.", id.load());
 }
 
 Instance::~Instance() {
-	LOG(5, "Instance %d goes away.", id.load());
+	LOG(5, "Instance {} goes away.", id.load());
 	poll_stop();
 	if (rk) {
 		LOG(3, "try to destroy kafka");
@@ -191,22 +193,22 @@ void Instance::init() {
 
 		for (auto & c : confs) {
 			if (RD_KAFKA_CONF_OK != rd_kafka_conf_set(conf, c.at(0).c_str(), c.at(1).c_str(), errstr, errstr_N)) {
-				LOG(7, "error setting config: %s", c.at(0).c_str());
+				LOG(7, "error setting config: {}", c.at(0).c_str());
 			}
 		}
 	}
 
 	rk = rd_kafka_new(RD_KAFKA_PRODUCER, conf, errstr, errstr_N);
 	if (!rk) {
-		LOG(7, "ERROR can not create kafka handle: %s", errstr);
+		LOG(7, "ERROR can not create kafka handle: {}", errstr);
 		throw std::runtime_error("can not create Kafka handle");
 	}
 
-	LOG(3, "Name of the new Kafka handle: %s", rd_kafka_name(rk));
+	LOG(3, "Name of the new Kafka handle: {}", rd_kafka_name(rk));
 
 	rd_kafka_set_log_level(rk, LOG_DEBUG);
 
-	LOG(3, "Brokers: %s", brokers.c_str());
+	LOG(3, "Brokers: {}", brokers.c_str());
 	if (rd_kafka_brokers_add(rk, brokers.c_str()) == 0) {
 		LOG(7, "ERROR could not add brokers");
 		throw std::runtime_error("could not add brokers");
@@ -228,10 +230,10 @@ void Instance::poll_run() {
 	int i1 = 0;
 	while (do_poll) {
 		if (i1 % 10 == 0) {
-			//LOG(3, "Polling, queue length %d", rd_kafka_outq_len(rk));
+			//LOG(3, "Polling, queue length {}", rd_kafka_outq_len(rk));
 		}
 		int n1 = rd_kafka_poll(rk, 100);
-		//LOG(0, "poll served callbacks: %d  queue: %d", n1, rd_kafka_outq_len(rk));
+		//LOG(0, "poll served callbacks: {}  queue: {}", n1, rd_kafka_outq_len(rk));
 		i1 += 1;
 	}
 	LOG(3, "Poll finished");
@@ -266,7 +268,7 @@ sptr<Topic> Instance::get_or_create_topic(std::string topic_name) {
 	for (auto & x : topics) {
 		if (auto sp = x.lock()) {
 			if (sp->topic_name() == topic_name) {
-				LOG(3, "reuse topic \"%s\", using %lu so far", topic_name.c_str(), topics.size());
+				LOG(3, "reuse topic \"{}\", using {} so far", topic_name.c_str(), topics.size());
 				return sp;
 			}
 		}
@@ -338,7 +340,7 @@ Topic::Topic(sptr<Instance> ins, std::string topic_name)
 		};
 		for (auto & c : confs) {
 			if (RD_KAFKA_CONF_OK != rd_kafka_topic_conf_set(topic_conf, c.at(0).c_str(), c.at(1).c_str(), errstr, errstr_N)) {
-				LOG(7, "error setting config: %s", c.at(0).c_str());
+				LOG(7, "error setting config: {}", c.at(0).c_str());
 			}
 		}
 	}
@@ -347,10 +349,10 @@ Topic::Topic(sptr<Instance> ins, std::string topic_name)
 	if (rkt == nullptr) {
 		// Seems like Kafka uses the system error code?
 		auto errstr = rd_kafka_err2str(rd_kafka_errno2err(errno));
-		LOG(7, "ERROR could not create Kafka topic: %s", errstr);
+		LOG(7, "ERROR could not create Kafka topic: {}", errstr);
 		throw std::exception();
 	}
-	LOG(0, "OK, seems like we've added topic %s", rd_kafka_topic_name(rkt));
+	LOG(0, "OK, seems like we've added topic {}", rd_kafka_topic_name(rkt));
 }
 
 Topic::~Topic() {
@@ -383,7 +385,7 @@ void Topic::produce(Epics::FBBptr fbuf) {
 	//x = rd_kafka_produce(rkt, partition, msgflags, buf.begin, buf.size, key, key_len, callback_data);
 	x = rd_kafka_produce(rkt, partition, msgflags, fbuf->GetBufferPointer(), fbuf->GetSize(), key, key_len, callback_data);
 	if (x != 0) {
-		LOG(7, "ERROR on produce topic %s  partition %i: %s", rd_kafka_topic_name(rkt), partition, rd_kafka_err2str(rd_kafka_last_error()));
+		LOG(7, "ERROR on produce topic {}  partition {}: {}", rd_kafka_topic_name(rkt), partition, rd_kafka_err2str(rd_kafka_last_error()));
 		throw std::runtime_error("ERROR on message send");
 		// even when taking out exception in future, return here
 		return;
@@ -393,7 +395,7 @@ void Topic::produce(Epics::FBBptr fbuf) {
 	// until the callback is called.
 	fbuf.release();
 
-	//LOG(0, "sent to topic %s partition %i", rd_kafka_topic_name(rkt), partition);
+	//LOG(0, "sent to topic {} partition {}", rd_kafka_topic_name(rkt), partition);
 }
 
 

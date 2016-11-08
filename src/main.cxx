@@ -9,6 +9,7 @@
 #include <string>
 #include <cstring>
 
+#include <fmt/format.h>
 #include "logger.h"
 #include "configuration.h"
 #include "TopicMapping.h"
@@ -153,7 +154,7 @@ Main & main;
 void ConfigCB::operator() (std::string const & msg) {
 	using std::string;
 	using namespace rapidjson;
-	LOG(0, "Command received: %s", msg.c_str());
+	LOG(0, "Command received: {}", msg.c_str());
 	Document j0;
 	j0.Parse(msg.c_str());
 	if (j0["cmd"] == "add") {
@@ -188,7 +189,7 @@ Main::Main(MainOpt opt) : main_opt(opt), kafka_instance_set(Kafka::InstanceSet::
 					auto type_1 = m["type"].GetString();
 					if (not type_1) type_1 = "EPICS_PVA_NT";
 					string type(type_1);
-					LOG(9, "entry %s   %s", type_1, type.c_str());
+					LOG(9, "entry {}   {}", type_1, type.c_str());
 					if (type == "chopper") {
 						auto channel = m["channel"].GetString();
 						auto topic = m["topic"].GetString();
@@ -396,7 +397,7 @@ void Main::report_stats(int started_in_current_round) {
 	RMLG lg1(m_tms_to_start_mutex);
 	RMLG lg2(m_tms_to_delete_mutex);
 	RMLG lg3(m_tms_zombies_mutex);
-	LOG(1, "running %6d   to_start: %6d   failure %6d   started %5d   to_delete %5d   zombies %5d",
+	LOG(1, "running {:6}   to_start: {:6}   failure {:6}   started {:5}   to_delete {:5}   zombies {:5}",
 		(int)tms.size(),
 		(int)tms_to_start.size(),
 		(int)tms_failed.size(),
@@ -488,7 +489,7 @@ int main(int argc, char ** argv) {
 	bool getopt_error = false;
 	while (true) {
 		int c = getopt_long(argc, argv, "v", long_options, &option_index);
-		//LOG(5, "c getopt %d", c);
+		//LOG(5, "c getopt {}", c);
 		if (c == -1) break;
 		if (c == '?') {
 			//LOG(5, "option argument missing");
@@ -583,7 +584,7 @@ int main(int argc, char ** argv) {
 		main.forward_epics_to_kafka();
 	}
 	catch (std::runtime_error & e) {
-		LOG(6, "CATCH runtime error in main watchdog thread: %s", e.what());
+		LOG(6, "CATCH runtime error in main watchdog thread: {}", e.what());
 	}
 	catch (std::exception & e) {
 		LOG(6, "CATCH EXCEPTION in main watchdog thread");
