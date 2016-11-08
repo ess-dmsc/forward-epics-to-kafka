@@ -38,7 +38,8 @@ Installed by the playbook currently under /opt/local until standardized:
 - RapidJSON
 - fmt
   The EPEL in dev-env does not have it, so we assume the fmt git repository in /opt/local
-  or wherever ENV[fmt_dir] points to.
+  as used by the Ansible script, or wherever ENV[fmt_dir] points to.
+  <https://github.com/fmtlib/fmt>
 
 Tooling
 
