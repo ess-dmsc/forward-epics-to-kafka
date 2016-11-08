@@ -251,6 +251,8 @@ set (SOURCES
 helper.cxx
 logger.cxx
 config-msg.cxx
+${path_include_fmt}/fmt/format.cc
+${CMAKE_CURRENT_BINARY_DIR}/git_commit_current.cxx
 )
 
 if (WIN32)
@@ -258,11 +260,7 @@ set(SOURCES ${SOURCES} wingetopt.c)
 endif (WIN32)
 
 set(tgt config-msg)
-add_executable(${tgt}
-${SOURCES}
-${path_include_fmt}/fmt/format.cc
-${CMAKE_CURRENT_BINARY_DIR}/git_commit_current.cxx
-)
+add_executable(${tgt} ${SOURCES})
 add_dependencies(${tgt} git_commit_current)
 target_include_directories(${tgt} PRIVATE ${path_include_fmt})
 set_property(TARGET ${tgt} APPEND PROPERTY INCLUDE_DIRECTORIES ${path_include_rdkafka})
