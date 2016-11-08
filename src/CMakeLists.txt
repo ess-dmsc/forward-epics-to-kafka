@@ -47,6 +47,14 @@ set(epics_pvAccess_version 4.1.2)
 # compiler/gcc/compilerSpecific.h
 
 
+# fmt not in the EPEL pinned by the dev-env crew.
+# So use the source version:
+find_path(path_include_fmt NAMES fmt/format.cc PATHS
+  "$ENV{fmt_dir}"
+  /opt/local
+)
+#find_library(path_lib_fmt NAMES fmt)
+
 find_path(path_include_epics_base NAMES epicsTypes.h PATHS
  "$ENV{epicsbase_dir}/include"
  /opt/epics/bases/base-${epics_base_version}/include
@@ -150,6 +158,10 @@ else ()
 endif()
 
 
+# Not in EPEL on dev-env
+#add_library(fmt SHARED IMPORTED)
+#set_property(TARGET fmt PROPERTY IMPORTED_LOCATION ${path_lib_fmt})
+
 add_library(epicsbase SHARED IMPORTED)
 set_property(TARGET epicsbase PROPERTY IMPORTED_LOCATION ${path_lib_epics_ca})
 
@@ -177,21 +189,20 @@ Kafka.cxx
 epics.cxx
 Config.cxx
 main.cxx
+${path_include_fmt}/fmt/format.cc
+${CMAKE_CURRENT_BINARY_DIR}/git_commit_current.cxx
 )
 
 if (WIN32)
 set(SOURCES ${SOURCES} wingetopt.c)
 endif (WIN32)
 
-add_executable(${tgt}
-${SOURCES}
-${CMAKE_CURRENT_BINARY_DIR}/git_commit_current.cxx
-)
+add_executable(${tgt} ${SOURCES})
 
-
-
+add_dependencies(${tgt} flatbuffers_generate)
 add_dependencies(${tgt} git_commit_current)
 
+target_include_directories(${tgt} PRIVATE ${path_include_fmt})
 set_property(TARGET ${tgt} APPEND PROPERTY INCLUDE_DIRECTORIES ${path_include_epics_base})
 set_property(TARGET ${tgt} APPEND PROPERTY INCLUDE_DIRECTORIES ${path_include_epics_base}/os/Linux)
 set_property(TARGET ${tgt} APPEND PROPERTY INCLUDE_DIRECTORIES ${path_include_epics_base}/compiler/gcc)
@@ -210,9 +221,6 @@ set_property(TARGET ${tgt} APPEND PROPERTY INCLUDE_DIRECTORIES ${path_include_co
 set_property(TARGET ${tgt} APPEND PROPERTY INCLUDE_DIRECTORIES ${path_include_configuration_manager}/cppzmq)
 endif()
 
-
-add_dependencies(${tgt} flatbuffers_generate)
-
 target_link_libraries(${tgt} epicsbase)
 target_link_libraries(${tgt} libpvData)
 target_link_libraries(${tgt} libpvAccess)
@@ -230,7 +238,10 @@ add_executable(${tgt}
 helper.cxx
 logger.cxx
 read-buffer.cxx
+${path_include_fmt}/fmt/format.cc
+${CMAKE_CURRENT_BINARY_DIR}/git_commit_current.cxx
 )
+add_dependencies(${tgt} git_commit_current)
 set_property(TARGET ${tgt} APPEND PROPERTY INCLUDE_DIRECTORIES ${path_include_flatbuffers})
 set_property(TARGET ${tgt} APPEND PROPERTY INCLUDE_DIRECTORIES ${CMAKE_CURRENT_BINARY_DIR})
 add_dependencies(${tgt} flatbuffers_generate)
@@ -242,6 +253,7 @@ add_executable(${tgt}
 helper.cxx
 logger.cxx
 config-msg.cxx
+${path_include_fmt}/fmt/format.cc
 ${CMAKE_CURRENT_BINARY_DIR}/git_commit_current.cxx
 )
 add_dependencies(${tgt} git_commit_current)
