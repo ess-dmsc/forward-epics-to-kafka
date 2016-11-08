@@ -242,6 +242,7 @@ ${path_include_fmt}/fmt/format.cc
 ${CMAKE_CURRENT_BINARY_DIR}/git_commit_current.cxx
 )
 add_dependencies(${tgt} git_commit_current)
+target_include_directories(${tgt} PRIVATE ${path_include_fmt})
 set_property(TARGET ${tgt} APPEND PROPERTY INCLUDE_DIRECTORIES ${path_include_flatbuffers})
 set_property(TARGET ${tgt} APPEND PROPERTY INCLUDE_DIRECTORIES ${CMAKE_CURRENT_BINARY_DIR})
 add_dependencies(${tgt} flatbuffers_generate)
@@ -257,6 +258,7 @@ ${path_include_fmt}/fmt/format.cc
 ${CMAKE_CURRENT_BINARY_DIR}/git_commit_current.cxx
 )
 add_dependencies(${tgt} git_commit_current)
+target_include_directories(${tgt} PRIVATE ${path_include_fmt})
 set_property(TARGET ${tgt} APPEND PROPERTY INCLUDE_DIRECTORIES ${path_include_rdkafka})
 set_property(TARGET ${tgt} APPEND PROPERTY INCLUDE_DIRECTORIES ${path_include_rapidjson})
 target_link_libraries(${tgt} librdkafka)
