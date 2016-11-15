@@ -15,7 +15,6 @@
 #  become: true
 
 - include: fmt.yml
-
 - include: rapidjson.yml
 - include: rdkafka.yml
 - include: flatbuffers.yml
