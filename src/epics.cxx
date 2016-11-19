@@ -136,7 +136,7 @@ using T1 = typename std::conditional<
 	std::is_same<T0,   uint32_t  >::value, NTScalarUIntBuilder,   typename std::conditional<
 	std::is_same<T0,   uint64_t  >::value, NTScalarULongBuilder,  typename std::conditional<
 	std::is_same<T0,   float     >::value, NTScalarFloatBuilder,  typename std::conditional<
-	std::is_same<T0,   double    >::value, NTScalarDoubleBuilder, nullptr_t
+	std::is_same<T0,   double    >::value, NTScalarDoubleBuilder, std::nullptr_t
 	>::type
 	>::type
 	>::type
@@ -199,7 +199,7 @@ using T1 = typename std::conditional<
 	std::is_same<T0, uint32_t>::value, NTScalarArrayUIntBuilder,    typename std::conditional<
 	std::is_same<T0, uint64_t>::value, NTScalarArrayULongBuilder,   typename std::conditional<
 	std::is_same<T0, float   >::value, NTScalarArrayFloatBuilder,   typename std::conditional<
-	std::is_same<T0, double  >::value, NTScalarArrayDoubleBuilder,  nullptr_t
+	std::is_same<T0, double  >::value, NTScalarArrayDoubleBuilder,  std::nullptr_t
 	>::type
 	>::type
 	>::type
@@ -225,7 +225,7 @@ using T2 = typename std::conditional<
 	std::is_same<T0, uint32_t>::value, _O<_F::NTScalarArrayUInt>,   typename std::conditional<
 	std::is_same<T0, uint64_t>::value, _O<_F::NTScalarArrayULong>,   typename std::conditional<
 	std::is_same<T0, float   >::value, _O<_F::NTScalarArrayFloat>,  typename std::conditional<
-	std::is_same<T0, double  >::value, _O<_F::NTScalarArrayDouble>, nullptr_t
+	std::is_same<T0, double  >::value, _O<_F::NTScalarArrayDouble>, std::nullptr_t
 #undef _F
 	>::type
 	>::type
@@ -253,7 +253,7 @@ using T3 = typename std::conditional<
 	std::is_same<T0, uint32_t>::value, uint32_t,   typename std::conditional<
 	std::is_same<T0, uint64_t>::value, uint64_t,   typename std::conditional<
 	std::is_same<T0,    float>::value,    float,   typename std::conditional<
-	std::is_same<T0,   double>::value,   double,   nullptr_t
+	std::is_same<T0,   double>::value,   double,   std::nullptr_t
 	>::type
 	>::type
 	>::type
