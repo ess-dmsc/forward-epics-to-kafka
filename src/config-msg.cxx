@@ -126,23 +126,25 @@ KafkaProducer(MainOpt main_opt) : main_opt(main_opt) {
 }
 
 ~KafkaProducer() {
+	if (rkt) {
+		rd_kafka_topic_destroy(rkt);
+		rkt = nullptr;
+		topic_conf = nullptr;
+	}
+	else if (topic_conf) {
+		rd_kafka_topic_conf_destroy(topic_conf);
+		topic_conf = nullptr;
+	}
 	if (rk) {
 		rd_kafka_destroy(rk);
 		rk = nullptr;
+		conf = nullptr;
 	}
 	else if (conf) {
 		// Destroy conf only if we didn't used it to create a kafka instance.
 		// Even if we created the instance, can not set conf to null because we may need it.
 		rd_kafka_conf_destroy(conf);
 		conf = nullptr;
-	}
-	if (rkt) {
-		rd_kafka_topic_destroy(rkt);
-		rkt = nullptr;
-	}
-	else if (topic_conf) {
-		rd_kafka_topic_conf_destroy(topic_conf);
-		topic_conf = nullptr;
 	}
 }
 
