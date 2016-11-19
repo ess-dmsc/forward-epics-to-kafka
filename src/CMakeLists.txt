@@ -6,7 +6,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ..)
 if (NOT CMAKE_BUILD_TYPE)
 set(CMAKE_BUILD_TYPE Release)
 endif()
-message("Build type used: ${CMAKE_BUILD_TYPE}")
+message(STATUS "Build type used: ${CMAKE_BUILD_TYPE}")
 
 
 
@@ -23,19 +23,12 @@ DEPENDS git_commit_now
 )
 
 
-
-
-# Different libs use different arch tags.
-# We target x86-64
-set(archs linux-x86_64)
-
 # Search the dev env standard locations, but it will also look in PATH
 find_program(flatc flatc PATHS "$ENV{flatc}" "$ENV{HOME}/.tools" "/opt/local/flatbuffers")
 
 
-# Using 3.15.2 because the v4 modules do not show headers yet for the more recent 3.15.4
-set(epics_arch centos7-x86_64)
-set(epics_base_version 3.15.2)
+set(epics_arch $ENV{EPICS_HOST_ARCH})
+set(epics_base_version $ENV{EPICS_V4_BASE_VERSION})
 
 # TODO
 # Should these versions be pinned here in the cmake file, or should we allow wildcard?
@@ -50,38 +43,38 @@ set(epics_pvAccess_version 4.1.2)
 # fmt not in the EPEL pinned by the dev-env crew.
 # So use the source version:
 find_path(path_include_fmt NAMES fmt/format.cc PATHS
-  "$ENV{fmt_dir}"
+  "$ENV{fmt_dir}/include"
   /opt/local
 )
 #find_library(path_lib_fmt NAMES fmt)
 
 find_path(path_include_epics_base NAMES epicsTypes.h PATHS
- "$ENV{epicsbase_dir}/include"
+ "$ENV{EPICS_BASE}/include"
  /opt/epics/bases/base-${epics_base_version}/include
 )
 
 find_library(path_lib_epics_ca NAMES ca PATHS
- $ENV{epicsbase_dir}/lib/linux-x86_64
+ $ENV{EPICS_BASE}/lib/${epics_arch}
  /opt/epics/bases/base-${epics_base_version}/lib/${epics_arch}
 )
 
 find_path(path_include_epics_pvData NAMES pv/pvData.h PATHS
- "$ENV{epicsv4_dir}/pvDataCPP/include"
+ $ENV{epicsv4_dir}/pvDataCPP/include
  /opt/epics/modules/pvDataCPP/${epics_pvData_version}/${epics_base_version}/include
 )
 
 find_library(path_lib_epics_pvData NAMES pvData pvDataCPP PATHS
- "$ENV{epicsv4_dir}/pvDataCPP/lib/linux-x86_64"
+ $ENV{epicsv4_dir}/pvDataCPP/lib/${epics_arch}
  /opt/epics/modules/pvDataCPP/${epics_pvData_version}/${epics_base_version}/lib/${epics_arch}
 )
 
 find_path(path_include_epics_pvAccess NAMES pv/pvAccess.h PATHS
- "$ENV{epicsv4_dir}/pvAccessCPP/include"
+ $ENV{epicsv4_dir}/pvAccessCPP/include
  /opt/epics/modules/pvAccessCPP/${epics_pvAccess_version}/${epics_base_version}/include
 )
 
 find_library(path_lib_epics_pvAccess NAMES pvAccess pvAccessCPP PATHS
- "$ENV{epicsv4_dir}/pvAccessCPP/lib/linux-x86_64"
+ $ENV{epicsv4_dir}/pvAccessCPP/lib/${epics_arch}
  /opt/epics/modules/pvAccessCPP/${epics_pvAccess_version}/${epics_base_version}/lib/${epics_arch}
 )
 
@@ -204,8 +197,15 @@ add_dependencies(${tgt} git_commit_current)
 
 target_include_directories(${tgt} PRIVATE ${path_include_fmt})
 set_property(TARGET ${tgt} APPEND PROPERTY INCLUDE_DIRECTORIES ${path_include_epics_base})
+
+# TODO
+# Which ENV variables in the dev env allow us to find these?
+# For now, just specify both.
 set_property(TARGET ${tgt} APPEND PROPERTY INCLUDE_DIRECTORIES ${path_include_epics_base}/os/Linux)
+set_property(TARGET ${tgt} APPEND PROPERTY INCLUDE_DIRECTORIES ${path_include_epics_base}/os/Darwin)
 set_property(TARGET ${tgt} APPEND PROPERTY INCLUDE_DIRECTORIES ${path_include_epics_base}/compiler/gcc)
+set_property(TARGET ${tgt} APPEND PROPERTY INCLUDE_DIRECTORIES ${path_include_epics_base}/compiler/clang)
+
 set_property(TARGET ${tgt} APPEND PROPERTY INCLUDE_DIRECTORIES ${path_include_epics_pvData})
 set_property(TARGET ${tgt} APPEND PROPERTY INCLUDE_DIRECTORIES ${path_include_epics_pvAccess})
 set_property(TARGET ${tgt} APPEND PROPERTY INCLUDE_DIRECTORIES ${path_include_rdkafka})
