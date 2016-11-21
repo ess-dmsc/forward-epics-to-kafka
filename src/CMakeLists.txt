@@ -80,12 +80,12 @@ find_library(path_lib_epics_pvAccess NAMES pvAccess pvAccessCPP PATHS
 )
 
 find_path(path_include_epics_NT NAMES pv/nt.h PATHS
- "$ENV{epicsv4_dir}/normativeTypesCPP/include"
+ $ENV{epicsv4_dir}/normativeTypesCPP/include
  /opt/epics/modules/normativeTypesCPP/${epics_normativeTypes_version}/${epics_base_version}/include
 )
 
 find_library(path_lib_epics_NT NAMES nt ntCPP PATHS
- "$ENV{epicsv4_dir}/normativeTypesCPP/lib/linux-x86_64"
+ $ENV{epicsv4_dir}/normativeTypesCPP/lib/${epics_arch}
  /opt/epics/modules/normativeTypesCPP/${epics_normativeTypes_version}/${epics_base_version}/lib/${epics_arch}
 )
 
