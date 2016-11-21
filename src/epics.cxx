@@ -78,9 +78,9 @@ char const * channel_state_name(epics::pvAccess::Channel::ConnectionState x) {
 namespace fbg {
 	using std::vector;
 	using fmt::print;
-	typedef struct { int type; flatbuffers::Offset<void> off; } F_t;
+	typedef struct { F type; flatbuffers::Offset<void> off; } F_t;
 
-	F_t F(flatbuffers::FlatBufferBuilder & builder, epics::pvData::PVFieldPtr const & field, int level) {
+	F_t Field(flatbuffers::FlatBufferBuilder & builder, epics::pvData::PVFieldPtr const & field, int level) {
 		auto etype = field->getField()->getType();
 		if (etype == epics::pvData::Type::structure) {
 			auto pvstr = dynamic_cast<epics::pvData::PVStructure*>(field.get());
@@ -89,40 +89,145 @@ namespace fbg {
 
 			// For each subfield, collect the offsets:
 			vector<F_t> fs;
-
 			for (auto & f1ptr : subfields) {
-				fs.push_back(F(builder, f1ptr, 1+level));
+				fs.push_back(Field(builder, f1ptr, 1+level));
 			}
 
 			for (auto & x : fs) {
-				FLOG(level, "off: {}", x.off.o);
+				FLOG(level, "off: {:d}", x.off.o);
 			}
+
+			// With the collected offsets, create object members
+			// Collect raw vector of offsets to store later in flat buffer
+			vector<flatbuffers::Offset<ObjM>> f2;
+			for (auto & x : fs) {
+				ObjMBuilder b1(builder);
+				b1.add_v_type(x.type);
+				b1.add_v(x.off);
+				f2.push_back(b1.Finish());
+			}
+			auto v1 = builder.CreateVector(f2);
+
+			ObjBuilder bo(builder);
+			bo.add_ms(v1);
+			return {F_Obj, bo.Finish().Union()};
 		}
+
 		else if (etype == epics::pvData::Type::structureArray) {
+			// Serialize all objects, collect the offsets, and store an array of those.
+			auto sa = dynamic_cast<epics::pvData::PVValueArray<epics::pvData::PVStructurePtr> const *>(field.get());
+			if (sa) {
+				FLOG(level, "[size(): {}]", sa->view().size());
+				vector<flatbuffers::Offset<Obj>> v1;
+				for (auto & x : sa->view()) {
+					FLOG(1+level, "OK");
+					auto sub = Field(builder, x, 1+level);
+					if (sub.type != F_Obj) {
+						throw std::runtime_error("mismatched types in the EPICS structure");
+						// TODO could return NONE?
+					}
+					v1.push_back(sub.off.o);
+				}
+				auto v2 = builder.CreateVector(v1);
+				Obj_aBuilder b(builder);
+				b.add_v(v2);
+				// Normally, we should reach this return:
+				return {F_Obj_a, b.Finish().Union()};
+			}
+			else {
+				FLOG(level+2, "[ERROR could not dynamic_cast]");
+			}
+			return { F_NONE, 111333 };
 		}
+
 		else if (etype == epics::pvData::Type::scalar) {
 			FLOG(level, "scalar");
-			//builder->CreateInt(12);
+			#define M(T, B, E) if (auto p1 = dynamic_cast<epics::pvData::PVScalarValue<T> const *>(field.get())) { \
+				B b(builder); \
+				b.add_v(p1->get()); \
+				return {E, b.Finish().Union()}; \
+			}
+			M( int8_t,  pvByteBuilder,   F_pvByte);
+			M( int16_t, pvShortBuilder,  F_pvShort);
+			M( int32_t, pvIntBuilder,    F_pvInt);
+			M( int64_t, pvLongBuilder,   F_pvLong);
+			M(uint8_t,  pvUByteBuilder,  F_pvUByte);
+			M(uint16_t, pvUShortBuilder, F_pvUShort);
+			M(uint32_t, pvUIntBuilder,   F_pvUInt);
+			M(uint64_t, pvULongBuilder,  F_pvULong);
+			M(float,    pvFloatBuilder,  F_pvFloat);
+			M(double,   pvDoubleBuilder, F_pvDouble);
+			#undef M
+			if (auto p1 = dynamic_cast<epics::pvData::PVScalarValue<std::string> const *>(field.get())) {
+				auto s1 = builder.CreateString(p1->get());
+				pvStringBuilder b(builder);
+				b.add_v(s1);
+				return { F_pvString, b.Finish().Union() };
+			}
+			return { F_NONE, 887700 };
+		}
 
-			// TODO
-			// Need this for all types...
-			// This is just a dummy:
-			pvIntBuilder b1(builder);
-			b1.add_v(123);
-			//auto x1 = static_cast<flatbuffers::Offset<void>>(b1.Finish());
-			auto k1 = b1.Finish();
-			auto k2 = k1.Union();
-			//PVBuilder b2(builder);
-			//b2.add_v_type(F_pvInt);
-			//b2.add_v(k2);
-			return { F_pvInt, k1.Union() };
-		}
 		else if (etype == epics::pvData::Type::scalarArray) {
+			FLOG(level, "scalar array");
+			#define M(TC, TB, TF) \
+			if (auto p1 = dynamic_cast<epics::pvData::PVValueArray<TC> const *>(field.get())) { \
+				auto v1 = p1->view(); \
+				auto v2 = builder.CreateVector(v1.data(), v1.size()); \
+				TB b(builder); \
+				b.add_v(v2); \
+				return { TF, b.Finish().Union() }; \
+			}
+			M( int8_t,  pvByte_aBuilder,   F_pvByte_a);
+			M( int16_t, pvShort_aBuilder,  F_pvShort_a);
+			M( int32_t, pvInt_aBuilder,    F_pvInt_a);
+			M( int64_t, pvLong_aBuilder,   F_pvLong_a);
+			M(uint8_t,  pvUByte_aBuilder,  F_pvUByte_a);
+			M(uint16_t, pvUShort_aBuilder, F_pvUShort_a);
+			M(uint32_t, pvUInt_aBuilder,   F_pvUInt_a);
+			M(uint64_t, pvULong_aBuilder,  F_pvULong_a);
+			M(float,    pvFloat_aBuilder,  F_pvFloat_a);
+			M(double,   pvDouble_aBuilder, F_pvDouble_a);
+			#undef M
+
+			if (auto p1 = dynamic_cast<epics::pvData::PVValueArray<std::string> const *>(field.get())) {
+				vector<flatbuffers::Offset<flatbuffers::String>> v1;
+				for (auto & s0 : p1->view()) {
+					v1.push_back(builder.CreateString(s0));
+				}
+				auto v2 = builder.CreateVector(v1);
+				pvString_aBuilder b(builder);
+				b.add_v(v2);
+				return { F_pvString_a, b.Finish().Union() };
+			}
+			throw std::runtime_error("is a type missing here?");
+			return {F_NONE, 555};
 		}
+
 		else if (etype == epics::pvData::Type::union_) {
+			FLOG(level, "union");
+			auto f2 = dynamic_cast<epics::pvData::PVUnion*>(field.get());
+			if (f2) {
+				auto f3 = f2->get();
+				if (f3) {
+					return Field(builder, f2->get(), 1+level);
+				}
+				else {
+					// The union does not contain anything:
+					return {F_NONE, 0};
+				}
+			}
+			else {
+				throw std::runtime_error("should never happen");
+				// TODO we could ignore this and return NONE
+			}
 		}
+
 		else if (etype == epics::pvData::Type::unionArray) {
+			FLOG(level, "union array");
+			throw std::runtime_error("union array not yet supported");
+			return {F_NONE, 777};
 		}
+
 		else {
 			throw std::runtime_error("Somethings wrong, none of the known types match");
 		}
@@ -133,9 +238,17 @@ FBBptr conv_to_fb_general(TopicMappingSettings const & settings, epics::pvData::
 	LOG(3, "conv_to_fb_general");
 	// Passing initial size:
 	auto builder = new flatbuffers::FlatBufferBuilder(1024);
-	auto off = fbg::F(*builder, pvstr, 0);
+	auto vF = fbg::Field(*builder, pvstr, 0);
 	//some kind of 'union F' offset:   flatbuffers::Offset<void>
-	PVBuilder b1(*builder);
+	PVBuilder b(*builder);
+	b.add_v_type(vF.type);
+	auto r = b.Finish();
+	builder->Finish(r);
+	auto p1 = builder->GetBufferPointer();
+	auto veri = flatbuffers::Verifier(p1, builder->GetSize());
+	if (not VerifyPVBuffer(veri)) {
+		throw std::runtime_error("Bad buffer");
+	}
 	return FBBptr(builder);
 }
 
@@ -1028,6 +1141,17 @@ int epics_test_fb_general() {
 		auto n = std::string(epics::pvData::ScalarTypeFunc::name(type)) + "Value";
 		u->set(n, a);
 	}
+
+	{
+		// TODO
+		// Push the attribute into the actual PV
+		auto att1_ = epics::nt::NTAttribute::createBuilder()->create();
+		att1_->getName()->put("att1_name");
+		auto att1 = att1_->getPVStructure();
+		auto x1 = epics::pvData::getPVDataCreate()->createPVScalar(epics::pvData::ScalarType::pvFloat);
+		att1_->getValue()->set(x1);
+	}
+
 	pvstr->dumpValue(std::cout);
 	BrightnESS::ForwardEpicsToKafka::Epics::conv_to_fb_general(BrightnESS::ForwardEpicsToKafka::TopicMappingSettings("ch1", "tp1"), pvstr);
 	return 0;
