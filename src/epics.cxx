@@ -17,6 +17,8 @@ watchdog thread.
 #include "helper.h"
 #include <vector>
 
+#include "fbhelper.h"
+#include "fbschemas.h"
 
 namespace BrightnESS {
 namespace ForwardEpicsToKafka {

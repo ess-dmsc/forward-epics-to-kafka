@@ -119,7 +119,7 @@ find_library(path_lib_redox NAMES redox PATHS
 
 set(cmake_include_current_dir on)
 
-set(flatbuffers_schemata "simple")
+set(flatbuffers_schemata simple general)
 set(flatbuffers_generated_headers "")
 
 foreach (f ${flatbuffers_schemata})

@@ -4,6 +4,7 @@
 #include "helper.h"
 #include "logger.h"
 #include "fbhelper.h"
+#include "fbschemas.h"
 
 using namespace BrightnESS::ForwardEpicsToKafka::Epics;
 
