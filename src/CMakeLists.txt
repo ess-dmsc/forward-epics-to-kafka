@@ -34,6 +34,7 @@ set(epics_base_version $ENV{EPICS_V4_BASE_VERSION})
 # Should these versions be pinned here in the cmake file, or should we allow wildcard?
 set(epics_pvData_version   5.0.2)
 set(epics_pvAccess_version 4.1.2)
+set(epics_normativeTypes_version 1.2.3.4.5.6)
 
 
 # os/Linux/epicsMath.h
@@ -76,6 +77,16 @@ find_path(path_include_epics_pvAccess NAMES pv/pvAccess.h PATHS
 find_library(path_lib_epics_pvAccess NAMES pvAccess pvAccessCPP PATHS
  $ENV{epicsv4_dir}/pvAccessCPP/lib/${epics_arch}
  /opt/epics/modules/pvAccessCPP/${epics_pvAccess_version}/${epics_base_version}/lib/${epics_arch}
+)
+
+find_path(path_include_epics_NT NAMES pv/nt.h PATHS
+ "$ENV{epicsv4_dir}/normativeTypesCPP/include"
+ /opt/epics/modules/normativeTypesCPP/${epics_normativeTypes_version}/${epics_base_version}/include
+)
+
+find_library(path_lib_epics_NT NAMES nt ntCPP PATHS
+ "$ENV{epicsv4_dir}/normativeTypesCPP/lib/linux-x86_64"
+ /opt/epics/modules/normativeTypesCPP/${epics_normativeTypes_version}/${epics_base_version}/lib/${epics_arch}
 )
 
 find_path(path_include_rdkafka NAMES librdkafka/rdkafka.h PATHS
@@ -164,6 +175,9 @@ set_property(TARGET libpvData PROPERTY IMPORTED_LOCATION ${path_lib_epics_pvData
 add_library(libpvAccess SHARED IMPORTED)
 set_property(TARGET libpvAccess PROPERTY IMPORTED_LOCATION ${path_lib_epics_pvAccess})
 
+add_library(libNormativeTypes SHARED IMPORTED)
+set_property(TARGET libNormativeTypes PROPERTY IMPORTED_LOCATION ${path_lib_epics_NT})
+
 add_library(librdkafka SHARED IMPORTED)
 set_property(TARGET librdkafka PROPERTY IMPORTED_LOCATION ${path_lib_rdkafka})
 
@@ -195,25 +209,21 @@ add_executable(${tgt} ${SOURCES})
 add_dependencies(${tgt} flatbuffers_generate)
 add_dependencies(${tgt} git_commit_current)
 
-target_include_directories(${tgt} PRIVATE ${path_include_fmt})
-set_property(TARGET ${tgt} APPEND PROPERTY INCLUDE_DIRECTORIES ${path_include_epics_base})
-
-# TODO
-# Which ENV variables in the dev env allow us to find these?
-# For now, just specify both.
-set_property(TARGET ${tgt} APPEND PROPERTY INCLUDE_DIRECTORIES ${path_include_epics_base}/os/Linux)
-set_property(TARGET ${tgt} APPEND PROPERTY INCLUDE_DIRECTORIES ${path_include_epics_base}/os/Darwin)
-set_property(TARGET ${tgt} APPEND PROPERTY INCLUDE_DIRECTORIES ${path_include_epics_base}/compiler/gcc)
-set_property(TARGET ${tgt} APPEND PROPERTY INCLUDE_DIRECTORIES ${path_include_epics_base}/compiler/clang)
-
-set_property(TARGET ${tgt} APPEND PROPERTY INCLUDE_DIRECTORIES ${path_include_epics_pvData})
-set_property(TARGET ${tgt} APPEND PROPERTY INCLUDE_DIRECTORIES ${path_include_epics_pvAccess})
-set_property(TARGET ${tgt} APPEND PROPERTY INCLUDE_DIRECTORIES ${path_include_rdkafka})
-set_property(TARGET ${tgt} APPEND PROPERTY INCLUDE_DIRECTORIES ${path_include_flatbuffers})
-set_property(TARGET ${tgt} APPEND PROPERTY INCLUDE_DIRECTORIES ${path_include_rapidjson})
-
-# Find the generated flat buffer
-set_property(TARGET ${tgt} APPEND PROPERTY INCLUDE_DIRECTORIES ${CMAKE_CURRENT_BINARY_DIR})
+target_include_directories(${tgt} PRIVATE
+${path_include_fmt}
+${path_include_epics_base}
+${path_include_epics_base}/os/Linux
+${path_include_epics_base}/os/Darwin
+${path_include_epics_base}/compiler/gcc
+${path_include_epics_base}/compiler/clang
+${path_include_epics_pvData}
+${path_include_epics_pvAccess}
+${path_include_epics_NT}
+${path_include_rdkafka}
+${path_include_flatbuffers}
+${path_include_rapidjson}
+${CMAKE_CURRENT_BINARY_DIR}
+)
 
 if (NOT ${path_include_configuration_manager} STREQUAL "path_include_configuration_manager-NOTFOUND")
 set_property(TARGET ${tgt} APPEND PROPERTY INCLUDE_DIRECTORIES ${path_include_configuration_manager})
@@ -224,6 +234,7 @@ endif()
 target_link_libraries(${tgt} epicsbase)
 target_link_libraries(${tgt} libpvData)
 target_link_libraries(${tgt} libpvAccess)
+target_link_libraries(${tgt} libNormativeTypes)
 target_link_libraries(${tgt} librdkafka)
 
 if (NOT ${path_lib_configuration_manager} STREQUAL "path_lib_configuration_manager-NOTFOUND")
