@@ -6,7 +6,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ..)
 if (NOT CMAKE_BUILD_TYPE)
 set(CMAKE_BUILD_TYPE Release)
 endif()
-message(STATUS "Build type used: ${CMAKE_BUILD_TYPE}")
+message(STATUS "CMAKE_BUILD_TYPE: ${CMAKE_BUILD_TYPE}")
 
 
 
