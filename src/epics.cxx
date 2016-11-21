@@ -17,6 +17,12 @@ watchdog thread.
 #include "helper.h"
 #include <vector>
 
+// For NTNDArray tests:
+#include <pv/nt.h>
+#include <pv/ntndarray.h>
+#include <pv/ntndarrayAttribute.h>
+#include <pv/ntutils.h>
+
 #include "fbhelper.h"
 #include "fbschemas.h"
 
@@ -65,12 +71,84 @@ char const * channel_state_name(epics::pvAccess::Channel::ConnectionState x) {
 }
 
 
+#include <fmt/format.h>
+#define FLOG(level, fmt, args...)  print("{:{}s}" fmt "\n", "", 2*(level), ## args);
+
+
+namespace fbg {
+	using std::vector;
+	using fmt::print;
+	typedef struct { int type; flatbuffers::Offset<void> off; } F_t;
+
+	F_t F(flatbuffers::FlatBufferBuilder & builder, epics::pvData::PVFieldPtr const & field, int level) {
+		auto etype = field->getField()->getType();
+		if (etype == epics::pvData::Type::structure) {
+			auto pvstr = dynamic_cast<epics::pvData::PVStructure*>(field.get());
+			auto & subfields = pvstr->getPVFields();
+			FLOG(level, "subfields.size(): {}", subfields.size());
+
+			// For each subfield, collect the offsets:
+			vector<F_t> fs;
+
+			for (auto & f1ptr : subfields) {
+				fs.push_back(F(builder, f1ptr, 1+level));
+			}
+
+			for (auto & x : fs) {
+				FLOG(level, "off: {}", x.off.o);
+			}
+		}
+		else if (etype == epics::pvData::Type::structureArray) {
+		}
+		else if (etype == epics::pvData::Type::scalar) {
+			FLOG(level, "scalar");
+			//builder->CreateInt(12);
+
+			// TODO
+			// Need this for all types...
+			// This is just a dummy:
+			pvIntBuilder b1(builder);
+			b1.add_v(123);
+			//auto x1 = static_cast<flatbuffers::Offset<void>>(b1.Finish());
+			auto k1 = b1.Finish();
+			auto k2 = k1.Union();
+			//PVBuilder b2(builder);
+			//b2.add_v_type(F_pvInt);
+			//b2.add_v(k2);
+			return { F_pvInt, k1.Union() };
+		}
+		else if (etype == epics::pvData::Type::scalarArray) {
+		}
+		else if (etype == epics::pvData::Type::union_) {
+		}
+		else if (etype == epics::pvData::Type::unionArray) {
+		}
+		else {
+			throw std::runtime_error("Somethings wrong, none of the known types match");
+		}
+	}
+}
+
+FBBptr conv_to_fb_general(TopicMappingSettings const & settings, epics::pvData::PVStructure::shared_pointer & pvstr) {
+	LOG(3, "conv_to_fb_general");
+	// Passing initial size:
+	auto builder = new flatbuffers::FlatBufferBuilder(1024);
+	auto off = fbg::F(*builder, pvstr, 0);
+	//some kind of 'union F' offset:   flatbuffers::Offset<void>
+	PVBuilder b1(*builder);
+	return FBBptr(builder);
+}
+
+
+
+
+
 class PVStructureToFlatBuffer {
 public:
 using FBT = FBBptr;
 using ptr = std::unique_ptr<PVStructureToFlatBuffer>;
 static ptr create(epics::pvData::PVStructure::shared_pointer & pvstr);
-virtual FBT convert(TopicMappingSettings & channel_name, epics::pvData::PVStructure::shared_pointer & pvstr) = 0;
+virtual FBT convert(TopicMappingSettings & settings, epics::pvData::PVStructure::shared_pointer & pvstr) = 0;
 };
 
 namespace PVStructureToFlatBufferN {
@@ -702,22 +780,35 @@ void MonitorRequester::monitorEvent(epics::pvData::MonitorPtr const & monitor) {
 
 		auto & pvstr = ele->pvStructurePtr;
 
-		// NOTE
-		// One assumption is currently that we stream only certain types from EPICS,
-		// including NTScalar and NTScalarArray.
-		// This is implemneted currently by passing the PVStructure to this function which decides
-		// based on the naming scheme what type it contains.
-		// A more robust solution in the future should actually investigate the PVStructure.
-		// Open question:  Could EPICS suddenly change the type during runtime?
-		if (!conv_to_flatbuffer) conv_to_flatbuffer = PVStructureToFlatBuffer::create(pvstr);
-		if (!conv_to_flatbuffer) {
-			LOG(5, "ERROR can not create a converter to produce flat buffers for this field");
-			monitor_HL->go_into_failure_mode();
+		bool const use_general =
+		#ifdef FLATBUFFERS_USE_GENERAL
+			true
+		#else
+			false
+		#endif
+			;
+		if (use_general) {
+			// try a new general but slower approach to cover all kinds of PV
+			auto fb = conv_to_fb_general(monitor_HL->topic_mapping->topic_mapping_settings, pvstr);
 		}
 		else {
-			auto flat_buffer = conv_to_flatbuffer->convert(monitor_HL->topic_mapping->topic_mapping_settings, pvstr);
-			monitor_HL->emit(std::move(flat_buffer));
-			monitor->release(ele);
+			// NOTE
+			// One assumption is currently that we stream only certain types from EPICS,
+			// including NTScalar and NTScalarArray.
+			// This is implemneted currently by passing the PVStructure to this function which decides
+			// based on the naming scheme what type it contains.
+			// A more robust solution in the future should actually investigate the PVStructure.
+			// Open question:  Could EPICS suddenly change the type during runtime?
+			if (!conv_to_flatbuffer) conv_to_flatbuffer = PVStructureToFlatBuffer::create(pvstr);
+			if (!conv_to_flatbuffer) {
+				LOG(5, "ERROR can not create a converter to produce flat buffers for this field");
+				monitor_HL->go_into_failure_mode();
+			}
+			else {
+				auto flat_buffer = conv_to_flatbuffer->convert(monitor_HL->topic_mapping->topic_mapping_settings, pvstr);
+				monitor_HL->emit(std::move(flat_buffer));
+				monitor->release(ele);
+			}
 		}
 	}
 }
@@ -916,4 +1007,28 @@ void Monitor::emit(FBBptr fbuf) {
 
 }
 }
+}
+
+
+
+int epics_test_fb_general() {
+	auto pvstr = epics::nt::NTNDArray::createBuilder()
+	->addAlarm()
+	->createPVStructure();
+	auto const type = epics::pvData::ScalarType::pvFloat;
+	// Note how we have to specify the basic scalar type here:
+	auto a = epics::pvData::getPVDataCreate()->createPVScalarArray<epics::pvData::PVValueArray<float>>();
+	// Fill with dummy data:
+	a->setLength(16);
+	//int xx = a;
+	auto a1 = a->reuse();
+	for (auto & x : a1) { x = 0.1; }
+	a->replace(epics::pvData::freeze(a1));
+	if (auto u = dynamic_cast<epics::pvData::PVUnion*>(pvstr->getSubField("value").get())) {
+		auto n = std::string(epics::pvData::ScalarTypeFunc::name(type)) + "Value";
+		u->set(n, a);
+	}
+	pvstr->dumpValue(std::cout);
+	BrightnESS::ForwardEpicsToKafka::Epics::conv_to_fb_general(BrightnESS::ForwardEpicsToKafka::TopicMappingSettings("ch1", "tp1"), pvstr);
+	return 0;
 }

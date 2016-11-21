@@ -1,0 +1,44 @@
+// General schema which allows any PVStructure to be forwarded as a flatbuffer.
+// Generality comes at a price:  More overhead during construction in terms of space
+// and cpu, more work for the receiver of the flatbuffer to access.
+
+table pvInt {
+	v: int;
+}
+
+table pvUInt {
+	v: uint;
+}
+
+table pvFloat {
+	v: float;
+}
+
+table pvDouble {
+	v: double;
+}
+
+union F {
+	pvInt,
+	pvUInt,
+	pvFloat,
+	pvDouble,
+	Obj,
+}
+
+
+table ObjM {
+	k: string;
+	v: F;
+}
+
+table Obj {
+	ms: [ObjM];
+}
+
+table PV {
+	v: F;
+}
+
+// Root must be a table
+root_type PV;

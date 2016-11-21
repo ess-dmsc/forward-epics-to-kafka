@@ -470,10 +470,18 @@ void Main::forwarding_exit() {
 
 
 
+extern int epics_test_fb_general();
+
+int tests() {
+	if (auto x = epics_test_fb_general()) return x;
+}
+
 
 
 int main(int argc, char ** argv) {
+	return tests();
 	//BrightnESS::ForwardEpicsToKafka::Config::Service s1;
+	//return 1;
 	BrightnESS::ForwardEpicsToKafka::MainOpt opt;
 	static struct option long_options[] = {
 		{"help",                            no_argument,              0,  0 },
