@@ -8,6 +8,7 @@ set(CMAKE_BUILD_TYPE Release)
 endif()
 message(STATUS "CMAKE_BUILD_TYPE: ${CMAKE_BUILD_TYPE}")
 
+set(REQUIRE_GTEST false CACHE BOOL "Require Google Test")
 
 
 file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/git_commit_current.cxx "extern \"C\" char const GIT_COMMIT[] = \"NOTSET\";\n")
@@ -110,6 +111,13 @@ find_path(path_include_rapidjson NAMES rapidjson/document.h PATHS
  "$ENV{rapidjson_dir}/include"
  /opt/local/rapidjson.git/include
 )
+
+find_path(path_include_gtest NAMES gtest/gtest.h)
+find_library(path_lib_gtest NAMES gtest)
+if (path_lib_gtest)
+add_library(libgtest SHARED IMPORTED)
+set_property(TARGET libgtest PROPERTY IMPORTED_LOCATION ${path_lib_gtest})
+endif()
 
 
 # TODO
@@ -225,11 +233,26 @@ ${path_include_rapidjson}
 ${CMAKE_CURRENT_BINARY_DIR}
 )
 
-if (NOT ${path_include_configuration_manager} STREQUAL "path_include_configuration_manager-NOTFOUND")
+if (path_include_configuration_manager)
 set_property(TARGET ${tgt} APPEND PROPERTY INCLUDE_DIRECTORIES ${path_include_configuration_manager})
 set_property(TARGET ${tgt} APPEND PROPERTY INCLUDE_DIRECTORIES ${path_include_configuration_manager}/redox/include)
 set_property(TARGET ${tgt} APPEND PROPERTY INCLUDE_DIRECTORIES ${path_include_configuration_manager}/cppzmq)
 endif()
+
+
+if (REQUIRE_GTEST AND (NOT path_include_gtest OR NOT path_lib_gtest))
+message(FATAL_ERROR "Google test required but not found")
+else()
+message(STATUS "Using Google Test")
+endif()
+
+if (path_include_gtest)
+target_include_directories(${tgt} PRIVATE ${path_include_gtest})
+endif()
+if (path_lib_gtest)
+target_link_libraries(${tgt} libgtest)
+endif()
+
 
 target_link_libraries(${tgt} epicsbase)
 target_link_libraries(${tgt} libpvData)
@@ -237,7 +260,7 @@ target_link_libraries(${tgt} libpvAccess)
 target_link_libraries(${tgt} libNormativeTypes)
 target_link_libraries(${tgt} librdkafka)
 
-if (NOT ${path_lib_configuration_manager} STREQUAL "path_lib_configuration_manager-NOTFOUND")
+if (path_lib_configuration_manager)
 target_link_libraries(${tgt} libpath_lib_redox)
 target_link_libraries(${tgt} ${path_lib_configuration_manager})
 endif()
