@@ -97,7 +97,7 @@ void TopicMapping::stop_forwarding() {
 	}
 }
 
-void TopicMapping::emit(ForwardEpicsToKafka::Epics::FBBptr fbuf) {
+void TopicMapping::emit(BrightnESS::FlatBufs::FB_uptr fb) {
 	if (!forwarding) {
 		LOG(3, "WARNING emit called despite not forwarding");
 		return;
@@ -122,12 +122,12 @@ void TopicMapping::emit(ForwardEpicsToKafka::Epics::FBBptr fbuf) {
 
 	bool debug_messages = false;
 	if (!debug_messages) {
-		//LOG(5, "TM {} producing size {}", id, fbuf->GetSize());
+		//LOG(5, "TM {} producing size {}", id, fb->builder->GetSize());
 		// Produce the actual payload
-		//top->produce({reinterpret_cast<char*>(fbuf->GetBufferPointer()), fbuf->GetSize()});
-		top->produce(std::move(fbuf));
-		//auto hex = binary_to_hex(reinterpret_cast<char*>(fbuf->GetBufferPointer()), fbuf->GetSize());
-		//LOG(5, "packet in hex {}: {:.{}}", fbuf->GetSize(), hex.data(), hex.size());
+		//top->produce({reinterpret_cast<char*>(fb->builder->GetBufferPointer()), fb->builder->GetSize()});
+		top->produce(std::move(fb));
+		//auto hex = binary_to_hex(reinterpret_cast<char*>(fb->builder->GetBufferPointer()), fb->builder->GetSize());
+		//LOG(5, "packet in hex {}: {:.{}}", fb->builder->GetSize(), hex.data(), hex.size());
 	}
 
 	else {

@@ -219,6 +219,16 @@ Main::Main(MainOpt opt) : main_opt(opt), kafka_instance_set(Kafka::InstanceSet::
 							m["topic"].GetString()
 						});
 					}
+
+					// Use the general flatbuffer scheme to forward arbitrary EPICS PVStructure
+					else if (type == "general") {
+						mapping_add({
+							TopicMappingType::EPICS_PVA_GENERAL,
+							m["channel"].GetString(),
+							m["topic"].GetString()
+						});
+					}
+
 				}
 			}
 		}
@@ -242,7 +252,6 @@ void Main::start_some_test_mappings(int n1) {
 
 
 void Main::forward_epics_to_kafka() {
-	// Start configuration listener.  It will use its own thread.
 	Config::Listener config_listener({
 		main_opt.broker_configuration_address,
 		main_opt.broker_configuration_topic
@@ -470,16 +479,17 @@ void Main::forwarding_exit() {
 
 
 
-extern int epics_test_fb_general();
-
-int tests() {
-	if (auto x = epics_test_fb_general()) return x;
-}
-
-
+#if HAVE_GTEST
+#include <gtest/gtest.h>
+#endif
 
 int main(int argc, char ** argv) {
-	return tests();
+	#if HAVE_GTEST
+	if (argc == 2 and strcmp("--test", argv[1]) == 0) {
+		::testing::InitGoogleTest(&argc, argv);
+		return RUN_ALL_TESTS();
+	}
+	#endif
 	//BrightnESS::ForwardEpicsToKafka::Config::Service s1;
 	//return 1;
 	BrightnESS::ForwardEpicsToKafka::MainOpt opt;

@@ -72,7 +72,11 @@ char const * channel_state_name(epics::pvAccess::Channel::ConnectionState x) {
 
 
 #include <fmt/format.h>
+#if 0
 #define FLOG(level, fmt, args...)  print("{:{}s}" fmt "\n", "", 2*(level), ## args);
+#else
+#define FLOG(level, fmt, args...)
+#endif
 
 
 namespace fbg {
@@ -110,7 +114,7 @@ namespace fbg {
 
 			ObjBuilder bo(builder);
 			bo.add_ms(v1);
-			return {F_Obj, bo.Finish().Union()};
+			return {F::Obj, bo.Finish().Union()};
 		}
 
 		else if (etype == epics::pvData::Type::structureArray) {
@@ -122,7 +126,7 @@ namespace fbg {
 				for (auto & x : sa->view()) {
 					FLOG(1+level, "OK");
 					auto sub = Field(builder, x, 1+level);
-					if (sub.type != F_Obj) {
+					if (sub.type != F::Obj) {
 						throw std::runtime_error("mismatched types in the EPICS structure");
 						// TODO could return NONE?
 					}
@@ -132,12 +136,12 @@ namespace fbg {
 				Obj_aBuilder b(builder);
 				b.add_v(v2);
 				// Normally, we should reach this return:
-				return {F_Obj_a, b.Finish().Union()};
+				return {F::Obj_a, b.Finish().Union()};
 			}
 			else {
 				FLOG(level+2, "[ERROR could not dynamic_cast]");
 			}
-			return { F_NONE, 111333 };
+			return { F::NONE, 111333 };
 		}
 
 		else if (etype == epics::pvData::Type::scalar) {
@@ -147,24 +151,24 @@ namespace fbg {
 				b.add_v(p1->get()); \
 				return {E, b.Finish().Union()}; \
 			}
-			M( int8_t,  pvByteBuilder,   F_pvByte);
-			M( int16_t, pvShortBuilder,  F_pvShort);
-			M( int32_t, pvIntBuilder,    F_pvInt);
-			M( int64_t, pvLongBuilder,   F_pvLong);
-			M(uint8_t,  pvUByteBuilder,  F_pvUByte);
-			M(uint16_t, pvUShortBuilder, F_pvUShort);
-			M(uint32_t, pvUIntBuilder,   F_pvUInt);
-			M(uint64_t, pvULongBuilder,  F_pvULong);
-			M(float,    pvFloatBuilder,  F_pvFloat);
-			M(double,   pvDoubleBuilder, F_pvDouble);
+			M( int8_t,  pvByteBuilder,   F::pvByte);
+			M( int16_t, pvShortBuilder,  F::pvShort);
+			M( int32_t, pvIntBuilder,    F::pvInt);
+			M( int64_t, pvLongBuilder,   F::pvLong);
+			M(uint8_t,  pvUByteBuilder,  F::pvUByte);
+			M(uint16_t, pvUShortBuilder, F::pvUShort);
+			M(uint32_t, pvUIntBuilder,   F::pvUInt);
+			M(uint64_t, pvULongBuilder,  F::pvULong);
+			M(float,    pvFloatBuilder,  F::pvFloat);
+			M(double,   pvDoubleBuilder, F::pvDouble);
 			#undef M
 			if (auto p1 = dynamic_cast<epics::pvData::PVScalarValue<std::string> const *>(field.get())) {
 				auto s1 = builder.CreateString(p1->get());
 				pvStringBuilder b(builder);
 				b.add_v(s1);
-				return { F_pvString, b.Finish().Union() };
+				return { F::pvString, b.Finish().Union() };
 			}
-			return { F_NONE, 887700 };
+			return { F::NONE, 887700 };
 		}
 
 		else if (etype == epics::pvData::Type::scalarArray) {
@@ -177,16 +181,16 @@ namespace fbg {
 				b.add_v(v2); \
 				return { TF, b.Finish().Union() }; \
 			}
-			M( int8_t,  pvByte_aBuilder,   F_pvByte_a);
-			M( int16_t, pvShort_aBuilder,  F_pvShort_a);
-			M( int32_t, pvInt_aBuilder,    F_pvInt_a);
-			M( int64_t, pvLong_aBuilder,   F_pvLong_a);
-			M(uint8_t,  pvUByte_aBuilder,  F_pvUByte_a);
-			M(uint16_t, pvUShort_aBuilder, F_pvUShort_a);
-			M(uint32_t, pvUInt_aBuilder,   F_pvUInt_a);
-			M(uint64_t, pvULong_aBuilder,  F_pvULong_a);
-			M(float,    pvFloat_aBuilder,  F_pvFloat_a);
-			M(double,   pvDouble_aBuilder, F_pvDouble_a);
+			M( int8_t,  pvByte_aBuilder,   F::pvByte_a);
+			M( int16_t, pvShort_aBuilder,  F::pvShort_a);
+			M( int32_t, pvInt_aBuilder,    F::pvInt_a);
+			M( int64_t, pvLong_aBuilder,   F::pvLong_a);
+			M(uint8_t,  pvUByte_aBuilder,  F::pvUByte_a);
+			M(uint16_t, pvUShort_aBuilder, F::pvUShort_a);
+			M(uint32_t, pvUInt_aBuilder,   F::pvUInt_a);
+			M(uint64_t, pvULong_aBuilder,  F::pvULong_a);
+			M(float,    pvFloat_aBuilder,  F::pvFloat_a);
+			M(double,   pvDouble_aBuilder, F::pvDouble_a);
 			#undef M
 
 			if (auto p1 = dynamic_cast<epics::pvData::PVValueArray<std::string> const *>(field.get())) {
@@ -197,10 +201,10 @@ namespace fbg {
 				auto v2 = builder.CreateVector(v1);
 				pvString_aBuilder b(builder);
 				b.add_v(v2);
-				return { F_pvString_a, b.Finish().Union() };
+				return { F::pvString_a, b.Finish().Union() };
 			}
 			throw std::runtime_error("is a type missing here?");
-			return {F_NONE, 555};
+			return {F::NONE, 555};
 		}
 
 		else if (etype == epics::pvData::Type::union_) {
@@ -213,7 +217,7 @@ namespace fbg {
 				}
 				else {
 					// The union does not contain anything:
-					return {F_NONE, 0};
+					return {F::NONE, 0};
 				}
 			}
 			else {
@@ -225,7 +229,7 @@ namespace fbg {
 		else if (etype == epics::pvData::Type::unionArray) {
 			FLOG(level, "union array");
 			throw std::runtime_error("union array not yet supported");
-			return {F_NONE, 777};
+			return {F::NONE, 777};
 		}
 
 		else {
@@ -234,23 +238,24 @@ namespace fbg {
 	}
 }
 
-FBBptr conv_to_fb_general(TopicMappingSettings const & settings, epics::pvData::PVStructure::shared_pointer & pvstr) {
-	LOG(3, "conv_to_fb_general");
+BrightnESS::FlatBufs::FB_uptr conv_to_fb_general(TopicMappingSettings const & settings, epics::pvData::PVStructure::shared_pointer & pvstr) {
+	//LOG(0, "conv_to_fb_general");
 	// Passing initial size:
-	auto builder = new flatbuffers::FlatBufferBuilder(1024);
+	auto fb = BrightnESS::FlatBufs::FB_uptr(
+		new BrightnESS::FlatBufs::FB(
+			FlatBufs::Schema::General
+		)
+	);
+	auto builder = fb->builder.get();
 	auto vF = fbg::Field(*builder, pvstr, 0);
 	//some kind of 'union F' offset:   flatbuffers::Offset<void>
 	PVBuilder b(*builder);
 	b.add_v_type(vF.type);
 	auto r = b.Finish();
 	builder->Finish(r);
-	auto p1 = builder->GetBufferPointer();
-	auto veri = flatbuffers::Verifier(p1, builder->GetSize());
-	if (not VerifyPVBuffer(veri)) {
-		throw std::runtime_error("Bad buffer");
-	}
-	return FBBptr(builder);
+	return fb;
 }
+
 
 
 
@@ -258,7 +263,7 @@ FBBptr conv_to_fb_general(TopicMappingSettings const & settings, epics::pvData::
 
 class PVStructureToFlatBuffer {
 public:
-using FBT = FBBptr;
+using FBT = BrightnESS::FlatBufs::FB_uptr;
 using ptr = std::unique_ptr<PVStructureToFlatBuffer>;
 static ptr create(epics::pvData::PVStructure::shared_pointer & pvstr);
 virtual FBT convert(TopicMappingSettings & settings, epics::pvData::PVStructure::shared_pointer & pvstr) = 0;
@@ -289,27 +294,27 @@ using RET = BrightnESS::ForwardEpicsToKafka::Epics::PV;
 };
 
 template <typename T0> struct BuilderType_to_Enum_PV : public Enum_PV_Base { static RET v(); };
-template <> struct BuilderType_to_Enum_PV<NTScalarByteBuilder>        : public Enum_PV_Base { static RET v() { return PV_NTScalarByte; } };
-template <> struct BuilderType_to_Enum_PV<NTScalarUByteBuilder>       : public Enum_PV_Base { static RET v() { return PV_NTScalarUByte; } };
-template <> struct BuilderType_to_Enum_PV<NTScalarShortBuilder>       : public Enum_PV_Base { static RET v() { return PV_NTScalarShort; } };
-template <> struct BuilderType_to_Enum_PV<NTScalarUShortBuilder>      : public Enum_PV_Base { static RET v() { return PV_NTScalarUShort; } };
-template <> struct BuilderType_to_Enum_PV<NTScalarIntBuilder>         : public Enum_PV_Base { static RET v() { return PV_NTScalarInt; } };
-template <> struct BuilderType_to_Enum_PV<NTScalarUIntBuilder>        : public Enum_PV_Base { static RET v() { return PV_NTScalarUInt; } };
-template <> struct BuilderType_to_Enum_PV<NTScalarLongBuilder>        : public Enum_PV_Base { static RET v() { return PV_NTScalarLong; } };
-template <> struct BuilderType_to_Enum_PV<NTScalarULongBuilder>       : public Enum_PV_Base { static RET v() { return PV_NTScalarULong; } };
-template <> struct BuilderType_to_Enum_PV<NTScalarFloatBuilder>       : public Enum_PV_Base { static RET v() { return PV_NTScalarFloat; } };
-template <> struct BuilderType_to_Enum_PV<NTScalarDoubleBuilder>      : public Enum_PV_Base { static RET v() { return PV_NTScalarDouble; } };
+template <> struct BuilderType_to_Enum_PV<NTScalarByteBuilder>        : public Enum_PV_Base { static RET v() { return PV::NTScalarByte; } };
+template <> struct BuilderType_to_Enum_PV<NTScalarUByteBuilder>       : public Enum_PV_Base { static RET v() { return PV::NTScalarUByte; } };
+template <> struct BuilderType_to_Enum_PV<NTScalarShortBuilder>       : public Enum_PV_Base { static RET v() { return PV::NTScalarShort; } };
+template <> struct BuilderType_to_Enum_PV<NTScalarUShortBuilder>      : public Enum_PV_Base { static RET v() { return PV::NTScalarUShort; } };
+template <> struct BuilderType_to_Enum_PV<NTScalarIntBuilder>         : public Enum_PV_Base { static RET v() { return PV::NTScalarInt; } };
+template <> struct BuilderType_to_Enum_PV<NTScalarUIntBuilder>        : public Enum_PV_Base { static RET v() { return PV::NTScalarUInt; } };
+template <> struct BuilderType_to_Enum_PV<NTScalarLongBuilder>        : public Enum_PV_Base { static RET v() { return PV::NTScalarLong; } };
+template <> struct BuilderType_to_Enum_PV<NTScalarULongBuilder>       : public Enum_PV_Base { static RET v() { return PV::NTScalarULong; } };
+template <> struct BuilderType_to_Enum_PV<NTScalarFloatBuilder>       : public Enum_PV_Base { static RET v() { return PV::NTScalarFloat; } };
+template <> struct BuilderType_to_Enum_PV<NTScalarDoubleBuilder>      : public Enum_PV_Base { static RET v() { return PV::NTScalarDouble; } };
 
-template <> struct BuilderType_to_Enum_PV<NTScalarArrayByteBuilder>   : public Enum_PV_Base { static RET v() { return PV_NTScalarArrayByte; } };
-template <> struct BuilderType_to_Enum_PV<NTScalarArrayUByteBuilder>  : public Enum_PV_Base { static RET v() { return PV_NTScalarArrayUByte; } };
-template <> struct BuilderType_to_Enum_PV<NTScalarArrayShortBuilder>  : public Enum_PV_Base { static RET v() { return PV_NTScalarArrayShort; } };
-template <> struct BuilderType_to_Enum_PV<NTScalarArrayUShortBuilder> : public Enum_PV_Base { static RET v() { return PV_NTScalarArrayUShort; } };
-template <> struct BuilderType_to_Enum_PV<NTScalarArrayIntBuilder>    : public Enum_PV_Base { static RET v() { return PV_NTScalarArrayInt; } };
-template <> struct BuilderType_to_Enum_PV<NTScalarArrayUIntBuilder>   : public Enum_PV_Base { static RET v() { return PV_NTScalarArrayUInt; } };
-template <> struct BuilderType_to_Enum_PV<NTScalarArrayLongBuilder>   : public Enum_PV_Base { static RET v() { return PV_NTScalarArrayLong; } };
-template <> struct BuilderType_to_Enum_PV<NTScalarArrayULongBuilder>  : public Enum_PV_Base { static RET v() { return PV_NTScalarArrayULong; } };
-template <> struct BuilderType_to_Enum_PV<NTScalarArrayFloatBuilder>  : public Enum_PV_Base { static RET v() { return PV_NTScalarArrayFloat; } };
-template <> struct BuilderType_to_Enum_PV<NTScalarArrayDoubleBuilder> : public Enum_PV_Base { static RET v() { return PV_NTScalarArrayDouble; } };
+template <> struct BuilderType_to_Enum_PV<NTScalarArrayByteBuilder>   : public Enum_PV_Base { static RET v() { return PV::NTScalarArrayByte; } };
+template <> struct BuilderType_to_Enum_PV<NTScalarArrayUByteBuilder>  : public Enum_PV_Base { static RET v() { return PV::NTScalarArrayUByte; } };
+template <> struct BuilderType_to_Enum_PV<NTScalarArrayShortBuilder>  : public Enum_PV_Base { static RET v() { return PV::NTScalarArrayShort; } };
+template <> struct BuilderType_to_Enum_PV<NTScalarArrayUShortBuilder> : public Enum_PV_Base { static RET v() { return PV::NTScalarArrayUShort; } };
+template <> struct BuilderType_to_Enum_PV<NTScalarArrayIntBuilder>    : public Enum_PV_Base { static RET v() { return PV::NTScalarArrayInt; } };
+template <> struct BuilderType_to_Enum_PV<NTScalarArrayUIntBuilder>   : public Enum_PV_Base { static RET v() { return PV::NTScalarArrayUInt; } };
+template <> struct BuilderType_to_Enum_PV<NTScalarArrayLongBuilder>   : public Enum_PV_Base { static RET v() { return PV::NTScalarArrayLong; } };
+template <> struct BuilderType_to_Enum_PV<NTScalarArrayULongBuilder>  : public Enum_PV_Base { static RET v() { return PV::NTScalarArrayULong; } };
+template <> struct BuilderType_to_Enum_PV<NTScalarArrayFloatBuilder>  : public Enum_PV_Base { static RET v() { return PV::NTScalarArrayFloat; } };
+template <> struct BuilderType_to_Enum_PV<NTScalarArrayDoubleBuilder> : public Enum_PV_Base { static RET v() { return PV::NTScalarArrayDouble; } };
 
 
 
@@ -343,7 +348,8 @@ using T1 = typename std::conditional<
 	>::type;
 
 FBT convert(TopicMappingSettings & tms, epics::pvData::PVStructure::shared_pointer & pvstr) override {
-	auto builder = FBT(new flatbuffers::FlatBufferBuilder);
+	FBT fb( new BrightnESS::FlatBufs::FB( FlatBufs::Schema::Simple ) );
+	auto builder = fb->builder.get();
 	T1 scalar_builder(*builder);
 	{
 		auto f1 = pvstr->getSubField("value");
@@ -371,7 +377,7 @@ FBT convert(TopicMappingSettings & tms, epics::pvData::PVStructure::shared_point
 	pv_builder.add_pv(scalar_fin.Union());
 	builder->Finish(pv_builder.Finish());
 
-	return builder;
+	return fb;
 }
 
 };
@@ -464,7 +470,8 @@ FBT convert(TopicMappingSettings & tms, epics::pvData::PVStructure::shared_point
 	static_assert(FLATBUFFERS_LITTLEENDIAN, "Optimization relies on little endianness");
 	static_assert(sizeof(T0) == sizeof(T3), "Numeric types not compatible");
 	// Build the flat buffer from scratch
-	auto builder = FBT(new flatbuffers::FlatBufferBuilder);
+	FBT fb( new BrightnESS::FlatBufs::FB( FlatBufs::Schema::Simple ) );
+	auto builder = fb->builder.get();
 	T2 array_fin;
 	{
 		// NOTE
@@ -514,7 +521,7 @@ FBT convert(TopicMappingSettings & tms, epics::pvData::PVStructure::shared_point
 	pv_builder.add_pv(array_fin.Union());
 	builder->Finish(pv_builder.Finish());
 
-	return builder;
+	return fb;
 }
 
 };
@@ -868,7 +875,7 @@ void MonitorRequester::monitorConnect(epics::pvData::Status const & status, epic
 
 
 void MonitorRequester::monitorEvent(epics::pvData::MonitorPtr const & monitor) {
-	LOG(0, "got event");
+	LOG(0, "monitorEvent");
 
 	auto monitor_HL = this->monitor_HL.lock();
 	if (!monitor_HL) {
@@ -893,18 +900,13 @@ void MonitorRequester::monitorEvent(epics::pvData::MonitorPtr const & monitor) {
 
 		auto & pvstr = ele->pvStructurePtr;
 
-		bool const use_general =
-		#ifdef FLATBUFFERS_USE_GENERAL
-			true
-		#else
-			false
-		#endif
-			;
-		if (use_general) {
-			// try a new general but slower approach to cover all kinds of PV
+		if (monitor_HL->topic_mapping->topic_mapping_settings.type == TopicMappingType::EPICS_PVA_GENERAL) {
+			// Try a new general but slower approach to cover all kinds of PV.
+			// This codepath should be preferred if fast enough.
 			auto fb = conv_to_fb_general(monitor_HL->topic_mapping->topic_mapping_settings, pvstr);
+			monitor_HL->emit(std::move(fb));
 		}
-		else {
+		else if (monitor_HL->topic_mapping->topic_mapping_settings.type == TopicMappingType::EPICS_PVA_NT) {
 			// NOTE
 			// One assumption is currently that we stream only certain types from EPICS,
 			// including NTScalar and NTScalarArray.
@@ -919,10 +921,17 @@ void MonitorRequester::monitorEvent(epics::pvData::MonitorPtr const & monitor) {
 			}
 			else {
 				auto flat_buffer = conv_to_flatbuffer->convert(monitor_HL->topic_mapping->topic_mapping_settings, pvstr);
+
+				// TODO
+				// refactor, send out the FB instead
 				monitor_HL->emit(std::move(flat_buffer));
-				monitor->release(ele);
 			}
 		}
+		else {
+			LOG(9, "can not handle this");
+			throw std::runtime_error("can not handle this");
+		}
+		monitor->release(ele);
 	}
 }
 
@@ -1072,6 +1081,14 @@ void Monitor::initiate_connection() {
 		provider = epics::pvAccess::getChannelProviderRegistry()
 			->getProvider("ca");
 	}
+	else if (t == T::EPICS_PVA_GENERAL) {
+		if (do_init_factory_pva) {
+			epics::pvAccess::ClientFactory::start();
+			do_init_factory_pva = false;
+		}
+		provider = epics::pvAccess::getChannelProviderRegistry()
+			->getProvider("pva");
+	}
 	if (provider == nullptr) {
 		LOG(3, "ERROR could not create a provider");
 		throw epics_channel_failure();
@@ -1102,7 +1119,7 @@ void Monitor::initiate_value_monitoring() {
 	}
 }
 
-void Monitor::emit(FBBptr fbuf) {
+void Monitor::emit(BrightnESS::FlatBufs::FB_uptr fb) {
 	// TODO
 	// It seems to be hard to tell when Epics won't use the callback anymore.
 	// Instead of checking each access, use flags and quarantine before release
@@ -1110,7 +1127,7 @@ void Monitor::emit(FBBptr fbuf) {
 	RMLG lg(m_mutex_emitter);
 	if (!topic_mapping) return;
 	if (!topic_mapping->forwarding) return;
-	topic_mapping->emit(std::move(fbuf));
+	topic_mapping->emit(std::move(fb));
 }
 
 
@@ -1132,7 +1149,7 @@ int epics_test_fb_general() {
 	// Note how we have to specify the basic scalar type here:
 	auto a = epics::pvData::getPVDataCreate()->createPVScalarArray<epics::pvData::PVValueArray<float>>();
 	// Fill with dummy data:
-	a->setLength(16);
+	a->setLength(0);
 	//int xx = a;
 	auto a1 = a->reuse();
 	for (auto & x : a1) { x = 0.1; }
@@ -1153,6 +1170,34 @@ int epics_test_fb_general() {
 	}
 
 	pvstr->dumpValue(std::cout);
-	BrightnESS::ForwardEpicsToKafka::Epics::conv_to_fb_general(BrightnESS::ForwardEpicsToKafka::TopicMappingSettings("ch1", "tp1"), pvstr);
+	auto fb = BrightnESS::ForwardEpicsToKafka::Epics::conv_to_fb_general(BrightnESS::ForwardEpicsToKafka::TopicMappingSettings("ch1", "tp1"), pvstr);
+	if (true) {
+		auto b = fb->builder.get();
+		fmt::print("builder raw pointer after Finish: {}\n", (void*)b->GetBufferPointer());
+		auto p1 = b->GetBufferPointer();
+		auto veri = flatbuffers::Verifier(p1, b->GetSize());
+		if (not VerifyPVBuffer(veri)) {
+			throw std::runtime_error("Bad buffer");
+		}
+		else {
+			LOG(3, "Verified");
+		}
+	}
+	if (true) {
+		// Print the test buffer
+		auto d1 = fb->message();
+		fmt::print("d1 raw ptr: {}\n", (void*)d1.first);
+		auto b1 = binary_to_hex((char*)d1.first, d1.second);
+		fmt::print("Tested buffer in hex, check for schema tag:\n{:{}}\n", b1.data(), b1.size());
+	}
 	return 0;
 }
+
+
+#if HAVE_GTEST
+#include <gtest/gtest.h>
+
+TEST(ssdfds, sdfdshf) {
+	epics_test_fb_general();
+}
+#endif

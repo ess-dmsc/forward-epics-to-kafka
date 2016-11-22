@@ -9,6 +9,3 @@
 /// DO NOT MODIFY!  KEEP AT 1
 /// Feature not complete.
 #define KAFKA_INSTANCE_COUNT 1
-
-
-#define FLATBUFFERS_USE_GENERAL 1

@@ -11,7 +11,8 @@ std::vector<char> binary_to_hex(char const * data, int len) {
 			else v += 97 - 10;
 			ret.push_back(v);
 		}
-		if (i1 % 8 == 7) ret.push_back(' ');
+		if (i1 %    8  == 7) ret.push_back(' ');
+		if (i1 % (4*8) == 4*8-1) ret.push_back('\n');
 	}
 	return ret;
 }

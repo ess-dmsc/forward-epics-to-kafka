@@ -28,6 +28,7 @@ class Topic;
 enum class TopicMappingType {
 	EPICS_PVA_NT,       // currently the default
 	EPICS_CA_VALUE,     // TODO do I need an extra waveform, or can that be introspected?
+	EPICS_PVA_GENERAL,
 };
 
 
@@ -74,7 +75,7 @@ TopicMapping(Kafka::InstanceSet & kset, TopicMappingSettings topic_mapping_setti
 void start_forwarding(Kafka::InstanceSet & kset);
 void stop_forwarding();
 
-void emit(ForwardEpicsToKafka::Epics::FBBptr fbuf);
+void emit(BrightnESS::FlatBufs::FB_uptr fb);
 
 /** Called from watchdog thread, opportunity to check own health status */
 void health_selfcheck();

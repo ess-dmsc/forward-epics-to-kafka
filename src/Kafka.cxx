@@ -86,9 +86,9 @@ static void msg_delivered_cb(
 		//	rkmessage->len, rkmessage->offset, rkmessage->partition,
 		//	(const char *)rkmessage->payload, (int)rkmessage->len);
 	}
-	auto fbuf = static_cast<Epics::FBBptr::pointer>(rkmessage->_private);
-	if (fbuf) {
-		delete fbuf;
+	auto fb = static_cast<BrightnESS::FlatBufs::FB*>(rkmessage->_private);
+	if (fb) {
+		delete fb;
 	}
 }
 
@@ -229,13 +229,8 @@ void Instance::poll_start() {
 void Instance::poll_run() {
 	int i1 = 0;
 	while (do_poll) {
-		if (i1 % 10 == 0) {
-			//LOG(3, "Polling, queue length {}", rd_kafka_outq_len(rk));
-		}
-		if (false) {
-			int n1 = rd_kafka_poll(rk, 100);
-			LOG(0, "poll served callbacks: {}  queue: {}", n1, rd_kafka_outq_len(rk));
-		}
+		int n1 = rd_kafka_poll(rk, 500);
+		LOG(0, "poll served callbacks: {}  queue: {}", n1, rd_kafka_outq_len(rk));
 		i1 += 1;
 	}
 	LOG(3, "Poll finished");
@@ -367,7 +362,7 @@ Topic::~Topic() {
 
 
 
-void Topic::produce(Epics::FBBptr fbuf) {
+void Topic::produce(BrightnESS::FlatBufs::FB_uptr fb) {
 	int x;
 	int32_t partition = RD_KAFKA_PARTITION_UA;
 
@@ -375,7 +370,7 @@ void Topic::produce(Epics::FBBptr fbuf) {
 	void const * key = NULL;
 	size_t key_len = 0;
 
-	void * callback_data = fbuf.get();
+	void * callback_data = fb.get();
 	// no flags means that we reown our buffer when Kafka calls our callback.
 	int msgflags = 0; // 0, RD_KAFKA_MSG_F_COPY, RD_KAFKA_MSG_F_FREE
 
@@ -385,7 +380,7 @@ void Topic::produce(Epics::FBBptr fbuf) {
 	// Check that this is thread safe ?!?
 
 	//x = rd_kafka_produce(rkt, partition, msgflags, buf.begin, buf.size, key, key_len, callback_data);
-	x = rd_kafka_produce(rkt, partition, msgflags, fbuf->GetBufferPointer(), fbuf->GetSize(), key, key_len, callback_data);
+	x = rd_kafka_produce(rkt, partition, msgflags, fb->builder->GetBufferPointer(), fb->builder->GetSize(), key, key_len, callback_data);
 	if (x != 0) {
 		LOG(7, "ERROR on produce topic {}  partition {}: {}", rd_kafka_topic_name(rkt), partition, rd_kafka_err2str(rd_kafka_last_error()));
 		throw std::runtime_error("ERROR on message send");
@@ -395,7 +390,7 @@ void Topic::produce(Epics::FBBptr fbuf) {
 
 	// After no Kafka error was reported on produce, we borrow the object to Kafka
 	// until the callback is called.
-	fbuf.release();
+	fb.release();
 
 	//LOG(0, "sent to topic {} partition {}", rd_kafka_topic_name(rkt), partition);
 }

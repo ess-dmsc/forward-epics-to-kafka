@@ -146,7 +146,7 @@ foreach (f ${flatbuffers_schemata})
 	set(fbh "${f}_generated.h")
 	add_custom_command(
 		OUTPUT ${fbh}
-		COMMAND ${flatc} --cpp "${CMAKE_CURRENT_SOURCE_DIR}/${fbs}"
+		COMMAND ${flatc} --cpp --gen-mutable --gen-name-strings --scoped-enums "${CMAKE_CURRENT_SOURCE_DIR}/${fbs}"
 		DEPENDS "${fbs}"
 		COMMENT "Process ${fbs} using ${flatc}"
 	)
@@ -204,6 +204,7 @@ Kafka.cxx
 epics.cxx
 Config.cxx
 main.cxx
+fbschemas.cxx
 ${path_include_fmt}/fmt/format.cc
 ${CMAKE_CURRENT_BINARY_DIR}/git_commit_current.cxx
 )
@@ -240,17 +241,15 @@ set_property(TARGET ${tgt} APPEND PROPERTY INCLUDE_DIRECTORIES ${path_include_co
 endif()
 
 
-if (REQUIRE_GTEST AND (NOT path_include_gtest OR NOT path_lib_gtest))
-message(FATAL_ERROR "Google test required but not found")
-else()
-message(STATUS "Using Google Test")
-endif()
-
-if (path_include_gtest)
+if (path_include_gtest AND path_lib_gtest)
+message(STATUS "Using Google Test: ${path_include_gtest}  ${path_lib_gtest}")
+target_compile_definitions(${tgt} PRIVATE HAVE_GTEST=1)
 target_include_directories(${tgt} PRIVATE ${path_include_gtest})
-endif()
-if (path_lib_gtest)
 target_link_libraries(${tgt} libgtest)
+else()
+if (REQUIRE_GTEST)
+message(FATAL_ERROR "Google test required but not found")
+endif()
 endif()
 
 
@@ -272,6 +271,7 @@ add_executable(${tgt}
 helper.cxx
 logger.cxx
 read-buffer.cxx
+files.cxx
 ${path_include_fmt}/fmt/format.cc
 ${CMAKE_CURRENT_BINARY_DIR}/git_commit_current.cxx
 )

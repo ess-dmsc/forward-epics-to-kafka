@@ -16,6 +16,7 @@
 #include <pv/caProvider.h>
 
 #include "fbhelper.h"
+#include "fbschemas.h"
 
 //#include <pv/channelProviderLocal.h>
 //#include <pv/caProvider.h>
@@ -69,7 +70,7 @@ private:
 friend class MonitorRequester;
 friend class IntrospectField;
 friend class StartMonitorChannel;
-void emit(FBBptr fbuf);
+void emit(BrightnESS::FlatBufs::FB_uptr fb);
 
 TopicMapping * topic_mapping;
 
