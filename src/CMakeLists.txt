@@ -35,7 +35,7 @@ set(epics_base_version $ENV{EPICS_V4_BASE_VERSION})
 # Should these versions be pinned here in the cmake file, or should we allow wildcard?
 set(epics_pvData_version   5.0.2)
 set(epics_pvAccess_version 4.1.2)
-set(epics_normativeTypes_version 1.2.3.4.5.6)
+set(epics_normativeTypes_version 5.0.2)
 
 
 # os/Linux/epicsMath.h
@@ -46,7 +46,7 @@ set(epics_normativeTypes_version 1.2.3.4.5.6)
 # So use the source version:
 find_path(path_include_fmt NAMES fmt/format.cc PATHS
   "$ENV{fmt_dir}/include"
-  /opt/local
+  /opt/local/fmt
 )
 #find_library(path_lib_fmt NAMES fmt)
 
@@ -85,7 +85,7 @@ find_path(path_include_epics_NT NAMES pv/nt.h PATHS
  /opt/epics/modules/normativeTypesCPP/${epics_normativeTypes_version}/${epics_base_version}/include
 )
 
-find_library(path_lib_epics_NT NAMES nt ntCPP PATHS
+find_library(path_lib_epics_NT NAMES nt ntCPP normativeTypesCPP PATHS
  $ENV{epicsv4_dir}/normativeTypesCPP/lib/${epics_arch}
  /opt/epics/modules/normativeTypesCPP/${epics_normativeTypes_version}/${epics_base_version}/lib/${epics_arch}
 )
