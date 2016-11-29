@@ -31,8 +31,6 @@ enum class TopicMappingType: uint16_t {
 	EPICS_PVA_GENERAL,
 };
 
-uint16_t schema_id(TopicMappingType x);
-
 
 /**
 This class is meant to have trivial copy ctor.

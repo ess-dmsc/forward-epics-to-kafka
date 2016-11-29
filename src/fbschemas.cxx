@@ -36,15 +36,14 @@ FB::FB(Schema schema)
 	alloc->fb = this;
 }
 
-std::pair<uint8_t *, size_t> FB::message() {
+FBmsg FB::message() {
 	auto ret = decltype(FB::message()) {
 		builder->GetBufferPointer() - NNE,
 		builder->GetSize() + NNE
 	};
 	// Put the header in place:
 	for (int i1 = 0; i1 < NNE; ++i1) {
-		*(ret.first+i1) = header[i1];
-		//fmt::print("{:x}\n", *(ret.first+i1));
+		*(ret.data+i1) = header[i1];
 	}
 	return ret;
 }

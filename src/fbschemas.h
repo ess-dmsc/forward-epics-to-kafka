@@ -24,10 +24,18 @@ void deallocate(uint8_t * p) const override;
 FB * fb;
 };
 
+// POD
+class FBmsg {
+public:
+uint8_t * data;
+size_t size;
+};
+
 class FB {
 public:
 FB(Schema schema);
-std::pair<uint8_t *, size_t> message();
+//void finalize();
+FBmsg message();
 // Internal identifier
 Schema schema;
 uint8_t header[2] = {0xaa, 0xbb};

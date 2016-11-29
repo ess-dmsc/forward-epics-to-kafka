@@ -1201,8 +1201,8 @@ int epics_test_fb_general() {
 	if (true) {
 		// Print the test buffer
 		auto d1 = fb->message();
-		fmt::print("d1 raw ptr: {}\n", (void*)d1.first);
-		auto b1 = binary_to_hex((char*)d1.first, d1.second);
+		fmt::print("d1 raw ptr: {}\n", (void*)d1.data);
+		auto b1 = binary_to_hex((char*)d1.data, d1.size);
 		fmt::print("Tested buffer in hex, check for schema tag:\n{:{}}\n", b1.data(), b1.size());
 	}
 	return 0;

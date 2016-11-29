@@ -227,24 +227,5 @@ bool TopicMapping::healthy() const {
 std::string TopicMapping::topic_name() const { return topic_mapping_settings.topic; }
 std::string TopicMapping::channel_name() const { return topic_mapping_settings.channel; }
 
-// POD
-class SchemaIDS {
-public:
-SchemaIDS() {
-	ids.resize(16);
-	ids.at((int)TopicMappingType::EPICS_PVA_GENERAL) = 0x6677;
-	ids.at((int)TopicMappingType::EPICS_PVA_NT) = 0x9164;
-	ids.at((int)TopicMappingType::EPICS_CA_VALUE) = 0x0241;
-}
-std::vector<uint16_t> ids;
-};
-
-uint16_t schema_id(TopicMappingType x) {
-	static SchemaIDS ids;
-	return ids.ids.at((int)x);
-}
-
-
-
 }
 }

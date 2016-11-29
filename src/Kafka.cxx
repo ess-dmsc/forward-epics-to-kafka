@@ -379,8 +379,9 @@ void Topic::produce(BrightnESS::FlatBufs::FB_uptr fb) {
 	// API docs state that error codes are given in 'errno'
 	// Check that this is thread safe ?!?
 
+	auto m1 = fb->message();
 	//x = rd_kafka_produce(rkt, partition, msgflags, buf.begin, buf.size, key, key_len, callback_data);
-	x = rd_kafka_produce(rkt, partition, msgflags, fb->builder->GetBufferPointer(), fb->builder->GetSize(), key, key_len, callback_data);
+	x = rd_kafka_produce(rkt, partition, msgflags, m1.data, m1.size, key, key_len, callback_data);
 	if (x != 0) {
 		LOG(7, "ERROR on produce topic {}  partition {}: {}", rd_kafka_topic_name(rkt), partition, rd_kafka_err2str(rd_kafka_last_error()));
 		throw std::runtime_error("ERROR on message send");
