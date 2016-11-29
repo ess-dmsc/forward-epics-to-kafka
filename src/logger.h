@@ -31,8 +31,6 @@
 
 extern int log_level;
 
-void dwlog_OLD(int level, char const * fmt, char const * file, int line, char const * func, ...);
-
 int prefix_len();
 
 template <typename ...TT>
@@ -53,5 +51,3 @@ void dwlog(int level, char const * fmt, char const * file, int line, char const 
 		fmt::print("ERROR  fmt::FormatError {}:{}\n", f1, line);
 	}
 }
-
-void break1();
