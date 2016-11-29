@@ -508,7 +508,7 @@ int main(int argc, char ** argv) {
 	//return 1;
 	BrightnESS::ForwardEpicsToKafka::MainOpt opt;
 	static struct option long_options[] = {
-		{"help",                            no_argument,              0,  0 },
+		{"help",                            no_argument,              0, 'h'},
 		{"broker-configuration-address",    required_argument,        0,  0 },
 		{"broker-configuration-topic",      required_argument,        0,  0 },
 		{"broker-data-address",             required_argument,        0,  0 },
