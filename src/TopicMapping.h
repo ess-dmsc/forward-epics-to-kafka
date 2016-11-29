@@ -25,11 +25,13 @@ class Topic;
 
 // If we get many different such combinations, maybe better to factor
 // this even more, but currently, this seems like the best choice.
-enum class TopicMappingType {
+enum class TopicMappingType: uint16_t {
 	EPICS_PVA_NT,       // currently the default
 	EPICS_CA_VALUE,     // TODO do I need an extra waveform, or can that be introspected?
 	EPICS_PVA_GENERAL,
 };
+
+uint16_t schema_id(TopicMappingType x);
 
 
 /**
