@@ -24,17 +24,14 @@ DEPENDS git_commit_now
 )
 
 
-# Search the dev env standard locations, but it will also look in PATH
-find_program(flatc flatc PATHS "$ENV{flatc}" "$ENV{HOME}/.tools" "/opt/local/flatbuffers")
-
-
-set(epics_arch $ENV{EPICS_HOST_ARCH})
+set(epicsv4_dir        $ENV{epicsv4_dir})
+set(epicsbase_dir      $ENV{EPICS_BASE})
+set(epics_arch         $ENV{EPICS_HOST_ARCH})
 set(epics_base_version $ENV{EPICS_V4_BASE_VERSION})
 
-# TODO
-# Should these versions be pinned here in the cmake file, or should we allow wildcard?
-set(epics_pvData_version   5.0.2)
+set(epics_pvData_version 5.0.2)
 set(epics_pvAccess_version 4.1.2)
+set(epics_pvDatabase_version 4.1.1)
 set(epics_normativeTypes_version 5.0.2)
 
 
@@ -45,71 +42,80 @@ set(epics_normativeTypes_version 5.0.2)
 # fmt not in the EPEL pinned by the dev-env crew.
 # So use the source version:
 find_path(path_include_fmt NAMES fmt/format.cc PATHS
-  "$ENV{fmt_dir}/include"
-  /opt/local/fmt
+$ENV{fmt_dir}/include
+/opt/local/fmt
 )
-#find_library(path_lib_fmt NAMES fmt)
 
 find_path(path_include_epics_base NAMES epicsTypes.h PATHS
- "$ENV{EPICS_BASE}/include"
- /opt/epics/bases/base-${epics_base_version}/include
+${epicsbase_dir}/include
+/opt/epics/bases/base-${epics_base_version}/include
 )
 
 find_library(path_lib_epics_ca NAMES ca PATHS
- $ENV{EPICS_BASE}/lib/${epics_arch}
- /opt/epics/bases/base-${epics_base_version}/lib/${epics_arch}
+${epicsbase_dir}/lib/${epics_arch}
+/opt/epics/bases/base-${epics_base_version}/lib/${epics_arch}
 )
 
 find_path(path_include_epics_pvData NAMES pv/pvData.h PATHS
- $ENV{epicsv4_dir}/pvDataCPP/include
- /opt/epics/modules/pvDataCPP/${epics_pvData_version}/${epics_base_version}/include
+${epicsv4_dir}/pvDataCPP/include
+/opt/epics/modules/pvDataCPP/${epics_pvData_version}/${epics_base_version}/include
 )
 
 find_library(path_lib_epics_pvData NAMES pvData pvDataCPP PATHS
- $ENV{epicsv4_dir}/pvDataCPP/lib/${epics_arch}
+${epicsv4_dir}/pvDataCPP/lib/${epics_arch}
  /opt/epics/modules/pvDataCPP/${epics_pvData_version}/${epics_base_version}/lib/${epics_arch}
 )
 
 find_path(path_include_epics_pvAccess NAMES pv/pvAccess.h PATHS
- $ENV{epicsv4_dir}/pvAccessCPP/include
- /opt/epics/modules/pvAccessCPP/${epics_pvAccess_version}/${epics_base_version}/include
+${epicsv4_dir}/pvAccessCPP/include
+/opt/epics/modules/pvAccessCPP/${epics_pvAccess_version}/${epics_base_version}/include
 )
 
 find_library(path_lib_epics_pvAccess NAMES pvAccess pvAccessCPP PATHS
- $ENV{epicsv4_dir}/pvAccessCPP/lib/${epics_arch}
- /opt/epics/modules/pvAccessCPP/${epics_pvAccess_version}/${epics_base_version}/lib/${epics_arch}
+${epicsv4_dir}/pvAccessCPP/lib/${epics_arch}
+/opt/epics/modules/pvAccessCPP/${epics_pvAccess_version}/${epics_base_version}/lib/${epics_arch}
+)
+
+find_path(path_include_epics_pvDatabase NAMES pv/pvDatabase.h PATHS
+${epicsv4_dir}/pvDatabaseCPP/include
+/opt/epics/modules/pvDatabaseCPP/${epics_pvDatabase_version}/${epics_base_version}/include
+)
+
+find_library(path_lib_epics_pvDatabase NAMES pvDatabase pvDatabaseCPP PATHS
+${epicsv4_dir}/pvDatabaseCPP/lib/${epics_arch}
+/opt/epics/modules/pvDatabaseCPP/${epics_pvDatabase_version}/${epics_base_version}/lib/${epics_arch}
 )
 
 find_path(path_include_epics_NT NAMES pv/nt.h PATHS
- $ENV{epicsv4_dir}/normativeTypesCPP/include
- /opt/epics/modules/normativeTypesCPP/${epics_normativeTypes_version}/${epics_base_version}/include
+${epicsv4_dir}/normativeTypesCPP/include
+/opt/epics/modules/normativeTypesCPP/${epics_normativeTypes_version}/${epics_base_version}/include
 )
 
 find_library(path_lib_epics_NT NAMES nt ntCPP normativeTypesCPP PATHS
- $ENV{epicsv4_dir}/normativeTypesCPP/lib/${epics_arch}
- /opt/epics/modules/normativeTypesCPP/${epics_normativeTypes_version}/${epics_base_version}/lib/${epics_arch}
-)
-
-find_path(path_include_rdkafka NAMES librdkafka/rdkafka.h PATHS
- "$ENV{librdkafka_dir}/include"
- /opt/local/rdkafka/install/include
- /usr/local/include
-)
-
-find_library(path_lib_rdkafka NAMES rdkafka PATHS
- "$ENV{librdkafka_dir}/lib"
- /opt/local/rdkafka/install/lib
- /usr/local/lib
-)
-
-find_path(path_include_flatbuffers NAMES flatbuffers/flatbuffers.h PATHS
- "$ENV{flatbuffers_dir}/include"
- /opt/local/flatbuffers.git/include
+${epicsv4_dir}/normativeTypesCPP/lib/${epics_arch}
+/opt/epics/modules/normativeTypesCPP/${epics_normativeTypes_version}/${epics_base_version}/lib/${epics_arch}
 )
 
 find_path(path_include_rapidjson NAMES rapidjson/document.h PATHS
- "$ENV{rapidjson_dir}/include"
- /opt/local/rapidjson.git/include
+$ENV{rapidjson_dir}/include
+/opt/local/rapidjson.git/include
+)
+
+find_path(path_include_rdkafka NAMES librdkafka/rdkafka.h PATHS
+$ENV{librdkafka_dir}/include
+/opt/local/rdkafka/install/include
+/usr/local/include
+)
+
+find_library(path_lib_rdkafka NAMES rdkafka PATHS
+$ENV{librdkafka_dir}/lib
+/opt/local/rdkafka/install/lib
+/usr/local/lib
+)
+
+find_path(path_include_flatbuffers NAMES flatbuffers/flatbuffers.h PATHS
+$ENV{flatbuffers_dir}/include
+/opt/local/flatbuffers.git/include
 )
 
 find_path(path_include_gtest NAMES gtest/gtest.h)
@@ -136,10 +142,15 @@ find_library(path_lib_redox NAMES redox PATHS
 #message(STATUS ${path_lib_configuration_manager})
 
 
-set(cmake_include_current_dir on)
+#set(cmake_include_current_dir on)
+
+
 
 set(flatbuffers_schemata simple general)
 set(flatbuffers_generated_headers "")
+
+# Search the dev env standard locations, but it will also look in PATH
+find_program(flatc flatc PATHS "$ENV{flatc}" "$ENV{HOME}/.tools" "/opt/local/flatbuffers")
 
 foreach (f ${flatbuffers_schemata})
 	set(fbs "${f}.fbs")
@@ -154,6 +165,8 @@ foreach (f ${flatbuffers_schemata})
 endforeach()
 
 add_custom_target(flatbuffers_generate ALL DEPENDS ${flatbuffers_generated_headers})
+
+
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -fPIC -g")
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0 -fno-inline")
@@ -191,6 +204,7 @@ set_property(TARGET librdkafka PROPERTY IMPORTED_LOCATION ${path_lib_rdkafka})
 
 add_library(libpath_lib_redox SHARED IMPORTED)
 set_property(TARGET libpath_lib_redox PROPERTY IMPORTED_LOCATION ${path_lib_redox})
+
 
 
 set(tgt forward-epics-to-kafka)
