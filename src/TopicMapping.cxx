@@ -109,7 +109,6 @@ void TopicMapping::emit(BrightnESS::FlatBufs::FB_uptr fb) {
 	if (state != State::READY) {
 		LOG(3, "looks like trouble");
 		go_into_failure_mode();
-		break1();
 		return;
 	}
 
