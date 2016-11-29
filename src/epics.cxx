@@ -13,6 +13,7 @@ watchdog thread.
 #include <exception>
 #include <random>
 #include <type_traits>
+#include <chrono>
 #include "local_config.h"
 #include "helper.h"
 #include <vector>
@@ -241,7 +242,7 @@ namespace fbg {
 	}
 }
 
-BrightnESS::FlatBufs::FB_uptr conv_to_fb_general(TopicMappingSettings const & settings, epics::pvData::PVStructure::shared_pointer & pvstr) {
+BrightnESS::FlatBufs::FB_uptr conv_to_fb_general(TopicMappingSettings const & settings, epics::pvData::PVStructure::shared_pointer & pvstr, uint64_t seq) {
 	//LOG(0, "conv_to_fb_general");
 	// Passing initial size:
 	auto fb = BrightnESS::FlatBufs::FB_uptr(
@@ -254,6 +255,13 @@ BrightnESS::FlatBufs::FB_uptr conv_to_fb_general(TopicMappingSettings const & se
 	//some kind of 'union F' offset:   flatbuffers::Offset<void>
 	PVBuilder b(*builder);
 	b.add_v_type(vF.type);
+	b.add_seq(seq);
+	static_assert(sizeof(uint64_t) >= sizeof(std::chrono::nanoseconds::rep), "Types not compatible");
+	b.add_ts(
+		std::chrono::duration_cast<std::chrono::nanoseconds>(
+			std::chrono::system_clock::now().time_since_epoch()
+		).count()
+	);
 	auto r = b.Finish();
 	builder->Finish(r);
 	return fb;
@@ -817,6 +825,8 @@ void GetFieldRequesterForAction::getDone(epics::pvData::Status const & status, e
 
 class MonitorRequester : public ::epics::pvData::MonitorRequester {
 public:
+uint64_t seq = 0;
+
 MonitorRequester(std::string channel_name, Monitor::wptr monitor_HL);
 ~MonitorRequester();
 string getRequesterName() override;
@@ -906,7 +916,8 @@ void MonitorRequester::monitorEvent(epics::pvData::MonitorPtr const & monitor) {
 		if (monitor_HL->topic_mapping->topic_mapping_settings.type == TopicMappingType::EPICS_PVA_GENERAL) {
 			// Try a new general but slower approach to cover all kinds of PV.
 			// This codepath should be preferred if fast enough.
-			auto fb = conv_to_fb_general(monitor_HL->topic_mapping->topic_mapping_settings, pvstr);
+			auto fb = conv_to_fb_general(monitor_HL->topic_mapping->topic_mapping_settings, pvstr, seq);
+			seq += 1;
 			monitor_HL->emit(std::move(fb));
 		}
 		else if (monitor_HL->topic_mapping->topic_mapping_settings.type == TopicMappingType::EPICS_PVA_NT) {
@@ -1173,7 +1184,8 @@ int epics_test_fb_general() {
 	}
 
 	pvstr->dumpValue(std::cout);
-	auto fb = BrightnESS::ForwardEpicsToKafka::Epics::conv_to_fb_general(BrightnESS::ForwardEpicsToKafka::TopicMappingSettings("ch1", "tp1"), pvstr);
+	auto sequence_number = 123;
+	auto fb = BrightnESS::ForwardEpicsToKafka::Epics::conv_to_fb_general(BrightnESS::ForwardEpicsToKafka::TopicMappingSettings("ch1", "tp1"), pvstr, sequence_number);
 	if (true) {
 		auto b = fb->builder.get();
 		fmt::print("builder raw pointer after Finish: {}\n", (void*)b->GetBufferPointer());

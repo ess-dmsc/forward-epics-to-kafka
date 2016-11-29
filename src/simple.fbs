@@ -55,6 +55,8 @@ table EpicsPV {
 	pv: PV;
 	timeStamp: timeStamp_t;
 	d2: [float];
+	seq: ulong;
+	ts: ulong;
 }
 
 root_type EpicsPV;

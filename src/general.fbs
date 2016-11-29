@@ -143,6 +143,8 @@ table Obj_a {
 
 table PV {
 	v: F;
+	seq: ulong;
+	ts: ulong;
 }
 
 // Root must be a table

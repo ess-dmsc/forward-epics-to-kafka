@@ -1,5 +1,6 @@
 #include "fbschemas.h"
 #include <flatbuffers/reflection.h>
+#include "TopicMapping.h"
 #include "logger.h"
 
 namespace BrightnESS {
@@ -27,11 +28,11 @@ FB::FB(Schema schema)
 		: schema(schema),
 			// yes, it's dirty..
 			//header { *((uint8_t*)(&schema) + 0), *((uint8_t*)(&schema) + 1) },
-			header {0x66, 0x77},
+			header {*((uint8_t*)&schema), *((uint8_t*)&schema+1)},
 			alloc(decltype(alloc)(new fballoc(this))),
 			builder(new flatbuffers::FlatBufferBuilder(2 * 1024 * 1024, alloc.get()))
 {
-	static_assert(FLATBUFFERS_LITTLEENDIAN, "Require little endian (would require little extra to cover big end as well)");
+	static_assert(FLATBUFFERS_LITTLEENDIAN, "Ctor requires little endian (would require little extra to cover big end as well)");
 	alloc->fb = this;
 }
 
