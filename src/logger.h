@@ -2,6 +2,7 @@
 
 #include <stdarg.h>
 #include <fmt/format.h>
+#include <string>
 
 // Do we have a cross-platform way of doing this?
 // Would a stream work better?
@@ -27,11 +28,11 @@
 
 #endif
 
-
-
 extern int log_level;
 
 int prefix_len();
+
+extern FILE * log_file;
 
 template <typename ...TT>
 void dwlog(int level, char const * fmt, char const * file, int line, char const * func, TT const & ... args) {
@@ -39,15 +40,18 @@ void dwlog(int level, char const * fmt, char const * file, int line, char const 
 	int npre = prefix_len();
 	int const n2 = strlen(file);
 	if (npre > n2) {
-		fmt::print("ERROR in logging API: npre > n2\n");
+		fmt::print(log_file, "ERROR in logging API: npre > n2\n");
 		npre = 0;
 	}
 	auto f1 = file + npre;
 	// TODO merge into one invocation..
 	try {
-		fmt::print("### {{{}}} {}:{}\n{}\n\n", level, f1, line, fmt::format(fmt, args...));
+		fmt::print(log_file, "### {{{}}} {}:{}\n{}\n\n", level, f1, line, fmt::format(fmt, args...));
 	}
 	catch (fmt::FormatError & e) {
-		fmt::print("ERROR  fmt::FormatError {}:{}\n", f1, line);
+		fmt::print(log_file, "ERROR  fmt::FormatError {}:{}\n", f1, line);
 	}
+	fflush(log_file);
 }
+
+void use_log_file(std::string fname);

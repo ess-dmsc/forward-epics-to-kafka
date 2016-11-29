@@ -8,6 +8,8 @@
 #include <mutex>
 #include <string>
 #include <cstring>
+#include <csignal>
+#include <atomic>
 
 #include <fmt/format.h>
 #include "logger.h"
@@ -32,6 +34,7 @@
 
 
 int const n_pv_forward = 0;
+std::atomic<int> g__run {1};
 
 
 namespace BrightnESS {
@@ -48,6 +51,7 @@ string broker_configuration_topic = "configuration.global";
 string broker_data_address = "localhost:9092";
 bool help = false;
 bool verbose = false;
+string log_file;
 string config_file;
 
 // When parsing options, we keep the json document because it may also contain
@@ -258,7 +262,7 @@ void Main::forward_epics_to_kafka() {
 	});
 	ConfigCB config_cb(*this);
 
-	while (forwarding_run) {
+	while (forwarding_run and g__run == 1) {
 		release_deleted_mappings();
 		move_failed_to_startup_queue();
 		// keep in this wider scope for later log output:
@@ -479,6 +483,14 @@ void Main::forwarding_exit() {
 
 
 
+
+void signal_handler(int signal) {
+	LOG(9, "SIGNAL {}", signal);
+	g__run = 0;
+}
+
+
+
 #if HAVE_GTEST
 #include <gtest/gtest.h>
 #endif
@@ -490,6 +502,8 @@ int main(int argc, char ** argv) {
 		return RUN_ALL_TESTS();
 	}
 	#endif
+	std::signal(SIGINT, signal_handler);
+	std::signal(SIGTERM, signal_handler);
 	//BrightnESS::ForwardEpicsToKafka::Config::Service s1;
 	//return 1;
 	BrightnESS::ForwardEpicsToKafka::MainOpt opt;
@@ -499,6 +513,7 @@ int main(int argc, char ** argv) {
 		{"broker-configuration-topic",      required_argument,        0,  0 },
 		{"broker-data-address",             required_argument,        0,  0 },
 		{"config-file",                     required_argument,        0,  0 },
+		{"log-file",                        required_argument,        0,  0 },
 		{"verbose",                         no_argument,              0, 'v'},
 		{0, 0, 0, 0},
 	};
@@ -506,7 +521,7 @@ int main(int argc, char ** argv) {
 	int option_index = 0;
 	bool getopt_error = false;
 	while (true) {
-		int c = getopt_long(argc, argv, "v", long_options, &option_index);
+		int c = getopt_long(argc, argv, "hv", long_options, &option_index);
 		//LOG(5, "c getopt {}", c);
 		if (c == -1) break;
 		if (c == '?') {
@@ -522,9 +537,11 @@ int main(int argc, char ** argv) {
 			}
 		}
 		switch (c) {
+		case 'h':
+			opt.help = true;
+			break;
 		case 'v':
 			// Do nothing, purpose is to fall through to long-option handling
-			LOG(9, "verbose");
 			opt.verbose = true;
 			log_level = std::max(0, log_level - 1);
 			break;
@@ -536,6 +553,9 @@ int main(int argc, char ** argv) {
 			}
 			if (std::string("config-file") == lname) {
 				opt.parse_json(optarg);
+			}
+			if (std::string("log-file") == lname) {
+				opt.log_file = optarg;
 			}
 			if (std::string("broker-configuration-address") == lname) {
 				opt.broker_configuration_address = optarg;
@@ -550,50 +570,58 @@ int main(int argc, char ** argv) {
 		// TODO catch error from missing argument
 		// TODO print a command help
 	}
+	if (opt.log_file.size() > 0) {
+		use_log_file(opt.log_file);
+	}
+
 	if (optind < argc) {
-		printf("Left-over commandline options:\n");
+		LOG(9, "Left-over commandline options:");
 		for (int i1 = optind; i1 < argc; ++i1) {
-			printf("%2d %s\n", i1, argv[i1]);
+			LOG(9, "{:2} {}", i1, argv[i1]);
 		}
 	}
 
 	if (getopt_error) {
-		LOG(5, "ERROR parsing command line options");
+		LOG(9, "ERROR parsing command line options");
 		opt.help = true;
 		return 1;
 	}
 
-	printf("forward-epics-to-kafka-0.0.1  (ESS, BrightnESS)\n");
-	printf("  %s\n", GIT_COMMIT);
-	puts("  Contact: dominik.werder@psi.ch");
-	puts("");
+	LOG(9, "\n"
+		"forward-epics-to-kafka-0.0.1  (ESS, BrightnESS)\n"
+		"  {:.7}\n"
+		"  Contact: dominik.werder@psi.ch\n\n",
+		GIT_COMMIT
+	);
 
 	if (opt.help) {
-		puts("Forwards EPICS process variables to Kafka topics.");
-		puts("Controlled via JSON packets sent over the configuration topic.");
-		puts("");
-		puts("");
-		puts("forward-epics-to-kafka");
-		puts("  --help");
-		puts("");
-		puts("  --config-file                     <file>");
-		puts("      Configuration file in JSON format.");
-		puts("      To overwrite the options in config-file, specify them later on the command line.");
-		puts("");
-		puts("  --broker-configuration-address    host:port,host:port,...");
-		puts("      Kafka brokers to connect with for configuration updates.");
-		puts("      Default: localhost:9092");
-		puts("");
-		puts("  --broker-configuration-topic      <topic-name>");
-		puts("      Topic name to listen to for configuration updates.");
-		puts("      Default: configuration.global");
-		puts("");
-		puts("  --broker-data-address             host:port,host:port,...");
-		puts("      Kafka brokers to connect with for configuration updates");
-		puts("      Default: localhost:9092");
-		puts("");
-		puts("  --verbose");
-		puts("");
+		LOG(9, "\n"
+			"Forwards EPICS process variables to Kafka topics.\n"
+			"Controlled via JSON packets sent over the configuration topic.\n"
+			"\n"
+			"\n"
+			"forward-epics-to-kafka\n"
+			"  --help, -h\n"
+			"\n"
+			"  --config-file                     <file>\n"
+			"      Configuration file in JSON format.\n"
+			"      To overwrite the options in config-file, specify them later on the command line.\n"
+			"\n"
+			"  --broker-configuration-address    host:port,host:port,...\n"
+			"      Kafka brokers to connect with for configuration updates.\n"
+			"      Default: localhost:9092\n"
+			"\n"
+			"  --broker-configuration-topic      <topic-name>\n"
+			"      Topic name to listen to for configuration updates.\n"
+			"      Default: configuration.global\n"
+			"\n"
+			"  --broker-data-address             host:port,host:port,...\n"
+			"      Kafka brokers to connect with for configuration updates\n"
+			"      Default: localhost:9092\n"
+			"\n"
+			"  --verbose, -v\n"
+			"\n"
+		);
 		return 1;
 	}
 
@@ -602,10 +630,10 @@ int main(int argc, char ** argv) {
 		main.forward_epics_to_kafka();
 	}
 	catch (std::runtime_error & e) {
-		LOG(6, "CATCH runtime error in main watchdog thread: {}", e.what());
+		LOG(9, "CATCH runtime error in main watchdog thread: {}", e.what());
 	}
 	catch (std::exception & e) {
-		LOG(6, "CATCH EXCEPTION in main watchdog thread");
+		LOG(9, "CATCH EXCEPTION in main watchdog thread");
 	}
 	return 0;
 }
