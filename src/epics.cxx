@@ -74,6 +74,7 @@ char const * channel_state_name(epics::pvAccess::Channel::ConnectionState x) {
 #include <fmt/format.h>
 #if 0
 #define FLOG(level, fmt, args...)  print("{:{}s}" fmt "\n", "", 2*(level), ## args);
+#define DO_FLOG
 #else
 #define FLOG(level, fmt, args...)
 #endif
@@ -97,9 +98,11 @@ namespace fbg {
 				fs.push_back(Field(builder, f1ptr, 1+level));
 			}
 
+			#ifdef DO_FLOG
 			for (auto & x : fs) {
 				FLOG(level, "off: {:d}", x.off.o);
 			}
+			#endif
 
 			// With the collected offsets, create object members
 			// Collect raw vector of offsets to store later in flat buffer
