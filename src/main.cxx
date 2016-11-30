@@ -514,7 +514,6 @@ int main(int argc, char ** argv) {
 		{"broker-data-address",             required_argument,        0,  0 },
 		{"config-file",                     required_argument,        0,  0 },
 		{"log-file",                        required_argument,        0,  0 },
-		{"verbose",                         no_argument,              0, 'v'},
 		{0, 0, 0, 0},
 	};
 	std::string cmd;
@@ -619,7 +618,8 @@ int main(int argc, char ** argv) {
 			"      Kafka brokers to connect with for configuration updates\n"
 			"      Default: localhost:9092\n"
 			"\n"
-			"  --verbose, -v\n"
+			"  -v\n"
+			"      Verbose.\n"
 			"\n"
 		);
 		return 1;

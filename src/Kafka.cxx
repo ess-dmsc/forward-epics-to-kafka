@@ -143,6 +143,10 @@ sptr<Instance> Instance::create(std::string brokers) {
 
 
 
+void kafka_log_cb(rd_kafka_t const * rk, int level, char const * fac, char const * buf) {
+	LOG(level, "{}  fac: {}", buf, fac);
+}
+
 
 
 void Instance::init() {
@@ -168,8 +172,7 @@ void Instance::init() {
 	KafkaOpaqueType * op1 = this;
 	rd_kafka_conf_set_opaque(conf, op1);
 
-	// TODO
-	// Do we want a logger callback via rd_kafka_conf_set_log_cb() ?
+	rd_kafka_conf_set_log_cb(conf, kafka_log_cb);
 
 	{
 		std::vector<std::vector<std::string>> confs = {

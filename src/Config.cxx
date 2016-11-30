@@ -40,6 +40,10 @@ KafkaSettings::KafkaSettings(std::string brokers, std::string topic)
 
 
 
+static void kafka_log_cb(rd_kafka_t const * rk, int level, char const * fac, char const * buf) {
+	LOG(level, "{}  fac: {}", buf, fac);
+}
+
 static void kafka_error_cb(rd_kafka_t * rk, int err_i, const char * reason, void * opaque) {
 	// cast necessary because of Kafka API design
 	rd_kafka_resp_err_t err = (rd_kafka_resp_err_t) err_i;
@@ -83,6 +87,7 @@ static void rebalance_cb(
 
 
 
+
 Listener::Listener(KafkaSettings settings) {
 	static_assert(0 == RD_KAFKA_RESP_ERR_NO_ERROR, "0 == RD_KAFKA_RESP_ERR_NO_ERROR");
 
@@ -92,6 +97,8 @@ Listener::Listener(KafkaSettings settings) {
 	char errstr[errstr_N];
 
 	auto conf = rd_kafka_conf_new();
+
+	rd_kafka_conf_set_log_cb(conf, kafka_log_cb);
 
 	std::vector<std::vector<std::string>> confs = {
 		{"message.max.bytes", "100000"},
