@@ -57,6 +57,7 @@ table EpicsPV {
 	d2: [float];
 	seq: ulong;
 	ts: ulong;
+	ts_epics_server: ulong;
 }
 
 root_type EpicsPV;

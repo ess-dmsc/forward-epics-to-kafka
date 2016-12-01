@@ -262,6 +262,7 @@ BrightnESS::FlatBufs::FB_uptr conv_to_fb_general(TopicMappingSettings const & se
 			std::chrono::system_clock::now().time_since_epoch()
 		).count()
 	);
+	b.add_ts_epics_server(pvstr->getSubField<epics::pvData::PVScalarValue<uint64_t>>("ts")->get());
 	auto r = b.Finish();
 	builder->Finish(r);
 	return fb;
@@ -277,21 +278,21 @@ public:
 using FBT = BrightnESS::FlatBufs::FB_uptr;
 using ptr = std::unique_ptr<PVStructureToFlatBuffer>;
 static ptr create(epics::pvData::PVStructure::shared_pointer & pvstr);
-virtual FBT convert(TopicMappingSettings & settings, epics::pvData::PVStructure::shared_pointer & pvstr) = 0;
+virtual FBT convert(uint64_t seq, uint64_t ts, TopicMappingSettings & settings, epics::pvData::PVStructure::shared_pointer & pvstr) = 0;
 };
 
 namespace PVStructureToFlatBufferN {
 
 
 void add_name_timeStamp(flatbuffers::FlatBufferBuilder & b1, EpicsPVBuilder & b2, std::string & channel_name, epics::pvData::PVStructure::shared_pointer & pvstr) {
-	auto ts = pvstr->getSubField<epics::pvData::PVStructure>("timeStamp");
-	if (not ts) {
+	auto pvTimeStamp = pvstr->getSubField<epics::pvData::PVStructure>("timeStamp");
+	if (not pvTimeStamp) {
 		LOG(0, "timeStamp not available");
 		return;
 	}
 	timeStamp_t timeStamp(
-		ts->getSubField<epics::pvData::PVScalarValue<int64_t>>("secondsPastEpoch")->get(),
-		ts->getSubField<epics::pvData::PVScalarValue<int>>("nanoseconds")->get()
+		pvTimeStamp->getSubField<epics::pvData::PVScalarValue<int64_t>>("secondsPastEpoch")->get(),
+		pvTimeStamp->getSubField<epics::pvData::PVScalarValue<int>>("nanoseconds")->get()
 	);
 	//LOG(5, "secondsPastEpoch: {:20}", timeStamp.secondsPastEpoch());
 	//LOG(5, "nanoseconds:      {:20}", timeStamp.nanoseconds());
@@ -358,7 +359,7 @@ using T1 = typename std::conditional<
 	>::type
 	>::type;
 
-FBT convert(TopicMappingSettings & tms, epics::pvData::PVStructure::shared_pointer & pvstr) override {
+FBT convert(uint64_t seq, uint64_t ts, TopicMappingSettings & tms, epics::pvData::PVStructure::shared_pointer & pvstr) override {
 	FBT fb( new BrightnESS::FlatBufs::FB( FlatBufs::Schema::Simple ) );
 	auto builder = fb->builder.get();
 	T1 scalar_builder(*builder);
@@ -386,6 +387,11 @@ FBT convert(TopicMappingSettings & tms, epics::pvData::PVStructure::shared_point
 	add_name_timeStamp(*builder, pv_builder, tms.channel, pvstr);
 	pv_builder.add_pv_type(BuilderType_to_Enum_PV<T1>::v());
 	pv_builder.add_pv(scalar_fin.Union());
+
+	pv_builder.add_seq(seq);
+	pv_builder.add_ts(ts);
+	pv_builder.add_ts_epics_server(pvstr->getSubField<epics::pvData::PVScalarValue<uint64_t>>("ts")->get());
+
 	builder->Finish(pv_builder.Finish());
 
 	return fb;
@@ -477,7 +483,7 @@ using T3 = typename std::conditional<
 	>::type;
 
 
-FBT convert(TopicMappingSettings & tms, epics::pvData::PVStructure::shared_pointer & pvstr) override {
+FBT convert(uint64_t seq, uint64_t ts, TopicMappingSettings & tms, epics::pvData::PVStructure::shared_pointer & pvstr) override {
 	static_assert(FLATBUFFERS_LITTLEENDIAN, "Optimization relies on little endianness");
 	static_assert(sizeof(T0) == sizeof(T3), "Numeric types not compatible");
 	// Build the flat buffer from scratch
@@ -530,6 +536,11 @@ FBT convert(TopicMappingSettings & tms, epics::pvData::PVStructure::shared_point
 	add_name_timeStamp(*builder, pv_builder, tms.channel, pvstr);
 	pv_builder.add_pv_type(BuilderType_to_Enum_PV<T1>::v());
 	pv_builder.add_pv(array_fin.Union());
+
+	pv_builder.add_seq(seq);
+	pv_builder.add_ts(ts);
+	pv_builder.add_ts_epics_server(pvstr->getSubField<epics::pvData::PVScalarValue<uint64_t>>("ts")->get());
+
 	builder->Finish(pv_builder.Finish());
 
 	return fb;
@@ -934,7 +945,9 @@ void MonitorRequester::monitorEvent(epics::pvData::MonitorPtr const & monitor) {
 				monitor_HL->go_into_failure_mode();
 			}
 			else {
-				auto flat_buffer = conv_to_flatbuffer->convert(monitor_HL->topic_mapping->topic_mapping_settings, pvstr);
+				auto ts = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+				auto flat_buffer = conv_to_flatbuffer->convert(seq, ts, monitor_HL->topic_mapping->topic_mapping_settings, pvstr);
+				seq += 1;
 
 				// TODO
 				// refactor, send out the FB instead
