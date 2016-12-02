@@ -899,7 +899,7 @@ void MonitorRequester::monitorConnect(epics::pvData::Status const & status, epic
 
 
 void MonitorRequester::monitorEvent(epics::pvData::MonitorPtr const & monitor) {
-	LOG(0, "monitorEvent");
+	LOG(0, "monitorEvent seq {}", seq);
 
 	auto monitor_HL = this->monitor_HL.lock();
 	if (!monitor_HL) {
