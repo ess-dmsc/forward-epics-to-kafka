@@ -385,9 +385,17 @@ void Topic::produce(BrightnESS::FlatBufs::FB_uptr fb) {
 	auto m1 = fb->message();
 	//x = rd_kafka_produce(rkt, partition, msgflags, buf.begin, buf.size, key, key_len, callback_data);
 	x = rd_kafka_produce(rkt, partition, msgflags, m1.data, m1.size, key, key_len, callback_data);
+	if (x == RD_KAFKA_RESP_ERR__QUEUE_FULL) {
+		LOG(7, "ERROR OutQ: {}  QUEUE_FULL  Dropping message", rd_kafka_outq_len(ins->rk));
+		return;
+	}
+	if (x == RD_KAFKA_RESP_ERR_MSG_SIZE_TOO_LARGE) {
+		LOG(7, "ERROR OutQ: {}  TOO_LARGE", rd_kafka_outq_len(ins->rk));
+		return;
+	}
 	if (x != 0) {
 		LOG(7, "ERROR on produce topic {}  partition {}: {}", rd_kafka_topic_name(rkt), partition, rd_kafka_err2str(rd_kafka_last_error()));
-		throw std::runtime_error("ERROR on message send");
+		//throw std::runtime_error("ERROR on message send");
 		// even when taking out exception in future, return here
 		return;
 	}
