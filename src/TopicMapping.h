@@ -75,7 +75,7 @@ TopicMapping(Kafka::InstanceSet & kset, TopicMappingSettings topic_mapping_setti
 void start_forwarding(Kafka::InstanceSet & kset);
 void stop_forwarding();
 
-void emit(BrightnESS::FlatBufs::FB_uptr fb);
+void emit(BrightnESS::FlatBufs::FB_uptr fb, uint64_t seq);
 
 /** Called from watchdog thread, opportunity to check own health status */
 void health_selfcheck();

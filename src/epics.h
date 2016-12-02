@@ -70,7 +70,7 @@ private:
 friend class MonitorRequester;
 friend class IntrospectField;
 friend class StartMonitorChannel;
-void emit(BrightnESS::FlatBufs::FB_uptr fb);
+void emit(BrightnESS::FlatBufs::FB_uptr fb, uint64_t seq);
 
 TopicMapping * topic_mapping;
 

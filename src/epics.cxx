@@ -929,7 +929,7 @@ void MonitorRequester::monitorEvent(epics::pvData::MonitorPtr const & monitor) {
 			// This codepath should be preferred if fast enough.
 			auto fb = conv_to_fb_general(monitor_HL->topic_mapping->topic_mapping_settings, pvstr, seq);
 			seq += 1;
-			monitor_HL->emit(std::move(fb));
+			monitor_HL->emit(std::move(fb), seq);
 		}
 		else if (monitor_HL->topic_mapping->topic_mapping_settings.type == TopicMappingType::EPICS_PVA_NT) {
 			// NOTE
@@ -951,7 +951,7 @@ void MonitorRequester::monitorEvent(epics::pvData::MonitorPtr const & monitor) {
 
 				// TODO
 				// refactor, send out the FB instead
-				monitor_HL->emit(std::move(flat_buffer));
+				monitor_HL->emit(std::move(flat_buffer), seq);
 			}
 		}
 		else {
@@ -1146,7 +1146,7 @@ void Monitor::initiate_value_monitoring() {
 	}
 }
 
-void Monitor::emit(BrightnESS::FlatBufs::FB_uptr fb) {
+void Monitor::emit(BrightnESS::FlatBufs::FB_uptr fb, uint64_t seq) {
 	// TODO
 	// It seems to be hard to tell when Epics won't use the callback anymore.
 	// Instead of checking each access, use flags and quarantine before release
@@ -1154,7 +1154,7 @@ void Monitor::emit(BrightnESS::FlatBufs::FB_uptr fb) {
 	RMLG lg(m_mutex_emitter);
 	if (!topic_mapping) return;
 	if (!topic_mapping->forwarding) return;
-	topic_mapping->emit(std::move(fb));
+	topic_mapping->emit(std::move(fb), seq);
 }
 
 

@@ -34,7 +34,7 @@ public:
 Topic(sptr<Instance> ins, std::string topic_name);
 ~Topic();
 
-void produce(BrightnESS::FlatBufs::FB_uptr fb);
+void produce(BrightnESS::FlatBufs::FB_uptr fb, uint64_t seq);
 
 // Should make a friend method out of this..
 void error_from_kafka_callback();

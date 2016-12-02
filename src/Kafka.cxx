@@ -365,7 +365,7 @@ Topic::~Topic() {
 
 
 
-void Topic::produce(BrightnESS::FlatBufs::FB_uptr fb) {
+void Topic::produce(BrightnESS::FlatBufs::FB_uptr fb, uint64_t seq) {
 	int x;
 	int32_t partition = RD_KAFKA_PARTITION_UA;
 
