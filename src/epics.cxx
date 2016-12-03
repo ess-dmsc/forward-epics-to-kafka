@@ -242,7 +242,7 @@ namespace fbg {
 	}
 }
 
-BrightnESS::FlatBufs::FB_uptr conv_to_fb_general(TopicMappingSettings const & settings, epics::pvData::PVStructure::shared_pointer & pvstr, uint64_t seq) {
+BrightnESS::FlatBufs::FB_uptr conv_to_fb_general(TopicMappingSettings const & settings, epics::pvData::PVStructure::shared_pointer & pvstr, uint64_t seq, uint64_t ts, int forwarder_ix) {
 	//LOG(0, "conv_to_fb_general");
 	// Passing initial size:
 	auto fb = BrightnESS::FlatBufs::FB_uptr(
@@ -257,12 +257,9 @@ BrightnESS::FlatBufs::FB_uptr conv_to_fb_general(TopicMappingSettings const & se
 	b.add_v_type(vF.type);
 	b.add_seq(seq);
 	static_assert(sizeof(uint64_t) >= sizeof(std::chrono::nanoseconds::rep), "Types not compatible");
-	b.add_ts(
-		std::chrono::duration_cast<std::chrono::nanoseconds>(
-			std::chrono::system_clock::now().time_since_epoch()
-		).count()
-	);
+	b.add_ts(ts);
 	b.add_ts_epics_server(pvstr->getSubField<epics::pvData::PVScalarValue<uint64_t>>("ts")->get());
+	b.add_forwarder_ix(forwarder_ix);
 	auto r = b.Finish();
 	builder->Finish(r);
 	return fb;
@@ -899,7 +896,7 @@ void MonitorRequester::monitorConnect(epics::pvData::Status const & status, epic
 
 
 void MonitorRequester::monitorEvent(epics::pvData::MonitorPtr const & monitor) {
-	LOG(0, "monitorEvent seq {}", seq);
+	//LOG(0, "monitorEvent seq {}", seq);
 
 	auto monitor_HL = this->monitor_HL.lock();
 	if (!monitor_HL) {
@@ -917,6 +914,9 @@ void MonitorRequester::monitorEvent(epics::pvData::MonitorPtr const & monitor) {
 	// Docs for MonitorRequester says that we have to call poll()
 	// This seems weird naming to me, because I listen to the Monitor because I do not want to poll?!?
 	while (auto ele = monitor->poll()) {
+		uint64_t ts = std::chrono::duration_cast<std::chrono::nanoseconds>(
+			std::chrono::system_clock::now().time_since_epoch()
+		).count();
 
 		// Seems like MonitorElement always returns a Structure type ?
 		// The inheritance diagram shows that scalars derive from Field, not from Structure.
@@ -927,9 +927,9 @@ void MonitorRequester::monitorEvent(epics::pvData::MonitorPtr const & monitor) {
 		if (monitor_HL->topic_mapping->topic_mapping_settings.type == TopicMappingType::EPICS_PVA_GENERAL) {
 			// Try a new general but slower approach to cover all kinds of PV.
 			// This codepath should be preferred if fast enough.
-			auto fb = conv_to_fb_general(monitor_HL->topic_mapping->topic_mapping_settings, pvstr, seq);
+			auto fb = conv_to_fb_general(monitor_HL->topic_mapping->topic_mapping_settings, pvstr, seq, ts, monitor_HL->forwarder_ix);
+			monitor_HL->emit(std::move(fb), seq, ts);
 			seq += 1;
-			monitor_HL->emit(std::move(fb), seq);
 		}
 		else if (monitor_HL->topic_mapping->topic_mapping_settings.type == TopicMappingType::EPICS_PVA_NT) {
 			// NOTE
@@ -945,13 +945,12 @@ void MonitorRequester::monitorEvent(epics::pvData::MonitorPtr const & monitor) {
 				monitor_HL->go_into_failure_mode();
 			}
 			else {
-				auto ts = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
 				auto flat_buffer = conv_to_flatbuffer->convert(seq, ts, monitor_HL->topic_mapping->topic_mapping_settings, pvstr);
-				seq += 1;
 
 				// TODO
 				// refactor, send out the FB instead
-				monitor_HL->emit(std::move(flat_buffer), seq);
+				monitor_HL->emit(std::move(flat_buffer), seq, ts);
+				seq += 1;
 			}
 		}
 		else {
@@ -998,9 +997,10 @@ epics::pvAccess::GetFieldRequester::shared_pointer gfr;
 
 //                 Monitor
 
-Monitor::Monitor(TopicMapping * topic_mapping, std::string channel_name) :
+Monitor::Monitor(TopicMapping * topic_mapping, std::string channel_name, int forwarder_ix) :
 	topic_mapping(topic_mapping),
-	channel_name(channel_name)
+	channel_name(channel_name),
+	forwarder_ix(forwarder_ix)
 {
 	if (!topic_mapping) throw std::runtime_error("ERROR did not receive a topic_mapping");
 }
@@ -1146,7 +1146,7 @@ void Monitor::initiate_value_monitoring() {
 	}
 }
 
-void Monitor::emit(BrightnESS::FlatBufs::FB_uptr fb, uint64_t seq) {
+void Monitor::emit(BrightnESS::FlatBufs::FB_uptr fb, uint64_t seq, uint64_t ts) {
 	// TODO
 	// It seems to be hard to tell when Epics won't use the callback anymore.
 	// Instead of checking each access, use flags and quarantine before release
@@ -1154,7 +1154,7 @@ void Monitor::emit(BrightnESS::FlatBufs::FB_uptr fb, uint64_t seq) {
 	RMLG lg(m_mutex_emitter);
 	if (!topic_mapping) return;
 	if (!topic_mapping->forwarding) return;
-	topic_mapping->emit(std::move(fb), seq);
+	topic_mapping->emit(std::move(fb), seq, ts);
 }
 
 
@@ -1198,7 +1198,7 @@ int epics_test_fb_general() {
 
 	pvstr->dumpValue(std::cout);
 	auto sequence_number = 123;
-	auto fb = BrightnESS::ForwardEpicsToKafka::Epics::conv_to_fb_general(BrightnESS::ForwardEpicsToKafka::TopicMappingSettings("ch1", "tp1"), pvstr, sequence_number);
+	auto fb = BrightnESS::ForwardEpicsToKafka::Epics::conv_to_fb_general(BrightnESS::ForwardEpicsToKafka::TopicMappingSettings("ch1", "tp1"), pvstr, sequence_number, 440055, 42);
 	if (true) {
 		auto b = fb->builder.get();
 		fmt::print("builder raw pointer after Finish: {}\n", (void*)b->GetBufferPointer());

@@ -56,7 +56,7 @@ public:
 using wptr = std::weak_ptr<Monitor>;
 
 /// Initiate the connection to the channel.  As far as EPICS docs tell, it should not block.
-Monitor(TopicMapping * topic_mapping, std::string channel_name);
+Monitor(TopicMapping * topic_mapping, std::string channel_name, int forwarder_ix);
 void init(std::shared_ptr<Monitor> self);
 ~Monitor();
 bool ready();
@@ -70,7 +70,7 @@ private:
 friend class MonitorRequester;
 friend class IntrospectField;
 friend class StartMonitorChannel;
-void emit(BrightnESS::FlatBufs::FB_uptr fb, uint64_t seq);
+void emit(BrightnESS::FlatBufs::FB_uptr fb, uint64_t seq, uint64_t ts);
 
 TopicMapping * topic_mapping;
 
@@ -91,7 +91,7 @@ std::atomic<int> failure_triggered {0};
 
 std::recursive_mutex m_mutex_emitter;
 using RMLG = std::lock_guard<std::recursive_mutex>;
-
+int forwarder_ix = 0;
 };
 
 

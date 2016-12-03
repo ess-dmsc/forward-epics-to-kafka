@@ -49,5 +49,5 @@ void dwlog_inner(int level, char const * file, int line, char const * func, std:
 	catch (fmt::FormatError & e) {
 		fmt::print(log_file, "ERROR  fmt::FormatError {}:{}\n", f1, line);
 	}
-	fflush(log_file);
+	//fflush(log_file);
 }

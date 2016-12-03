@@ -146,6 +146,7 @@ table PV {
 	seq: ulong;
 	ts: ulong;
 	ts_epics_server: ulong;
+	forwarder_ix: ubyte;
 }
 
 // Root must be a table

@@ -4,6 +4,7 @@
 #include <vector>
 #include <list>
 #include <forward_list>
+#include <map>
 #include <algorithm>
 #include <mutex>
 #include <string>
@@ -33,7 +34,6 @@
 #include "git_commit_current.h"
 
 
-int const n_pv_forward = 0;
 std::atomic<int> g__run {1};
 
 
@@ -53,6 +53,8 @@ bool help = false;
 bool verbose = false;
 string log_file;
 string config_file;
+std::map<std::string, int> kafka_conf_ints;
+int forwarder_ix = 0;
 
 // When parsing options, we keep the json document because it may also contain
 // some topic mappings which are read by the Main.
@@ -183,13 +185,12 @@ void ConfigCB::operator() (std::string const & msg) {
 }
 
 
-Main::Main(MainOpt opt) : main_opt(opt), kafka_instance_set(Kafka::InstanceSet::Set(opt.broker_data_address)) {
+Main::Main(MainOpt opt) : main_opt(opt), kafka_instance_set(Kafka::InstanceSet::Set(opt.broker_data_address, opt.kafka_conf_ints)) {
 	if (main_opt.json) {
 		if (main_opt.json->HasMember("mappings")) {
 			auto & ms = (*main_opt.json)["mappings"];
 			if (ms.IsArray()) {
 				for (auto & m : ms.GetArray()) {
-					LOG(3, "LOOP OVER ONE ARRAY ENTRY");
 					auto type_1 = m["type"].GetString();
 					if (not type_1) type_1 = "EPICS_PVA_NT";
 					string type(type_1);
@@ -441,7 +442,7 @@ void Main::mapping_start(TopicMappingSettings tmsettings) {
 	for (auto & tm : tms) {
 		if (tm->channel_name() == tmsettings.channel) return;
 	}
-	auto tm = new TopicMapping(kafka_instance_set, tmsettings, topic_mappings_started);
+	auto tm = new TopicMapping(kafka_instance_set, tmsettings, topic_mappings_started, main_opt.forwarder_ix);
 	topic_mappings_started += 1;
 	tms.push_back(decltype(tms)::value_type(tm));
 }
@@ -514,6 +515,8 @@ int main(int argc, char ** argv) {
 		{"broker-data-address",             required_argument,        0,  0 },
 		{"config-file",                     required_argument,        0,  0 },
 		{"log-file",                        required_argument,        0,  0 },
+		{"kafka-message.max.bytes",         required_argument,        0,  0 },
+		{"forwarder-ix",                    required_argument,        0,  0 },
 		{0, 0, 0, 0},
 	};
 	std::string cmd;
@@ -564,6 +567,13 @@ int main(int argc, char ** argv) {
 			}
 			if (std::string("broker-data-address") == lname) {
 				opt.broker_data_address = optarg;
+			}
+			if (std::string("kafka-message.max.bytes") == lname) {
+				opt.kafka_conf_ints["message.max.bytes"] = strtol(optarg, nullptr, 10);
+				LOG(3, "Option: {}", opt.kafka_conf_ints.at("message.max.bytes"));
+			}
+			if (std::string("forwarder-ix") == lname) {
+				opt.forwarder_ix = strtol(optarg, nullptr, 10);
 			}
 		}
 		// TODO catch error from missing argument

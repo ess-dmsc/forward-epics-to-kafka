@@ -69,13 +69,13 @@ enum class State { INIT, READY, FAILURE };
 //TopicMapping(TopicMapping &&) = default;
 
 /// Defines a mapping, but does not yet start the forwarding
-TopicMapping(Kafka::InstanceSet & kset, TopicMappingSettings topic_mapping_settings, uint32_t id);
+TopicMapping(Kafka::InstanceSet & kset, TopicMappingSettings topic_mapping_settings, uint32_t id, int forwarder_ix);
 ~TopicMapping();
 
 void start_forwarding(Kafka::InstanceSet & kset);
 void stop_forwarding();
 
-void emit(BrightnESS::FlatBufs::FB_uptr fb, uint64_t seq);
+void emit(BrightnESS::FlatBufs::FB_uptr fb, uint64_t seq, uint64_t ts);
 
 /** Called from watchdog thread, opportunity to check own health status */
 void health_selfcheck();
@@ -91,6 +91,7 @@ void go_into_failure_mode();
 
 // for debugging:
 uint32_t id;
+int forwarder_ix = 0;
 
 /// Should return true if we waited long enough so that this zombie can be cleaned up
 bool zombie_can_be_cleaned(int grace_time);

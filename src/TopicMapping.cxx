@@ -36,11 +36,12 @@ bool wait(int time, std::function<bool()> predicate) {
 }
 
 
-TopicMapping::TopicMapping(Kafka::InstanceSet & kset, TopicMappingSettings topic_mapping_settings, uint32_t id) :
+TopicMapping::TopicMapping(Kafka::InstanceSet & kset, TopicMappingSettings topic_mapping_settings, uint32_t id, int forwarder_ix) :
 	id(id),
 	topic_mapping_settings(topic_mapping_settings),
 	ts_init(std::chrono::system_clock::now()),
-	rnd((uint32_t)id)
+	rnd((uint32_t)id),
+	forwarder_ix(forwarder_ix)
 {
 	// If we do not want to start immediately, we should initialize
 	// the epics monitor such that it does not yet poll.
@@ -82,7 +83,7 @@ void TopicMapping::start_forwarding(Kafka::InstanceSet & kset) {
 	this->topic = kset.instance()->get_or_create_topic(topic_name());
 
 	LOG(0, "Start Epics monitor for {}", channel_name().c_str());
-	epics_monitor.reset(new Epics::Monitor(this, channel_name()));
+	epics_monitor.reset(new Epics::Monitor(this, channel_name(), forwarder_ix));
 	epics_monitor->init(epics_monitor);
 }
 
@@ -97,7 +98,7 @@ void TopicMapping::stop_forwarding() {
 	}
 }
 
-void TopicMapping::emit(BrightnESS::FlatBufs::FB_uptr fb, uint64_t seq) {
+void TopicMapping::emit(BrightnESS::FlatBufs::FB_uptr fb, uint64_t seq, uint64_t ts) {
 	if (!forwarding) {
 		LOG(3, "WARNING emit called despite not forwarding");
 		return;
@@ -124,7 +125,7 @@ void TopicMapping::emit(BrightnESS::FlatBufs::FB_uptr fb, uint64_t seq) {
 		//LOG(5, "TM {} producing size {}", id, fb->builder->GetSize());
 		// Produce the actual payload
 		//top->produce({reinterpret_cast<char*>(fb->builder->GetBufferPointer()), fb->builder->GetSize()});
-		top->produce(std::move(fb), seq);
+		top->produce(std::move(fb), seq, ts);
 		//auto hex = binary_to_hex(reinterpret_cast<char*>(fb->builder->GetBufferPointer()), fb->builder->GetSize());
 		//LOG(5, "packet in hex {}: {:.{}}", fb->builder->GetSize(), hex.data(), hex.size());
 	}

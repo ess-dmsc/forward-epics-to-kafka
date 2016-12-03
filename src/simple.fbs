@@ -58,6 +58,7 @@ table EpicsPV {
 	seq: ulong;
 	ts: ulong;
 	ts_epics_server: ulong;
+	forwarder_ix: ubyte;
 }
 
 root_type EpicsPV;

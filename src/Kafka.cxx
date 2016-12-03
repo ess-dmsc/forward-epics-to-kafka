@@ -2,6 +2,7 @@
 #include "logger.h"
 #include "local_config.h"
 
+#include <map>
 #include <algorithm>
 
 // Kafka uses LOG_DEBUG as defined here:
@@ -16,18 +17,18 @@ namespace BrightnESS {
 namespace ForwardEpicsToKafka {
 namespace Kafka {
 
-InstanceSet & InstanceSet::Set(std::string brokers) {
+InstanceSet & InstanceSet::Set(std::string brokers, std::map<std::string, int> conf_ints) {
 	LOG(3, "Kafka InstanceSet with rdkafka version: {}", rd_kafka_version_str());
 	static std::unique_ptr<InstanceSet> kset;
 	if (!kset) {
-		kset.reset(new InstanceSet(brokers));
+		kset.reset(new InstanceSet(brokers, conf_ints));
 	}
 	return *kset;
 }
 
-InstanceSet::InstanceSet(std::string brokers) : brokers(brokers) {
+InstanceSet::InstanceSet(std::string brokers, std::map<std::string, int> conf_ints) : brokers(brokers), conf_ints(conf_ints) {
 	for (int i1 = 0; i1 < KAFKA_INSTANCE_COUNT; ++i1) {
-		instances.push_front(Instance::create(brokers));
+		instances.push_front(Instance::create(brokers, conf_ints));
 	}
 }
 
@@ -50,7 +51,7 @@ sptr<Instance> InstanceSet::instance() {
 	if (it1 == instances.end()) {
 		// TODO
 		// Need to throttle the creation of instances in case of permanent failure
-		instances.push_front(Instance::create(brokers));
+		instances.push_front(Instance::create(brokers, conf_ints));
 		return instances.front();
 		//throw std::runtime_error("error no instances available?");
 	}
@@ -130,11 +131,12 @@ Instance::~Instance() {
 }
 
 
-sptr<Instance> Instance::create(std::string brokers) {
+sptr<Instance> Instance::create(std::string brokers, std::map<std::string, int> conf_ints) {
 	auto ret = sptr<Instance>(new Instance);
 	ret->brokers = brokers;
-	ret->init();
 	ret->self = std::weak_ptr<Instance>(ret);
+	ret->conf_ints = conf_ints;
+	ret->init();
 	return ret;
 }
 
@@ -150,14 +152,36 @@ void kafka_log_cb(rd_kafka_t const * rk, int level, char const * fac, char const
 
 
 void Instance::init() {
-	int const message_max_bytes                = 100 * 1024 * 1024;
-	int const fetch_message_max_bytes          = 256 * 1024 * 1024;
-	int const receive_message_max_bytes        = 256 * 1024 * 1024;
-	int const queue_buffering_max_messages     = 2*1024;
-	int const batch_num_messages               = 60;
+	std::map<std::string, int> conf_ints {
+		{"statistics.interval.ms",                   20 * 1000},
+		{"metadata.request.timeout.ms",              15 * 1000},
+		{"socket.timeout.ms",                         4 * 1000},
+		{"session.timeout.ms",                       15 * 1000},
 
-	int const N1 = 512;
-	char buf1[N1];
+		{"message.max.bytes",                 23 * 1024 * 1024},
+		//{"message.max.bytes",                       512 * 1024},
+
+		// check again these two?
+		{"fetch.message.max.bytes",            3 * 1024 * 1024},
+		{"receive.message.max.bytes",          3 * 1024 * 1024},
+
+		{"queue.buffering.max.messages",              2 * 1024},
+		//{"queue.buffering.max.kbytes",              800 * 1024},
+		{"queue.buffering.max.ms",                        1000},
+
+		// Total MessageSet size limited by message.max.bytes
+		{"batch.num.messages",                       10 * 1000},
+		{"socket.send.buffer.bytes",          23 * 1024 * 1024},
+		{"socket.receive.buffer.bytes",       23 * 1024 * 1024},
+
+		// Consumer
+		//{"queued.min.messages", "1"},
+	};
+
+	for (auto & c : this->conf_ints) {
+		conf_ints[c.first] = c.second;
+	}
+
 	// librdkafka API sometimes wants to write errors into a buffer:
 	int const errstr_N = 512;
 	char errstr[errstr_N];
@@ -174,30 +198,10 @@ void Instance::init() {
 
 	rd_kafka_conf_set_log_cb(conf, kafka_log_cb);
 
-	{
-		std::vector<std::vector<std::string>> confs = {
-			//{"queued.min.messages", "10"},
-			{"statistics.interval.ms", "20000"},
-			{"metadata.request.timeout.ms", "15000"},
-			{"socket.timeout.ms", "4000"},
-			{"session.timeout.ms", "15000"},
-		};
-
-		auto set_int = [&buf1, &N1, &confs](char const * name, int value){
-			snprintf(buf1, N1, "%d", value);
-			confs.push_back({(char*)name, (char*)buf1});
-		};
-
-		set_int("message.max.bytes", message_max_bytes);
-		set_int("fetch.message.max.bytes", fetch_message_max_bytes);
-		set_int("receive.message.max.bytes", receive_message_max_bytes);
-		set_int("queue.buffering.max.messages", queue_buffering_max_messages);
-		set_int("batch.num.messages", batch_num_messages);
-
-		for (auto & c : confs) {
-			if (RD_KAFKA_CONF_OK != rd_kafka_conf_set(conf, c.at(0).c_str(), c.at(1).c_str(), errstr, errstr_N)) {
-				LOG(7, "error setting config: {}", c.at(0).c_str());
-			}
+	for (auto & c : conf_ints) {
+		LOG(7, "Set config: {} = {}", c.first.c_str(), c.second);
+		if (RD_KAFKA_CONF_OK != rd_kafka_conf_set(conf, c.first.c_str(), fmt::format("{:d}", c.second).c_str(), errstr, errstr_N)) {
+			LOG(7, "ERROR setting config: {}", c.first.c_str());
 		}
 	}
 
@@ -233,7 +237,8 @@ void Instance::poll_run() {
 	int i1 = 0;
 	while (do_poll) {
 		int n1 = rd_kafka_poll(rk, 500);
-		LOG(0, "poll served callbacks: {}  queue: {}", n1, rd_kafka_outq_len(rk));
+		uint64_t ts = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+		LOG(0, "poll served callbacks ts {}  n1 {}  queue {}", ts, n1, rd_kafka_outq_len(rk));
 		i1 += 1;
 	}
 	LOG(3, "Poll finished");
@@ -322,6 +327,20 @@ bool Instance::instance_failure() {
 
 
 
+int32_t partitioner_example(
+	rd_kafka_topic_t const * rkt,
+	void const * keydata,
+	size_t keylen,
+	int32_t partition_cnt,
+	void * rkt_opaque,
+	void * msg_opaque)
+{
+	// This callback is only allowed to call rd_kafka_topic_partition_available
+	LOG(7, "WARNING WARNING WARNING WARNING partitioner_example NOT IMPLEMENTED");
+	return RD_KAFKA_PARTITION_UA;
+}
+
+
 
 
 Topic::Topic(sptr<Instance> ins, std::string topic_name)
@@ -345,6 +364,11 @@ Topic::Topic(sptr<Instance> ins, std::string topic_name)
 		}
 	}
 
+	//rd_kafka_topic_conf_set_partitioner_cb(topic_conf, rd_kafka_msg_partitioner_random);
+	//rd_kafka_topic_conf_set_partitioner_cb(topic_conf, rd_kafka_msg_partitioner_consistent);
+	//rd_kafka_topic_conf_set_partitioner_cb(topic_conf, rd_kafka_msg_partitioner_consistent_random);
+	rd_kafka_topic_conf_set_partitioner_cb(topic_conf, partitioner_example);
+
 	rkt = rd_kafka_topic_new(ins->rk, topic_name.c_str(), topic_conf);
 	if (rkt == nullptr) {
 		// Seems like Kafka uses the system error code?
@@ -365,9 +389,10 @@ Topic::~Topic() {
 
 
 
-void Topic::produce(BrightnESS::FlatBufs::FB_uptr fb, uint64_t seq) {
+void Topic::produce(BrightnESS::FlatBufs::FB_uptr fb, uint64_t seq, uint64_t ts) {
 	int x;
 	int32_t partition = RD_KAFKA_PARTITION_UA;
+	partition = seq % 5;
 
 	// Optional:
 	void const * key = NULL;
@@ -383,6 +408,8 @@ void Topic::produce(BrightnESS::FlatBufs::FB_uptr fb, uint64_t seq) {
 	// Check that this is thread safe ?!?
 
 	auto m1 = fb->message();
+	LOG(0, "produce seq {}  ts {}  len {}", seq, ts, m1.size);
+
 	//x = rd_kafka_produce(rkt, partition, msgflags, buf.begin, buf.size, key, key_len, callback_data);
 	x = rd_kafka_produce(rkt, partition, msgflags, m1.data, m1.size, key, key_len, callback_data);
 	if (x == RD_KAFKA_RESP_ERR__QUEUE_FULL) {
@@ -394,7 +421,12 @@ void Topic::produce(BrightnESS::FlatBufs::FB_uptr fb, uint64_t seq) {
 		return;
 	}
 	if (x != 0) {
-		LOG(7, "ERROR on produce topic {}  partition {}  seq {}: {}", rd_kafka_topic_name(rkt), partition, rd_kafka_err2str(rd_kafka_last_error()), seq);
+		LOG(7, "ERROR on produce topic {}  partition {}  seq {}: {}",
+			rd_kafka_topic_name(rkt),
+			partition,
+			seq,
+			rd_kafka_err2str(rd_kafka_last_error())
+		);
 		//throw std::runtime_error("ERROR on message send");
 		// even when taking out exception in future, return here
 		return;

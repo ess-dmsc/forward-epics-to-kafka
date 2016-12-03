@@ -10,7 +10,7 @@ Simple load balance over the available producers.
 #include <atomic>
 #include <thread>
 #include <vector>
-#include <vector>
+#include <map>
 #include <forward_list>
 #include <string>
 
@@ -34,7 +34,7 @@ public:
 Topic(sptr<Instance> ins, std::string topic_name);
 ~Topic();
 
-void produce(BrightnESS::FlatBufs::FB_uptr fb, uint64_t seq);
+void produce(BrightnESS::FlatBufs::FB_uptr fb, uint64_t seq, uint64_t ts);
 
 // Should make a friend method out of this..
 void error_from_kafka_callback();
@@ -55,7 +55,7 @@ std::string topic_name_;
 
 class Instance {
 public:
-static sptr<Instance> create(std::string brokers);
+static sptr<Instance> create(std::string brokers, std::map<std::string, int> conf_ints);
 
 int load();
 
@@ -94,12 +94,13 @@ std::thread poll_thread;
 std::atomic_bool do_poll {false};
 std::atomic_bool ready_kafka {false};
 std::atomic_int id {0};
+std::map<std::string, int> conf_ints;
 };
 
 
 class InstanceSet {
 public:
-static InstanceSet & Set(std::string brokers);
+static InstanceSet & Set(std::string brokers, std::map<std::string, int> conf_ints);
 sptr<Instance> instance();
 
 std::forward_list<sptr<Instance>> instances;
@@ -107,8 +108,9 @@ std::forward_list<sptr<Instance>> instances;
 private:
 // Prevent ctor
 InstanceSet(InstanceSet const &&) = delete;
-InstanceSet(std::string brokers);
+InstanceSet(std::string brokers, std::map<std::string, int> conf_ints);
 std::string brokers;
+std::map<std::string, int> conf_ints;
 };
 
 
