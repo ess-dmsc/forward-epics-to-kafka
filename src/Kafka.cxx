@@ -165,7 +165,7 @@ void Instance::init() {
 		{"fetch.message.max.bytes",            3 * 1024 * 1024},
 		{"receive.message.max.bytes",          3 * 1024 * 1024},
 
-		{"queue.buffering.max.messages",              2 * 1024},
+		{"queue.buffering.max.messages",       2 * 1000 * 1000},
 		//{"queue.buffering.max.kbytes",              800 * 1024},
 		{"queue.buffering.max.ms",                        1000},
 
