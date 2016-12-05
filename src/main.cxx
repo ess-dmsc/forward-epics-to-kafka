@@ -55,6 +55,7 @@ string log_file;
 string config_file;
 std::map<std::string, int> kafka_conf_ints;
 int forwarder_ix = 0;
+int write_per_message = 0;
 
 // When parsing options, we keep the json document because it may also contain
 // some topic mappings which are read by the Main.
@@ -517,6 +518,7 @@ int main(int argc, char ** argv) {
 		{"log-file",                        required_argument,        0,  0 },
 		{"kafka-message.max.bytes",         required_argument,        0,  0 },
 		{"forwarder-ix",                    required_argument,        0,  0 },
+		{"write-per-message",               required_argument,        0,  0 },
 		{0, 0, 0, 0},
 	};
 	std::string cmd;
@@ -574,6 +576,9 @@ int main(int argc, char ** argv) {
 			}
 			if (std::string("forwarder-ix") == lname) {
 				opt.forwarder_ix = strtol(optarg, nullptr, 10);
+			}
+			if (std::string("write-per-message") == lname) {
+				opt.write_per_message = strtol(optarg, nullptr, 10);
 			}
 		}
 		// TODO catch error from missing argument
