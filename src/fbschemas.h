@@ -41,6 +41,7 @@ Schema schema;
 uint8_t header[2] = {0xaa, 0xbb};
 std::unique_ptr<fballoc> alloc;
 std::unique_ptr<flatbuffers::FlatBufferBuilder> builder;
+uint64_t part_key = 0;
 };
 using FB_uptr = std::unique_ptr<FB>;
 

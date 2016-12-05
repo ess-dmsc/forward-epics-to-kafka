@@ -170,7 +170,7 @@ void Instance::init() {
 		{"queue.buffering.max.ms",                        1000},
 
 		// Total MessageSet size limited by message.max.bytes
-		{"batch.num.messages",                       10 * 1000},
+		{"batch.num.messages",                      100 * 1000},
 		{"socket.send.buffer.bytes",          23 * 1024 * 1024},
 		{"socket.receive.buffer.bytes",       23 * 1024 * 1024},
 
@@ -327,7 +327,7 @@ bool Instance::instance_failure() {
 
 
 
-int32_t partitioner_example(
+static int32_t partitioner_example(
 	rd_kafka_topic_t const * rkt,
 	void const * keydata,
 	size_t keylen,
@@ -335,9 +335,17 @@ int32_t partitioner_example(
 	void * rkt_opaque,
 	void * msg_opaque)
 {
-	// This callback is only allowed to call rd_kafka_topic_partition_available
-	LOG(7, "WARNING WARNING WARNING WARNING partitioner_example NOT IMPLEMENTED");
-	return RD_KAFKA_PARTITION_UA;
+	// This callback is allowed to call rd_kafka_topic_partition_available
+	if (partition_cnt <= 0) {
+		// TODO
+		// Limit frequency of this message
+		LOG(2, "ERROR partition_cnt: {}", partition_cnt);
+		return RD_KAFKA_PARTITION_UA;
+	}
+	auto fb = static_cast<BrightnESS::FlatBufs::FB*>(msg_opaque);
+	int32_t ret = fb->part_key % partition_cnt;
+	//LOG(2, "Assigned to partition {} of {}", ret, partition_cnt);
+	return ret;
 }
 
 
@@ -392,7 +400,7 @@ Topic::~Topic() {
 void Topic::produce(BrightnESS::FlatBufs::FB_uptr fb, uint64_t seq, uint64_t ts) {
 	int x;
 	int32_t partition = RD_KAFKA_PARTITION_UA;
-	partition = seq % 5;
+	//partition = seq % 5;
 
 	// Optional:
 	void const * key = NULL;
