@@ -250,7 +250,8 @@ BrightnESS::FlatBufs::FB_uptr conv_to_fb_general(TopicMappingSettings const & se
 			FlatBufs::Schema::General
 		)
 	);
-	fb->part_key = seq;
+	fb->seq = seq;
+	fb->fwdix = forwarder_ix;
 	auto builder = fb->builder.get();
 	auto vF = fbg::Field(*builder, pvstr, 0);
 	//some kind of 'union F' offset:   flatbuffers::Offset<void>

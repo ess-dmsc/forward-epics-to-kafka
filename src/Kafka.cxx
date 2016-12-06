@@ -238,7 +238,7 @@ void Instance::poll_run() {
 	while (do_poll) {
 		int n1 = rd_kafka_poll(rk, 500);
 		uint64_t ts = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
-		LOG(0, "poll served callbacks ts {}  n1 {}  queue {}", ts, n1, rd_kafka_outq_len(rk));
+		LOG(1, "poll served callbacks ts {}  n1 {}  queue {}", ts, n1, rd_kafka_outq_len(rk));
 		i1 += 1;
 	}
 	LOG(3, "Poll finished");
@@ -343,7 +343,8 @@ static int32_t partitioner_example(
 		return RD_KAFKA_PARTITION_UA;
 	}
 	auto fb = static_cast<BrightnESS::FlatBufs::FB*>(msg_opaque);
-	int32_t ret = fb->part_key % partition_cnt;
+	// fb has: seq, fwdix
+	int32_t ret = fb->fwdix % partition_cnt;
 	//LOG(2, "Assigned to partition {} of {}", ret, partition_cnt);
 	return ret;
 }
