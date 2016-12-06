@@ -416,7 +416,7 @@ void Topic::produce(BrightnESS::FlatBufs::FB_uptr fb, uint64_t seq, uint64_t ts)
 	// Check that this is thread safe ?!?
 
 	auto m1 = fb->message();
-	LOG(0, "produce seq {}  ts {}  len {}", seq, ts, m1.size);
+	//LOG(0, "produce seq {}  ts {}  len {}", seq, ts, m1.size);
 
 	//x = rd_kafka_produce(rkt, partition, msgflags, buf.begin, buf.size, key, key_len, callback_data);
 	x = rd_kafka_produce(rkt, partition, msgflags, m1.data, m1.size, key, key_len, callback_data);
