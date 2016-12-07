@@ -38,10 +38,10 @@ bool wait(int time, std::function<bool()> predicate) {
 
 TopicMapping::TopicMapping(Kafka::InstanceSet & kset, TopicMappingSettings topic_mapping_settings, uint32_t id, int forwarder_ix) :
 	id(id),
+	forwarder_ix(forwarder_ix),
 	topic_mapping_settings(topic_mapping_settings),
 	ts_init(std::chrono::system_clock::now()),
-	rnd((uint32_t)id),
-	forwarder_ix(forwarder_ix)
+	rnd((uint32_t)id)
 {
 	// If we do not want to start immediately, we should initialize
 	// the epics monitor such that it does not yet poll.
