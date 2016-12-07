@@ -89,7 +89,7 @@ namespace fbg {
 	F_t Field(flatbuffers::FlatBufferBuilder & builder, epics::pvData::PVFieldPtr const & field, int level) {
 		auto etype = field->getField()->getType();
 		if (etype == epics::pvData::Type::structure) {
-			auto pvstr = dynamic_cast<epics::pvData::PVStructure*>(field.get());
+			auto pvstr = reinterpret_cast<epics::pvData::PVStructure*>(field.get());
 			auto & subfields = pvstr->getPVFields();
 			FLOG(level, "subfields.size(): {}", subfields.size());
 
@@ -123,7 +123,7 @@ namespace fbg {
 
 		else if (etype == epics::pvData::Type::structureArray) {
 			// Serialize all objects, collect the offsets, and store an array of those.
-			auto sa = dynamic_cast<epics::pvData::PVValueArray<epics::pvData::PVStructurePtr> const *>(field.get());
+			auto sa = reinterpret_cast<epics::pvData::PVValueArray<epics::pvData::PVStructurePtr> const *>(field.get());
 			if (sa) {
 				FLOG(level, "[size(): {}]", sa->view().size());
 				vector<flatbuffers::Offset<Obj>> v1;
@@ -150,23 +150,27 @@ namespace fbg {
 
 		else if (etype == epics::pvData::Type::scalar) {
 			FLOG(level, "scalar");
-			#define M(T, B, E) if (auto p1 = dynamic_cast<epics::pvData::PVScalarValue<T> const *>(field.get())) { \
+			auto pvscalar = reinterpret_cast<epics::pvData::PVScalar const *>(field.get());
+			auto stype = pvscalar->getScalar()->getScalarType();
+			#define M(T, B, E) if (stype == epics::pvData::ScalarType::E) { \
+				auto p1 = reinterpret_cast<epics::pvData::PVScalarValue<T> const *>(field.get()); \
 				B b(builder); \
 				b.add_v(p1->get()); \
-				return {E, b.Finish().Union()}; \
+				return {F::E, b.Finish().Union()}; \
 			}
-			M( int8_t,  pvByteBuilder,   F::pvByte);
-			M( int16_t, pvShortBuilder,  F::pvShort);
-			M( int32_t, pvIntBuilder,    F::pvInt);
-			M( int64_t, pvLongBuilder,   F::pvLong);
-			M(uint8_t,  pvUByteBuilder,  F::pvUByte);
-			M(uint16_t, pvUShortBuilder, F::pvUShort);
-			M(uint32_t, pvUIntBuilder,   F::pvUInt);
-			M(uint64_t, pvULongBuilder,  F::pvULong);
-			M(float,    pvFloatBuilder,  F::pvFloat);
-			M(double,   pvDoubleBuilder, F::pvDouble);
+			M( int8_t,  pvByteBuilder,   pvByte);
+			M( int16_t, pvShortBuilder,  pvShort);
+			M( int32_t, pvIntBuilder,    pvInt);
+			M( int64_t, pvLongBuilder,   pvLong);
+			M(uint8_t,  pvUByteBuilder,  pvUByte);
+			M(uint16_t, pvUShortBuilder, pvUShort);
+			M(uint32_t, pvUIntBuilder,   pvUInt);
+			M(uint64_t, pvULongBuilder,  pvULong);
+			M(float,    pvFloatBuilder,  pvFloat);
+			M(double,   pvDoubleBuilder, pvDouble);
 			#undef M
-			if (auto p1 = dynamic_cast<epics::pvData::PVScalarValue<std::string> const *>(field.get())) {
+			if (stype == epics::pvData::ScalarType::pvString) {
+				auto p1 = reinterpret_cast<epics::pvData::PVScalarValue<std::string> const *>(field.get());
 				auto s1 = builder.CreateString(p1->get());
 				pvStringBuilder b(builder);
 				b.add_v(s1);
@@ -177,27 +181,30 @@ namespace fbg {
 
 		else if (etype == epics::pvData::Type::scalarArray) {
 			FLOG(level, "scalar array");
-			#define M(TC, TB, TF) \
-			if (auto p1 = dynamic_cast<epics::pvData::PVValueArray<TC> const *>(field.get())) { \
+			auto pvSA = reinterpret_cast<epics::pvData::PVScalarArray const *>(field.get());
+			auto stype = pvSA->getScalarArray()->getElementType();
+			#define M(TC, TB, TF, TE) \
+			if (stype == epics::pvData::ScalarType::TE) { \
+				auto p1 = reinterpret_cast<epics::pvData::PVValueArray<TC> const *>(field.get()); \
 				auto v1 = p1->view(); \
 				auto v2 = builder.CreateVector(v1.data(), v1.size()); \
 				TB b(builder); \
 				b.add_v(v2); \
-				return { TF, b.Finish().Union() }; \
+				return { F::TF, b.Finish().Union() }; \
 			}
-			M( int8_t,  pvByte_aBuilder,   F::pvByte_a);
-			M( int16_t, pvShort_aBuilder,  F::pvShort_a);
-			M( int32_t, pvInt_aBuilder,    F::pvInt_a);
-			M( int64_t, pvLong_aBuilder,   F::pvLong_a);
-			M(uint8_t,  pvUByte_aBuilder,  F::pvUByte_a);
-			M(uint16_t, pvUShort_aBuilder, F::pvUShort_a);
-			M(uint32_t, pvUInt_aBuilder,   F::pvUInt_a);
-			M(uint64_t, pvULong_aBuilder,  F::pvULong_a);
-			M(float,    pvFloat_aBuilder,  F::pvFloat_a);
-			M(double,   pvDouble_aBuilder, F::pvDouble_a);
+			M( int8_t,  pvByte_aBuilder,   pvByte_a,   pvByte);
+			M( int16_t, pvShort_aBuilder,  pvShort_a,  pvShort);
+			M( int32_t, pvInt_aBuilder,    pvInt_a,    pvInt);
+			M( int64_t, pvLong_aBuilder,   pvLong_a,   pvLong);
+			M(uint8_t,  pvUByte_aBuilder,  pvUByte_a,  pvUByte);
+			M(uint16_t, pvUShort_aBuilder, pvUShort_a, pvUShort);
+			M(uint32_t, pvUInt_aBuilder,   pvUInt_a,   pvUInt);
+			M(uint64_t, pvULong_aBuilder,  pvULong_a,  pvULong);
+			M(float,    pvFloat_aBuilder,  pvFloat_a,  pvFloat);
+			M(double,   pvDouble_aBuilder, pvDouble_a, pvDouble);
 			#undef M
 
-			if (auto p1 = dynamic_cast<epics::pvData::PVValueArray<std::string> const *>(field.get())) {
+			if (auto p1 = reinterpret_cast<epics::pvData::PVValueArray<std::string> const *>(field.get())) {
 				vector<flatbuffers::Offset<flatbuffers::String>> v1;
 				for (auto & s0 : p1->view()) {
 					v1.push_back(builder.CreateString(s0));
@@ -213,7 +220,7 @@ namespace fbg {
 
 		else if (etype == epics::pvData::Type::union_) {
 			FLOG(level, "union");
-			auto f2 = dynamic_cast<epics::pvData::PVUnion*>(field.get());
+			auto f2 = reinterpret_cast<epics::pvData::PVUnion*>(field.get());
 			if (f2) {
 				auto f3 = f2->get();
 				if (f3) {
