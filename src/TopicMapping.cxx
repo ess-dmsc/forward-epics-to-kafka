@@ -80,7 +80,10 @@ void TopicMapping::start_forwarding(Kafka::InstanceSet & kset) {
 	// But the topic can go away if the instance notices that something bad happened.
 
 	//this->topic = std::weak_ptr<Kafka::Topic>(kset.instance()->get_or_create_topic(topic_name()));
-	this->topic = kset.instance()->get_or_create_topic(topic_name());
+	this->topic = kset.instance()->get_or_create_topic(topic_name(), this->id);
+	if (!this->topic) {
+		LOG(9, "ERROR could not create topic object");
+	}
 
 	LOG(0, "Start Epics monitor for {}", channel_name().c_str());
 	epics_monitor.reset(new Epics::Monitor(this, channel_name(), forwarder_ix));

@@ -31,7 +31,7 @@ class Instance;
 
 class Topic {
 public:
-Topic(sptr<Instance> ins, std::string topic_name);
+Topic(sptr<Instance> ins, std::string topic_name, int id);
 ~Topic();
 
 void produce(BrightnESS::FlatBufs::FB_uptr fb, uint64_t seq, uint64_t ts);
@@ -50,6 +50,10 @@ sptr<Instance> ins;
 rd_kafka_topic_t * rkt = 0;
 friend class Producer;
 std::string topic_name_;
+
+public:
+// For testing:
+int id = -1;
 };
 
 
@@ -68,7 +72,7 @@ rd_kafka_t * rk = 0;
 // Invoked from callback.  Should make it a friend.
 void error_from_kafka_callback();
 
-sptr<Topic> get_or_create_topic(std::string topic_name);
+sptr<Topic> get_or_create_topic(std::string topic_name, int id);
 
 void check_topic_health();
 std::atomic_bool error_from_kafka_callback_flag {false};
@@ -95,6 +99,10 @@ std::atomic_bool do_poll {false};
 std::atomic_bool ready_kafka {false};
 std::atomic_int id {0};
 std::map<std::string, int> conf_ints;
+static void cb_delivered(rd_kafka_t * rk, rd_kafka_message_t const * msg, void * opaque);
+static void cb_error(rd_kafka_t * rk, int err_i, char const * msg, void * opaque);
+static void cb_log(rd_kafka_t const * rk, int level, char const * fac, char const * buf);
+static int cb_stats(rd_kafka_t * rk, char * json, size_t json_len, void * opaque);
 };
 
 
@@ -112,9 +120,6 @@ InstanceSet(std::string brokers, std::map<std::string, int> conf_ints);
 std::string brokers;
 std::map<std::string, int> conf_ints;
 };
-
-
-typedef Instance KafkaOpaqueType;
 
 
 }

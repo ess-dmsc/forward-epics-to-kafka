@@ -104,11 +104,11 @@ Listener::Listener(KafkaSettings settings) {
 		{"message.max.bytes", "100000"},
 		{"fetch.message.max.bytes", "100000"},
 		//{"statistics.interval.ms", "10000"},
-		{"metadata.request.timeout.ms", "2000"},
-		{"socket.timeout.ms", "2000"},
-		{"session.timeout.ms", "2000"},
 		{"metadata.request.timeout.ms", "3000"},
+		{"socket.timeout.ms", "2000"},
+		{"session.timeout.ms", "4000"},
 		{"group.id", "configuration_global_consumer_group"},
+		{"topic.metadata.refresh.interval.ms", "5000"},
 	};
 	for (auto & c : confs) {
 		if (RD_KAFKA_CONF_OK != rd_kafka_conf_set(conf, c.at(0).c_str(), c.at(1).c_str(), errstr, errstr_N)) {

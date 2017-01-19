@@ -258,11 +258,15 @@ void Main::start_some_test_mappings(int n1) {
 
 
 void Main::forward_epics_to_kafka() {
-	Config::Listener config_listener({
-		main_opt.broker_configuration_address,
-		main_opt.broker_configuration_topic
-	});
-	ConfigCB config_cb(*this);
+	#define do_config_kafka_listener true
+
+	#if do_config_kafka_listener
+		Config::Listener config_listener({
+			main_opt.broker_configuration_address,
+			main_opt.broker_configuration_topic
+		});
+		ConfigCB config_cb(*this);
+	#endif
 
 	while (forwarding_run and g__run == 1) {
 		release_deleted_mappings();
@@ -272,7 +276,11 @@ void Main::forward_epics_to_kafka() {
 		start_mappings(started);
 		collect_and_revive_failed_mappings();
 		check_instances();
-		config_listener.poll(config_cb);
+
+		#if do_config_kafka_listener
+			config_listener.poll(config_cb);
+		#endif
+
 		report_stats(started);
 		std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 	}
@@ -444,7 +452,7 @@ void Main::mapping_start(TopicMappingSettings tmsettings) {
 		if (tm->channel_name() == tmsettings.channel) return;
 	}
 	auto tm = new TopicMapping(kafka_instance_set, tmsettings, topic_mappings_started, main_opt.forwarder_ix);
-	topic_mappings_started += 1;
+	this->topic_mappings_started += 1;
 	tms.push_back(decltype(tms)::value_type(tm));
 }
 
@@ -506,8 +514,6 @@ int main(int argc, char ** argv) {
 	#endif
 	std::signal(SIGINT, signal_handler);
 	std::signal(SIGTERM, signal_handler);
-	//BrightnESS::ForwardEpicsToKafka::Config::Service s1;
-	//return 1;
 	BrightnESS::ForwardEpicsToKafka::MainOpt opt;
 	static struct option long_options[] = {
 		{"help",                            no_argument,              0, 'h'},
