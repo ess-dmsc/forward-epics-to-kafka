@@ -81,21 +81,31 @@ int Instance::load() {
 
 void Instance::cb_delivered(rd_kafka_t * rk, rd_kafka_message_t const * msg, void * opaque) {
 	auto self = reinterpret_cast<Instance*>(opaque);
+	auto fb = reinterpret_cast<BrightnESS::FlatBufs::FB*>(msg->_private);
 	if (msg->err) {
-		LOG(6, "IID: {}  ERROR on delivery, topic {}, {}, {}",
+		if (msg->err == RD_KAFKA_RESP_ERR__MSG_TIMED_OUT) {
+			// TODO
+			// Try to re-send, but within limits.
+			// Remember how often it was re-send already.
+			// How to find the topic instance?  Also remember in message object?
+		}
+		LOG(6, "IID: {}  ERROR on delivery, topic {}, {} [{}] {}  seq: {}",
 			self->id,
 			rd_kafka_topic_name(msg->rkt),
+			rd_kafka_err2name(msg->err),
+			msg->err,
 			rd_kafka_err2str(msg->err),
-			rd_kafka_message_errstr(msg));
+			fb->seq
+		);
+		// seems to be not used anymore:  rd_kafka_message_errstr(msg)
 	}
 	else {
-		LOG(3, "IID: {}  OK delivered (p {}, offset {}, len {})\n",
+		LOG(0, "IID: {}  OK delivered (p {}, offset {}, len {})",
 			self->id,
 			msg->partition, msg->offset, msg->len
 		);
 	}
-	if (opaque) {
-		auto fb = reinterpret_cast<BrightnESS::FlatBufs::FB*>(msg->_private);
+	if (fb) {
 		delete fb;
 	}
 }
@@ -162,37 +172,38 @@ void Instance::cb_log(rd_kafka_t const * rk, int level, char const * fac, char c
 
 void Instance::init() {
 	std::map<std::string, int> conf_ints {
+		{"queue.buffering.max.ms",                          20},
 		{"socket.timeout.ms",                         4 * 1000},
 		{"session.timeout.ms",                        6 * 1000},
 
 		{"message.max.bytes",                 23 * 1024 * 1024},
-		//{"message.max.bytes",                       512 * 1024},
 
-		// check again these two?
 		{"fetch.message.max.bytes",            3 * 1024 * 1024},
 		{"receive.message.max.bytes",          3 * 1024 * 1024},
-
-		{"queue.buffering.max.messages",       2 * 1000 * 1000},
+		{"queue.buffering.max.messages",           1000 * 1000},
 		{"queue.buffering.max.kbytes",              800 * 1024},
-		{"queue.buffering.max.ms",                          50},
 
-		// Total MessageSet size limited by message.max.bytes
 		{"batch.num.messages",                      100 * 1000},
-		{"socket.send.buffer.bytes",          23 * 1024 * 1024},
-		{"socket.receive.buffer.bytes",       23 * 1024 * 1024},
 
+		{"socket.send.buffer.bytes",           4 * 1024 * 1024},
+		{"socket.receive.buffer.bytes",        4 * 1024 * 1024},
+
+		//{"metadata.request.timeout.ms",               4 * 1000},
+		//{"topic.metadata.refresh.interval.ms",       16 * 1000},
+		//{"metadata.max.age.ms",                      10 * 1000},
+
+		/*
+		*/
+
+		/*
 		//{"statistics.interval.ms",                   20 * 1000},
-
-		{"metadata.request.timeout.ms",              15 * 1000},
-		{"topic.metadata.refresh.interval.ms",        2 * 1000},
-		{"metadata.max.age.ms",                       3 * 1000},
-
 		// Consumer
 		//{"queued.min.messages", "1"},
+		*/
 	};
 
 	std::map<std::string, std::string> conf_strings {
-		{"topic.metadata.refresh.sparse",            "false"},
+		{"topic.metadata.refresh.sparse",            "true"},
 		{"socket.keepalive.enable",                  "false"},
 	};
 
@@ -255,10 +266,13 @@ void Instance::poll_start() {
 void Instance::poll_run() {
 	int i1 = 0;
 	while (do_poll) {
-		int n1 = rd_kafka_poll(rk, 500);
-		uint64_t ts = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
-		ILOG(1, "poll served callbacks ts {}  n1 {}  queue {}", ts, n1, rd_kafka_outq_len(rk));
+		int n1 = rd_kafka_poll(rk, 10);
+		uint64_t ts = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+		ILOG(1, "poll served callbacks ts:{}  n1:{}  outq_len:{}", ts, n1, rd_kafka_outq_len(rk));
 		i1 += 1;
+		if (n1 == 0) {
+			std::this_thread::sleep_for(std::chrono::milliseconds(10));
+		}
 	}
 	ILOG(3, "Poll finished");
 }
@@ -356,6 +370,7 @@ static int32_t partitioner_example(
 	void * rkt_opaque,
 	void * msg_opaque)
 {
+	return 0;
 	// This callback is allowed to call rd_kafka_topic_partition_available
 	if (partition_cnt <= 0) {
 		// TODO
@@ -383,9 +398,11 @@ Topic::Topic(sptr<Instance> ins, std::string topic_name, int id)
 	rd_kafka_topic_conf_t * topic_conf = rd_kafka_topic_conf_new();
 	{
 		std::vector<std::vector<std::string>> confs = {
+			/*
 			{"produce.offset.report", "true"},
-			{"request.required.acks", "1"},
-			{"message.timeout.ms", "2000"},
+			//{"request.required.acks", "1"},
+			{"message.timeout.ms", "30000"},
+			*/
 		};
 		for (auto & c : confs) {
 			if (RD_KAFKA_CONF_OK != rd_kafka_topic_conf_set(topic_conf, c.at(0).c_str(), c.at(1).c_str(), errstr, errstr_N)) {
@@ -423,6 +440,7 @@ void Topic::produce(BrightnESS::FlatBufs::FB_uptr fb, uint64_t seq, uint64_t ts)
 	int x;
 	int32_t partition = RD_KAFKA_PARTITION_UA;
 	//partition = seq % 5;
+	//partition = 0;
 
 	// Optional:
 	void const * key = NULL;
