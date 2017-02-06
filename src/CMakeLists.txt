@@ -1,7 +1,5 @@
 project(forward-epics-to-kafka)
 
-return()
-
 # Relative to build root
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ..)
 
@@ -46,6 +44,8 @@ set(epics_normativeTypes_version 5.0.2)
 find_path(path_include_fmt NAMES fmt/format.cc PATHS
 $ENV{fmt_dir}/include
 /opt/local/fmt
+# For DMSC build node:
+$ENV{DM_ROOT}/usr/include
 )
 
 find_path(path_include_epics_base NAMES epicsTypes.h PATHS
@@ -101,23 +101,29 @@ ${epicsv4_dir}/normativeTypesCPP/lib/${epics_arch}
 find_path(path_include_rapidjson NAMES rapidjson/document.h PATHS
 $ENV{rapidjson_dir}/include
 /opt/local/rapidjson.git/include
+# For DMSC build node:
+$ENV{DM_ROOT}/usr/include
 )
 
 find_path(path_include_rdkafka NAMES librdkafka/rdkafka.h PATHS
 $ENV{librdkafka_dir}/include
 /opt/local/rdkafka/install/include
+# For the 'master' on DMSC build node, and another machine at PSI:
 /usr/local/include
 )
 
 find_library(path_lib_rdkafka NAMES rdkafka PATHS
 $ENV{librdkafka_dir}/lib
 /opt/local/rdkafka/install/lib
+# For DMSC build node and a machine at PSI:
 /usr/local/lib
 )
 
 find_path(path_include_flatbuffers NAMES flatbuffers/flatbuffers.h PATHS
 $ENV{flatbuffers_dir}/include
 /opt/local/flatbuffers.git/include
+# For DMSC build node:
+$ENV{DM_ROOT}/usr/include
 )
 
 find_path(path_include_gtest NAMES gtest/gtest.h)
@@ -126,6 +132,25 @@ if (path_lib_gtest)
 add_library(libgtest SHARED IMPORTED)
 set_property(TARGET libgtest PROPERTY IMPORTED_LOCATION ${path_lib_gtest})
 endif()
+
+
+message(STATUS "path_include_fmt ${path_include_fmt}")
+message(STATUS "path_include_epics_base ${path_include_epics_base}")
+message(STATUS "path_lib_epics_ca ${path_lib_epics_ca}")
+message(STATUS "path_include_epics_pvData ${path_include_epics_pvData}")
+message(STATUS "path_lib_epics_pvData ${path_lib_epics_pvData}")
+message(STATUS "path_include_epics_pvAccess ${path_include_epics_pvAccess}")
+message(STATUS "path_lib_epics_pvAccess ${path_lib_epics_pvAccess}")
+message(STATUS "path_include_epics_pvDatabase ${path_include_epics_pvDatabase}")
+message(STATUS "path_lib_epics_pvDatabase ${path_lib_epics_pvDatabase}")
+message(STATUS "path_include_epics_NT ${path_include_epics_NT}")
+message(STATUS "path_lib_epics_NT ${path_lib_epics_NT}")
+message(STATUS "path_include_rapidjson ${path_include_rapidjson}")
+message(STATUS "path_include_rdkafka ${path_include_rdkafka}")
+message(STATUS "path_lib_rdkafka ${path_lib_rdkafka}")
+message(STATUS "path_include_flatbuffers ${path_include_flatbuffers}")
+message(STATUS "path_include_gtest ${path_include_gtest}")
+message(STATUS "path_lib_gtest ${path_lib_gtest}")
 
 
 # TODO
