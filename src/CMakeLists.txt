@@ -1,10 +1,5 @@
 project(forward-epics-to-kafka)
 
-message(STATUS $ENV{EPICS_BASES_PATH})
-message(STATUS $ENV{EPICS_V4_BASE_VERSION})
-message(STATUS $ENV{EPICS_HOST_ARCH})
-message(STATUS $ENV{EPICS_BASE})
-
 return()
 
 # Relative to build root
