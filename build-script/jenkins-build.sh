@@ -24,6 +24,10 @@ echo EPICS_HOST_ARCH
 echo $EPICS_HOST_ARCH
 echo '-----------------------------------------------------'
 echo '-----------------------------------------------------'
+echo grep env
+set | grep -i epics
+echo '-----------------------------------------------------'
+echo '-----------------------------------------------------'
 echo /opt/epics/modules/pvDataCPP
 find /opt/epics/modules/pvDataCPP -maxdepth 2
 echo '-----------------------------------------------------'
@@ -45,4 +49,4 @@ pwd
 mkdir build
 mkdir install
 cd build
-cmake -DCMAKE_INSTALL_PREFIX=`cd ../install; pwd` -DREQUIRE_GTEST=0 ../repos/forward-epics-to-kafka
+cmake -DCMAKE_INSTALL_PREFIX=`cd ../install; pwd` -DREQUIRE_GTEST=1 ../repos/forward-epics-to-kafka
