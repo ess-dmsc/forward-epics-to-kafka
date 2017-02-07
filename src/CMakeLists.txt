@@ -1,14 +1,9 @@
 project(forward-epics-to-kafka)
 
-# Relative to build root
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ..)
-
 if (NOT CMAKE_BUILD_TYPE)
 set(CMAKE_BUILD_TYPE Release)
 endif()
 message(STATUS "CMAKE_BUILD_TYPE: ${CMAKE_BUILD_TYPE}")
-
-set(REQUIRE_GTEST false CACHE BOOL "Require Google Test")
 
 
 file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/git_commit_current.cxx "extern \"C\" char const GIT_COMMIT[] = \"NOTSET\";\n")
@@ -130,12 +125,14 @@ $ENV{flatbuffers_dir}/include
 $ENV{DM_ROOT}/usr/include
 )
 
-find_path(path_include_gtest NAMES gtest/gtest.h)
-find_library(path_lib_gtest NAMES gtest)
-if (path_lib_gtest)
-add_library(libgtest SHARED IMPORTED)
-set_property(TARGET libgtest PROPERTY IMPORTED_LOCATION ${path_lib_gtest})
-endif()
+
+# Include path not needed, gtest is included for all targets by googletest's CMakeLists.txt
+#find_path(path_include_gtest NAMES gtest/gtest.h)
+#find_library(path_lib_gtest NAMES gtest)
+#if (path_lib_gtest)
+#add_library(libgtest SHARED IMPORTED)
+#set_property(TARGET libgtest PROPERTY IMPORTED_LOCATION ${path_lib_gtest})
+#endif()
 
 
 message(STATUS "path_include_fmt ${path_include_fmt}")
@@ -259,6 +256,7 @@ set(SOURCES ${SOURCES} wingetopt.c)
 endif (WIN32)
 
 add_executable(${tgt} ${SOURCES})
+set_property(TARGET ${tgt} PROPERTY RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/..")
 
 add_dependencies(${tgt} flatbuffers_generate)
 add_dependencies(${tgt} git_commit_current)
@@ -290,7 +288,9 @@ if (path_include_gtest AND path_lib_gtest)
 message(STATUS "Using Google Test: ${path_include_gtest}  ${path_lib_gtest}")
 target_compile_definitions(${tgt} PRIVATE HAVE_GTEST=1)
 target_include_directories(${tgt} PRIVATE ${path_include_gtest})
-target_link_libraries(${tgt} libgtest)
+#target_link_libraries(${tgt} libgtest)
+# Defined by the CMakeLists.txt inside of the googletest repo
+target_link_libraries(${tgt} gtest)
 else()
 if (REQUIRE_GTEST)
 message(FATAL_ERROR "Google test required but not found")

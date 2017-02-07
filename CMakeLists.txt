@@ -1,4 +1,10 @@
 cmake_minimum_required(VERSION 2.8.11)
+
+set(REQUIRE_GTEST false CACHE BOOL "Require Google Test")
+if (REQUIRE_GTEST)
+add_subdirectory(../googletest googletest)
+endif()
+
 add_subdirectory(src)
 
 option(RUN_DOXYGEN "Run doxygen" TRUE)
