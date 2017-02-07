@@ -73,6 +73,7 @@ std::vector<char> gulp(FILE * f1) {
 			ret.reserve(cap);
 		}
 	}
+	return ret;
 }
 
 
