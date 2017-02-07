@@ -179,6 +179,7 @@ set(flatbuffers_generated_headers "")
 
 # Search the dev env standard locations, but it will also look in PATH
 find_program(flatc flatc PATHS "$ENV{flatc}" "$ENV{HOME}/.tools" "/opt/local/flatbuffers")
+message(STATUS "flatc in ${flatc}")
 
 foreach (f ${flatbuffers_schemata})
 	set(fbs "${f}.fbs")
@@ -190,6 +191,28 @@ foreach (f ${flatbuffers_schemata})
 		COMMENT "Process ${fbs} using ${flatc}"
 	)
 	list(APPEND flatbuffers_generated_headers "${fbh}")
+endforeach()
+
+set(schemas_subdir "schemas")
+set(head_out_dir "${CMAKE_CURRENT_BINARY_DIR}/${schemas_subdir}")
+file(MAKE_DIRECTORY ${head_out_dir})
+file(GLOB_RECURSE flatbuffers_schemata2 RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}/../../streaming-data-types/schemas" "${CMAKE_CURRENT_SOURCE_DIR}/../../streaming-data-types/schemas/*.fbs")
+
+foreach (f0 ${flatbuffers_schemata2})
+	string(REGEX REPLACE "\\.fbs$" "" s0 ${f0})
+	message(STATUS "s0: ${s0}")
+	set(fbs "${s0}.fbs")
+	set(fbh "${s0}_generated.h")
+	message(STATUS "fbs: ${fbs}")
+	message(STATUS "fbh: ${fbh}")
+	add_custom_command(
+		OUTPUT "${head_out_dir}/${fbh}"
+		COMMAND pwd && ${flatc} --cpp --gen-mutable --gen-name-strings --scoped-enums "../../../../streaming-data-types/schemas/${fbs}"
+		DEPENDS "../../streaming-data-types/schemas/${fbs}"
+		WORKING_DIRECTORY "${head_out_dir}"
+		COMMENT "Process ${fbs} using ${flatc}"
+	)
+	list(APPEND flatbuffers_generated_headers "${head_out_dir}/${fbh}")
 endforeach()
 
 add_custom_target(flatbuffers_generate ALL DEPENDS ${flatbuffers_generated_headers})
