@@ -17,11 +17,10 @@ class FB;
 
 class fballoc : public flatbuffers::simple_allocator {
 public:
-fballoc(FB * fb);
+fballoc();
 uint8_t * allocate(size_t size) const override;
 void deallocate(uint8_t * p) const override;
 ~fballoc() { }
-FB * fb;
 };
 
 // POD
@@ -38,8 +37,6 @@ FB(Schema schema);
 FBmsg message();
 // Internal identifier
 Schema schema;
-uint8_t header[2] = {0xaa, 0xbb};
-std::unique_ptr<fballoc> alloc;
 std::unique_ptr<flatbuffers::FlatBufferBuilder> builder;
 // Used for performance measurements:
 uint64_t seq = 0;

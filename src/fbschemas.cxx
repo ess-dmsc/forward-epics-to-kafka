@@ -6,9 +6,12 @@
 namespace BrightnESS {
 namespace FlatBufs {
 
-#define NNE 2
+#define NNE 0
 
-fballoc::fballoc(FB * fb) : fb(fb) { }
+// Singleton
+static fballoc g_fballoc;
+
+fballoc::fballoc() { }
 
 uint8_t * fballoc::allocate(size_t size) const {
 	//LOG(3, "Allocate new flat buffer: {} + {}", size, NNE);
@@ -26,14 +29,9 @@ void fballoc::deallocate(uint8_t * p1) const {
 
 FB::FB(Schema schema)
 		: schema(schema),
-			// yes, it's dirty..
-			//header { *((uint8_t*)(&schema) + 0), *((uint8_t*)(&schema) + 1) },
-			header {*((uint8_t*)&schema), *((uint8_t*)&schema+1)},
-			alloc(decltype(alloc)(new fballoc(this))),
-			builder(new flatbuffers::FlatBufferBuilder(2 * 1024 * 1024, alloc.get()))
+			builder(new flatbuffers::FlatBufferBuilder(2 * 1024 * 1024, &g_fballoc))
 {
 	static_assert(FLATBUFFERS_LITTLEENDIAN, "Ctor requires little endian (would require little extra to cover big end as well)");
-	alloc->fb = this;
 }
 
 FBmsg FB::message() {
@@ -41,15 +39,13 @@ FBmsg FB::message() {
 		builder->GetBufferPointer() - NNE,
 		builder->GetSize() + NNE
 	};
-	// Put the header in place:
-	for (int i1 = 0; i1 < NNE; ++i1) {
-		*(ret.data+i1) = header[i1];
-	}
 	return ret;
 }
 
 void inspect(FB const & fb) {
 }
+
+#undef NNE
 
 }
 }
