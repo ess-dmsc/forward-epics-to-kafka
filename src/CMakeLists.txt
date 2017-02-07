@@ -200,11 +200,11 @@ file(GLOB_RECURSE flatbuffers_schemata2 RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}/..
 
 foreach (f0 ${flatbuffers_schemata2})
 	string(REGEX REPLACE "\\.fbs$" "" s0 ${f0})
-	message(STATUS "s0: ${s0}")
+	#message(STATUS "s0: ${s0}")
 	set(fbs "${s0}.fbs")
 	set(fbh "${s0}_generated.h")
-	message(STATUS "fbs: ${fbs}")
-	message(STATUS "fbh: ${fbh}")
+	#message(STATUS "fbs: ${fbs}")
+	#message(STATUS "fbh: ${fbh}")
 	add_custom_command(
 		OUTPUT "${head_out_dir}/${fbh}"
 		COMMAND pwd && ${flatc} --cpp --gen-mutable --gen-name-strings --scoped-enums "../../../../streaming-data-types/schemas/${fbs}"
