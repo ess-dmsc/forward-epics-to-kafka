@@ -27,9 +27,8 @@ void fballoc::deallocate(uint8_t * p1) const {
 	delete[] p1;
 }
 
-FB::FB(Schema schema)
-		: schema(schema),
-			builder(new flatbuffers::FlatBufferBuilder(2 * 1024 * 1024, &g_fballoc))
+FB::FB()
+		: builder(new flatbuffers::FlatBufferBuilder(2 * 1024 * 1024, &g_fballoc))
 {
 	static_assert(FLATBUFFERS_LITTLEENDIAN, "Ctor requires little endian (would require little extra to cover big end as well)");
 }

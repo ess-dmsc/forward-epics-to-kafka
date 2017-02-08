@@ -1,6 +1,6 @@
 #pragma once
 
-#include "flatbuffers/flatbuffers.h"
+#include <flatbuffers/flatbuffers.h>
 
 /** \file
 Helper definitions for working with flat buffers.

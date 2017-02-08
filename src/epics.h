@@ -45,6 +45,8 @@ class monitor_lost_exception : public std::exception {
 class epics_channel_failure : public std::exception {
 };
 
+
+
 /** \brief
 Monitor a channel which currently has to have a certain type and forward changes in value to a callable.
 
@@ -70,7 +72,7 @@ private:
 friend class MonitorRequester;
 friend class IntrospectField;
 friend class StartMonitorChannel;
-void emit(BrightnESS::FlatBufs::FB_uptr fb, uint64_t seq, uint64_t ts);
+void emit(BrightnESS::FlatBufs::FB_uptr fb);
 
 TopicMapping * topic_mapping;
 

@@ -1,5 +1,3 @@
-project(forward-epics-to-kafka)
-
 if (NOT CMAKE_BUILD_TYPE)
 set(CMAKE_BUILD_TYPE Release)
 endif()
@@ -260,16 +258,19 @@ set_property(TARGET libpath_lib_redox PROPERTY IMPORTED_LOCATION ${path_lib_redo
 
 set(tgt forward-epics-to-kafka)
 
-set (SOURCES 
+set (SOURCES
 helper.cxx
 logger.cxx
 configuration.cxx
 TopicMapping.cxx
 Kafka.cxx
+KafkaW.cxx
 epics.cxx
 Config.cxx
 main.cxx
 fbschemas.cxx
+epics-to-fb.cxx
+schema_f140_general.cxx
 ${path_include_fmt}/fmt/format.cc
 ${CMAKE_CURRENT_BINARY_DIR}/git_commit_current.cxx
 )
@@ -334,6 +335,7 @@ endif()
 
 
 
+if (false)
 set(tgt read-buffer)
 add_executable(${tgt}
 helper.cxx
@@ -361,10 +363,18 @@ if (WIN32)
 set(SOURCES ${SOURCES} wingetopt.c)
 endif (WIN32)
 
+endif()
+
+
+
+if (false)
 set(tgt config-msg)
 add_executable(${tgt} ${SOURCES})
 add_dependencies(${tgt} git_commit_current)
 target_include_directories(${tgt} PRIVATE ${path_include_fmt})
-set_property(TARGET ${tgt} APPEND PROPERTY INCLUDE_DIRECTORIES ${path_include_rdkafka})
-set_property(TARGET ${tgt} APPEND PROPERTY INCLUDE_DIRECTORIES ${path_include_rapidjson})
+set_property(TARGET ${tgt} APPEND PROPERTY INCLUDE_DIRECTORIES
+${path_include_rdkafka}
+${path_include_rapidjson}
+)
 target_link_libraries(${tgt} librdkafka)
+endif()

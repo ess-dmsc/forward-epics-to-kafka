@@ -29,19 +29,17 @@ namespace BrightnESS {
 namespace ForwardEpicsToKafka {
 namespace Kafka {
 
-InstanceSet & InstanceSet::Set(std::string brokers, std::map<std::string, int> conf_ints) {
+InstanceSet & InstanceSet::Set(KafkaW::BrokerOpt opt) {
 	LOG(3, "Kafka InstanceSet with rdkafka version: {}", rd_kafka_version_str());
 	static std::unique_ptr<InstanceSet> kset;
 	if (!kset) {
-		kset.reset(new InstanceSet(brokers, conf_ints));
+		kset.reset(new InstanceSet(opt));
 	}
 	return *kset;
 }
 
-InstanceSet::InstanceSet(std::string brokers, std::map<std::string, int> conf_ints) : brokers(brokers), conf_ints(conf_ints) {
-	for (int i1 = 0; i1 < KAFKA_INSTANCE_COUNT; ++i1) {
-		instances.push_front(Instance::create(brokers, conf_ints));
-	}
+InstanceSet::InstanceSet(KafkaW::BrokerOpt opt) : opt(opt) {
+	instances.push_front(Instance::create(opt));
 }
 
 /**
@@ -63,7 +61,7 @@ sptr<Instance> InstanceSet::instance() {
 	if (it1 == instances.end()) {
 		// TODO
 		// Need to throttle the creation of instances in case of permanent failure
-		instances.push_front(Instance::create(brokers, conf_ints));
+		instances.push_front(Instance::create(opt));
 		return instances.front();
 		//throw std::runtime_error("error no instances available?");
 	}
@@ -75,73 +73,7 @@ int Instance::load() {
 }
 
 
-// Callbacks
-// The callbacks can be set per Kafka instance, but not per topic.
-// The message delivery callback can have a opaque specific to each message.
-
-void Instance::cb_delivered(rd_kafka_t * rk, rd_kafka_message_t const * msg, void * opaque) {
-	auto self = reinterpret_cast<Instance*>(opaque);
-	auto fb = reinterpret_cast<BrightnESS::FlatBufs::FB*>(msg->_private);
-	if (msg->err) {
-		if (msg->err == RD_KAFKA_RESP_ERR__MSG_TIMED_OUT) {
-			// TODO
-			// Try to re-send, but within limits.
-			// Remember how often it was re-send already.
-			// How to find the topic instance?  Also remember in message object?
-		}
-		LOG(6, "IID: {}  ERROR on delivery, topic {}, {} [{}] {}  seq: {}",
-			self->id,
-			rd_kafka_topic_name(msg->rkt),
-			rd_kafka_err2name(msg->err),
-			msg->err,
-			rd_kafka_err2str(msg->err),
-			fb->seq
-		);
-		// seems to be not used anymore:  rd_kafka_message_errstr(msg)
-	}
-	else {
-		LOG(0, "IID: {}  OK delivered (p {}, offset {}, len {})",
-			self->id,
-			msg->partition, msg->offset, msg->len
-		);
-	}
-	if (fb) {
-		delete fb;
-	}
-}
-
-void Instance::cb_error(rd_kafka_t * rk, int err_i, char const * msg, void * opaque) {
-	auto self = reinterpret_cast<Instance*>(opaque);
-	// cast necessary because of Kafka API design
-	rd_kafka_resp_err_t err = (rd_kafka_resp_err_t) err_i;
-	LOG(7, "IID: {}  ERROR  {}, {}, {}, {}", self->id, err_i, rd_kafka_err2name(err), rd_kafka_err2str(err), msg);
-
-	// Can not throw, as it's Kafka's thread.
-	// Must notify my watchdog though.
-	self->error_from_kafka_callback();
-}
-
-
-
-int Instance::cb_stats(rd_kafka_t * rk, char * json, size_t json_len, void * opaque) {
-	auto self = reinterpret_cast<Instance*>(opaque);
-	LOG(3, "IID: {}  INFO cb_stats length {}   {:.{}}", self->id, json_len, json, json_len);
-	// TODO
-	// What does librdkafka want us to return from this callback?
-	return 0;
-}
-
-
-
-void Instance::cb_throttle(rd_kafka_t * rk, char const * broker_name, int32_t broker_id, int throttle_time_ms, void * opaque) {
-	auto self = reinterpret_cast<Instance*>(opaque);
-	LOG(3, "IID: {}  INFO cb_throttle  broker_id: {}  broker_name: {}  throttle_time_ms: {}",
-		self->id, broker_id, broker_name, throttle_time_ms);
-}
-
-
-
-Instance::Instance() {
+Instance::Instance(KafkaW::BrokerOpt opt) : opt(opt), producer(KafkaW::Producer(opt)) {
 	static int id_ = 0;
 	id = id_++;
 	LOG(5, "Instance {} created.", id.load());
@@ -150,18 +82,12 @@ Instance::Instance() {
 Instance::~Instance() {
 	LOG(5, "Instance {} goes away.", id.load());
 	poll_stop();
-	if (rk) {
-		LOG(3, "try to destroy kafka");
-		rd_kafka_destroy(rk);
-	}
 }
 
 
-sptr<Instance> Instance::create(std::string brokers, std::map<std::string, int> conf_ints) {
-	auto ret = sptr<Instance>(new Instance);
-	ret->brokers = brokers;
+sptr<Instance> Instance::create(KafkaW::BrokerOpt opt) {
+	auto ret = sptr<Instance>(new Instance(opt));
 	ret->self = std::weak_ptr<Instance>(ret);
-	ret->conf_ints = conf_ints;
 	ret->init();
 	return ret;
 }
@@ -171,95 +97,7 @@ sptr<Instance> Instance::create(std::string brokers, std::map<std::string, int> 
 
 
 
-void Instance::cb_log(rd_kafka_t const * rk, int level, char const * fac, char const * buf) {
-	auto self = reinterpret_cast<Instance*>(rd_kafka_opaque(rk));
-	LOG(level, "IID: {}  {}  fac: {}", self->id, buf, fac);
-}
-
-
-
 void Instance::init() {
-	std::map<std::string, int> conf_ints {
-		{"queue.buffering.max.ms",                          20},
-		{"socket.timeout.ms",                         4 * 1000},
-		{"session.timeout.ms",                        6 * 1000},
-
-		{"message.max.bytes",                 23 * 1024 * 1024},
-
-		{"fetch.message.max.bytes",            3 * 1024 * 1024},
-		{"receive.message.max.bytes",          3 * 1024 * 1024},
-		{"queue.buffering.max.messages",           1000 * 1000},
-		{"queue.buffering.max.kbytes",              800 * 1024},
-
-		{"batch.num.messages",                      100 * 1000},
-
-		{"socket.send.buffer.bytes",           4 * 1024 * 1024},
-		{"socket.receive.buffer.bytes",        4 * 1024 * 1024},
-
-		//{"metadata.request.timeout.ms",               4 * 1000},
-		//{"topic.metadata.refresh.interval.ms",       16 * 1000},
-		//{"metadata.max.age.ms",                      10 * 1000},
-
-		/*
-		*/
-
-		/*
-		//{"statistics.interval.ms",                   20 * 1000},
-		// Consumer
-		//{"queued.min.messages", "1"},
-		*/
-	};
-
-	std::map<std::string, std::string> conf_strings {
-		{"topic.metadata.refresh.sparse",            "true"},
-		{"socket.keepalive.enable",                  "false"},
-	};
-
-	for (auto & c : this->conf_ints) {
-		conf_ints[c.first] = c.second;
-	}
-
-	// librdkafka API sometimes wants to write errors into a buffer:
-	int const errstr_N = 512;
-	char errstr[errstr_N];
-
-	rd_kafka_conf_t * conf = 0;
-	conf = rd_kafka_conf_new();
-	rd_kafka_conf_set_opaque(conf, this);
-	rd_kafka_conf_set_dr_msg_cb(conf, Instance::cb_delivered);
-	rd_kafka_conf_set_error_cb(conf, Instance::cb_error);
-	//rd_kafka_conf_set_stats_cb(conf, Instance::cb_stats);
-	rd_kafka_conf_set_log_cb(conf, Instance::cb_log);
-	rd_kafka_conf_set_throttle_cb(conf, Instance::cb_throttle);
-
-	for (auto & c : conf_ints) {
-		conf_strings[c.first] = fmt::format("{:d}", c.second);
-	}
-
-	for (auto & c : conf_strings) {
-		ILOG(7, "Set config: {} = {}", c.first, c.second);
-		auto x = rd_kafka_conf_set(conf, c.first.c_str(), c.second.c_str(), errstr, errstr_N);
-		if (x != RD_KAFKA_CONF_OK) {
-			ILOG(7, "ERROR setting config: {} = {}", c.first, c.second);
-		}
-	}
-
-	rk = rd_kafka_new(RD_KAFKA_PRODUCER, conf, errstr, errstr_N);
-	if (!rk) {
-		ILOG(7, "ERROR can not create kafka handle: {}", errstr);
-		throw std::runtime_error("can not create Kafka handle");
-	}
-
-	ILOG(3, "Name of the new Kafka handle: {}", rd_kafka_name(rk));
-
-	rd_kafka_set_log_level(rk, 7);
-
-	ILOG(3, "Brokers: {}", brokers.c_str());
-	if (rd_kafka_brokers_add(rk, brokers.c_str()) == 0) {
-		ILOG(7, "ERROR could not add brokers");
-		throw std::runtime_error("could not add brokers");
-	}
-
 	poll_start();
 }
 
@@ -267,21 +105,15 @@ void Instance::init() {
 void Instance::poll_start() {
 	ILOG(0, "START polling");
 	do_poll = true;
-	// NOTE
-	// All Kafka callbacks are also invoked from that thread:
 	poll_thread = std::thread(&Instance::poll_run, this);
 }
 
 void Instance::poll_run() {
 	int i1 = 0;
 	while (do_poll) {
-		int n1 = rd_kafka_poll(rk, 10);
-		uint64_t ts = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
-		ILOG(1, "poll served callbacks ts:{}  n1:{}  outq_len:{}", ts, n1, rd_kafka_outq_len(rk));
+		producer.poll();
 		i1 += 1;
-		if (n1 == 0) {
-			std::this_thread::sleep_for(std::chrono::milliseconds(10));
-		}
+		std::this_thread::sleep_for(std::chrono::milliseconds(750));
 	}
 	ILOG(3, "Poll finished");
 }
@@ -294,6 +126,11 @@ void Instance::poll_stop() {
 
 
 void Instance::error_from_kafka_callback() {
+
+	// TODO
+	// Need to set a callback on the kafka producer which knows about Instance.
+	// In order to avoid passing opaques, should use a lambda as callback and std::function.
+
 	if (!error_from_kafka_callback_flag.exchange(true)) {
 		for (auto & tmw : topics) {
 			if (auto tm = tmw.lock()) {
@@ -371,129 +208,49 @@ bool Instance::instance_failure() {
 
 
 
-static int32_t partitioner_example(
-	rd_kafka_topic_t const * rkt,
-	void const * keydata,
-	size_t keylen,
-	int32_t partition_cnt,
-	void * rkt_opaque,
-	void * msg_opaque)
-{
-	return 0;
-	// This callback is allowed to call rd_kafka_topic_partition_available
-	if (partition_cnt <= 0) {
-		// TODO
-		// Limit frequency of this message
-		LOG(2, "ERROR partition_cnt: {}", partition_cnt);
-		return RD_KAFKA_PARTITION_UA;
-	}
-	auto fb = static_cast<BrightnESS::FlatBufs::FB*>(msg_opaque);
-	// fb has: seq, fwdix
-	int32_t ret = fb->fwdix % partition_cnt;
-	//LOG(2, "Assigned to partition {} of {}", ret, partition_cnt);
-	return ret;
-}
-
-
-
-
 Topic::Topic(sptr<Instance> ins, std::string topic_name, int id)
-: ins(ins), topic_name_(topic_name), id(id)
+	: ins(ins),
+		topic_name_(topic_name),
+		id(id),
+		topic(KafkaW::Producer::Topic(ins->producer, topic_name))
 {
-	// librdkafka API sometimes wants to write errors into a buffer:
-	int const errstr_N = 512;
-	char errstr[errstr_N];
-
-	rd_kafka_topic_conf_t * topic_conf = rd_kafka_topic_conf_new();
-	{
-		std::vector<std::vector<std::string>> confs = {
-			/*
-			{"produce.offset.report", "true"},
-			//{"request.required.acks", "1"},
-			{"message.timeout.ms", "30000"},
-			*/
-		};
-		for (auto & c : confs) {
-			if (RD_KAFKA_CONF_OK != rd_kafka_topic_conf_set(topic_conf, c.at(0).c_str(), c.at(1).c_str(), errstr, errstr_N)) {
-				TLOG(7, "error setting config: {}", c.at(0).c_str());
-			}
-		}
-	}
-
-	//rd_kafka_topic_conf_set_partitioner_cb(topic_conf, rd_kafka_msg_partitioner_random);
-	//rd_kafka_topic_conf_set_partitioner_cb(topic_conf, rd_kafka_msg_partitioner_consistent);
-	//rd_kafka_topic_conf_set_partitioner_cb(topic_conf, rd_kafka_msg_partitioner_consistent_random);
-	rd_kafka_topic_conf_set_partitioner_cb(topic_conf, partitioner_example);
-
-	rkt = rd_kafka_topic_new(ins->rk, topic_name.c_str(), topic_conf);
-	if (rkt == nullptr) {
-		// Seems like Kafka uses the system error code?
-		auto errstr = rd_kafka_err2str(rd_kafka_errno2err(errno));
-		TLOG(7, "ERROR could not create Kafka topic: {}", errstr);
-		throw std::exception();
-	}
-	TLOG(0, "OK, seems like we've added topic {}", rd_kafka_topic_name(rkt));
 }
 
 Topic::~Topic() {
-	if (rkt) {
-		TLOG(0, "destroy topic");
-		rd_kafka_topic_destroy(rkt);
-		rkt = nullptr;
-	}
 }
 
 
 
-void Topic::produce(BrightnESS::FlatBufs::FB_uptr fb, uint64_t seq, uint64_t ts) {
-	int x;
-	int32_t partition = RD_KAFKA_PARTITION_UA;
-	//partition = seq % 5;
-	//partition = 0;
-
-	// Optional:
-	void const * key = NULL;
-	size_t key_len = 0;
-
-	void * callback_data = fb.get();
-	// no flags means that we reown our buffer when Kafka calls our callback.
-	int msgflags = 0; // 0, RD_KAFKA_MSG_F_COPY, RD_KAFKA_MSG_F_FREE
-
-	// TODO
-	// How does Kafka report the error?
-	// API docs state that error codes are given in 'errno'
-	// Check that this is thread safe ?!?
-
+void Topic::produce(BrightnESS::FlatBufs::FB_uptr fb) {
+	void * opaque = fb.get();
 	auto m1 = fb->message();
 	//LOG(0, "produce seq {}  ts {}  len {}", seq, ts, m1.size);
 
-	//x = rd_kafka_produce(rkt, partition, msgflags, buf.begin, buf.size, key, key_len, callback_data);
-	x = rd_kafka_produce(rkt, partition, msgflags, m1.data, m1.size, key, key_len, callback_data);
-	if (x == RD_KAFKA_RESP_ERR__QUEUE_FULL) {
-		TLOG(7, "ERROR OutQ: {}  QUEUE_FULL  Dropping message seq {}", rd_kafka_outq_len(ins->rk), seq);
+	// TODO
+	// Change KafkaW to return errors and check what is to be done with fb.
+	int x = topic.produce(m1.data, m1.size, opaque);
+
+	auto rkt = topic.rkt;
+
+	if (x == RD_KAFKA_RESP_ERR_NO_ERROR) {
+		LOG(0, "sent seq {} to topic {} partition ??", fb->seq, rd_kafka_topic_name(rkt));
+		fb.release();
 		return;
+	}
+
+	if (x == RD_KAFKA_RESP_ERR__QUEUE_FULL) {
+		TLOG(7, "ERROR OutQ: {}  QUEUE_FULL  Dropping message seq {}", rd_kafka_outq_len(ins->producer.rk), fb->seq);
 	}
 	if (x == RD_KAFKA_RESP_ERR_MSG_SIZE_TOO_LARGE) {
-		TLOG(7, "ERROR OutQ: {}  TOO_LARGE seq {}", rd_kafka_outq_len(ins->rk), seq);
-		return;
+		TLOG(7, "ERROR OutQ: {}  TOO_LARGE seq {}", rd_kafka_outq_len(ins->producer.rk), fb->seq);
 	}
 	if (x != 0) {
-		TLOG(7, "ERROR on produce topic {}  partition {}  seq {}: {}",
+		TLOG(7, "ERROR on produce topic {}  partition ??  seq {}: {}",
 			rd_kafka_topic_name(rkt),
-			partition,
-			seq,
+			fb->seq,
 			rd_kafka_err2str(rd_kafka_last_error())
 		);
-		//throw std::runtime_error("ERROR on message send");
-		// even when taking out exception in future, return here
-		return;
 	}
-
-	// After no Kafka error was reported on produce, we borrow the object to Kafka
-	// until the callback is called.
-	fb.release();
-
-	//LOG(0, "sent to topic {} partition {}", rd_kafka_topic_name(rkt), partition);
 }
 
 

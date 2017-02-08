@@ -101,7 +101,7 @@ void TopicMapping::stop_forwarding() {
 	}
 }
 
-void TopicMapping::emit(BrightnESS::FlatBufs::FB_uptr fb, uint64_t seq, uint64_t ts) {
+void TopicMapping::emit(BrightnESS::FlatBufs::FB_uptr fb) {
 	if (!forwarding) {
 		LOG(3, "WARNING emit called despite not forwarding");
 		return;
@@ -128,7 +128,7 @@ void TopicMapping::emit(BrightnESS::FlatBufs::FB_uptr fb, uint64_t seq, uint64_t
 		//LOG(5, "TM {} producing size {}", id, fb->builder->GetSize());
 		// Produce the actual payload
 		//top->produce({reinterpret_cast<char*>(fb->builder->GetBufferPointer()), fb->builder->GetSize()});
-		top->produce(std::move(fb), seq, ts);
+		top->produce(std::move(fb));
 		//auto hex = binary_to_hex(reinterpret_cast<char*>(fb->builder->GetBufferPointer()), fb->builder->GetSize());
 		//LOG(5, "packet in hex {}: {:.{}}", fb->builder->GetSize(), hex.data(), hex.size());
 	}

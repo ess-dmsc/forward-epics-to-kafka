@@ -2,16 +2,12 @@
 
 #include <memory>
 #include <utility>
-#include "simple_generated.h"
-#include "general_generated.h"
+#include <flatbuffers/flatbuffers.h>
+#include "KafkaW.h"
 
 namespace BrightnESS {
 namespace FlatBufs {
 
-enum class Schema: uint16_t {
-	General = 0xf1,
-	Simple = 0x1f
-};
 
 class FB;
 
@@ -30,21 +26,21 @@ uint8_t * data;
 size_t size;
 };
 
-class FB {
+class FB : public KafkaW::ProducerMsg {
 public:
-FB(Schema schema);
+FB();
 //void finalize();
 FBmsg message();
-// Internal identifier
-Schema schema;
 std::unique_ptr<flatbuffers::FlatBufferBuilder> builder;
 // Used for performance measurements:
 uint64_t seq = 0;
-uint8_t fwdix = 0;
+uint32_t fwdix = 0;
 };
 using FB_uptr = std::unique_ptr<FB>;
 
 void inspect(FB const & fb);
+
+
 
 }
 }
