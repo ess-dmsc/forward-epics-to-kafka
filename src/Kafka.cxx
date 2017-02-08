@@ -133,6 +133,14 @@ int Instance::cb_stats(rd_kafka_t * rk, char * json, size_t json_len, void * opa
 
 
 
+void Instance::cb_throttle(rd_kafka_t * rk, char const * broker_name, int32_t broker_id, int throttle_time_ms, void * opaque) {
+	auto self = reinterpret_cast<Instance*>(opaque);
+	LOG(3, "IID: {}  INFO cb_throttle  broker_id: {}  broker_name: {}  throttle_time_ms: {}",
+		self->id, broker_id, broker_name, throttle_time_ms);
+}
+
+
+
 Instance::Instance() {
 	static int id_ = 0;
 	id = id_++;
@@ -222,6 +230,7 @@ void Instance::init() {
 	rd_kafka_conf_set_error_cb(conf, Instance::cb_error);
 	//rd_kafka_conf_set_stats_cb(conf, Instance::cb_stats);
 	rd_kafka_conf_set_log_cb(conf, Instance::cb_log);
+	rd_kafka_conf_set_throttle_cb(conf, Instance::cb_throttle);
 
 	for (auto & c : conf_ints) {
 		conf_strings[c.first] = fmt::format("{:d}", c.second);

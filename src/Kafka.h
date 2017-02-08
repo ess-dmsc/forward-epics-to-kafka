@@ -103,6 +103,7 @@ static void cb_delivered(rd_kafka_t * rk, rd_kafka_message_t const * msg, void *
 static void cb_error(rd_kafka_t * rk, int err_i, char const * msg, void * opaque);
 static void cb_log(rd_kafka_t const * rk, int level, char const * fac, char const * buf);
 static int cb_stats(rd_kafka_t * rk, char * json, size_t json_len, void * opaque);
+static void cb_throttle(rd_kafka_t * rk, char const * broker_name, int32_t broker_id, int throttle_time_ms, void * opaque);
 };
 
 
