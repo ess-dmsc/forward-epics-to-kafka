@@ -172,24 +172,11 @@ find_library(path_lib_redox NAMES redox PATHS
 
 
 
-set(flatbuffers_schemata simple general)
 set(flatbuffers_generated_headers "")
 
 # Search the dev env standard locations, but it will also look in PATH
 find_program(flatc flatc PATHS "$ENV{flatc}" "$ENV{HOME}/.tools" "/opt/local/flatbuffers")
 message(STATUS "flatc in ${flatc}")
-
-foreach (f ${flatbuffers_schemata})
-	set(fbs "${f}.fbs")
-	set(fbh "${f}_generated.h")
-	add_custom_command(
-		OUTPUT ${fbh}
-		COMMAND ${flatc} --cpp --gen-mutable --gen-name-strings --scoped-enums "${CMAKE_CURRENT_SOURCE_DIR}/${fbs}"
-		DEPENDS "${fbs}"
-		COMMENT "Process ${fbs} using ${flatc}"
-	)
-	list(APPEND flatbuffers_generated_headers "${fbh}")
-endforeach()
 
 set(schemas_subdir "schemas")
 set(head_out_dir "${CMAKE_CURRENT_BINARY_DIR}/${schemas_subdir}")
