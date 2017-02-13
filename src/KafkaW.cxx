@@ -7,7 +7,9 @@ namespace KafkaW {
 std::atomic<int> g_kafka_instance_count;
 
 
-#define KERR(err) if (err != 0) { LOG(3, "Kafka error code: {}", err); }
+#define KERR(err) if (err != 0) { \
+	LOG(3, "Kafka error code: {}, {}, {}", err, rd_kafka_err2name((rd_kafka_resp_err_t)err), rd_kafka_err2str((rd_kafka_resp_err_t)err)); \
+}
 
 
 BrokerOpt::BrokerOpt() {
@@ -48,22 +50,26 @@ BrokerOpt::BrokerOpt() {
 
 		*/
 	};
-	std::map<std::string, std::string> conf_strings {
-		{"group.id", fmt::format("some-group-id")},
+	conf_strings = {
+		//{"group.id",                      ""},
+		{"api.version.request",                  "true"},
 	};
 }
 
 
 void BrokerOpt::apply(rd_kafka_conf_t * conf) {
-	std::vector<char> errstr(1024);
+	std::vector<char> errstr(256);
 	for (auto & c : conf_ints) {
-		if (RD_KAFKA_CONF_OK != rd_kafka_conf_set(conf, c.first.c_str(), fmt::format("{:d}", c.second).c_str(), errstr.data(), errstr.size())) {
-			LOG(7, "error setting config: {}", c.first.c_str());
+		auto s1 = fmt::format("{:d}", c.second);
+		LOG(2, "set config: {} = {}", c.first, s1);
+		if (RD_KAFKA_CONF_OK != rd_kafka_conf_set(conf, c.first.c_str(), s1.c_str(), errstr.data(), errstr.size())) {
+			LOG(7, "error setting config: {} = {}", c.first, s1);
 		}
 	}
 	for (auto & c : conf_strings) {
+		LOG(2, "set config: {} = {}", c.first, c.second);
 		if (RD_KAFKA_CONF_OK != rd_kafka_conf_set(conf, c.first.c_str(), c.second.c_str(), errstr.data(), errstr.size())) {
-			LOG(7, "error setting config: {}", c.first.c_str());
+			LOG(7, "error setting config: {} = {}", c.first, c.second);
 		}
 	}
 }
@@ -91,6 +97,31 @@ void TopicOpt::apply(rd_kafka_topic_conf_t * conf) {
 	}
 }
 
+
+
+Msg::~Msg() {
+	rd_kafka_message_destroy((rd_kafka_message_t*)kmsg);
+}
+
+uchar * Msg::data() {
+	return (uchar*)((rd_kafka_message_t*)kmsg)->payload;
+}
+
+uint32_t Msg::size() {
+	return ((rd_kafka_message_t*)kmsg)->len;
+}
+
+char const * Msg::topic_name() {
+	return rd_kafka_topic_name( ((rd_kafka_message_t*)kmsg)->rkt );
+}
+
+int32_t Msg::partition() {
+	return ((rd_kafka_message_t*)kmsg)->partition;
+}
+
+int32_t Msg::offset() {
+	return ((rd_kafka_message_t*)kmsg)->offset;
+}
 
 
 PollStatus::~PollStatus() {
@@ -234,29 +265,28 @@ static void print_partition_list(rd_kafka_topic_partition_list_t * plist) {
 
 void Consumer::cb_rebalance(rd_kafka_t * rk, rd_kafka_resp_err_t err, rd_kafka_topic_partition_list_t * plist, void * opaque) {
 	rd_kafka_resp_err_t err2;
-	LOG(3, "Consumer::cb_rebalance");
 	auto self = static_cast<Consumer*>(opaque);
 	switch (err) {
 	case RD_KAFKA_RESP_ERR__ASSIGN_PARTITIONS:
-		LOG(3, "rebalance_cb assign:");
+		LOG(1, "cb_rebalance assign:");
 		if (auto & cb = self->on_rebalance_start) {
 			cb(plist);
 		}
 		print_partition_list(plist);
 		err2 = rd_kafka_assign(rk, plist);
 		if (err2 != RD_KAFKA_RESP_ERR_NO_ERROR) {
-			LOG(9, "rebalance error: {}  {}", rd_kafka_err2name(err2), rd_kafka_err2str(err2));
+			LOG(7, "rebalance error: {}  {}", rd_kafka_err2name(err2), rd_kafka_err2str(err2));
 		}
 		if (self->on_rebalance_assign) {
 			(*self->on_rebalance_assign)();
 		}
 		break;
 	case RD_KAFKA_RESP_ERR__REVOKE_PARTITIONS:
-		LOG(3, "rebalance_cb revoke:");
+		LOG(1, "cb_rebalance revoke:");
 		print_partition_list(plist);
 		err2 = rd_kafka_assign(rk, NULL);
 		if (err2 != RD_KAFKA_RESP_ERR_NO_ERROR) {
-			LOG(9, "rebalance error: {}  {}", rd_kafka_err2name(err2), rd_kafka_err2str(err2));
+			LOG(7, "rebalance error: {}  {}", rd_kafka_err2name(err2), rd_kafka_err2str(err2));
 		}
 		/*
 		LOG(3, "commit offsets");
@@ -267,47 +297,12 @@ void Consumer::cb_rebalance(rd_kafka_t * rk, rd_kafka_resp_err_t err, rd_kafka_t
 		*/
 		break;
 	default:
-		LOG(3, "rebalance_cb failure and revoke: {}", rd_kafka_err2str(err));
+		LOG(1, "cb_rebalance failure and revoke: {}", rd_kafka_err2str(err));
 		err2 = rd_kafka_assign(rk, NULL);
 		if (err2 != RD_KAFKA_RESP_ERR_NO_ERROR) {
-			LOG(9, "rebalance error: {}  {}", rd_kafka_err2name(err2), rd_kafka_err2str(err2));
+			LOG(7, "rebalance error: {}  {}", rd_kafka_err2name(err2), rd_kafka_err2str(err2));
 		}
 		break;
-	}
-}
-
-
-
-void Consumer::cb_consume(rd_kafka_message_t * msg, void * opaque) {
-	//auto const & consumer = static_cast<Consumer*>(opaque);
-	LOG(3, "consume_cb");
-
-	if (msg) {
-		//auto topic_name = rd_kafka_topic_name(msg->rkt);
-		//int partition = msg->partition;
-		if (msg->err == RD_KAFKA_RESP_ERR_NO_ERROR) {
-			LOG(3, "GOT MESSAGE  {}  {:.{}}", msg->offset, (char*)msg->payload, msg->len);
-		}
-		else if (msg->err == RD_KAFKA_RESP_ERR__PARTITION_EOF) {
-			// Just an advisory.  msg contains which partition it is.
-		}
-		else if (msg->err == RD_KAFKA_RESP_ERR__ALL_BROKERS_DOWN) {
-			LOG(3, "RD_KAFKA_RESP_ERR__ALL_BROKERS_DOWN");
-			return;
-		}
-		else if (msg->err == RD_KAFKA_RESP_ERR__BAD_MSG) {
-			LOG(3, "RD_KAFKA_RESP_ERR__BAD_MSG");
-			throw std::runtime_error("RD_KAFKA_RESP_ERR__BAD_MSG");
-		}
-		else if (msg->err == RD_KAFKA_RESP_ERR__DESTROY) {
-			LOG(3, "RD_KAFKA_RESP_ERR__DESTROY");
-			// Broker will go away soon
-			LOG(3, "WARNING broker will go away");
-		}
-		else {
-			LOG(3, "ERROR unhandled msg error: {} {}", rd_kafka_err2name(msg->err), rd_kafka_err2str(msg->err));
-			throw std::runtime_error("unhandled error");
-		}
 	}
 }
 
@@ -319,35 +314,13 @@ void Consumer::start() {
 	char errstr[errstr_N];
 
 	auto conf = rd_kafka_conf_new();
-
-	for (auto & c : opt.conf_ints) {
-		if (RD_KAFKA_CONF_OK != rd_kafka_conf_set(conf, c.first.c_str(), fmt::format("{:d}", c.second).c_str(), errstr, errstr_N)) {
-			LOG(7, "error setting config: {}", c.first.c_str());
-		}
-	}
-	for (auto & c : opt.conf_strings) {
-		if (RD_KAFKA_CONF_OK != rd_kafka_conf_set(conf, c.first.c_str(), c.second.c_str(), errstr, errstr_N)) {
-			LOG(7, "error setting config: {}", c.first.c_str());
-		}
-	}
-
-	// TODO
-	// Release this resource later:
-	//rd_kafka_topic_conf_t * topic_conf = nullptr;
-	auto topic_conf = rd_kafka_topic_conf_new();
-	//rd_kafka_topic_conf_set(topic_conf, "produce.offset.report", "true", errstr, errstr_N);
-	//rd_kafka_topic_conf_set(topic_conf, "message.timeout.ms", "2000", errstr, errstr_N);
-	//rd_kafka_topic_conf_set(topic_conf, "offset.store.method", "broker", errstr, errstr_N);
-
-	rd_kafka_conf_set_default_topic_conf(conf, topic_conf);
+	opt.apply(conf);
 
 	rd_kafka_conf_set_log_cb(conf, Consumer::cb_log);
 	rd_kafka_conf_set_error_cb(conf, Consumer::cb_error);
 	rd_kafka_conf_set_stats_cb(conf, Consumer::cb_stats);
 	rd_kafka_conf_set_rebalance_cb(conf, Consumer::cb_rebalance);
-	rd_kafka_conf_set_consume_cb(conf, cb_consume);
 	rd_kafka_conf_set_consume_cb(conf, nullptr);
-
 	rd_kafka_conf_set_opaque(conf, this);
 
 	rk = rd_kafka_new(RD_KAFKA_CONSUMER, conf, errstr, errstr_N);
@@ -405,13 +378,8 @@ void Consumer::dump_current_subscription() {
 
 
 PollStatus Consumer::poll() {
-	if (0) {
-		dump_current_subscription();
-	}
-
-	if (0) {
-		rd_kafka_dump(stdout, rk);
-	}
+	if (0) dump_current_subscription();
+	if (0) rd_kafka_dump(stdout, rk);
 
 	auto ret = PollStatus::Err();
 
@@ -419,18 +387,14 @@ PollStatus Consumer::poll() {
 	auto msg = rd_kafka_consumer_poll(rk, opt.poll_timeout_ms);
 
 	if (msg != nullptr) {
-		auto topic_name = rd_kafka_topic_name(msg->rkt);
-		int partition = msg->partition;
+		static_assert(sizeof(char) == 1, "Failed: sizeof(char) == 1");
+		std::unique_ptr<Msg> m2(new Msg);
+		m2->kmsg = msg;
+		//auto topic_name = rd_kafka_topic_name(msg->rkt);
+		//int partition = msg->partition;
 		if (msg->err == RD_KAFKA_RESP_ERR_NO_ERROR) {
-			LOG(0, "Consuming offset: {}  {:.{}}", msg->offset, (char*)msg->payload, msg->len);
-			auto mk = new Msg;
-			static_assert(sizeof(char) == 1, "Failed: sizeof(char) == 1");
-			// TODO
-			// Avoid copy later..
-			auto p1 = (char*)msg->payload;
-			std::copy(p1, p1 + msg->len, std::back_inserter(mk->_data));
-			std::unique_ptr<Msg> msg(mk);
-			ret = PollStatus::make_Msg(std::move(msg));
+			LOG(0, "Consuming offset: {}  partition: {}", m2->offset(), m2->partition());
+			return PollStatus::make_Msg(std::move(m2));
 		}
 		else if (msg->err == RD_KAFKA_RESP_ERR__PARTITION_EOF) {
 			// Just an advisory.  msg contains which partition it is.
@@ -449,9 +413,7 @@ PollStatus Consumer::poll() {
 		else {
 			LOG(9, "ERROR unhandled msg error: {} {}", rd_kafka_err2name(msg->err), rd_kafka_err2str(msg->err));
 		}
-		rd_kafka_message_destroy(msg);
 	}
-
 	return ret;
 }
 
@@ -476,12 +438,12 @@ void Producer::cb_delivered(rd_kafka_t * rk, rd_kafka_message_t const * msg, voi
 		);
 		if (msg->err == RD_KAFKA_RESP_ERR__MSG_TIMED_OUT) {
 			// TODO
-			// Try to re-send, but within limits.
-			// Remember how often it was re-send already.
-			// How to find the topic instance?  Also remember in message object?
 		}
 	}
 	else {
+		if (auto p = self->on_delivery_ok) {
+			(*p)(msg);
+		}
 		if (true) {
 			LOG(0, "IID: {}  Ok delivered ({}, p {}, offset {}, len {})",
 				self->id,
@@ -490,14 +452,6 @@ void Producer::cb_delivered(rd_kafka_t * rk, rd_kafka_message_t const * msg, voi
 			);
 		}
 	}
-	/*
-	TODO
-	call custom set handler to print domain-specific error, or clean up
-	auto fb = reinterpret_cast<BrightnESS::FlatBufs::FB*>(msg->_private);
-	if (fb) {
-		delete fb;
-	}
-	*/
 }
 
 
@@ -673,6 +627,7 @@ int ProducerTopic::produce(void * msg_data, int msg_size, void * opaque, bool pr
 
 	// no flags means that we reown our buffer when Kafka calls our callback.
 	int msgflags = 0; // 0, RD_KAFKA_MSG_F_COPY, RD_KAFKA_MSG_F_FREE
+	if (_do_copy) msgflags = RD_KAFKA_MSG_F_COPY;
 
 	// TODO
 	// How does Kafka report the error?
@@ -701,6 +656,12 @@ int ProducerTopic::produce(void * msg_data, int msg_size, void * opaque, bool pr
 	}
 
 	return x;
+}
+
+
+
+void ProducerTopic::do_copy() {
+	_do_copy = true;
 }
 
 
