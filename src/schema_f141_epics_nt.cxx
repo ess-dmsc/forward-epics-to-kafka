@@ -292,8 +292,7 @@ BrightnESS::FlatBufs::FB_uptr convert(EpicsPVUpdate const & up) override {
 		LOG(2, "timeStamp not available");
 	}
 
-	uint64_t teamid = 0;
-	auto fi = FlatBufs::f141_epics_nt::fwdinfo_t(up.seq, ts_data, up.ts_epics_monitor, up.fwdix, teamid);
+	auto fi = FlatBufs::f141_epics_nt::fwdinfo_t(up.seq, ts_data, up.ts_epics_monitor, up.fwdix, up.teamid);
 	b.add_fwdinfo(&fi);
 	FinishEpicsPVBuffer(*builder, b.Finish());
 	{

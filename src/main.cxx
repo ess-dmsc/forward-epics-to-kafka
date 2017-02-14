@@ -58,6 +58,7 @@ string config_file;
 std::map<std::string, int> kafka_conf_ints;
 int forwarder_ix = 0;
 int write_per_message = 0;
+uint64_t teamid = 0;
 FlatBufs::SchemaRegistry schema_registry;
 
 // When parsing options, we keep the json document because it may also contain
@@ -279,9 +280,16 @@ Main::Main(MainOpt opt) : main_opt(opt),
 						mapping_add(tms);
 					}
 					*/
-					if (type == "general") {
+					if (type == "general" || type == "f140") {
 						TopicMappingSettings tms(m["channel"].GetString(), m["topic"].GetString());
+						tms.teamid = opt.teamid;
 						tms.converter_epics_to_fb = opt.schema_registry.items().at("f140")->create_converter();
+						mapping_add(tms);
+					}
+					if (type == "f141") {
+						TopicMappingSettings tms(m["channel"].GetString(), m["topic"].GetString());
+						tms.teamid = opt.teamid;
+						tms.converter_epics_to_fb = opt.schema_registry.items().at("f141")->create_converter();
 						mapping_add(tms);
 					}
 
@@ -556,6 +564,7 @@ int main(int argc, char ** argv) {
 		{"kafka-message.max.bytes",         required_argument,        0,  0 },
 		{"forwarder-ix",                    required_argument,        0,  0 },
 		{"write-per-message",               required_argument,        0,  0 },
+		{"teamid",                          required_argument,        0,  0 },
 		{0, 0, 0, 0},
 	};
 	std::string cmd;
@@ -616,6 +625,9 @@ int main(int argc, char ** argv) {
 			}
 			if (std::string("write-per-message") == lname) {
 				opt.write_per_message = strtol(optarg, nullptr, 10);
+			}
+			if (std::string("teamid") == lname) {
+				opt.teamid = strtoul(optarg, nullptr, 0);
 			}
 		}
 		// TODO catch error from missing argument

@@ -85,8 +85,13 @@ void TopicMapping::start_forwarding(Kafka::InstanceSet & kset) {
 		LOG(9, "ERROR could not create topic object");
 	}
 
-	LOG(0, "Start Epics monitor for {}", channel_name().c_str());
-	epics_monitor.reset(new Epics::Monitor(this, channel_name(), forwarder_ix));
+	auto & tms = topic_mapping_settings;
+	auto cn = channel_name();
+	if (tms.teamid != 0) {
+		cn = fmt::format("{}__teamid_{:016x}", cn, tms.teamid);
+	}
+	LOG(0, "Start Epics monitor for {}", cn);
+	epics_monitor.reset(new Epics::Monitor(this, cn, forwarder_ix));
 	epics_monitor->init(epics_monitor);
 }
 

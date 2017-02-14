@@ -38,6 +38,7 @@ TopicMappingSettings(std::string channel, std::string topic)
 
 std::string channel;
 std::string topic;
+uint64_t teamid = 0;
 // shared simplifies things and is not hot spot at all.
 FlatBufs::MakeFlatBufferFromPVStructure::sptr converter_epics_to_fb;
 

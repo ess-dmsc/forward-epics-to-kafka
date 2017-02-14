@@ -331,13 +331,15 @@ void MonitorRequester::monitorEvent(epics::pvData::MonitorPtr const & monitor) {
 		// Does that mean that we never get a scalar here directly??
 
 		// TODO optimize a bit..
+		auto & tms = monitor_HL->topic_mapping->topic_mapping_settings;
 		FlatBufs::EpicsPVUpdate up;
-		up.channel = monitor_HL->topic_mapping->topic_mapping_settings.channel;
+		up.channel = tms.channel;
 		up.pvstr = ele->pvStructurePtr;
 		up.seq = seq;
 		up.ts_epics_monitor = ts;
 		up.fwdix = monitor_HL->forwarder_ix;
-		auto fb = monitor_HL->topic_mapping->topic_mapping_settings.converter_epics_to_fb->convert(up);
+		up.teamid = tms.teamid;
+		auto fb = tms.converter_epics_to_fb->convert(up);
 		seq += 1;
 		monitor_HL->emit(std::move(fb));
 		monitor->release(ele);
