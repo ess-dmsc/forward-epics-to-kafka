@@ -258,6 +258,7 @@ main.cxx
 fbschemas.cxx
 epics-to-fb.cxx
 schema_f140_general.cxx
+schema_f141_epics_nt.cxx
 ${path_include_fmt}/fmt/format.cc
 ${CMAKE_CURRENT_BINARY_DIR}/git_commit_current.cxx
 )
