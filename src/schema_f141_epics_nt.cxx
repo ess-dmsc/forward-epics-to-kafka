@@ -298,7 +298,7 @@ BrightnESS::FlatBufs::FB_uptr convert(EpicsPVUpdate const & up) override {
 	FinishEpicsPVBuffer(*builder, b.Finish());
 	{
 		auto b1 = binary_to_hex((char const *)builder->GetBufferPointer(), builder->GetSize());
-		LOG(9, "buffer: [{}] {:.{}}", FlatBufs::f141_epics_nt::EpicsPVIdentifier(), b1.data(), b1.size());
+		LOG(9, "buffer: [{}]\n{:.{}}", FlatBufs::f141_epics_nt::EpicsPVIdentifier(), b1.data(), b1.size());
 	}
 	return fb;
 }
