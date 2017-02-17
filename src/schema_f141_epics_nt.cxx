@@ -273,8 +273,9 @@ BrightnESS::FlatBufs::FB_uptr convert(EpicsPVUpdate const & up) override {
 	fb->seq = up.seq;
 	fb->fwdix = up.fwdix;
 	auto builder = fb->builder.get();
-	auto n = builder->CreateString(up.pvstr->getStructure()->getID());
-	auto vF = make_PV(*builder, up.pvstr);
+	// this is the field type ID string: up.pvstr->getStructure()->getID()
+	auto n = builder->CreateString(up.channel);
+	auto vF = make_PV(*builder, up.pvstr->getSubField("value"));
 	//some kind of 'union F' offset:   flatbuffers::Offset<void>
 	FlatBufs::f141_epics_nt::EpicsPVBuilder b(*builder);
 	b.add_name(n);
