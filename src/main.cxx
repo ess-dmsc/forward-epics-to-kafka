@@ -20,6 +20,7 @@
 
 #include <rapidjson/document.h>
 #include <rapidjson/writer.h>
+#include <rapidjson/prettywriter.h>
 #include <rapidjson/stringbuffer.h>
 #include <rapidjson/filereadstream.h>
 
@@ -31,6 +32,7 @@
 	#include <getopt.h>
 #endif
 
+#include "KafkaW.h"
 #include "git_commit_current.h"
 
 
@@ -56,11 +58,16 @@ string config_file;
 std::map<std::string, int> kafka_conf_ints;
 int forwarder_ix = 0;
 int write_per_message = 0;
+uint64_t teamid = 0;
+FlatBufs::SchemaRegistry schema_registry;
 
 // When parsing options, we keep the json document because it may also contain
 // some topic mappings which are read by the Main.
 std::shared_ptr<rapidjson::Document> json = nullptr;
 void parse_json(string config_file);
+KafkaW::BrokerOpt broker_opt;
+
+void init_after_parse();
 };
 
 
@@ -78,12 +85,27 @@ void MainOpt::parse_json(string config_file) {
 		LOG(9, "ERROR can not find the requested config-file");
 		return;
 	}
-	int const N1 = 4000;
+	int const N1 = 16000;
 	char buf1[N1];
 	FileReadStream is(f1, buf1, N1);
-	json = std::shared_ptr<Document>(new Document);
-	auto & d = *json;
-	d.ParseStream<0, UTF8<>, FileReadStream>(is);
+	json = std::make_shared<Document>();
+	auto & d = * json;
+	//d.ParseStream<0, UTF8<>, FileReadStream>(is);
+	d.ParseStream(is);
+	fclose(f1);
+	f1 = 0;
+
+	/*StringBuffer sb1;
+	PrettyWriter<StringBuffer> wr(sb1);
+	d.Accept(wr);
+	LOG(9, "Document is: {}", sb1.GetString());*/
+
+	if (d.IsNull()) {
+		LOG(9, "ERROR can not parse configuration file");
+		throw std::runtime_error("ERROR can not parse configuration file");
+		return;
+	}
+
 	if (d.HasMember("broker-configuration-address")) {
 		broker_configuration_address = d["broker-configuration-address"].GetString();
 	}
@@ -93,15 +115,45 @@ void MainOpt::parse_json(string config_file) {
 	if (d.HasMember("broker-data-address")) {
 		broker_data_address          = d["broker-data-address"].GetString();
 	}
+	if (d.HasMember("kafka")) {
+		auto & o1 = d["kafka"];
+		if (o1.IsObject()) {
+			if (o1.HasMember("broker-default")) {
+				for (auto & x : o1["broker-default"].GetObject()) {
+					if (strncmp("___", x.name.GetString(), 3) == 0) {
+						// ignore
+					}
+					else {
+						if (x.value.IsString()) {
+							LOG(9, "{}: {}", x.name.GetString(), x.value.GetString());
+						}
+						else if (x.value.IsInt()) {
+							LOG(9, "{}: {}", x.name.GetString(), x.value.GetInt());
+						}
+						else {
+							LOG(9, "ERROR can not understand option: {}", x.name.GetString());
+						}
+					}
+				}
+			}
+		}
+	}
 }
+
+
+
+void MainOpt::init_after_parse() {
+	// TODO
+	// Remove duplicates, eliminate the need for this function
+	broker_opt.address = broker_data_address;
+}
+
 
 
 class Main {
 public:
 Main(MainOpt opt);
 void forward_epics_to_kafka();
-void mapping_add(string channel, string topic);
-void mapping_add(TopicMappingType type, string channel, string topic);
 void mapping_add(TopicMappingSettings tmsettings);
 void mapping_start(TopicMappingSettings tmsettings);
 void mapping_remove_topic(string topic);
@@ -168,7 +220,8 @@ void ConfigCB::operator() (std::string const & msg) {
 		auto channel = j0["channel"].GetString();
 		auto topic   = j0["topic"].GetString();
 		if (channel && topic) {
-			main.mapping_add(channel, topic);
+			//main.mapping_add(channel, topic);
+			LOG(9, "ERROR this command handler needs fecatoring, need to look up fb converter first");
 		}
 	}
 	if (j0["cmd"] == "remove") {
@@ -186,7 +239,12 @@ void ConfigCB::operator() (std::string const & msg) {
 }
 
 
-Main::Main(MainOpt opt) : main_opt(opt), kafka_instance_set(Kafka::InstanceSet::Set(opt.broker_data_address, opt.kafka_conf_ints)) {
+Main::Main(MainOpt opt) : main_opt(opt),
+		kafka_instance_set(Kafka::InstanceSet::Set(opt.broker_opt)) {
+	LOG(9, "MainOpt begin, registry:");
+	for (auto & x : opt.schema_registry.items()) {
+		LOG(9, "{}", x.first);
+	}
 	if (main_opt.json) {
 		if (main_opt.json->HasMember("mappings")) {
 			auto & ms = (*main_opt.json)["mappings"];
@@ -196,7 +254,10 @@ Main::Main(MainOpt opt) : main_opt(opt), kafka_instance_set(Kafka::InstanceSet::
 					if (not type_1) type_1 = "EPICS_PVA_NT";
 					string type(type_1);
 					LOG(9, "entry {}   {}", type_1, type.c_str());
+					/*
 					if (type == "chopper") {
+						LOG(9, "ERROR NEEDS REFACTOR FIRST");
+						throw std::runtime_error("ERROR NEEDS REFACTOR FIRST");
 						auto channel = m["channel"].GetString();
 						auto topic = m["topic"].GetString();
 						if (channel == nullptr or topic == nullptr) {
@@ -218,21 +279,18 @@ Main::Main(MainOpt opt) : main_opt(opt), kafka_instance_set(Kafka::InstanceSet::
 						tms.is_chopper_TDCE = true;
 						mapping_add(tms);
 					}
-					else if (type == "EPICS_PVA_NT") {
-						mapping_add({
-							TopicMappingType::EPICS_PVA_NT,
-							m["channel"].GetString(),
-							m["topic"].GetString()
-						});
+					*/
+					if (type == "general" || type == "f140") {
+						TopicMappingSettings tms(m["channel"].GetString(), m["topic"].GetString());
+						tms.teamid = opt.teamid;
+						tms.converter_epics_to_fb = opt.schema_registry.items().at("f140")->create_converter();
+						mapping_add(tms);
 					}
-
-					// Use the general flatbuffer scheme to forward arbitrary EPICS PVStructure
-					else if (type == "general") {
-						mapping_add({
-							TopicMappingType::EPICS_PVA_GENERAL,
-							m["channel"].GetString(),
-							m["topic"].GetString()
-						});
+					if (type == "f141") {
+						TopicMappingSettings tms(m["channel"].GetString(), m["topic"].GetString());
+						tms.teamid = opt.teamid;
+						tms.converter_epics_to_fb = opt.schema_registry.items().at("f141")->create_converter();
+						mapping_add(tms);
 					}
 
 				}
@@ -241,20 +299,6 @@ Main::Main(MainOpt opt) : main_opt(opt), kafka_instance_set(Kafka::InstanceSet::
 	}
 }
 
-
-
-/*
-Start some default mappings for testing purposes.
-*/
-void Main::start_some_test_mappings(int n1) {
-	for (int i1 = 0; i1 < n1; ++i1) {
-		int const N1 = 32;
-		char buf1[N1], buf2[N1];
-		snprintf(buf1, N1, "pv.%06d", i1);
-		snprintf(buf2, N1, "pv.%06d", i1 < 4 ? i1 : 4);
-		mapping_add(buf1, buf2);
-	}
-}
 
 
 void Main::forward_epics_to_kafka() {
@@ -434,11 +478,6 @@ void Main::report_stats(int started_in_current_round) {
 
 
 
-void Main::mapping_add(string channel, string topic) {
-	RMLG lg(m_tms_to_start_mutex);
-	tms_to_start.emplace_back(channel, topic);
-}
-
 void Main::mapping_add(TopicMappingSettings tmsettings) {
 	RMLG lg(m_tms_to_start_mutex);
 	tms_to_start.push_back(tmsettings);
@@ -525,6 +564,7 @@ int main(int argc, char ** argv) {
 		{"kafka-message.max.bytes",         required_argument,        0,  0 },
 		{"forwarder-ix",                    required_argument,        0,  0 },
 		{"write-per-message",               required_argument,        0,  0 },
+		{"teamid",                          required_argument,        0,  0 },
 		{0, 0, 0, 0},
 	};
 	std::string cmd;
@@ -586,6 +626,9 @@ int main(int argc, char ** argv) {
 			if (std::string("write-per-message") == lname) {
 				opt.write_per_message = strtol(optarg, nullptr, 10);
 			}
+			if (std::string("teamid") == lname) {
+				opt.teamid = strtoul(optarg, nullptr, 0);
+			}
 		}
 		// TODO catch error from missing argument
 		// TODO print a command help
@@ -645,6 +688,8 @@ int main(int argc, char ** argv) {
 		);
 		return 1;
 	}
+
+	opt.init_after_parse();
 
 	BrightnESS::ForwardEpicsToKafka::Main main(opt);
 	try {

@@ -9,6 +9,9 @@
 #include "Kafka.h"
 #include "fbhelper.h"
 
+// for MakeFlatBufferFromPVStructure
+#include "epics-to-fb.h"
+
 namespace BrightnESS {
 namespace ForwardEpicsToKafka {
 
@@ -23,15 +26,6 @@ class Topic;
 
 
 
-// If we get many different such combinations, maybe better to factor
-// this even more, but currently, this seems like the best choice.
-enum class TopicMappingType: uint16_t {
-	EPICS_PVA_NT,       // currently the default
-	EPICS_CA_VALUE,     // TODO do I need an extra waveform, or can that be introspected?
-	EPICS_PVA_GENERAL,
-};
-
-
 /**
 This class is meant to have trivial copy ctor.
 */
@@ -42,15 +36,11 @@ TopicMappingSettings(std::string channel, std::string topic)
 	topic(topic)
 { }
 
-TopicMappingSettings(TopicMappingType type, std::string channel, std::string topic)
-:	type(type),
-	channel(channel),
-	topic(topic)
-{ }
-
-TopicMappingType type {TopicMappingType::EPICS_PVA_NT};
 std::string channel;
 std::string topic;
+uint64_t teamid = 0;
+// shared simplifies things and is not hot spot at all.
+FlatBufs::MakeFlatBufferFromPVStructure::sptr converter_epics_to_fb;
 
 bool is_chopper_TDCE { false };
 };
@@ -75,7 +65,7 @@ TopicMapping(Kafka::InstanceSet & kset, TopicMappingSettings topic_mapping_setti
 void start_forwarding(Kafka::InstanceSet & kset);
 void stop_forwarding();
 
-void emit(BrightnESS::FlatBufs::FB_uptr fb, uint64_t seq, uint64_t ts);
+void emit(BrightnESS::FlatBufs::FB_uptr fb);
 
 /** Called from watchdog thread, opportunity to check own health status */
 void health_selfcheck();

@@ -1,5 +1,3 @@
-project(forward-epics-to-kafka)
-
 if (NOT CMAKE_BUILD_TYPE)
 set(CMAKE_BUILD_TYPE Release)
 endif()
@@ -174,24 +172,11 @@ find_library(path_lib_redox NAMES redox PATHS
 
 
 
-set(flatbuffers_schemata simple general)
 set(flatbuffers_generated_headers "")
 
 # Search the dev env standard locations, but it will also look in PATH
 find_program(flatc flatc PATHS "$ENV{flatc}" "$ENV{HOME}/.tools" "/opt/local/flatbuffers")
 message(STATUS "flatc in ${flatc}")
-
-foreach (f ${flatbuffers_schemata})
-	set(fbs "${f}.fbs")
-	set(fbh "${f}_generated.h")
-	add_custom_command(
-		OUTPUT ${fbh}
-		COMMAND ${flatc} --cpp --gen-mutable --gen-name-strings --scoped-enums "${CMAKE_CURRENT_SOURCE_DIR}/${fbs}"
-		DEPENDS "${fbs}"
-		COMMENT "Process ${fbs} using ${flatc}"
-	)
-	list(APPEND flatbuffers_generated_headers "${fbh}")
-endforeach()
 
 set(schemas_subdir "schemas")
 set(head_out_dir "${CMAKE_CURRENT_BINARY_DIR}/${schemas_subdir}")
@@ -260,16 +245,20 @@ set_property(TARGET libpath_lib_redox PROPERTY IMPORTED_LOCATION ${path_lib_redo
 
 set(tgt forward-epics-to-kafka)
 
-set (SOURCES 
+set (SOURCES
 helper.cxx
 logger.cxx
 configuration.cxx
 TopicMapping.cxx
 Kafka.cxx
+KafkaW.cxx
 epics.cxx
 Config.cxx
 main.cxx
 fbschemas.cxx
+epics-to-fb.cxx
+schema_f140_general.cxx
+schema_f141_epics_nt.cxx
 ${path_include_fmt}/fmt/format.cc
 ${CMAKE_CURRENT_BINARY_DIR}/git_commit_current.cxx
 )
@@ -334,6 +323,7 @@ endif()
 
 
 
+if (false)
 set(tgt read-buffer)
 add_executable(${tgt}
 helper.cxx
@@ -361,10 +351,18 @@ if (WIN32)
 set(SOURCES ${SOURCES} wingetopt.c)
 endif (WIN32)
 
+endif()
+
+
+
+if (false)
 set(tgt config-msg)
 add_executable(${tgt} ${SOURCES})
 add_dependencies(${tgt} git_commit_current)
 target_include_directories(${tgt} PRIVATE ${path_include_fmt})
-set_property(TARGET ${tgt} APPEND PROPERTY INCLUDE_DIRECTORIES ${path_include_rdkafka})
-set_property(TARGET ${tgt} APPEND PROPERTY INCLUDE_DIRECTORIES ${path_include_rapidjson})
+set_property(TARGET ${tgt} APPEND PROPERTY INCLUDE_DIRECTORIES
+${path_include_rdkafka}
+${path_include_rapidjson}
+)
 target_link_libraries(${tgt} librdkafka)
+endif()
