@@ -33,3 +33,6 @@ void dwlog(int level, char const * fmt, char const * file, int line, char const 
 }
 
 void use_log_file(std::string fname);
+
+void log_kafka_gelf_start(std::string broker, std::string topic);
+void log_kafka_gelf_stop();
