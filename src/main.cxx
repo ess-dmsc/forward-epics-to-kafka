@@ -51,8 +51,10 @@ struct MainOpt {
 string broker_configuration_address = "localhost:9092";
 string broker_configuration_topic = "configuration.global";
 string broker_data_address = "localhost:9092";
+string broker_log_address = "";
+string broker_log_topic = "";
+string graylog_logger_address = "";
 bool help = false;
-bool verbose = false;
 string log_file;
 string config_file;
 std::map<std::string, int> kafka_conf_ints;
@@ -125,13 +127,13 @@ void MainOpt::parse_json(string config_file) {
 					}
 					else {
 						if (x.value.IsString()) {
-							LOG(9, "{}: {}", x.name.GetString(), x.value.GetString());
+							LOG(2, "{}: {}", x.name.GetString(), x.value.GetString());
 						}
 						else if (x.value.IsInt()) {
-							LOG(9, "{}: {}", x.name.GetString(), x.value.GetInt());
+							LOG(2, "{}: {}", x.name.GetString(), x.value.GetInt());
 						}
 						else {
-							LOG(9, "ERROR can not understand option: {}", x.name.GetString());
+							LOG(7, "ERROR can not understand option: {}", x.name.GetString());
 						}
 					}
 				}
@@ -239,12 +241,7 @@ void ConfigCB::operator() (std::string const & msg) {
 }
 
 
-Main::Main(MainOpt opt) : main_opt(opt),
-		kafka_instance_set(Kafka::InstanceSet::Set(opt.broker_opt)) {
-	LOG(9, "MainOpt begin, registry:");
-	for (auto & x : opt.schema_registry.items()) {
-		LOG(9, "{}", x.first);
-	}
+Main::Main(MainOpt opt) : main_opt(opt), kafka_instance_set(Kafka::InstanceSet::Set(opt.broker_opt)) {
 	if (main_opt.json) {
 		if (main_opt.json->HasMember("mappings")) {
 			auto & ms = (*main_opt.json)["mappings"];
@@ -253,7 +250,6 @@ Main::Main(MainOpt opt) : main_opt(opt),
 					auto type_1 = m["type"].GetString();
 					if (not type_1) type_1 = "EPICS_PVA_NT";
 					string type(type_1);
-					LOG(9, "entry {}   {}", type_1, type.c_str());
 					/*
 					if (type == "chopper") {
 						LOG(9, "ERROR NEEDS REFACTOR FIRST");
@@ -559,6 +555,9 @@ int main(int argc, char ** argv) {
 		{"broker-configuration-address",    required_argument,        0,  0 },
 		{"broker-configuration-topic",      required_argument,        0,  0 },
 		{"broker-data-address",             required_argument,        0,  0 },
+		{"broker-log-address",              required_argument,        0,  0 },
+		{"broker-log-topic",                required_argument,        0,  0 },
+		{"graylog-logger-address",          required_argument,        0,  0 },
 		{"config-file",                     required_argument,        0,  0 },
 		{"log-file",                        required_argument,        0,  0 },
 		{"kafka-message.max.bytes",         required_argument,        0,  0 },
@@ -571,7 +570,7 @@ int main(int argc, char ** argv) {
 	int option_index = 0;
 	bool getopt_error = false;
 	while (true) {
-		int c = getopt_long(argc, argv, "hv", long_options, &option_index);
+		int c = getopt_long(argc, argv, "hvQ", long_options, &option_index);
 		//LOG(5, "c getopt {}", c);
 		if (c == -1) break;
 		if (c == '?') {
@@ -591,9 +590,10 @@ int main(int argc, char ** argv) {
 			opt.help = true;
 			break;
 		case 'v':
-			// Do nothing, purpose is to fall through to long-option handling
-			opt.verbose = true;
 			log_level = std::max(0, log_level - 1);
+			break;
+		case 'Q':
+			log_level = std::min(9, log_level + 1);
 			break;
 		case 0:
 			auto lname = long_options[option_index].name;
@@ -615,6 +615,15 @@ int main(int argc, char ** argv) {
 			}
 			if (std::string("broker-data-address") == lname) {
 				opt.broker_data_address = optarg;
+			}
+			if (std::string("broker-log-address") == lname) {
+				opt.broker_log_address = optarg;
+			}
+			if (std::string("broker-log-topic") == lname) {
+				opt.broker_log_topic = optarg;
+			}
+			if (std::string("graylog-logger-address") == lname) {
+				opt.graylog_logger_address = optarg;
 			}
 			if (std::string("kafka-message.max.bytes") == lname) {
 				opt.kafka_conf_ints["message.max.bytes"] = strtol(optarg, nullptr, 10);
@@ -650,15 +659,14 @@ int main(int argc, char ** argv) {
 		return 1;
 	}
 
-	LOG(9, "\n"
-		"forward-epics-to-kafka-0.0.1  (ESS, BrightnESS)\n"
-		"  {:.7}\n"
+	fmt::print(
+		"forward-epics-to-kafka-0.0.1 {:.7} (ESS, BrightnESS)\n"
 		"  Contact: dominik.werder@psi.ch\n\n",
 		GIT_COMMIT
 	);
 
 	if (opt.help) {
-		LOG(9, "\n"
+		fmt::print(
 			"Forwards EPICS process variables to Kafka topics.\n"
 			"Controlled via JSON packets sent over the configuration topic.\n"
 			"\n"
@@ -682,14 +690,31 @@ int main(int argc, char ** argv) {
 			"      Kafka brokers to connect with for configuration updates\n"
 			"      Default: localhost:9092\n"
 			"\n"
+			"  --broker-log-address              <host:port,host:port,...>\n"
+			"  --broker-log-topic                <topic-name>\n"
+			"\n"
+			"  --graylog-logger-address          <host:port>\n"
+			"      Graylog server to be used by graylog_lgger library\n"
+			"\n"
 			"  -v\n"
-			"      Verbose.\n"
+			"      Decrease log_level by one step.  Default log_level is 3.\n"
+			"  -Q\n"
+			"      Increase log_level by one step.\n"
 			"\n"
 		);
 		return 1;
 	}
 
 	opt.init_after_parse();
+
+	if (opt.broker_log_address != "" && opt.broker_log_topic != "") {
+		log_kafka_gelf_start(opt.broker_log_address, opt.broker_log_topic);
+		LOG(7, "enabled kafka_gelf");
+	}
+
+	if (opt.graylog_logger_address != "") {
+		fwd_graylog_logger_enable(opt.graylog_logger_address);
+	}
 
 	BrightnESS::ForwardEpicsToKafka::Main main(opt);
 	try {

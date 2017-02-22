@@ -2,7 +2,6 @@
 #include "epics-to-fb.h"
 #include "helper.h"
 #include "schemas/f141_epics_nt_generated.h"
-#include "schemas/f141_epics_nt_generated.h"
 
 namespace BrightnESS {
 namespace FlatBufs {
@@ -277,6 +276,20 @@ BrightnESS::FlatBufs::FB_uptr convert(EpicsPVUpdate const & up) override {
 	auto n = builder->CreateString(up.channel);
 	auto vF = make_PV(*builder, up.pvstr->getSubField("value"));
 	//some kind of 'union F' offset:   flatbuffers::Offset<void>
+
+	fwdinfo_2_tBuilder bf(*builder);
+	uint64_t seq_data = 0;
+	if (auto x = up.pvstr->getSubField<epics::pvData::PVScalarValue<uint64_t>>("seq")) {
+		seq_data = x->get();
+	}
+	bf.add_seq_data(seq_data);
+	bf.add_seq_fwd(up.seq);
+	bf.add_ts_data(ts_data);
+	bf.add_ts_fwd(up.ts_epics_monitor);
+	bf.add_fwdix(up.fwdix);
+	bf.add_teamid(up.teamid);
+	auto fwdinfo2 = bf.Finish().Union();
+
 	FlatBufs::f141_epics_nt::EpicsPVBuilder b(*builder);
 	b.add_name(n);
 	b.add_pv_type(vF.type);
@@ -293,12 +306,13 @@ BrightnESS::FlatBufs::FB_uptr convert(EpicsPVUpdate const & up) override {
 		LOG(2, "timeStamp not available");
 	}
 
-	auto fi = FlatBufs::f141_epics_nt::fwdinfo_t(up.seq, ts_data, up.ts_epics_monitor, up.fwdix, up.teamid);
-	b.add_fwdinfo(&fi);
+	b.add_fwdinfo2_type(fwdinfo_u::fwdinfo_2_t);
+	b.add_fwdinfo2(fwdinfo2);
+
 	FinishEpicsPVBuffer(*builder, b.Finish());
-	{
+	if (log_level <= 0) {
 		auto b1 = binary_to_hex((char const *)builder->GetBufferPointer(), builder->GetSize());
-		LOG(9, "buffer: [{}]\n{:.{}}", FlatBufs::f141_epics_nt::EpicsPVIdentifier(), b1.data(), b1.size());
+		LOG(0, "seq data/fwd: {} / {}  schema: [{}]\n{:.{}}", seq_data, up.seq, FlatBufs::f141_epics_nt::EpicsPVIdentifier(), b1.data(), b1.size());
 	}
 	return fb;
 }
