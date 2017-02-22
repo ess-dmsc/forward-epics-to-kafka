@@ -124,6 +124,21 @@ find_path(path_include_streaming_data_types NAMES schemas/f141_epics_nt.fbs PATH
 ${CMAKE_CURRENT_SOURCE_DIR}/../../streaming-data-types
 )
 
+find_path(path_include_graylog_logger NAMES graylog_logger/Log.hpp PATHS
+$ENV{graylog_logger_dir}/include
+/opt/local/graylog_logger-install
+)
+
+find_library(path_lib_graylog_logger NAMES graylog_logger PATHS
+$ENV{graylog_logger_dir}/lib
+/opt/local/graylog_logger-install
+)
+
+if (path_include_graylog_logger AND path_lib_graylog_logger)
+message(STATUS "Using graylog_logger")
+set(have_graylog_logger TRUE)
+endif()
+
 
 # Include path not needed, gtest is included for all targets by googletest's CMakeLists.txt
 #find_path(path_include_gtest NAMES gtest/gtest.h)
@@ -152,6 +167,8 @@ message(STATUS "path_include_flatbuffers ${path_include_flatbuffers}")
 message(STATUS "path_include_gtest ${path_include_gtest}")
 message(STATUS "path_lib_gtest ${path_lib_gtest}")
 message(STATUS "path_include_streaming_data_types ${path_include_streaming_data_types}")
+message(STATUS "path_include_graylog_logger ${path_include_graylog_logger}")
+message(STATUS "path_lib_graylog_logger ${path_lib_graylog_logger}")
 
 
 
@@ -221,6 +238,8 @@ set_property(TARGET libNormativeTypes PROPERTY IMPORTED_LOCATION ${path_lib_epic
 add_library(librdkafka SHARED IMPORTED)
 set_property(TARGET librdkafka PROPERTY IMPORTED_LOCATION ${path_lib_rdkafka})
 
+add_library(libgraylog_logger SHARED IMPORTED)
+set_property(TARGET libgraylog_logger PROPERTY IMPORTED_LOCATION ${path_lib_graylog_logger})
 
 
 
@@ -288,6 +307,12 @@ else()
 if (REQUIRE_GTEST)
 message(FATAL_ERROR "Google test required but not found")
 endif()
+endif()
+
+if (have_graylog_logger)
+target_compile_definitions(${tgt} PRIVATE HAVE_GRAYLOG_LOGGER=1)
+target_include_directories(${tgt} PRIVATE ${path_include_graylog_logger})
+target_link_libraries(${tgt} libgraylog_logger)
 endif()
 
 

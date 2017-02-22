@@ -11,11 +11,21 @@
 #include <rapidjson/document.h>
 #include <rapidjson/stringbuffer.h>
 #include <rapidjson/writer.h>
+#ifdef HAVE_GRAYLOG_LOGGER
+#include <graylog_logger/Log.hpp>
+#include <graylog_logger/GraylogInterface.hpp>
+#endif
 
 int log_level = 3;
 
+// adhoc namespace because it would now collide with ::Logger defined
+// in gralog_logger
+
+namespace DW {
+
 class Logger {
 public:
+Logger();
 ~Logger();
 void use_log_file(std::string fname);
 void log_kafka_gelf_start(std::string broker, std::string topic);
@@ -23,12 +33,17 @@ void log_kafka_gelf_stop();
 FILE * log_file = stdout;
 void dwlog_inner(int level, char const * file, int line, char const * func, std::string const & s1);
 int prefix_len();
+void fwd_graylog_logger_enable(std::string address);
 private:
 std::atomic<bool> do_run_kafka { false };
+std::atomic<bool> do_use_graylog_logger { false };
 std::unique_ptr<KafkaW::Producer> producer;
 std::unique_ptr<KafkaW::Producer::Topic> topic;
 std::thread thread_poll;
 };
+
+Logger::Logger() {
+}
 
 Logger::~Logger() {
 	if (log_file != nullptr and log_file != stdout) {
@@ -63,6 +78,24 @@ void Logger::log_kafka_gelf_stop() {
 	//auto p = producer.exchange(nullptr);
 }
 
+void Logger::fwd_graylog_logger_enable(std::string address) {
+	#ifdef HAVE_GRAYLOG_LOGGER
+	auto addr = address;
+	int port = 12201;
+	auto col = address.find(":");
+	if (col != std::string::npos) {
+		addr = address.substr(0, col);
+		port = strtol(address.c_str() + col + 1, nullptr, 10);
+	}
+	Log::RemoveAllHandlers();
+	LOG(3, "Enable graylog_logger on {}:{}", addr, port);
+	Log::AddLogHandler(new GraylogInterface(addr, port));
+	do_use_graylog_logger = true;
+	#else
+	LOG(7, "ERROR not compiled with support for graylog_logger");
+	#endif
+}
+
 void Logger::dwlog_inner(int level, char const * file, int line, char const * func, std::string const & s1) {
 	int npre = prefix_len();
 	int const n2 = strlen(file);
@@ -71,10 +104,10 @@ void Logger::dwlog_inner(int level, char const * file, int line, char const * fu
 		npre = 0;
 	}
 	auto f1 = file + npre;
-	fmt::print(log_file, "{}:{} [{}]:  {}\n", f1, line, level, s1);
+	auto lmsg = fmt::format("{}:{} [{}]:  {}\n", f1, line, level, s1);
+	fwrite(lmsg.c_str(), 1, lmsg.size(), log_file);
 	if (level > 1 && do_run_kafka.load()) {
 		// If we will use logging to Kafka in the future, refactor a bit to reduce duplicate work..
-		auto lmsg = fmt::format("{}:{} [{}]:  {}\n", f1, line, level, s1);
 		using namespace rapidjson;
 		Document d;
 		auto & a = d.GetAllocator();
@@ -90,6 +123,11 @@ void Logger::dwlog_inner(int level, char const * file, int line, char const * fu
 		auto s1 = buf1.GetString();
 		topic->produce((void*)s1, strlen(s1), nullptr, true);
 	}
+	#ifdef HAVE_GRAYLOG_LOGGER
+	if (do_use_graylog_logger.load() and level >= 0) {
+		Log::Msg(level, lmsg);
+	}
+	#endif
 	//fflush(log_file);
 }
 
@@ -100,18 +138,24 @@ int Logger::prefix_len() {
 
 static Logger g__logger;
 
+}
+
 
 void use_log_file(std::string fname) {
-	g__logger.use_log_file(fname);
+	DW::g__logger.use_log_file(fname);
 }
 
 void dwlog_inner(int level, char const * file, int line, char const * func, std::string const & s1) {
-	g__logger.dwlog_inner(level, file, line, func, s1);
+	DW::g__logger.dwlog_inner(level, file, line, func, s1);
 }
 
 void log_kafka_gelf_start(std::string broker, std::string topic) {
-	g__logger.log_kafka_gelf_start(broker, topic);
+	DW::g__logger.log_kafka_gelf_start(broker, topic);
 }
 
 void log_kafka_gelf_stop() {
+}
+
+void fwd_graylog_logger_enable(std::string address) {
+	DW::g__logger.fwd_graylog_logger_enable(address);
 }
