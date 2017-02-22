@@ -17,6 +17,7 @@ DEPENDS git_commit_now
 )
 
 
+# Allows for easier testing with multiple versions on local hosts:
 set(epicsv4_dir        $ENV{epicsv4_dir})
 
 set(epicsbase_dir      $ENV{EPICS_BASE})
@@ -30,10 +31,6 @@ set(epics_pvData_version 5.0.2)
 set(epics_pvAccess_version 4.1.2)
 set(epics_pvDatabase_version 4.1.1)
 set(epics_normativeTypes_version 5.0.2)
-
-
-# os/Linux/epicsMath.h
-# compiler/gcc/compilerSpecific.h
 
 
 # fmt not in the EPEL pinned by the dev-env crew.
@@ -123,6 +120,10 @@ $ENV{flatbuffers_dir}/include
 $ENV{DM_ROOT}/usr/include
 )
 
+find_path(path_include_streaming_data_types NAMES schemas/f141_epics_nt.fbs PATHS
+${CMAKE_CURRENT_SOURCE_DIR}/../../streaming-data-types
+)
+
 
 # Include path not needed, gtest is included for all targets by googletest's CMakeLists.txt
 #find_path(path_include_gtest NAMES gtest/gtest.h)
@@ -150,25 +151,7 @@ message(STATUS "path_lib_rdkafka ${path_lib_rdkafka}")
 message(STATUS "path_include_flatbuffers ${path_include_flatbuffers}")
 message(STATUS "path_include_gtest ${path_include_gtest}")
 message(STATUS "path_lib_gtest ${path_lib_gtest}")
-
-
-# TODO
-# Change search paths as soon as the official default location has been specified.
-find_path(path_include_configuration_manager NAMES configuration.hpp PATHS
-/home/scratch/configuration-manager/client
-)
-# Config manager is currently a static library
-find_library(path_lib_configuration_manager NAMES libconfigmanager.a PATHS
-/home/scratch/configuration-manager-build
-)
-find_library(path_lib_redox NAMES redox PATHS
-/home/scratch/configuration-manager-build/redox
-)
-#message(STATUS ${path_include_configuration_manager})
-#message(STATUS ${path_lib_configuration_manager})
-
-
-#set(cmake_include_current_dir on)
+message(STATUS "path_include_streaming_data_types ${path_include_streaming_data_types}")
 
 
 
@@ -181,7 +164,7 @@ message(STATUS "flatc in ${flatc}")
 set(schemas_subdir "schemas")
 set(head_out_dir "${CMAKE_CURRENT_BINARY_DIR}/${schemas_subdir}")
 file(MAKE_DIRECTORY ${head_out_dir})
-file(GLOB_RECURSE flatbuffers_schemata2 RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}/../../streaming-data-types/schemas" "${CMAKE_CURRENT_SOURCE_DIR}/../../streaming-data-types/schemas/*.fbs")
+file(GLOB_RECURSE flatbuffers_schemata2 RELATIVE "${path_include_streaming_data_types}/schemas" "${path_include_streaming_data_types}/schemas/*.fbs")
 
 foreach (f0 ${flatbuffers_schemata2})
 	string(REGEX REPLACE "\\.fbs$" "" s0 ${f0})
@@ -192,8 +175,8 @@ foreach (f0 ${flatbuffers_schemata2})
 	#message(STATUS "fbh: ${fbh}")
 	add_custom_command(
 		OUTPUT "${head_out_dir}/${fbh}"
-		COMMAND pwd && ${flatc} --cpp --gen-mutable --gen-name-strings --scoped-enums "../../../../streaming-data-types/schemas/${fbs}"
-		DEPENDS "../../streaming-data-types/schemas/${fbs}"
+		COMMAND ${flatc} --cpp --gen-mutable --gen-name-strings --scoped-enums "${path_include_streaming_data_types}/schemas/${fbs}"
+		DEPENDS "${path_include_streaming_data_types}/schemas/${fbs}"
 		WORKING_DIRECTORY "${head_out_dir}"
 		COMMENT "Process ${fbs} using ${flatc}"
 	)
@@ -238,8 +221,6 @@ set_property(TARGET libNormativeTypes PROPERTY IMPORTED_LOCATION ${path_lib_epic
 add_library(librdkafka SHARED IMPORTED)
 set_property(TARGET librdkafka PROPERTY IMPORTED_LOCATION ${path_lib_rdkafka})
 
-add_library(libpath_lib_redox SHARED IMPORTED)
-set_property(TARGET libpath_lib_redox PROPERTY IMPORTED_LOCATION ${path_lib_redox})
 
 
 
@@ -316,11 +297,6 @@ target_link_libraries(${tgt} libpvAccess)
 target_link_libraries(${tgt} libNormativeTypes)
 target_link_libraries(${tgt} librdkafka)
 
-if (path_lib_configuration_manager)
-target_link_libraries(${tgt} libpath_lib_redox)
-target_link_libraries(${tgt} ${path_lib_configuration_manager})
-endif()
-
 
 
 if (false)
@@ -339,7 +315,7 @@ set_property(TARGET ${tgt} APPEND PROPERTY INCLUDE_DIRECTORIES ${path_include_fl
 set_property(TARGET ${tgt} APPEND PROPERTY INCLUDE_DIRECTORIES ${CMAKE_CURRENT_BINARY_DIR})
 add_dependencies(${tgt} flatbuffers_generate)
 
-set (SOURCES 
+set (SOURCES
 helper.cxx
 logger.cxx
 config-msg.cxx
