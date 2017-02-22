@@ -2,7 +2,6 @@
 #include "epics-to-fb.h"
 #include "helper.h"
 #include "schemas/f141_epics_nt_generated.h"
-#include "schemas/f141_epics_nt_generated.h"
 
 namespace BrightnESS {
 namespace FlatBufs {
@@ -311,7 +310,7 @@ BrightnESS::FlatBufs::FB_uptr convert(EpicsPVUpdate const & up) override {
 	b.add_fwdinfo2(fwdinfo2);
 
 	FinishEpicsPVBuffer(*builder, b.Finish());
-	{
+	if (log_level <= 0) {
 		auto b1 = binary_to_hex((char const *)builder->GetBufferPointer(), builder->GetSize());
 		LOG(0, "seq data/fwd: {} / {}  schema: [{}]\n{:.{}}", seq_data, up.seq, FlatBufs::f141_epics_nt::EpicsPVIdentifier(), b1.data(), b1.size());
 	}
