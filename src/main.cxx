@@ -127,13 +127,13 @@ void MainOpt::parse_json(string config_file) {
 					}
 					else {
 						if (x.value.IsString()) {
-							LOG(9, "{}: {}", x.name.GetString(), x.value.GetString());
+							LOG(2, "{}: {}", x.name.GetString(), x.value.GetString());
 						}
 						else if (x.value.IsInt()) {
-							LOG(9, "{}: {}", x.name.GetString(), x.value.GetInt());
+							LOG(2, "{}: {}", x.name.GetString(), x.value.GetInt());
 						}
 						else {
-							LOG(9, "ERROR can not understand option: {}", x.name.GetString());
+							LOG(7, "ERROR can not understand option: {}", x.name.GetString());
 						}
 					}
 				}
@@ -241,12 +241,7 @@ void ConfigCB::operator() (std::string const & msg) {
 }
 
 
-Main::Main(MainOpt opt) : main_opt(opt),
-		kafka_instance_set(Kafka::InstanceSet::Set(opt.broker_opt)) {
-	LOG(9, "MainOpt begin, registry:");
-	for (auto & x : opt.schema_registry.items()) {
-		LOG(9, "{}", x.first);
-	}
+Main::Main(MainOpt opt) : main_opt(opt), kafka_instance_set(Kafka::InstanceSet::Set(opt.broker_opt)) {
 	if (main_opt.json) {
 		if (main_opt.json->HasMember("mappings")) {
 			auto & ms = (*main_opt.json)["mappings"];
@@ -255,7 +250,6 @@ Main::Main(MainOpt opt) : main_opt(opt),
 					auto type_1 = m["type"].GetString();
 					if (not type_1) type_1 = "EPICS_PVA_NT";
 					string type(type_1);
-					LOG(9, "entry {}   {}", type_1, type.c_str());
 					/*
 					if (type == "chopper") {
 						LOG(9, "ERROR NEEDS REFACTOR FIRST");
