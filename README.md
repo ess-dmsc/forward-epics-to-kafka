@@ -1,86 +1,103 @@
 # Forward EPICS to Kafka
 
 - Forward EPICS process variables to Kafka topics
-- Listens to a Kafka topic for add/remove of forward mappings
-- Kafka brokers configured as command line parameters
-- Can forward so far the Epics 'NT' normative types, both scalar and array.
-  What else is needed?
+- Translates EPICS data into FlatBuffers according to the configured schema
+- New translations from EPICS to FlatBuffers can be easily registered
+- FlatBuffer schemas are taken from repository `streaming-data-types`
+- Comes with support for `f140_general` and `f142_logdata`
 
 
 ## Installation
 
-Ansible playbook in ```./ansible``` even though not all dependencies are installed by
-the playbook so far, see below, and in ```CMakeLists.txt```.
-
-
-## Install together with configuration manager
-
-- yum install gtest gtest-devel zeromq3 zeromq3-devel
-- Note that as user of the library we still currently depend on redox as well
-
-
 ### Requirements
 
 These libraries are expected in the ESS dev default locations or set via
-environment variables (see src/CMakeLists.txt) and are so far not installed
-by the ansible playbook:
+environment variables (see `src/CMakeLists.txt`):
 
-- EPICS v4 (pvData and pvAccess)
-
-Installed by the playbook via yum:
-
-- cmake
-
-Installed by the playbook currently under /opt/local until standardized:
-
+- EPICSv4
 - librdkafka
-- flatbuffers
-- RapidJSON
-- fmt
-  The EPEL in dev-env does not have it, so we assume the fmt git repository in /opt/local
-  as used by the Ansible script, or wherever ENV[fmt_dir] points to.
-  <https://github.com/fmtlib/fmt>
+- flatbuffers (headers and `flatc` executable)
+- RapidJSON (header only)
+- fmt (`fmt/format.h` and `fmt/format.cc`) <https://github.com/fmtlib/fmt>
+- `streaming-data-types`, easiest if cloned parallel to this repository.
+  <https://github.com/ess-dmsc/streaming-data-types>
+- `graylog_logger` <https://github.com/ess-dmsc/graylog-logger>
+- pcre2 (e.g. `yum install pcre2 pcre2-devel` or `brew install pcre2`)
 
 Tooling
+- cmake (above 2.8.11)
+- C++ compiler with c++11 support
+- Doxygen if you would like to make docs
 
-- C++ compiler with c++11 support (Flatbuffers requires that as well)
-- Doxygen if you want to make docs
-
-
-### Environment variables
-
-Location of compile-time dependencies can be controlled via environment variables
-as well, see CMakeLists.
+Others (optional)
+- Google Test  (clone the gtest repository parallel to this repository)
 
 
-### Build (without playbook)
+### Build
 
-Optional, set CC and CXX environment to your liking.
-
-Assuming you have 'make':
-
+Assuming you have `make`
 ```
 cmake <path-to-source>
 make
 make docs
 ```
 
+
+### Tests
+
+Run
+```
+./tests/tests
+```
+
+
 ### Performance
 
-Currently limited by flatbuffer construction.  Optimization ongoing..
-
+Some more thorough figures are to be included here, but we have forwarded
+about 200MB/s without problems.
 
 
 ## Usage
 
-A ```forward-epics-to-kafka --help``` shows the available options.
-The forwarder will listen to a Kafka topic for configuration updates.
-Configuration updates are JSON messages:
+```
+forward-epics-to-kafka --help
+```
 
-- Add a topic: ```{"cmd":"add", "channel":"[Epics-channel-name]", "topic":"[Kafka-topic-name]"}```
-- Remove a topic: ```{"cmd":"remove", "channel":"[Epics-channel-name]"}```
-- Exit the program: ```{"cmd":"exit"}```
-- more to come
+The forwarder will listen to the Kafka topic given on the command line for
+commands.  Configuration updates are JSON messages.  For example:
+
+Add a topic:
+```
+{"cmd":"add", "streams": [
+  {"channel": "<EPICS PV name>", "converter": {
+    "schema":"<schema-id>", "topic":"<Kafka-topic>"}
+  },
+  {"channel": "<EPICS PV name..>", "converter": {
+    "schema":"<schema-id>", "topic":"<Kafka-topic..>"}
+  }
+]}
+```
+
+Exit the forwarder:
+```
+{"cmd": "exit"}
+```
+
+
+### Using a configuration file
+
+The forwarding can be also set up with a configuration file, e.g:
+```
+{
+	"broker": "kafkabroker:9092",
+	"streams": [
+		{
+			"channel": "Epics_PV_name",
+			"converter": { "schema": "f142", "topic": "Kafka_topic_name" }
+		}
+	]
+}
+```
 
 
 
@@ -88,7 +105,7 @@ Configuration updates are JSON messages:
 
 Please send any feature requests you have (dominik.werder@psi.ch).
 
-- More efficient threading
-- Optimization of flat buffer creation
-- Statistics and log
-- Forward arbitrary Epics pvStructures
+- More options for threading
+- Multiple converters per epics channel
+- Pinned converters:  Multiple channels can be routed to the same converter
+- Optionally read from (the future) configuration service
