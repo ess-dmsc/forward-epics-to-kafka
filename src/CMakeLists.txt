@@ -140,15 +140,6 @@ set(have_graylog_logger TRUE)
 endif()
 
 
-# Include path not needed, gtest is included for all targets by googletest's CMakeLists.txt
-#find_path(path_include_gtest NAMES gtest/gtest.h)
-#find_library(path_lib_gtest NAMES gtest)
-#if (path_lib_gtest)
-#add_library(libgtest SHARED IMPORTED)
-#set_property(TARGET libgtest PROPERTY IMPORTED_LOCATION ${path_lib_gtest})
-#endif()
-
-
 message(STATUS "path_include_fmt ${path_include_fmt}")
 message(STATUS "path_include_epics_base ${path_include_epics_base}")
 message(STATUS "path_lib_epics_ca ${path_lib_epics_ca}")
@@ -164,8 +155,6 @@ message(STATUS "path_include_rapidjson ${path_include_rapidjson}")
 message(STATUS "path_include_rdkafka ${path_include_rdkafka}")
 message(STATUS "path_lib_rdkafka ${path_lib_rdkafka}")
 message(STATUS "path_include_flatbuffers ${path_include_flatbuffers}")
-message(STATUS "path_include_gtest ${path_include_gtest}")
-message(STATUS "path_lib_gtest ${path_lib_gtest}")
 message(STATUS "path_include_streaming_data_types ${path_include_streaming_data_types}")
 message(STATUS "path_include_graylog_logger ${path_include_graylog_logger}")
 message(STATUS "path_lib_graylog_logger ${path_lib_graylog_logger}")
@@ -296,17 +285,9 @@ set_property(TARGET ${tgt} APPEND PROPERTY INCLUDE_DIRECTORIES ${path_include_co
 endif()
 
 
-if (path_include_gtest AND path_lib_gtest)
-message(STATUS "Using Google Test: ${path_include_gtest}  ${path_lib_gtest}")
-target_compile_definitions(${tgt} PRIVATE HAVE_GTEST=1)
-target_include_directories(${tgt} PRIVATE ${path_include_gtest})
-#target_link_libraries(${tgt} libgtest)
-# Defined by the CMakeLists.txt inside of the googletest repo
-target_link_libraries(${tgt} gtest)
-else()
 if (REQUIRE_GTEST)
-message(FATAL_ERROR "Google test required but not found")
-endif()
+target_compile_definitions(${tgt} PRIVATE HAVE_GTEST=1)
+target_link_libraries(${tgt} gtest)
 endif()
 
 if (have_graylog_logger)
