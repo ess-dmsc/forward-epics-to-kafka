@@ -23,6 +23,7 @@
 #include <rapidjson/prettywriter.h>
 #include <rapidjson/stringbuffer.h>
 #include <rapidjson/filereadstream.h>
+#include <rapidjson/schema.h>
 
 #ifdef _MSC_VER
 	#include "wingetopt.h"
@@ -35,6 +36,7 @@
 #include "KafkaW.h"
 #include "git_commit_current.h"
 #include "uri.h"
+#include "blobs.h"
 
 
 std::atomic<int> g__run {1};
@@ -57,7 +59,7 @@ string graylog_logger_address = "";
 bool help = false;
 string log_file;
 string config_file;
-std::map<std::string, int> kafka_conf_ints;
+//std::map<std::string, int> kafka_conf_ints;
 int forwarder_ix = 0;
 int write_per_message = 0;
 uint64_t teamid = 0;
@@ -75,16 +77,31 @@ void init_after_parse();
 
 void MainOpt::parse_json(string config_file) {
 	if (config_file == "") {
-		LOG(4, "ERROR given config filename is empty");
+		LOG(3, "given config filename is empty");
 		return;
 	}
 	this->config_file = config_file;
 	using namespace rapidjson;
+	Document schema_;
+	try {
+		auto & s = blobs::schema_config_global_json;
+		schema_.Parse(s.data(), s.size());
+	}
+	catch (...) {
+		LOG(7, "ERROR schema is not valid!");
+		return;
+	}
+	if (schema_.HasParseError()) {
+		LOG(7, "ERROR could not parse schema");
+		return;
+	}
+	SchemaDocument schema(schema_);
+
 	// Parse the JSON configuration and extract parameters.
 	// Currently, these parameters take precedence over what is given on the command line.
 	FILE * f1 = fopen(config_file.c_str(), "rb");
 	if (not f1) {
-		LOG(0, "ERROR can not find the requested config-file");
+		LOG(3, "can not find the requested config-file");
 		return;
 	}
 	int const N1 = 16000;
@@ -92,48 +109,60 @@ void MainOpt::parse_json(string config_file) {
 	FileReadStream is(f1, buf1, N1);
 	json = std::make_shared<Document>();
 	auto & d = * json;
-	//d.ParseStream<0, UTF8<>, FileReadStream>(is);
 	d.ParseStream(is);
 	fclose(f1);
 	f1 = 0;
 
-	/*StringBuffer sb1;
-	PrettyWriter<StringBuffer> wr(sb1);
-	d.Accept(wr);
-	LOG(0, "Document is: {}", sb1.GetString());*/
-
-	if (d.IsNull()) {
-		LOG(0, "ERROR can not parse configuration file");
-		throw std::runtime_error("ERROR can not parse configuration file");
+	if (d.HasParseError()) {
+		LOG(7, "ERROR configuration is not well formed");
 		return;
 	}
+	SchemaValidator vali(schema);
+	if (!d.Accept(vali)) {
+		StringBuffer sb1, sb2;
+		vali.GetInvalidSchemaPointer().StringifyUriFragment(sb1);
+		vali.GetInvalidDocumentPointer().StringifyUriFragment(sb2);
+		LOG(7, "ERROR command message schema validation:  Invalid schema: {}  keyword: {}",
+			sb1.GetString(),
+			vali.GetInvalidSchemaKeyword()
+		);
+		if (std::string("additionalProperties") == vali.GetInvalidSchemaKeyword()) {
+			LOG(7, "Sorry, you have probably specified more properties than what is allowed by the schema.");
+		}
+		LOG(7, "ERROR configuration is not valid");
+		return;
+	}
+	vali.Reset();
 
-	if (d.HasMember("broker-configuration-address")) {
-		broker_configuration_address = d["broker-configuration-address"].GetString();
+	{
+		auto & v = d.FindMember("broker-data-address")->value;
+		if (v.IsString()) {
+			broker_data_address = v.GetString();
+		}
 	}
-	if (d.HasMember("broker-configuration-topic")) {
-		broker_configuration_topic   = d["broker-configuration-topic"].GetString();
-	}
-	if (d.HasMember("broker-data-address")) {
-		broker_data_address          = d["broker-data-address"].GetString();
-	}
-	if (d.HasMember("kafka")) {
-		auto & o1 = d["kafka"];
-		if (o1.IsObject()) {
-			if (o1.HasMember("broker-default")) {
-				for (auto & x : o1["broker-default"].GetObject()) {
-					if (strncmp("___", x.name.GetString(), 3) == 0) {
+	{
+		auto & v = d.FindMember("kafka")->value;
+		if (v.IsObject()) {
+			auto & v2 = v.FindMember("broker")->value;
+			if (v2.IsObject()) {
+				for (auto & x : v2.GetObject()) {
+					auto const & n = x.name.GetString();
+					if (strncmp("___", n, 3) == 0) {
 						// ignore
 					}
 					else {
 						if (x.value.IsString()) {
-							LOG(5, "{}: {}", x.name.GetString(), x.value.GetString());
+							auto const & v = x.value.GetString();
+							LOG(6, "kafka broker config {}: {}", n, v);
+							broker_opt.conf_strings[n] = v;
 						}
 						else if (x.value.IsInt()) {
-							LOG(5, "{}: {}", x.name.GetString(), x.value.GetInt());
+							auto const & v = x.value.GetInt();
+							LOG(6, "kafka broker config {}: {}", n, v);
+							broker_opt.conf_ints[n] = v;
 						}
 						else {
-							LOG(0, "ERROR can not understand option: {}", x.name.GetString());
+							LOG(3, "ERROR can not understand option: {}", n);
 						}
 					}
 				}
@@ -564,7 +593,6 @@ int main(int argc, char ** argv) {
 		{"graylog-logger-address",          required_argument,        0,  0 },
 		{"config-file",                     required_argument,        0,  0 },
 		{"log-file",                        required_argument,        0,  0 },
-		{"kafka-message.max.bytes",         required_argument,        0,  0 },
 		{"forwarder-ix",                    required_argument,        0,  0 },
 		{"write-per-message",               required_argument,        0,  0 },
 		{"teamid",                          required_argument,        0,  0 },
@@ -625,10 +653,6 @@ int main(int argc, char ** argv) {
 			}
 			if (std::string("graylog-logger-address") == lname) {
 				opt.graylog_logger_address = optarg;
-			}
-			if (std::string("kafka-message.max.bytes") == lname) {
-				opt.kafka_conf_ints["message.max.bytes"] = strtol(optarg, nullptr, 10);
-				LOG(4, "Option: {}", opt.kafka_conf_ints.at("message.max.bytes"));
 			}
 			if (std::string("forwarder-ix") == lname) {
 				opt.forwarder_ix = strtol(optarg, nullptr, 10);
