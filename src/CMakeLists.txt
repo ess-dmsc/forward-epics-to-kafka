@@ -18,7 +18,13 @@ DEPENDS git_commit_now
 
 
 # Allows for easier testing with multiple versions on local hosts:
-set(epicsv4_dir        $ENV{epicsv4_dir})
+if (EXISTS $ENV{epicsv4_dir})
+    set(epicsv4_dir        $ENV{epicsv4_dir})
+elseif(EXISTS $ENV{EPICSV4})
+    set(epicsv4_dir        $ENV{EPICSV4})
+else()
+    message(FATAL_ERROR "Unable to find EPICSv4 location. Make sure that the EPICSV4 or epicsv4_dir environment variable is set to point to the directory of your EPICSv4 installation.")
+endif()
 
 set(epicsbase_dir      $ENV{EPICS_BASE})
 set(epics_arch         $ENV{EPICS_HOST_ARCH})
