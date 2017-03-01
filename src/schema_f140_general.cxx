@@ -191,26 +191,9 @@ namespace fbg {
 
 
 
-std::vector<char> binary_to_hex(char const * data, int len) {
-	std::vector<char> ret;
-	for (int i1 = 0; i1 < len; ++i1) {
-		auto c = (uint8_t)data[i1];
-		for (auto & v : std::array<uint8_t,2>({{(uint8_t)(c>>4), (uint8_t)(c & 0x0f)}})) {
-			if (v < 10) v += 48;
-			else v += 97 - 10;
-			ret.push_back(v);
-		}
-		if (i1 % 8 == 7) ret.push_back(' ');
-	}
-	return ret;
-}
-
-
-
 class Converter : public MakeFlatBufferFromPVStructure {
 public:
 BrightnESS::FlatBufs::FB_uptr convert(EpicsPVUpdate const & up) override {
-	//LOG(0, "conv_to_fb_general");
 	// Passing initial size:
 	auto fb = BrightnESS::FlatBufs::FB_uptr(new BrightnESS::FlatBufs::FB);
 	uint64_t ts_data = 0;
@@ -228,13 +211,7 @@ BrightnESS::FlatBufs::FB_uptr convert(EpicsPVUpdate const & up) override {
 	b.add_v_type(vF.type);
 	auto fi = FlatBufs::f140_general::fwdinfo_t(up.seq, ts_data, up.ts_epics_monitor, up.fwdix);
 	b.add_fwdinfo(&fi);
-	//builder->Finish(b.Finish(), FlatBufs::f140_general::PVIdentifier());
 	FinishPVBuffer(*builder, b.Finish());
-	{
-		auto b1 = binary_to_hex((char const *)builder->GetBufferPointer(), builder->GetSize());
-		//auto b1 = binary_to_hex("f140", 4);
-		LOG(9, "buffer: [{}] {:.{}}", FlatBufs::f140_general::PVIdentifier(), b1.data(), b1.size());
-	}
 	return fb;
 }
 };
@@ -251,11 +228,7 @@ MakeFlatBufferFromPVStructure::ptr Info::create_converter() {
 }
 
 
-FlatBufs::SchemaRegistry::Registrar<Info> g_registrar_info("f140", std::move(Info::ptr(new Info)));
-
-
-
-
+FlatBufs::SchemaRegistry::Registrar<Info> g_registrar_info("f140", Info::ptr(new Info));
 
 
 }
