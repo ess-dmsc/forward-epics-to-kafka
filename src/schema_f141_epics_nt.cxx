@@ -330,7 +330,7 @@ MakeFlatBufferFromPVStructure::ptr Info::create_converter() {
 }
 
 
-FlatBufs::SchemaRegistry::Registrar<Info> g_registrar_info("f141", std::move(Info::ptr(new Info)));
+FlatBufs::SchemaRegistry::Registrar<Info> g_registrar_info("f141", Info::ptr(new Info));
 
 
 
