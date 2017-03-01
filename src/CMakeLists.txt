@@ -121,6 +121,7 @@ $ENV{DM_ROOT}/usr/include
 )
 
 find_path(path_include_streaming_data_types NAMES schemas/f141_epics_nt.fbs PATHS
+$ENV{streaming_data_types_dir}
 ${CMAKE_CURRENT_SOURCE_DIR}/../../streaming-data-types
 )
 
@@ -164,7 +165,7 @@ message(STATUS "path_lib_graylog_logger ${path_lib_graylog_logger}")
 set(flatbuffers_generated_headers "")
 
 # Search the dev env standard locations, but it will also look in PATH
-find_program(flatc flatc PATHS "$ENV{flatc}" "$ENV{HOME}/.tools" "/opt/local/flatbuffers")
+find_program(flatc flatc PATHS "$ENV{flatc}" "$ENV{flatc_dir}" "/opt/local/flatbuffers")
 message(STATUS "flatc in ${flatc}")
 
 set(schemas_subdir "schemas")
