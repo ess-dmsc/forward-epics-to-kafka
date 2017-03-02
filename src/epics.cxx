@@ -61,7 +61,7 @@ class ActionOnChannel {
 public:
 ActionOnChannel(Monitor::wptr monitor) : monitor(monitor) { }
 virtual void operator () (epics::pvAccess::Channel::shared_pointer const & channel) {
-	LOG(5, "[EMPTY ACTION]");
+	LOG(2, "[EMPTY ACTION]");
 };
 Monitor::wptr monitor;
 };
@@ -108,7 +108,7 @@ string ChannelRequester::getRequesterName() {
 }
 
 void ChannelRequester::message(std::string const & message, MessageType messageType) {
-	LOG(3, "Message for: {}  msg: {}  msgtype: {}", getRequesterName().c_str(), message.c_str(), getMessageTypeName(messageType).c_str());
+	LOG(4, "Message for: {}  msg: {}  msgtype: {}", getRequesterName().c_str(), message.c_str(), getMessageTypeName(messageType).c_str());
 }
 
 
@@ -122,7 +122,7 @@ from which the channel creation was initiated.
 void ChannelRequester::channelCreated(epics::pvData::Status const & status, Channel::shared_pointer const & channel) {
 	auto monitor = action->monitor.lock();
 	if (not monitor) {
-		LOG(9, "ERROR Assertion failed:  Expect to get a shared_ptr to the monitor");
+		LOG(0, "ERROR Assertion failed:  Expect to get a shared_ptr to the monitor");
 	}
 	#if TEST_RANDOM_FAILURES
 		std::mt19937 rnd(std::chrono::system_clock::now().time_since_epoch().count());
@@ -130,22 +130,22 @@ void ChannelRequester::channelCreated(epics::pvData::Status const & status, Chan
 			if (monitor) monitor->go_into_failure_mode();
 		}
 	#endif
-	LOG(0, "ChannelRequester::channelCreated:  (int)status.isOK(): {}", (int)status.isOK());
+	LOG(7, "ChannelRequester::channelCreated:  (int)status.isOK(): {}", (int)status.isOK());
 	if (!status.isOK() or !status.isSuccess()) {
 		// quick fix until decided on logging system..
 		std::ostringstream s1;
 		s1 << status;
-		LOG(3, "WARNING ChannelRequester::channelCreated:  {}", s1.str().c_str());
+		LOG(4, "WARNING ChannelRequester::channelCreated:  {}", s1.str().c_str());
 	}
 	if (!status.isSuccess()) {
 		// quick fix until decided on logging system..
 		std::ostringstream s1;
 		s1 << status;
-		LOG(6, "ChannelRequester::channelCreated:  failure: {}", s1.str().c_str());
+		LOG(1, "ChannelRequester::channelCreated:  failure: {}", s1.str().c_str());
 		if (channel) {
 			// Yes, take a copy
 			std::string cname = channel->getChannelName();
-			LOG(6, "  failure is in channel: {}", cname.c_str());
+			LOG(1, "  failure is in channel: {}", cname.c_str());
 		}
 		if (monitor) monitor->go_into_failure_mode();
 	}
@@ -153,23 +153,23 @@ void ChannelRequester::channelCreated(epics::pvData::Status const & status, Chan
 
 void ChannelRequester::channelStateChange(Channel::shared_pointer const & channel, Channel::ConnectionState cstate) {
 	auto monitor = action->monitor.lock();
-	LOG(0, "channel state change: {}", Channel::ConnectionStateNames[cstate]);
+	LOG(7, "channel state change: {}", Channel::ConnectionStateNames[cstate]);
 	if (cstate == Channel::DISCONNECTED) {
-		LOG(1, "Epics channel disconnect");
+		LOG(6, "Epics channel disconnect");
 		if (monitor) monitor->go_into_failure_mode();
 		return;
 	}
 	else if (cstate == Channel::DESTROYED) {
-		LOG(1, "Epics channel destroyed");
+		LOG(6, "Epics channel destroyed");
 		if (monitor) monitor->go_into_failure_mode();
 		return;
 	}
 	else if (cstate != Channel::CONNECTED) {
-		LOG(6, "Unhandled channel state change: {}", channel_state_name(cstate));
+		LOG(1, "Unhandled channel state change: {}", channel_state_name(cstate));
 		if (monitor) monitor->go_into_failure_mode();
 	}
 	if (!channel) {
-		LOG(6, "ERROR no channel, even though we should have.  state: {}", channel_state_name(cstate));
+		LOG(1, "ERROR no channel, even though we should have.  state: {}", channel_state_name(cstate));
 		if (monitor) monitor->go_into_failure_mode();
 	}
 
@@ -202,28 +202,28 @@ std::unique_ptr<ActionOnField> action;
 GetFieldRequesterForAction::GetFieldRequesterForAction(epics::pvAccess::Channel::shared_pointer channel, std::unique_ptr<ActionOnField> action) :
 	action(std::move(action))
 {
-	LOG(0, STRINGIFY(GetFieldRequesterForAction) " ctor");
+	LOG(7, STRINGIFY(GetFieldRequesterForAction) " ctor");
 }
 
 string GetFieldRequesterForAction::getRequesterName() { return STRINGIFY(GetFieldRequesterForAction); }
 
 void GetFieldRequesterForAction::message(string const & msg, epics::pvData::MessageType msgT) {
-	LOG(3, "GetFieldRequesterForAction::message: {}", msg.c_str());
+	LOG(4, "GetFieldRequesterForAction::message: {}", msg.c_str());
 }
 
 void GetFieldRequesterForAction::getDone(epics::pvData::Status const & status, epics::pvData::FieldConstPtr const & field) {
 	if (!status.isSuccess()) {
-		LOG(6, "ERROR nosuccess");
+		LOG(1, "ERROR nosuccess");
 		auto monitor = action->monitor.lock();
 		if (monitor) {
 			monitor->go_into_failure_mode();
 		}
 	}
 	if (status.isOK()) {
-		LOG(0, "success and OK");
+		LOG(7, "success and OK");
 	}
 	else {
-		LOG(3, "success with warning:  [[TODO STATUS]]");
+		LOG(4, "success with warning:  [[TODO STATUS]]");
 	}
 	action->operator()(*field);
 }
@@ -269,13 +269,13 @@ MonitorRequester::MonitorRequester(std::string channel_name, Monitor::wptr monit
 
 
 MonitorRequester::~MonitorRequester() {
-	LOG(0, "dtor");
+	LOG(7, "dtor");
 }
 
 string MonitorRequester::getRequesterName() { return "MonitorRequester"; }
 
 void MonitorRequester::message(string const & msg, epics::pvData::MessageType msgT) {
-	LOG(3, "MonitorRequester::message: {}", msg.c_str());
+	LOG(4, "MonitorRequester::message: {}", msg.c_str());
 }
 
 
@@ -284,17 +284,17 @@ void MonitorRequester::monitorConnect(epics::pvData::Status const & status, epic
 	if (!status.isSuccess()) {
 		// NOTE
 		// Docs does not say anything about whether we are responsible for any handling of the monitor if non-null?
-		LOG(6, "ERROR nosuccess");
+		LOG(1, "ERROR nosuccess");
 		if (monitor_HL) {
 			monitor_HL->go_into_failure_mode();
 		}
 	}
 	else {
 		if (status.isOK()) {
-			LOG(0, "success and OK");
+			LOG(7, "success and OK");
 		}
 		else {
-			LOG(3, "success with warning:  [[TODO STATUS]]");
+			LOG(4, "success with warning:  [[TODO STATUS]]");
 		}
 	}
 	//monitor = monitor_;
@@ -305,11 +305,11 @@ void MonitorRequester::monitorConnect(epics::pvData::Status const & status, epic
 
 
 void MonitorRequester::monitorEvent(epics::pvData::MonitorPtr const & monitor) {
-	//LOG(0, "monitorEvent seq {}", seq);
+	//LOG(7, "monitorEvent seq {}", seq);
 
 	auto monitor_HL = this->monitor_HL.lock();
 	if (!monitor_HL) {
-		LOG(5, "monitor_HL already gone");
+		LOG(2, "monitor_HL already gone");
 		return;
 	}
 
@@ -347,7 +347,7 @@ void MonitorRequester::monitorEvent(epics::pvData::MonitorPtr const & monitor) {
 }
 
 void MonitorRequester::unlisten(epics::pvData::MonitorPtr const & monitor) {
-	LOG(3, "monitor source no longer available");
+	LOG(4, "monitor source no longer available");
 }
 
 
@@ -396,7 +396,7 @@ void Monitor::init(std::shared_ptr<Monitor> self) {
 }
 
 Monitor::~Monitor() {
-	LOG(0, "Monitor dtor");
+	LOG(7, "Monitor dtor");
 	stop();
 }
 
@@ -408,7 +408,7 @@ void Monitor::stop() {
 	RMLG lg(m_mutex_emitter);
 	try {
 		if (mon) {
-			//LOG(5, "stopping monitor for TM {}", topic_mapping->id);
+			//LOG(2, "stopping monitor for TM {}", topic_mapping->id);
 
 			// TODO
 			// After some debugging, it seems to me that even though we call stop() on Epics
@@ -428,7 +428,7 @@ void Monitor::stop() {
 		}
 	}
 	catch (std::runtime_error & e) {
-		LOG(5, "Runtime error from Epics: {}", e.what());
+		LOG(2, "Runtime error from Epics: {}", e.what());
 		go_into_failure_mode();
 	}
 }
@@ -490,7 +490,7 @@ void Monitor::initiate_connection() {
 	}
 	*/
 	if (provider == nullptr) {
-		LOG(3, "ERROR could not create a provider");
+		LOG(4, "ERROR could not create a provider");
 		throw epics_channel_failure();
 	}
 	//cr.reset(new ChannelRequester(std::move(new StartMonitorChannel())));

@@ -14,7 +14,7 @@ static fballoc g_fballoc;
 fballoc::fballoc() { }
 
 uint8_t * fballoc::allocate(size_t size) const {
-	//LOG(3, "Allocate new flat buffer: {} + {}", size, NNE);
+	//LOG(4, "Allocate new flat buffer: {} + {}", size, NNE);
 	auto p1 = new uint8_t[size + NNE];
 	//fmt::print("raw pointer at: {}\n", (void*)p1);
 	p1 = p1 + NNE;
@@ -23,7 +23,7 @@ uint8_t * fballoc::allocate(size_t size) const {
 
 void fballoc::deallocate(uint8_t * p1) const {
 	p1 = p1 - NNE;
-	//LOG(3, "Deallocate {}", (void*)p1);
+	//LOG(4, "Deallocate {}", (void*)p1);
 	delete[] p1;
 }
 

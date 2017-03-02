@@ -183,7 +183,7 @@ PV_t make_PV_scalar(flatbuffers::FlatBufferBuilder & builder, epics::pvData::PVS
 		return Make_Scalar< double >::convert(&builder, field);
 	case S::pvString:
 		// Sorry, not implemented yet
-		LOG(2, "ERROR pvString not implemented yet");
+		LOG(5, "ERROR pvString not implemented yet");
 		break;
 	}
 	return {PV::NTScalarByte, 0};
@@ -218,7 +218,7 @@ PV_t make_PV_scalar_array(flatbuffers::FlatBufferBuilder & builder, epics::pvDat
 		return Make_ScalarArray< double >::convert(&builder, field);
 	case S::pvString:
 		// Sorry, not implemented yet
-		LOG(2, "ERROR pvString not implemented yet");
+		LOG(5, "ERROR pvString not implemented yet");
 		break;
 	}
 	return {PV::NTScalarByte, 0};
@@ -226,7 +226,7 @@ PV_t make_PV_scalar_array(flatbuffers::FlatBufferBuilder & builder, epics::pvDat
 
 PV_t make_PV(flatbuffers::FlatBufferBuilder & builder, epics::pvData::PVFieldPtr const & field) {
 	if (!field) {
-		LOG(9, "ERROR can not do anything with a null pointer");
+		LOG(0, "ERROR can not do anything with a null pointer");
 		return {PV::NTScalarByte, 0};
 	}
 	// Check the type of 'value'
@@ -241,16 +241,16 @@ PV_t make_PV(flatbuffers::FlatBufferBuilder & builder, epics::pvData::PVFieldPtr
 	case T::scalarArray:
 		return make_PV_scalar_array(builder, static_cast< epics::pvData::PVScalarArray*>(field.get()));
 	case T::structure:
-		LOG(2, "ERROR Type::structure can not be handled");
+		LOG(5, "ERROR Type::structure can not be handled");
 		break;
 	case T::structureArray:
-		LOG(2, "ERROR Type::structureArray can not be handled");
+		LOG(5, "ERROR Type::structureArray can not be handled");
 		break;
 	case T::union_:
-		LOG(2, "ERROR Type::union_ can not be handled");
+		LOG(5, "ERROR Type::union_ can not be handled");
 		break;
 	case T::unionArray:
-		LOG(2, "ERROR Type::unionArray can not be handled");
+		LOG(5, "ERROR Type::unionArray can not be handled");
 		break;
 	}
 	return {PV::NTScalarByte, 0};
@@ -303,7 +303,7 @@ BrightnESS::FlatBufs::FB_uptr convert(EpicsPVUpdate const & up) override {
 		b.add_timeStamp(&timeStamp);
 	}
 	else {
-		LOG(2, "timeStamp not available");
+		LOG(5, "timeStamp not available");
 	}
 
 	b.add_fwdinfo2_type(fwdinfo_u::fwdinfo_2_t);
@@ -312,7 +312,7 @@ BrightnESS::FlatBufs::FB_uptr convert(EpicsPVUpdate const & up) override {
 	FinishEpicsPVBuffer(*builder, b.Finish());
 	if (log_level <= 0) {
 		auto b1 = binary_to_hex((char const *)builder->GetBufferPointer(), builder->GetSize());
-		LOG(0, "seq data/fwd: {} / {}  schema: [{}]\n{:.{}}", seq_data, up.seq, FlatBufs::f141_epics_nt::EpicsPVIdentifier(), b1.data(), b1.size());
+		LOG(7, "seq data/fwd: {} / {}  schema: [{}]\n{:.{}}", seq_data, up.seq, FlatBufs::f141_epics_nt::EpicsPVIdentifier(), b1.data(), b1.size());
 	}
 	return fb;
 }
