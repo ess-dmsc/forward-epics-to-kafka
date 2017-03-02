@@ -247,6 +247,7 @@ Config.cxx
 main.cxx
 fbschemas.cxx
 epics-to-fb.cxx
+uri.cxx
 schema_f140_general.cxx
 schema_f141_epics_nt.cxx
 ${path_include_fmt}/fmt/format.cc
@@ -303,6 +304,7 @@ target_link_libraries(${tgt} libpvData)
 target_link_libraries(${tgt} libpvAccess)
 target_link_libraries(${tgt} libNormativeTypes)
 target_link_libraries(${tgt} librdkafka)
+target_link_libraries(${tgt} pcre2-8)
 
 
 

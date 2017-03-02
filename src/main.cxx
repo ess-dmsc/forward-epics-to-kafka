@@ -34,6 +34,7 @@
 
 #include "KafkaW.h"
 #include "git_commit_current.h"
+#include "uri.h"
 
 
 std::atomic<int> g__run {1};
