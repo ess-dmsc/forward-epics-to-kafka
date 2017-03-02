@@ -1,7 +1,7 @@
 #include "KafkaW.h"
 #include "logger.h"
 #include <atomic>
-#include <errno.h>
+#include <cerrno>
 
 namespace KafkaW {
 
@@ -17,7 +17,7 @@ BrokerOpt::BrokerOpt() {
 	conf_ints = {
 		{"metadata.request.timeout.ms",               2 * 1000},
 		{"socket.timeout.ms",                         2 * 1000},
-		{"session.timeout.ms",                        2 * 1000},
+		//{"session.timeout.ms",                        2 * 1000},
 
 		{"message.max.bytes",                 23 * 1024 * 1024},
 		{"fetch.message.max.bytes",           23 * 1024 * 1024},
@@ -330,11 +330,9 @@ void Consumer::start() {
 		throw std::runtime_error("can not create Kafka handle");
 	}
 
-	LOG(3, "New Kafka consumer: {}", rd_kafka_name(rk));
+	rd_kafka_set_log_level(rk, 4);
 
-	int const LOG_DEBUG = 7;
-	rd_kafka_set_log_level(rk, LOG_DEBUG);
-
+	LOG(4, "New Kafka consumer {} with brokers: {}", rd_kafka_name(rk), opt.address.c_str());
 	if (rd_kafka_brokers_add(rk, opt.address.c_str()) == 0) {
 		LOG(7, "ERROR could not add brokers");
 		throw std::runtime_error("could not add brokers");
@@ -445,11 +443,13 @@ void Producer::cb_delivered(rd_kafka_t * rk, rd_kafka_message_t const * msg, voi
 		if (auto p = self->on_delivery_ok) {
 			(*p)(msg);
 		}
-		LOG(-1, "IID: {}  Ok delivered ({}, p {}, offset {}, len {})",
-			self->id,
-			rd_kafka_name(rk),
-			msg->partition, msg->offset, msg->len
-		);
+		if (true) {
+			LOG(7, "IID: {}  Ok delivered ({}, p {}, offset {}, len {})",
+				self->id,
+				rd_kafka_name(rk),
+				msg->partition, msg->offset, msg->len
+			);
+		}
 	}
 }
 
@@ -541,7 +541,7 @@ Producer::Producer(BrokerOpt opt) : opt(opt) {
 		throw std::runtime_error("can not create Kafka handle");
 	}
 
-	rd_kafka_set_log_level(rk, 7);
+	rd_kafka_set_log_level(rk, 4);
 
 	LOG(3, "New Kafka {} with brokers: {}", rd_kafka_name(rk), opt.address.c_str());
 	if (rd_kafka_brokers_add(rk, opt.address.c_str()) == 0) {
