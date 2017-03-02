@@ -228,8 +228,10 @@ set_property(TARGET libNormativeTypes PROPERTY IMPORTED_LOCATION ${path_lib_epic
 add_library(librdkafka SHARED IMPORTED)
 set_property(TARGET librdkafka PROPERTY IMPORTED_LOCATION ${path_lib_rdkafka})
 
+if (have_graylog_logger)
 add_library(libgraylog_logger SHARED IMPORTED)
 set_property(TARGET libgraylog_logger PROPERTY IMPORTED_LOCATION ${path_lib_graylog_logger})
+endif()
 
 
 
