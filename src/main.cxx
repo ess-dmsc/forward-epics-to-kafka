@@ -52,8 +52,7 @@ struct MainOpt {
 string broker_configuration_address = "localhost:9092";
 string broker_configuration_topic = "configuration.global";
 string broker_data_address = "localhost:9092";
-string broker_log_address = "";
-string broker_log_topic = "";
+string kafka_gelf = "";
 string graylog_logger_address = "";
 bool help = false;
 string log_file;
@@ -561,8 +560,7 @@ int main(int argc, char ** argv) {
 		{"broker-configuration-address",    required_argument,        0,  0 },
 		{"broker-configuration-topic",      required_argument,        0,  0 },
 		{"broker-data-address",             required_argument,        0,  0 },
-		{"broker-log-address",              required_argument,        0,  0 },
-		{"broker-log-topic",                required_argument,        0,  0 },
+		{"kafka-gelf",                      required_argument,        0,  0 },
 		{"graylog-logger-address",          required_argument,        0,  0 },
 		{"config-file",                     required_argument,        0,  0 },
 		{"log-file",                        required_argument,        0,  0 },
@@ -622,11 +620,8 @@ int main(int argc, char ** argv) {
 			if (std::string("broker-data-address") == lname) {
 				opt.broker_data_address = optarg;
 			}
-			if (std::string("broker-log-address") == lname) {
-				opt.broker_log_address = optarg;
-			}
-			if (std::string("broker-log-topic") == lname) {
-				opt.broker_log_topic = optarg;
+			if (std::string("kafka-gelf") == lname) {
+				opt.kafka_gelf = optarg;
 			}
 			if (std::string("graylog-logger-address") == lname) {
 				opt.graylog_logger_address = optarg;
@@ -696,11 +691,10 @@ int main(int argc, char ** argv) {
 			"      Kafka brokers to connect with for configuration updates\n"
 			"      Default: localhost:9092\n"
 			"\n"
-			"  --broker-log-address              <host:port,host:port,...>\n"
-			"  --broker-log-topic                <topic-name>\n"
+			"  --kafka-gelf                      <kafka://host[:port]/topic>\n"
 			"\n"
 			"  --graylog-logger-address          <host:port>\n"
-			"      Graylog server to be used by graylog_lgger library\n"
+			"      Log to Graylog via graylog_logger library.\n"
 			"\n"
 			"  -v\n"
 			"      Decrease log_level by one step.  Default log_level is 3.\n"
@@ -713,9 +707,10 @@ int main(int argc, char ** argv) {
 
 	opt.init_after_parse();
 
-	if (opt.broker_log_address != "" && opt.broker_log_topic != "") {
-		log_kafka_gelf_start(opt.broker_log_address, opt.broker_log_topic);
-		LOG(0, "enabled kafka_gelf");
+	if (opt.kafka_gelf != "") {
+		BrightnESS::uri::URI uri(opt.kafka_gelf);
+		log_kafka_gelf_start(uri.host, uri.topic);
+		LOG(3, "Enabled kafka_gelf: //{}/{}", uri.host, uri.topic);
 	}
 
 	if (opt.graylog_logger_address != "") {
