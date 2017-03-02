@@ -612,7 +612,7 @@ ProducerTopic::ProducerTopic(Producer const & producer, std::string name) : prod
 }
 
 
-int ProducerTopic::produce(void const * msg_data, int msg_size, void const * opaque, bool print_err) {
+int ProducerTopic::produce(void * msg_data, int msg_size, void * opaque, bool print_err) {
 	static_assert(RD_KAFKA_RESP_ERR_NO_ERROR == 0, "Currently return lies on NO_ERROR == 0");
 	if (not rkt) {
 		throw std::runtime_error("ERROR tried to produce on uninitialized rkt");
@@ -633,7 +633,7 @@ int ProducerTopic::produce(void const * msg_data, int msg_size, void const * opa
 	// API docs state that error codes are given in 'errno'
 	// Check that this is thread safe ?!?
 
-	x = rd_kafka_produce(rkt, partition, msgflags, (void*)msg_data, msg_size, key, key_len, (void*)opaque);
+	x = rd_kafka_produce(rkt, partition, msgflags, msg_data, msg_size, key, key_len, opaque);
 
 	if (print_err) {
 		if (x == RD_KAFKA_RESP_ERR__QUEUE_FULL) {
