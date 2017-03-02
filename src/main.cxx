@@ -52,8 +52,7 @@ struct MainOpt {
 string broker_configuration_address = "localhost:9092";
 string broker_configuration_topic = "configuration.global";
 string broker_data_address = "localhost:9092";
-string broker_log_address = "";
-string broker_log_topic = "";
+string kafka_gelf = "";
 string graylog_logger_address = "";
 bool help = false;
 string log_file;
@@ -76,7 +75,7 @@ void init_after_parse();
 
 void MainOpt::parse_json(string config_file) {
 	if (config_file == "") {
-		LOG(3, "ERROR given config filename is empty");
+		LOG(4, "ERROR given config filename is empty");
 		return;
 	}
 	this->config_file = config_file;
@@ -85,7 +84,7 @@ void MainOpt::parse_json(string config_file) {
 	// Currently, these parameters take precedence over what is given on the command line.
 	FILE * f1 = fopen(config_file.c_str(), "rb");
 	if (not f1) {
-		LOG(9, "ERROR can not find the requested config-file");
+		LOG(0, "ERROR can not find the requested config-file");
 		return;
 	}
 	int const N1 = 16000;
@@ -101,10 +100,10 @@ void MainOpt::parse_json(string config_file) {
 	/*StringBuffer sb1;
 	PrettyWriter<StringBuffer> wr(sb1);
 	d.Accept(wr);
-	LOG(9, "Document is: {}", sb1.GetString());*/
+	LOG(0, "Document is: {}", sb1.GetString());*/
 
 	if (d.IsNull()) {
-		LOG(9, "ERROR can not parse configuration file");
+		LOG(0, "ERROR can not parse configuration file");
 		throw std::runtime_error("ERROR can not parse configuration file");
 		return;
 	}
@@ -128,13 +127,13 @@ void MainOpt::parse_json(string config_file) {
 					}
 					else {
 						if (x.value.IsString()) {
-							LOG(2, "{}: {}", x.name.GetString(), x.value.GetString());
+							LOG(5, "{}: {}", x.name.GetString(), x.value.GetString());
 						}
 						else if (x.value.IsInt()) {
-							LOG(2, "{}: {}", x.name.GetString(), x.value.GetInt());
+							LOG(5, "{}: {}", x.name.GetString(), x.value.GetInt());
 						}
 						else {
-							LOG(7, "ERROR can not understand option: {}", x.name.GetString());
+							LOG(0, "ERROR can not understand option: {}", x.name.GetString());
 						}
 					}
 				}
@@ -216,7 +215,7 @@ Main & main;
 void ConfigCB::operator() (std::string const & msg) {
 	using std::string;
 	using namespace rapidjson;
-	LOG(0, "Command received: {}", msg.c_str());
+	LOG(7, "Command received: {}", msg.c_str());
 	Document j0;
 	j0.Parse(msg.c_str());
 	if (j0["cmd"] == "add") {
@@ -224,7 +223,7 @@ void ConfigCB::operator() (std::string const & msg) {
 		auto topic   = j0["topic"].GetString();
 		if (channel && topic) {
 			//main.mapping_add(channel, topic);
-			LOG(9, "ERROR this command handler needs fecatoring, need to look up fb converter first");
+			LOG(0, "ERROR this command handler needs fecatoring, need to look up fb converter first");
 		}
 	}
 	if (j0["cmd"] == "remove") {
@@ -253,12 +252,12 @@ Main::Main(MainOpt opt) : main_opt(opt), kafka_instance_set(Kafka::InstanceSet::
 					string type(type_1);
 					/*
 					if (type == "chopper") {
-						LOG(9, "ERROR NEEDS REFACTOR FIRST");
+						LOG(0, "ERROR NEEDS REFACTOR FIRST");
 						throw std::runtime_error("ERROR NEEDS REFACTOR FIRST");
 						auto channel = m["channel"].GetString();
 						auto topic = m["topic"].GetString();
 						if (channel == nullptr or topic == nullptr) {
-							LOG(9, "ERROR expect 'channel' and 'topic' configuration settings for a chopper");
+							LOG(0, "ERROR expect 'channel' and 'topic' configuration settings for a chopper");
 							continue;
 						}
 
@@ -361,7 +360,7 @@ void Main::move_failed_to_startup_queue() {
 	for (auto & x : tms_failed) {
 		mapping_add(x->topic_mapping_settings);
 		if (!x) {
-			LOG(5, "ERROR null TopicMapping in tms_failed");
+			LOG(2, "ERROR null TopicMapping in tms_failed");
 		}
 		else {
 			tms_zombies.push_back(std::move(x));
@@ -411,7 +410,7 @@ void Main::check_instances() {
 	auto it2 = l1.before_begin();
 	for (auto it1 = l1.begin(); it1 != l1.end(); ++it1) {
 		if (it1->get()->instance_failure()) {
-			LOG(6, "Instance has issues");
+			LOG(1, "Instance has issues");
 			l1.erase_after(it2);
 			it1 = it2;
 			continue;
@@ -425,7 +424,7 @@ void Main::check_instances() {
 	for (auto & tm : tms) {
 		if (!tm) {
 			// Should never happen..
-			LOG(5, "ERROR nullptr, should never happen");
+			LOG(2, "ERROR nullptr, should never happen");
 			continue;
 		}
 		// TODO
@@ -461,7 +460,7 @@ void Main::report_stats(int started_in_current_round) {
 	RMLG lg1(m_tms_to_start_mutex);
 	RMLG lg2(m_tms_to_delete_mutex);
 	RMLG lg3(m_tms_zombies_mutex);
-	LOG(1, "running {:6}   to_start: {:6}   failure {:6}   started {:5}   to_delete {:5}   zombies {:5}",
+	LOG(6, "running {:6}   to_start: {:6}   failure {:6}   started {:5}   to_delete {:5}   zombies {:5}",
 		(int)tms.size(),
 		(int)tms_to_start.size(),
 		(int)tms_failed.size(),
@@ -519,7 +518,7 @@ void Main::mapping_list() {
 
 
 void Main::forwarding_exit() {
-	LOG(5, "exit requested");
+	LOG(2, "exit requested");
 	forwarding_run = false;
 }
 
@@ -531,7 +530,7 @@ void Main::forwarding_exit() {
 
 
 void signal_handler(int signal) {
-	LOG(9, "SIGNAL {}", signal);
+	LOG(0, "SIGNAL {}", signal);
 	g__run = 0;
 }
 
@@ -561,8 +560,7 @@ int main(int argc, char ** argv) {
 		{"broker-configuration-address",    required_argument,        0,  0 },
 		{"broker-configuration-topic",      required_argument,        0,  0 },
 		{"broker-data-address",             required_argument,        0,  0 },
-		{"broker-log-address",              required_argument,        0,  0 },
-		{"broker-log-topic",                required_argument,        0,  0 },
+		{"kafka-gelf",                      required_argument,        0,  0 },
 		{"graylog-logger-address",          required_argument,        0,  0 },
 		{"config-file",                     required_argument,        0,  0 },
 		{"log-file",                        required_argument,        0,  0 },
@@ -577,10 +575,10 @@ int main(int argc, char ** argv) {
 	bool getopt_error = false;
 	while (true) {
 		int c = getopt_long(argc, argv, "hvQ", long_options, &option_index);
-		//LOG(5, "c getopt {}", c);
+		//LOG(2, "c getopt {}", c);
 		if (c == -1) break;
 		if (c == '?') {
-			//LOG(5, "option argument missing");
+			//LOG(2, "option argument missing");
 			getopt_error = true;
 		}
 		if (false) {
@@ -622,18 +620,15 @@ int main(int argc, char ** argv) {
 			if (std::string("broker-data-address") == lname) {
 				opt.broker_data_address = optarg;
 			}
-			if (std::string("broker-log-address") == lname) {
-				opt.broker_log_address = optarg;
-			}
-			if (std::string("broker-log-topic") == lname) {
-				opt.broker_log_topic = optarg;
+			if (std::string("kafka-gelf") == lname) {
+				opt.kafka_gelf = optarg;
 			}
 			if (std::string("graylog-logger-address") == lname) {
 				opt.graylog_logger_address = optarg;
 			}
 			if (std::string("kafka-message.max.bytes") == lname) {
 				opt.kafka_conf_ints["message.max.bytes"] = strtol(optarg, nullptr, 10);
-				LOG(3, "Option: {}", opt.kafka_conf_ints.at("message.max.bytes"));
+				LOG(4, "Option: {}", opt.kafka_conf_ints.at("message.max.bytes"));
 			}
 			if (std::string("forwarder-ix") == lname) {
 				opt.forwarder_ix = strtol(optarg, nullptr, 10);
@@ -653,14 +648,14 @@ int main(int argc, char ** argv) {
 	}
 
 	if (optind < argc) {
-		LOG(9, "Left-over commandline options:");
+		LOG(0, "Left-over commandline options:");
 		for (int i1 = optind; i1 < argc; ++i1) {
-			LOG(9, "{:2} {}", i1, argv[i1]);
+			LOG(0, "{:2} {}", i1, argv[i1]);
 		}
 	}
 
 	if (getopt_error) {
-		LOG(9, "ERROR parsing command line options");
+		LOG(0, "ERROR parsing command line options");
 		opt.help = true;
 		return 1;
 	}
@@ -696,11 +691,10 @@ int main(int argc, char ** argv) {
 			"      Kafka brokers to connect with for configuration updates\n"
 			"      Default: localhost:9092\n"
 			"\n"
-			"  --broker-log-address              <host:port,host:port,...>\n"
-			"  --broker-log-topic                <topic-name>\n"
+			"  --kafka-gelf                      <kafka://host[:port]/topic>\n"
 			"\n"
 			"  --graylog-logger-address          <host:port>\n"
-			"      Graylog server to be used by graylog_lgger library\n"
+			"      Log to Graylog via graylog_logger library.\n"
 			"\n"
 			"  -v\n"
 			"      Decrease log_level by one step.  Default log_level is 3.\n"
@@ -713,9 +707,10 @@ int main(int argc, char ** argv) {
 
 	opt.init_after_parse();
 
-	if (opt.broker_log_address != "" && opt.broker_log_topic != "") {
-		log_kafka_gelf_start(opt.broker_log_address, opt.broker_log_topic);
-		LOG(7, "enabled kafka_gelf");
+	if (opt.kafka_gelf != "") {
+		BrightnESS::uri::URI uri(opt.kafka_gelf);
+		log_kafka_gelf_start(uri.host, uri.topic);
+		LOG(3, "Enabled kafka_gelf: //{}/{}", uri.host, uri.topic);
 	}
 
 	if (opt.graylog_logger_address != "") {
@@ -727,10 +722,10 @@ int main(int argc, char ** argv) {
 		main.forward_epics_to_kafka();
 	}
 	catch (std::runtime_error & e) {
-		LOG(9, "CATCH runtime error in main watchdog thread: {}", e.what());
+		LOG(0, "CATCH runtime error in main watchdog thread: {}", e.what());
 	}
 	catch (std::exception & e) {
-		LOG(9, "CATCH EXCEPTION in main watchdog thread");
+		LOG(0, "CATCH EXCEPTION in main watchdog thread");
 	}
 	return 0;
 }

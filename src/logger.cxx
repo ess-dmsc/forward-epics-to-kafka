@@ -46,9 +46,13 @@ Logger::Logger() {
 }
 
 Logger::~Logger() {
+	do_run_kafka = false;
 	if (log_file != nullptr and log_file != stdout) {
-		LOG(9, "Closing log");
+		LOG(0, "Closing log");
 		fclose(log_file);
+	}
+	if (thread_poll.joinable()) {
+		thread_poll.join();
 	}
 }
 
@@ -62,6 +66,7 @@ void Logger::log_kafka_gelf_start(std::string address, std::string topicname) {
 	opt.address = address;
 	producer.reset(new KafkaW::Producer(opt));
 	topic.reset(new KafkaW::Producer::Topic(*producer, topicname));
+	topic->do_copy();
 	thread_poll = std::thread([this]{
 		while (do_run_kafka.load()) {
 			producer->poll();
@@ -88,11 +93,11 @@ void Logger::fwd_graylog_logger_enable(std::string address) {
 		port = strtol(address.c_str() + col + 1, nullptr, 10);
 	}
 	Log::RemoveAllHandlers();
-	LOG(3, "Enable graylog_logger on {}:{}", addr, port);
+	LOG(4, "Enable graylog_logger on {}:{}", addr, port);
 	Log::AddLogHandler(new GraylogInterface(addr, port));
 	do_use_graylog_logger = true;
 	#else
-	LOG(7, "ERROR not compiled with support for graylog_logger");
+	LOG(0, "ERROR not compiled with support for graylog_logger");
 	#endif
 }
 
@@ -106,7 +111,7 @@ void Logger::dwlog_inner(int level, char const * file, int line, char const * fu
 	auto f1 = file + npre;
 	auto lmsg = fmt::format("{}:{} [{}]:  {}\n", f1, line, level, s1);
 	fwrite(lmsg.c_str(), 1, lmsg.size(), log_file);
-	if (level > 1 && do_run_kafka.load()) {
+	if (level < 7 && do_run_kafka.load()) {
 		// If we will use logging to Kafka in the future, refactor a bit to reduce duplicate work..
 		using namespace rapidjson;
 		Document d;
@@ -121,10 +126,10 @@ void Logger::dwlog_inner(int level, char const * file, int line, char const * fu
 		Writer<StringBuffer> wr(buf1);
 		d.Accept(wr);
 		auto s1 = buf1.GetString();
-		topic->produce((void*)s1, strlen(s1), nullptr, true);
+		topic->produce((void*)s1, strlen(s1), nullptr);
 	}
 	#ifdef HAVE_GRAYLOG_LOGGER
-	if (do_use_graylog_logger.load() and level >= 0) {
+	if (do_use_graylog_logger.load() and level < 7) {
 		Log::Msg(level, lmsg);
 	}
 	#endif
