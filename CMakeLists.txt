@@ -1,8 +1,10 @@
 cmake_minimum_required(VERSION 2.8.11)
 project(forward-epics-to-kafka)
 
-set(REQUIRE_GTEST false CACHE BOOL "Require Google Test")
+set(REQUIRE_GTEST FALSE CACHE BOOL "Require Google Test")
 if (REQUIRE_GTEST)
+set(have_gtest 1)
+set(path_include_gtest "${CMAKE_CURRENT_SOURCE_DIR}/../googletest/googletest/include")
 add_subdirectory(../googletest googletest)
 endif()
 
