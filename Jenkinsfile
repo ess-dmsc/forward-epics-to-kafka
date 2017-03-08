@@ -9,7 +9,7 @@ node('eee') {
     dir("build") {
         stage("CMake") {
             sh "cmake ../code \
-                -Dflatc=\$DM_ROOT/usr/bin/flatc
+                -Dflatc=\$DM_ROOT/usr/bin/flatc \
                 -Dpath_include_streaming_data_types=../code/streaming-data-types \
                 -Dno_graylog_logger=TRUE"
         }
