@@ -32,8 +32,6 @@ set(epics_pvAccess_version 4.1.2)
 set(epics_pvDatabase_version 4.1.1)
 set(epics_normativeTypes_version 5.0.2)
 
-set(use_graylog_logger_if_available TRUE)
-
 
 # fmt not in the EPEL pinned by the dev-env crew.
 # So use the source version:
@@ -127,7 +125,7 @@ $ENV{streaming_data_types_dir}
 ${CMAKE_CURRENT_SOURCE_DIR}/../../streaming-data-types
 )
 
-if (use_graylog_logger_if_available)
+if (NOT DEFINED no_graylog_logger)
     find_path(path_include_graylog_logger NAMES graylog_logger/Log.hpp PATHS
     $ENV{graylog_logger_dir}/include
     /opt/local/graylog_logger-install
