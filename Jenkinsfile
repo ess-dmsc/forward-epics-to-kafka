@@ -13,7 +13,7 @@ node('eee') {
                 -Dpath_include_rdkafka=\$DM_ROOT/usr/include \
                 -Dpath_lib_rdkafka=\$DM_ROOT/usr/lib \
                 -Dpath_include_flatbuffers=\$DM_ROOT/usr/lib \
-                -Dpath_include_streaming_data_types=./streaming-data-types \
+                -Dpath_include_streaming_data_types=../code/streaming-data-types \
                 -Dno_graylog_logger=TRUE"
         }
 
