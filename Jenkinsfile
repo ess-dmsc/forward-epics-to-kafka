@@ -20,5 +20,9 @@ node('eee') {
         stage("Build") {
             sh "make VERBOSE=1"
         }
+
+        stage("Run") {
+            sh "./forward-epics-to-kafka --help"
+        }
     }
 }
