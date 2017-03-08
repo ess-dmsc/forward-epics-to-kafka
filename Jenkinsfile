@@ -11,6 +11,8 @@ node('eee') {
             sh "cmake ../code \
                 -Dflatc=\$DM_ROOT/usr/bin/flatc \
                 -Dpath_include_streaming_data_types=../code/streaming-data-types \
+                -DREQUIRE_GTEST=TRUE \
+                -Dpath_gtest=../code/googletest \
                 -Dno_graylog_logger=TRUE"
         }
 
