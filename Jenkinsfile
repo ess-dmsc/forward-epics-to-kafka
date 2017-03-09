@@ -7,7 +7,7 @@ node('eee') {
     }
 
     dir("build") {
-        stage("CMake") {
+        stage("Configure") {
             sh "cmake ../code \
                 -Dflatc=\$DM_ROOT/usr/bin/flatc \
                 -Dpath_include_streaming_data_types=../code/streaming-data-types \
@@ -22,6 +22,10 @@ node('eee') {
 
         stage("Run") {
             sh "./forward-epics-to-kafka --help || true"
+        }
+
+        stage("Archive") {
+            archiveArtifacts 'forward-epics-to-kafka'
         }
     }
 }
