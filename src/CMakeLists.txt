@@ -127,32 +127,26 @@ $ENV{DM_ROOT}/usr/include
 )
 
 find_path(path_include_streaming_data_types NAMES schemas/f141_epics_nt.fbs PATHS
+$ENV{streaming_data_types_dir}
 ${CMAKE_CURRENT_SOURCE_DIR}/../../streaming-data-types
 )
 
-find_path(path_include_graylog_logger NAMES graylog_logger/Log.hpp PATHS
-$ENV{graylog_logger_dir}/include
-/opt/local/graylog_logger-install
-)
+if (NOT DEFINED no_graylog_logger)
+    find_path(path_include_graylog_logger NAMES graylog_logger/Log.hpp PATHS
+    $ENV{graylog_logger_dir}/include
+    /opt/local/graylog_logger-install
+    )
 
-find_library(path_lib_graylog_logger NAMES graylog_logger PATHS
-$ENV{graylog_logger_dir}/lib
-/opt/local/graylog_logger-install
-)
+    find_library(path_lib_graylog_logger NAMES graylog_logger PATHS
+    $ENV{graylog_logger_dir}/lib
+    /opt/local/graylog_logger-install
+    )
 
-if (path_include_graylog_logger AND path_lib_graylog_logger)
-message(STATUS "Using graylog_logger")
-set(have_graylog_logger TRUE)
+    if (path_include_graylog_logger AND path_lib_graylog_logger)
+    message(STATUS "Using graylog_logger")
+    set(have_graylog_logger TRUE)
+    endif()
 endif()
-
-
-# Include path not needed, gtest is included for all targets by googletest's CMakeLists.txt
-#find_path(path_include_gtest NAMES gtest/gtest.h)
-#find_library(path_lib_gtest NAMES gtest)
-#if (path_lib_gtest)
-#add_library(libgtest SHARED IMPORTED)
-#set_property(TARGET libgtest PROPERTY IMPORTED_LOCATION ${path_lib_gtest})
-#endif()
 
 
 message(STATUS "path_include_fmt ${path_include_fmt}")
@@ -170,6 +164,7 @@ message(STATUS "path_include_rapidjson ${path_include_rapidjson}")
 message(STATUS "path_include_rdkafka ${path_include_rdkafka}")
 message(STATUS "path_lib_rdkafka ${path_lib_rdkafka}")
 message(STATUS "path_include_flatbuffers ${path_include_flatbuffers}")
+<<<<<<< HEAD
 message(STATUS "path_include_gtest ${path_include_gtest}")
 message(STATUS "path_lib_gtest ${path_lib_gtest}")
 message(STATUS "path_include_graylog_logger ${path_include_graylog_logger}")
@@ -177,7 +172,17 @@ message(STATUS "path_lib_graylog_logger ${path_lib_graylog_logger}")
 
 #Generate flatbuffer header files
 # Search the dev env standard locations for flatc, but it will also look in PATH
-find_program(flatc flatc PATHS "$ENV{flatc}" "$ENV{HOME}/.tools" "/opt/local/flatbuffers")
+message(STATUS "path_include_streaming_data_types ${path_include_streaming_data_types}")
+message(STATUS "path_include_graylog_logger ${path_include_graylog_logger}")
+message(STATUS "path_lib_graylog_logger ${path_lib_graylog_logger}")
+
+
+
+set(flatbuffers_generated_headers "")
+
+# Search the dev env standard locations, but it will also look in PATH
+find_program(flatc flatc PATHS "$ENV{flatc}" "$ENV{flatc_dir}" "/opt/local/flatbuffers")
+
 message(STATUS "flatc in ${flatc}")
 
 if (EXISTS ${path_include_streaming_data_types})
@@ -312,17 +317,9 @@ set_property(TARGET ${tgt} APPEND PROPERTY INCLUDE_DIRECTORIES ${path_include_co
 endif()
 
 
-if (path_include_gtest AND path_lib_gtest)
-message(STATUS "Using Google Test: ${path_include_gtest}  ${path_lib_gtest}")
-target_compile_definitions(${tgt} PRIVATE HAVE_GTEST=1)
-target_include_directories(${tgt} PRIVATE ${path_include_gtest})
-#target_link_libraries(${tgt} libgtest)
-# Defined by the CMakeLists.txt inside of the googletest repo
-target_link_libraries(${tgt} gtest)
-else()
 if (REQUIRE_GTEST)
-message(FATAL_ERROR "Google test required but not found")
-endif()
+target_compile_definitions(${tgt} PRIVATE HAVE_GTEST=1)
+target_link_libraries(${tgt} gtest)
 endif()
 
 if (have_graylog_logger)

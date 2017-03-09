@@ -541,12 +541,15 @@ void signal_handler(int signal) {
 #endif
 
 int main(int argc, char ** argv) {
-	#if HAVE_GTEST
-	if (argc == 2 and strcmp("--test", argv[1]) == 0) {
+	if (strcmp("--test-no-opt", argv[1]) == 0) {
+		#if HAVE_GTEST
 		::testing::InitGoogleTest(&argc, argv);
 		return RUN_ALL_TESTS();
+		#else
+		LOG(3, "You asked for --test-no-opt but this binary is not compiled with gtest");
+		return 1;
+		#endif
 	}
-	#endif
 	std::signal(SIGINT, signal_handler);
 	std::signal(SIGTERM, signal_handler);
 	BrightnESS::ForwardEpicsToKafka::MainOpt opt;
