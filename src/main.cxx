@@ -697,7 +697,7 @@ int main(int argc, char ** argv) {
 			"  --broker-log-topic                <topic-name>\n"
 			"\n"
 			"  --graylog-logger-address          <host:port>\n"
-			"      Graylog server to be used by graylog_lgger library\n"
+			"      Graylog server to be used by graylog_logger library\n"
 			"\n"
 			"  -v\n"
 			"      Decrease log_level by one step.  Default log_level is 3.\n"
