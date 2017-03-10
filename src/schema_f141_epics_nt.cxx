@@ -1,7 +1,8 @@
 #include "logger.h"
-#include "epics-to-fb.h"
+#include "SchemaRegistry.h"
 #include "helper.h"
 #include "schemas/f141_epics_nt_generated.h"
+#include "epics-to-fb.h"
 
 namespace BrightnESS {
 namespace FlatBufs {

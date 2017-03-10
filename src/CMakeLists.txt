@@ -260,6 +260,7 @@ endif()
 
 
 set(SOURCES
+MainOpt.cxx
 helper.cxx
 logger.cxx
 configuration.cxx
@@ -269,7 +270,7 @@ KafkaW.cxx
 epics.cxx
 Config.cxx
 fbschemas.cxx
-epics-to-fb.cxx
+SchemaRegistry.cxx
 uri.cxx
 blobs.cxx
 schema_f140_general.cxx
