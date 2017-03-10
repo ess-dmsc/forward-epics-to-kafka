@@ -164,7 +164,7 @@ message(STATUS "path_include_rapidjson ${path_include_rapidjson}")
 message(STATUS "path_include_rdkafka ${path_include_rdkafka}")
 message(STATUS "path_lib_rdkafka ${path_lib_rdkafka}")
 message(STATUS "path_include_flatbuffers ${path_include_flatbuffers}")
-<<<<<<< HEAD
+
 message(STATUS "path_include_gtest ${path_include_gtest}")
 message(STATUS "path_lib_gtest ${path_lib_gtest}")
 message(STATUS "path_include_graylog_logger ${path_include_graylog_logger}")
@@ -185,33 +185,33 @@ find_program(flatc flatc PATHS "$ENV{flatc}" "$ENV{flatc_dir}" "/opt/local/flatb
 
 message(STATUS "flatc in ${flatc}")
 
-if (EXISTS ${path_include_streaming_data_types})
-    message(STATUS "path_include_streaming_data_types ${path_include_streaming_data_types}")
-    set(flatbuffers_generated_headers "")
-    set(schemas_subdir "schemas")
-    set(head_out_dir "${CMAKE_CURRENT_BINARY_DIR}/${schemas_subdir}")
-    file(MAKE_DIRECTORY ${head_out_dir})
-    file(GLOB_RECURSE flatbuffers_schemata2 RELATIVE "${streaming-data-types_SOURCE_DIR}/schemas/*.fbs" "${path_include_streaming_data_types}/schemas" "${path_include_streaming_data_types}/schemas/*.fbs")
-
-    foreach (f0 ${flatbuffers_schemata2})
-    	string(REGEX REPLACE "\\.fbs$" "" s0 ${f0})
-    	#message(STATUS "s0: ${s0}")
-    	set(fbs "${s0}.fbs")
-    	set(fbh "${s0}_generated.h")
-    	#message(STATUS "fbs: ${fbs}")
-    	#message(STATUS "fbh: ${fbh}")
-    	add_custom_command(
-    		OUTPUT "${head_out_dir}/${fbh}"
-    		COMMAND ${flatc} --cpp --gen-mutable --gen-name-strings --scoped-enums "${path_include_streaming_data_types}/schemas/${fbs}"
-    		DEPENDS "${path_include_streaming_data_types}/schemas/${fbs}"
-    		WORKING_DIRECTORY "${head_out_dir}"
-    		COMMENT "Process ${fbs} using ${flatc}"
-    	)
-    	list(APPEND flatbuffers_generated_headers "${head_out_dir}/${fbh}")
-    endforeach()
-
-    add_custom_target(flatbuffers_generate ALL DEPENDS ${flatbuffers_generated_headers})
-else()
+# if (EXISTS ${path_include_streaming_data_types})
+#     message(STATUS "path_include_streaming_data_types ${path_include_streaming_data_types}")
+#     set(flatbuffers_generated_headers "")
+#     set(schemas_subdir "schemas")
+#     set(head_out_dir "${CMAKE_CURRENT_BINARY_DIR}/${schemas_subdir}")
+#     file(MAKE_DIRECTORY ${head_out_dir})
+#     file(GLOB_RECURSE flatbuffers_schemata2 RELATIVE "${streaming-data-types_SOURCE_DIR}/schemas/*.fbs" "${path_include_streaming_data_types}/schemas" "${path_include_streaming_data_types}/schemas/*.fbs")
+#
+#     foreach (f0 ${flatbuffers_schemata2})
+#         string(REGEX REPLACE "\\.fbs$" "" s0 ${f0})
+#         #message(STATUS "s0: ${s0}")
+#         set(fbs "${s0}.fbs")
+#         set(fbh "${s0}_generated.h")
+#         #message(STATUS "fbs: ${fbs}")
+#         #message(STATUS "fbh: ${fbh}")
+#         add_custom_command(
+#             OUTPUT "${head_out_dir}/${fbh}"
+#             COMMAND ${flatc} --cpp --gen-mutable --gen-name-strings --scoped-enums "${path_include_streaming_data_types}/schemas/${fbs}"
+#             DEPENDS "${path_include_streaming_data_types}/schemas/${fbs}"
+#             WORKING_DIRECTORY "${head_out_dir}"
+#             COMMENT "Process ${fbs} using ${flatc}"
+#         )
+#         list(APPEND flatbuffers_generated_headers "${head_out_dir}/${fbh}")
+#     endforeach()
+#
+#     add_custom_target(flatbuffers_generate ALL DEPENDS ${flatbuffers_generated_headers})
+# else()
     message(STATUS "Downloading streaming data types.")
     include(DownloadProject)
     download_project(PROJ                streaming-data-types
@@ -223,7 +223,7 @@ else()
         message(STATUS "Generating header file for ${fb_file}.")
         execute_process(COMMAND ${flatc} --cpp --gen-mutable --gen-name-strings --scoped-enums -o ${fb_header_INC} ${fb_file})
     endforeach()
-endif()
+# endif()
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -fPIC -g")
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0 -fno-inline")
@@ -291,7 +291,7 @@ endif (WIN32)
 add_executable(${tgt} ${SOURCES})
 set_property(TARGET ${tgt} PROPERTY RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/..")
 
-add_dependencies(${tgt} flatbuffers_generate)
+#add_dependencies(${tgt} flatbuffers_generate)
 add_dependencies(${tgt} git_commit_current)
 
 target_include_directories(${tgt} PRIVATE
