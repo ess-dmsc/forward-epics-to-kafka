@@ -3,6 +3,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ../../tests)
 set(tgt "tests")
 set(sources
 tests.cxx
+MainOpt.cxx
 $<TARGET_OBJECTS:__objects>
 )
 add_executable(${tgt} ${sources})
@@ -26,4 +27,4 @@ target_include_directories(${tgt} PRIVATE ${path_include_gtest})
 target_link_libraries(${tgt} gtest)
 endif()
 
-#configure_file(schema-command.json ../../tests/schema-command.json)
+configure_file(test-config-valid.json ../../tests/test-config-valid.json)

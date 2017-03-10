@@ -25,10 +25,10 @@ using std::vector;
 
 
 
-void MainOpt::parse_json(string config_file) {
+int MainOpt::parse_json_file(string config_file) {
 	if (config_file == "") {
 		LOG(3, "given config filename is empty");
-		return;
+		return -1;
 	}
 	this->config_file = config_file;
 	using namespace rapidjson;
@@ -39,11 +39,11 @@ void MainOpt::parse_json(string config_file) {
 	}
 	catch (...) {
 		LOG(7, "ERROR schema is not valid!");
-		return;
+		return -2;
 	}
 	if (schema_.HasParseError()) {
 		LOG(7, "ERROR could not parse schema");
-		return;
+		return -3;
 	}
 	SchemaDocument schema(schema_);
 
@@ -52,7 +52,7 @@ void MainOpt::parse_json(string config_file) {
 	FILE * f1 = fopen(config_file.c_str(), "rb");
 	if (not f1) {
 		LOG(3, "can not find the requested config-file");
-		return;
+		return -4;
 	}
 	int const N1 = 16000;
 	char buf1[N1];
@@ -65,7 +65,7 @@ void MainOpt::parse_json(string config_file) {
 
 	if (d.HasParseError()) {
 		LOG(7, "ERROR configuration is not well formed");
-		return;
+		return -5;
 	}
 	SchemaValidator vali(schema);
 	if (!d.Accept(vali)) {
@@ -80,7 +80,7 @@ void MainOpt::parse_json(string config_file) {
 			LOG(7, "Sorry, you have probably specified more properties than what is allowed by the schema.");
 		}
 		LOG(7, "ERROR configuration is not valid");
-		return;
+		return -6;
 	}
 	vali.Reset();
 
@@ -119,6 +119,7 @@ void MainOpt::parse_json(string config_file) {
 			}
 		}
 	}
+	return 0;
 }
 
 
@@ -183,7 +184,7 @@ std::pair<int, std::unique_ptr<MainOpt>> parse_opt(int argc, char ** argv) {
 				opt.help = true;
 			}
 			if (std::string("config-file") == lname) {
-				opt.parse_json(optarg);
+				opt.parse_json_file(optarg);
 			}
 			if (std::string("log-file") == lname) {
 				opt.log_file = optarg;

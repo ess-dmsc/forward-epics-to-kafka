@@ -29,7 +29,7 @@ FlatBufs::SchemaRegistry schema_registry;
 // When parsing options, we keep the json document because it may also contain
 // some topic mappings which are read by the Main.
 std::shared_ptr<rapidjson::Document> json = nullptr;
-void parse_json(string config_file);
+int parse_json_file(string config_file);
 KafkaW::BrokerOpt broker_opt;
 
 void init_after_parse();
