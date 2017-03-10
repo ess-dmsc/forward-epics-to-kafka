@@ -11,6 +11,7 @@
 #include <cstring>
 #include <csignal>
 #include <atomic>
+#include <iostream>
 
 #include <fmt/format.h>
 #include "logger.h"
@@ -48,9 +49,9 @@ using std::vector;
 
 
 struct MainOpt {
-string broker_configuration_address = "localhost:9092";
+string broker_configuration_address = "10.4.0.216:9092";
 string broker_configuration_topic = "configuration.global";
-string broker_data_address = "localhost:9092";
+string broker_data_address = "10.4.0.216:9092";
 string broker_log_address = "";
 string broker_log_topic = "";
 string graylog_logger_address = "";
@@ -92,7 +93,7 @@ void MainOpt::parse_json(string config_file) {
 	FileReadStream is(f1, buf1, N1);
 	json = std::make_shared<Document>();
 	auto & d = * json;
-	//d.ParseStream<0, UTF8<>, FileReadStream>(is);
+    
 	d.ParseStream(is);
 	fclose(f1);
 	f1 = 0;
@@ -101,6 +102,9 @@ void MainOpt::parse_json(string config_file) {
 	PrettyWriter<StringBuffer> wr(sb1);
 	d.Accept(wr);
 	LOG(9, "Document is: {}", sb1.GetString());*/
+    if (d.HasParseError()) {
+        std::cout << "Failed to parse json." << std::endl;
+    }
 
 	if (d.IsNull()) {
 		LOG(9, "ERROR can not parse configuration file");
@@ -218,6 +222,10 @@ void ConfigCB::operator() (std::string const & msg) {
 	LOG(0, "Command received: {}", msg.c_str());
 	Document j0;
 	j0.Parse(msg.c_str());
+    if (j0.HasParseError()) {
+        LOG(9, "ERROR Message is not valid JSON.");
+        return;
+    }
 	if (j0["cmd"] == "add") {
 		auto channel = j0["channel"].GetString();
 		auto topic   = j0["topic"].GetString();
@@ -242,6 +250,7 @@ void ConfigCB::operator() (std::string const & msg) {
 
 
 Main::Main(MainOpt opt) : main_opt(opt), kafka_instance_set(Kafka::InstanceSet::Set(opt.broker_opt)) {
+    std::cout << "Elements in list:" << (*opt.json)["mappings"].Size() << std::endl;
 	if (main_opt.json) {
 		if (main_opt.json->HasMember("mappings")) {
 			auto & ms = (*main_opt.json)["mappings"];
@@ -541,7 +550,7 @@ void signal_handler(int signal) {
 #endif
 
 int main(int argc, char ** argv) {
-	if (strcmp("--test-no-opt", argv[1]) == 0) {
+	if (strcmp("--test-no-opt", argv[0]) == 0) {
 		#if HAVE_GTEST
 		::testing::InitGoogleTest(&argc, argv);
 		return RUN_ALL_TESTS();

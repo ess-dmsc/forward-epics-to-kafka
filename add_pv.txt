@@ -1,0 +1,1 @@
+{"mappings":[{"cmd":"add", "channel":"DMSC:KFK:DroppedArrays_RBV", "topic":"ArrayCounterTopic", "type":"f141"}]}
