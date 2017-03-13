@@ -50,6 +50,15 @@ static_ini::static_ini() {
 		URI::re1 = re;
 	}
 	{
+		auto s1 = (uchar*) "^\\s*(([-.A-Za-z0-9]+)(:([0-9]+))?)(/([-./A-Za-z0-9]*))?\\s*$";
+		auto re = pcre2_compile_8(s1, PCRE2_ZERO_TERMINATED, 0, &err, &errpos, nullptr);
+		if (!re) {
+			p_regerr(err);
+			throw std::runtime_error("can not compile regex");
+		}
+		URI::re_host_no_slashes = re;
+	}
+	{
 		auto s1 = (uchar*) "^/?([-./A-Za-z0-9]*)$";
 		auto re = pcre2_compile_8(s1, PCRE2_ZERO_TERMINATED, 0, &err, &errpos, nullptr);
 		if (!re) {
@@ -71,9 +80,10 @@ static_ini::static_ini() {
 
 
 static_ini::~static_ini() {
+	if (auto & x = URI::re1) pcre2_code_free(x);
+	if (auto & x = URI::re_host_no_slashes) pcre2_code_free(x);
 	if (auto & x = URI::re_no_host) pcre2_code_free(x);
 	if (auto & x = URI::re_topic) pcre2_code_free(x);
-	if (auto & x = URI::re1) pcre2_code_free(x);
 }
 
 
@@ -97,7 +107,16 @@ URI::~URI() {
 }
 
 
+URI::URI() {
+}
+
+
 URI::URI(std::string uri) {
+	init(uri);
+}
+
+
+void URI::init(std::string uri) {
 	using std::vector;
 	using std::string;
 	auto p0 = uri.data();
@@ -118,6 +137,20 @@ URI::URI(std::string uri) {
 			path = m.cg(7).substr(p0);
 		}
 	}
+	if (!match && !require_host_slashes) {
+		int x;
+		x = pcre2_match(re_host_no_slashes, (uchar*)uri.data(), uri.size(), 0, 0, mdd, nullptr);
+		if (x >= 0) {
+			match = true;
+			MD m(mdd);
+			host = m.cg(2).substr(p0);
+			auto cg = m.cg(4);
+			if (cg.n > 0) {
+				port = strtoul(string(p0 + cg.a, cg.n).data(), nullptr, 10);
+			}
+			path = m.cg(5).substr(p0);
+		}
+	}
 	if (!match) {
 		int x;
 		x = pcre2_match(re_no_host, (uchar*)uri.data(), uri.size(), 0, 0, mdd, nullptr);
@@ -133,6 +166,7 @@ URI::URI(std::string uri) {
 
 
 pcre2_code * URI::re1 = nullptr;
+pcre2_code * URI::re_host_no_slashes = nullptr;
 pcre2_code * URI::re_no_host = nullptr;
 pcre2_code * URI::re_topic = nullptr;
 
@@ -179,6 +213,14 @@ TEST(URI, ip) {
 }
 TEST(URI, host_port) {
 	URI u1("//myhost:345");
+	ASSERT_EQ(u1.scheme, "");
+	ASSERT_EQ(u1.host, "myhost");
+	ASSERT_EQ(u1.port, (uint32_t)345);
+}
+TEST(URI, host_port_noslashes) {
+	URI u1;
+	u1.require_host_slashes = false;
+	u1.init("myhost:345");
 	ASSERT_EQ(u1.scheme, "");
 	ASSERT_EQ(u1.host, "myhost");
 	ASSERT_EQ(u1.port, (uint32_t)345);
