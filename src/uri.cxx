@@ -41,7 +41,7 @@ static_ini::static_ini() {
 	int err = 0;
 	size_t errpos = 0;
 	{
-		auto s1 = (uchar*) "^(([a-z]+):)?//(([-.A-Za-z0-9]+)(:([0-9]+))?)(/([-./A-Za-z0-9]*))?$";
+		auto s1 = (uchar*) "^\\s*(([a-z]+):)?//(([-.A-Za-z0-9]+)(:([0-9]+))?)(/([-./A-Za-z0-9]*))?\\s*$";
 		auto re = pcre2_compile_8(s1, PCRE2_ZERO_TERMINATED, 0, &err, &errpos, nullptr);
 		if (!re) {
 			p_regerr(err);
@@ -171,10 +171,22 @@ TEST(URI, host) {
 	ASSERT_EQ(u1.host, "myhost");
 	ASSERT_EQ(u1.port, (uint32_t)0);
 }
+TEST(URI, ip) {
+	URI u1("//127.0.0.1");
+	ASSERT_EQ(u1.scheme, "");
+	ASSERT_EQ(u1.host, "127.0.0.1");
+	ASSERT_EQ(u1.port, (uint32_t)0);
+}
 TEST(URI, host_port) {
 	URI u1("//myhost:345");
 	ASSERT_EQ(u1.scheme, "");
 	ASSERT_EQ(u1.host, "myhost");
+	ASSERT_EQ(u1.port, (uint32_t)345);
+}
+TEST(URI, ip_port) {
+	URI u1("//127.0.0.1:345");
+	ASSERT_EQ(u1.scheme, "");
+	ASSERT_EQ(u1.host, "127.0.0.1");
 	ASSERT_EQ(u1.port, (uint32_t)345);
 }
 TEST(URI, scheme_host_port) {
