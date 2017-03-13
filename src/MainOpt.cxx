@@ -13,6 +13,7 @@
 #include <rapidjson/stringbuffer.h>
 #include <rapidjson/filereadstream.h>
 #include <rapidjson/schema.h>
+#include "helper.h"
 #include "logger.h"
 #include "blobs.h"
 #include "SchemaRegistry.h"
@@ -23,6 +24,16 @@ namespace ForwardEpicsToKafka {
 using std::string;
 using std::vector;
 
+
+void MainOpt::set_broker(string broker) {
+	auto a = split(broker, ",");
+	for (auto & x : a) {
+		uri::URI u1;
+		u1.require_host_slashes = false;
+		u1.init(x);
+		brokers.push_back(u1);
+	}
+}
 
 
 int MainOpt::parse_json_file(string config_file) {
@@ -85,9 +96,9 @@ int MainOpt::parse_json_file(string config_file) {
 	vali.Reset();
 
 	{
-		auto & v = d.FindMember("broker-data-address")->value;
+		auto & v = d.FindMember("broker")->value;
 		if (v.IsString()) {
-			broker_data_address = v.GetString();
+			set_broker(v.GetString());
 		}
 	}
 	{
@@ -125,9 +136,14 @@ int MainOpt::parse_json_file(string config_file) {
 
 
 void MainOpt::init_after_parse() {
-	// TODO
-	// Remove duplicates, eliminate the need for this function
-	broker_opt.address = broker_data_address;
+	string s1;
+	int i1 = 0;
+	for (auto & x : brokers) {
+		if (i1 > 0) s1 += ",";
+		s1 += x.host_port;
+		++i1;
+	}
+	broker_opt.address = s1;
 }
 
 
@@ -139,7 +155,7 @@ std::pair<int, std::unique_ptr<MainOpt>> parse_opt(int argc, char ** argv) {
 		{"help",                            no_argument,              0, 'h'},
 		{"broker-configuration-address",    required_argument,        0,  0 },
 		{"broker-configuration-topic",      required_argument,        0,  0 },
-		{"broker-data-address",             required_argument,        0,  0 },
+		{"broker",                          required_argument,        0,  0 },
 		{"kafka-gelf",                      required_argument,        0,  0 },
 		{"graylog-logger-address",          required_argument,        0,  0 },
 		{"config-file",                     required_argument,        0,  0 },
@@ -195,8 +211,8 @@ std::pair<int, std::unique_ptr<MainOpt>> parse_opt(int argc, char ** argv) {
 			if (std::string("broker-configuration-topic") == lname) {
 				opt.broker_configuration_topic = optarg;
 			}
-			if (std::string("broker-data-address") == lname) {
-				opt.broker_data_address = optarg;
+			if (std::string("broker") == lname) {
+				opt.set_broker(optarg);
 			}
 			if (std::string("kafka-gelf") == lname) {
 				opt.kafka_gelf = optarg;

@@ -2,8 +2,11 @@
 #include <vector>
 #include <string>
 #include <rapidjson/document.h>
+#include "uri.h"
 #include "KafkaW.h"
 #include "SchemaRegistry.h"
+
+class MainOpt_T;
 
 namespace BrightnESS {
 namespace ForwardEpicsToKafka {
@@ -12,9 +15,10 @@ using std::string;
 using std::vector;
 
 struct MainOpt {
+void set_broker(string broker);
 string broker_configuration_address = "localhost:9092";
 string broker_configuration_topic = "configuration.global";
-string broker_data_address = "localhost:9092";
+vector<uri::URI> brokers;
 string kafka_gelf = "";
 string graylog_logger_address = "";
 bool help = false;
@@ -33,6 +37,7 @@ int parse_json_file(string config_file);
 KafkaW::BrokerOpt broker_opt;
 
 void init_after_parse();
+friend class ::MainOpt_T;
 };
 
 
