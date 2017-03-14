@@ -41,7 +41,7 @@ static_ini::static_ini() {
 	int err = 0;
 	size_t errpos = 0;
 	{
-		auto s1 = (uchar*) "^\\s*(([a-z]+):)?//(([-.A-Za-z0-9]+)(:([0-9]+))?)(/([-./A-Za-z0-9]*))?\\s*$";
+		auto s1 = (uchar*) "^\\s*(([a-z]+):)?//(([-._A-Za-z0-9]+)(:([0-9]+))?)(/([-./_A-Za-z0-9]*))?\\s*$";
 		auto re = pcre2_compile_8(s1, PCRE2_ZERO_TERMINATED, 0, &err, &errpos, nullptr);
 		if (!re) {
 			p_regerr(err);
@@ -50,7 +50,7 @@ static_ini::static_ini() {
 		URI::re1 = re;
 	}
 	{
-		auto s1 = (uchar*) "^\\s*(([-.A-Za-z0-9]+)(:([0-9]+))?)(/([-./A-Za-z0-9]*))?\\s*$";
+		auto s1 = (uchar*) "^\\s*(([-._A-Za-z0-9]+)(:([0-9]+))?)(/([-./_A-Za-z0-9]*))?\\s*$";
 		auto re = pcre2_compile_8(s1, PCRE2_ZERO_TERMINATED, 0, &err, &errpos, nullptr);
 		if (!re) {
 			p_regerr(err);
@@ -59,7 +59,7 @@ static_ini::static_ini() {
 		URI::re_host_no_slashes = re;
 	}
 	{
-		auto s1 = (uchar*) "^/?([-./A-Za-z0-9]*)$";
+		auto s1 = (uchar*) "^/?([-./_A-Za-z0-9]*)$";
 		auto re = pcre2_compile_8(s1, PCRE2_ZERO_TERMINATED, 0, &err, &errpos, nullptr);
 		if (!re) {
 			p_regerr(err);
@@ -68,7 +68,7 @@ static_ini::static_ini() {
 		URI::re_no_host = re;
 	}
 	{
-		auto s1 = (uchar*) "^/?([-.A-Za-z0-9]+)$";
+		auto s1 = (uchar*) "^/?([-._A-Za-z0-9]+)$";
 		auto re = pcre2_compile_8(s1, PCRE2_ZERO_TERMINATED, 0, &err, &errpos, nullptr);
 		if (!re) {
 			p_regerr(err);
@@ -255,17 +255,17 @@ TEST(URI, scheme_host_port_pathdefault) {
 	ASSERT_EQ(u1.path, "/");
 }
 TEST(URI, scheme_host_port_path) {
-	URI u1("kafka://my-host.com:8080/some");
+	URI u1("kafka://my-host.com:8080/som_e");
 	ASSERT_EQ(u1.scheme, "kafka");
 	ASSERT_EQ(u1.host, "my-host.com");
 	ASSERT_EQ(u1.port, (uint32_t)8080);
-	ASSERT_EQ(u1.path, "/some");
-	ASSERT_EQ(u1.topic, "some");
+	ASSERT_EQ(u1.path, "/som_e");
+	ASSERT_EQ(u1.topic, "som_e");
 }
 TEST(URI, scheme_host_port_pathlonger) {
-	URI u1("kafka://my-host.com:8080/some/longer");
+	URI u1("kafka://my_host.com:8080/some/longer");
 	ASSERT_EQ(u1.scheme, "kafka");
-	ASSERT_EQ(u1.host, "my-host.com");
+	ASSERT_EQ(u1.host, "my_host.com");
 	ASSERT_EQ(u1.port, (uint32_t)8080);
 	ASSERT_EQ(u1.path, "/some/longer");
 	ASSERT_EQ(u1.topic, "");
