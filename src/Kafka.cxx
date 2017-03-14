@@ -76,11 +76,11 @@ int Instance::load() {
 Instance::Instance(KafkaW::BrokerOpt opt) : opt(opt), producer(KafkaW::Producer(opt)) {
 	static int id_ = 0;
 	id = id_++;
-	LOG(2, "Instance {} created.", id.load());
+	LOG(4, "Instance {} created.", id.load());
 }
 
 Instance::~Instance() {
-	LOG(2, "Instance {} goes away.", id.load());
+	LOG(4, "Instance {} goes away.", id.load());
 	poll_stop();
 }
 
@@ -115,13 +115,13 @@ void Instance::poll_run() {
 		i1 += 1;
 		std::this_thread::sleep_for(std::chrono::milliseconds(750));
 	}
-	ILOG(4, "Poll finished");
+	ILOG(7, "Poll finished");
 }
 
 void Instance::poll_stop() {
 	do_poll = false;
 	poll_thread.join();
-	ILOG(4, "Poll thread joined");
+	ILOG(7, "Poll thread joined");
 }
 
 
@@ -161,7 +161,7 @@ sptr<Topic> Instance::get_or_create_topic(std::string topic_name, int id) {
 	}
 	auto ins = self.lock();
 	if (!ins) {
-		LOG(4, "ERROR self is no longer alive");
+		LOG(3, "ERROR self is no longer alive");
 		return nullptr;
 	}
 	auto sp = sptr<Topic>(new Topic(ins, topic_name, id));

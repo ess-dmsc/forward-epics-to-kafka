@@ -201,25 +201,25 @@ Consumer::Consumer(BrokerOpt opt) : opt(opt) {
 
 
 Consumer::~Consumer() {
-	LOG(-1, "~Consumer()");
+	LOG(7, "~Consumer()");
 	if (rk) {
 		// commit offsets?
 		if (0) {
-			LOG(-1, "rd_kafka_unsubscribe");
+			LOG(7, "rd_kafka_unsubscribe");
 			rd_kafka_unsubscribe(rk);
 		}
 		if (0) {
-			LOG(-1, "rd_kafka_poll");
+			LOG(7, "rd_kafka_poll");
 			int n1 = rd_kafka_poll(rk, 100);
-			LOG(-1, "  served {} reuests", n1);
+			LOG(7, "  served {} reuests", n1);
 		}
 		if (1) {
-			LOG(-1, "rd_kafka_consumer_close");
+			LOG(7, "rd_kafka_consumer_close");
 			rd_kafka_consumer_close(rk);
 		}
 		// rd_kafka_consume_stop(rd_kafka_topic_t *, partition)  therefore low-level API?
 		if (1) {
-			LOG(-1, "rd_kafka_destroy");
+			LOG(7, "rd_kafka_destroy");
 			rd_kafka_destroy(rk);
 			rk = nullptr;
 		}
@@ -259,7 +259,7 @@ int Consumer::cb_stats(rd_kafka_t * rk, char * json, size_t json_size, void * op
 static void print_partition_list(rd_kafka_topic_partition_list_t * plist) {
 	for (int i1 = 0; i1 < plist->cnt; ++i1) {
 		auto & x = plist->elems[i1];
-		LOG(4, "   {}  {}  {}", x.topic, x.partition, x.offset);
+		LOG(7, "   {}  {}  {}", x.topic, x.partition, x.offset);
 	}
 }
 
@@ -498,17 +498,17 @@ void Producer::cb_throttle(rd_kafka_t * rk, char const * broker_name, int32_t br
 
 
 Producer::~Producer() {
-	LOG(-1, "~Producer");
+	LOG(7, "~Producer");
 	if (rk) {
 		int ns = 10;
 		while (rd_kafka_outq_len(rk) > 0) {
 			auto n1 = rd_kafka_poll(rk, ns);
 			if (n1 > 0) {
-				LOG(-1, "rd_kafka_poll handled {}, timeout {}", n1, ns);
+				LOG(7, "rd_kafka_poll handled {}, timeout {}", n1, ns);
 			}
 			ns = std::min(500, ns * 3 / 2);
 		}
-		LOG(-1, "rd_kafka_destroy");
+		LOG(7, "rd_kafka_destroy");
 		rd_kafka_destroy(rk);
 		rk = nullptr;
 	}
@@ -531,7 +531,7 @@ Producer::Producer(BrokerOpt opt) : opt(opt) {
 	rd_kafka_conf_set_throttle_cb(conf, Producer::cb_throttle);
 
 	rd_kafka_conf_set_opaque(conf, this);
-	LOG(-1, "Producer opaque: {}", (void*)this);
+	LOG(7, "Producer opaque: {}", (void*)this);
 
 	opt.apply(conf);
 
@@ -575,18 +575,18 @@ rd_kafka_t * Producer::rd_kafka_ptr() const {
 
 
 ProducerTopic::~ProducerTopic() {
-	LOG(-1, "~ProducerTopic");
+	LOG(7, "~ProducerTopic");
 	if (rkt) {
 		auto rk = producer.rd_kafka_ptr();
 		int ns = 10;
 		while (rd_kafka_outq_len(rk) > 0) {
 			auto n1 = rd_kafka_poll(rk, ns);
 			if (n1 > 0) {
-				LOG(-1, "rd_kafka_poll handled {}, timeout {}", n1, ns);
+				LOG(7, "rd_kafka_poll handled {}, timeout {}", n1, ns);
 			}
 			ns = std::min(500, ns << 2);
 		}
-		LOG(-1, "rd_kafka_topic_destroy");
+		LOG(7, "rd_kafka_topic_destroy");
 		rd_kafka_topic_destroy(rkt);
 		rkt = nullptr;
 	}
@@ -608,7 +608,7 @@ ProducerTopic::ProducerTopic(Producer const & producer, std::string name) : prod
 		LOG(0, "ERROR could not create Kafka topic: {}", errstr);
 		throw std::exception();
 	}
-	LOG(-1, "Ctor topic {} finished", rd_kafka_topic_name(rkt));
+	LOG(7, "ctor topic: {}  producer: {}", rd_kafka_topic_name(rkt), rd_kafka_name(producer.rd_kafka_ptr()));
 }
 
 
@@ -650,7 +650,7 @@ int ProducerTopic::produce(void * msg_data, int msg_size, void * opaque, bool pr
 			);
 		}
 		else {
-			LOG(-1, "sent to topic {} partition {}", rd_kafka_topic_name(rkt), partition);
+			LOG(7, "sent to topic {} partition {}", rd_kafka_topic_name(rkt), partition);
 		}
 	}
 
