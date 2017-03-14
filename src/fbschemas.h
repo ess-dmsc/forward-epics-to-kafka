@@ -14,6 +14,7 @@ class FB;
 class fballoc : public flatbuffers::simple_allocator {
 public:
 fballoc();
+fballoc(int);
 uint8_t * allocate(size_t size) const override;
 void deallocate(uint8_t * p) const override;
 ~fballoc() { }
@@ -29,7 +30,8 @@ size_t size;
 class FB : public KafkaW::ProducerMsg {
 public:
 FB();
-//void finalize();
+FB(uint32_t initial_size);
+FB(uint32_t initial_size, bool custom);
 FBmsg message();
 std::unique_ptr<flatbuffers::FlatBufferBuilder> builder;
 // Used for performance measurements:
