@@ -438,6 +438,9 @@ void Producer::cb_delivered(rd_kafka_t * rk, rd_kafka_message_t const * msg, voi
 		if (msg->err == RD_KAFKA_RESP_ERR__MSG_TIMED_OUT) {
 			// TODO
 		}
+		if (auto p = self->on_delivery_failed) {
+			(*p)(msg);
+		}
 	}
 	else {
 		if (auto p = self->on_delivery_ok) {

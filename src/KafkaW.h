@@ -118,6 +118,7 @@ static void cb_log(rd_kafka_t const * rk, int level, char const * fac, char cons
 static void cb_throttle(rd_kafka_t * rk, char const * broker_name, int32_t broker_id, int throttle_time_ms, void * opaque);
 rd_kafka_t * rd_kafka_ptr() const;
 std::function<void(rd_kafka_message_t const * msg)> * on_delivery_ok = nullptr;
+std::function<void(rd_kafka_message_t const * msg)> * on_delivery_failed = nullptr;
 void (*on_error) (Producer *, rd_kafka_resp_err_t) = nullptr;
 // Currently it's nice to have acces to these two for statistics:
 BrokerOpt opt;
