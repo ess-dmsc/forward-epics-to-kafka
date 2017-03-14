@@ -17,6 +17,7 @@
 #include "logger.h"
 #include "blobs.h"
 #include "SchemaRegistry.h"
+#include "git_commit_current.h"
 
 namespace BrightnESS {
 namespace ForwardEpicsToKafka {
@@ -25,7 +26,13 @@ using std::string;
 using std::vector;
 
 
+MainOpt::MainOpt() {
+	set_broker("localhost:9092");
+}
+
+
 void MainOpt::set_broker(string broker) {
+	brokers.clear();
 	auto a = split(broker, ",");
 	for (auto & x : a) {
 		uri::URI u1;
@@ -33,6 +40,18 @@ void MainOpt::set_broker(string broker) {
 		u1.init(x);
 		brokers.push_back(u1);
 	}
+}
+
+
+std::string MainOpt::brokers_as_comma_list() const {
+	std::string s1;
+	int i1 = 0;
+	for (auto & x : brokers) {
+		if (i1) s1 += ",";
+		s1 += x.host_port;
+		++i1;
+	}
+	return s1;
 }
 
 
@@ -135,26 +154,12 @@ int MainOpt::parse_json_file(string config_file) {
 
 
 
-void MainOpt::init_after_parse() {
-	string s1;
-	int i1 = 0;
-	for (auto & x : brokers) {
-		if (i1 > 0) s1 += ",";
-		s1 += x.host_port;
-		++i1;
-	}
-	broker_opt.address = s1;
-}
-
-
-
 std::pair<int, std::unique_ptr<MainOpt>> parse_opt(int argc, char ** argv) {
-	std::unique_ptr<MainOpt> opt_(new MainOpt);
-	auto & opt = *opt_;
+	std::pair<int, std::unique_ptr<MainOpt>> ret {0, std::unique_ptr<MainOpt>(new MainOpt)};
+	auto & opt = *ret.second;
 	static struct option long_options[] = {
 		{"help",                            no_argument,              0, 'h'},
-		{"broker-configuration-address",    required_argument,        0,  0 },
-		{"broker-configuration-topic",      required_argument,        0,  0 },
+		{"broker-config",                   required_argument,        0,  0 },
 		{"broker",                          required_argument,        0,  0 },
 		{"kafka-gelf",                      required_argument,        0,  0 },
 		{"graylog-logger-address",          required_argument,        0,  0 },
@@ -188,10 +193,10 @@ std::pair<int, std::unique_ptr<MainOpt>> parse_opt(int argc, char ** argv) {
 			opt.help = true;
 			break;
 		case 'v':
-			log_level = std::max(0, log_level - 1);
+			log_level = std::min(9, log_level + 1);
 			break;
 		case 'Q':
-			log_level = std::min(9, log_level + 1);
+			log_level = std::max(0, log_level - 1);
 			break;
 		case 0:
 			auto lname = long_options[option_index].name;
@@ -205,11 +210,11 @@ std::pair<int, std::unique_ptr<MainOpt>> parse_opt(int argc, char ** argv) {
 			if (std::string("log-file") == lname) {
 				opt.log_file = optarg;
 			}
-			if (std::string("broker-configuration-address") == lname) {
-				opt.broker_configuration_address = optarg;
-			}
-			if (std::string("broker-configuration-topic") == lname) {
-				opt.broker_configuration_topic = optarg;
+			if (std::string("broker-config") == lname) {
+				uri::URI u1;
+				u1.init(optarg);
+				u1.default_port(9092);
+				opt.broker_config = u1;
 			}
 			if (std::string("broker") == lname) {
 				opt.set_broker(optarg);
@@ -239,9 +244,59 @@ std::pair<int, std::unique_ptr<MainOpt>> parse_opt(int argc, char ** argv) {
 	}
 	if (getopt_error) {
 		opt.help = true;
-		return {1, std::move(opt_)};
+		ret.first = 1;
 	}
-	return {0, std::move(opt_)};
+	if (opt.help) {
+		fmt::print(
+			"forward-epics-to-kafka-0.0.1 {:.7} (ESS, BrightnESS)\n"
+			"  Contact: dominik.werder@psi.ch\n\n",
+			GIT_COMMIT
+		);
+		fmt::print(
+			"Forwards EPICS process variables to Kafka topics.\n"
+			"\n"
+			"forward-epics-to-kafka\n"
+			"  --help, -h\n"
+			"\n"
+			"  --config-file                     filename\n"
+			"      Configuration file in JSON format.\n"
+			"      To overwrite the options in config-file, specify them later on the command line.\n"
+			"\n"
+			"  --broker-config                   //host[:port]/topic\n"
+			"      Kafka brokers to connect with for configuration updates.\n"
+			"\n"
+			"  --broker                          host:port,host:port,...\n"
+			"      Kafka brokers to connect with for configuration updates\n"
+			"      Default: {}\n"
+			"\n"
+			"  --kafka-gelf                      kafka://host[:port]/topic\n"
+			"\n"
+			"  --graylog-logger-address          host:port\n"
+			"      Log to Graylog via graylog_logger library.\n"
+			"\n"
+			"  -v\n"
+			"      Decrease log_level by one step.  Default log_level is 3.\n"
+			"  -Q\n"
+			"      Increase log_level by one step.\n"
+			"\n",
+			opt.brokers_as_comma_list()
+		);
+		ret.first = 1;
+	}
+
+	return ret;
+}
+
+
+void MainOpt::init_logger() {
+	if (kafka_gelf != "") {
+		BrightnESS::uri::URI uri(kafka_gelf);
+		log_kafka_gelf_start(uri.host, uri.topic);
+		LOG(3, "Enabled kafka_gelf: //{}/{}", uri.host, uri.topic);
+	}
+	if (graylog_logger_address != "") {
+		fwd_graylog_logger_enable(graylog_logger_address);
+	}
 }
 
 

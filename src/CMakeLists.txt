@@ -261,6 +261,7 @@ endif()
 
 set(SOURCES
 MainOpt.cxx
+Main.cxx
 helper.cxx
 logger.cxx
 configuration.cxx

@@ -15,9 +15,10 @@ using std::string;
 using std::vector;
 
 struct MainOpt {
+MainOpt();
 void set_broker(string broker);
-string broker_configuration_address = "localhost:9092";
-string broker_configuration_topic = "configuration.global";
+std::string brokers_as_comma_list() const;
+uri::URI broker_config {"//localhost:9092/forward_epics_to_kafka_commands"};
 vector<uri::URI> brokers;
 string kafka_gelf = "";
 string graylog_logger_address = "";
@@ -36,7 +37,7 @@ std::shared_ptr<rapidjson::Document> json = nullptr;
 int parse_json_file(string config_file);
 KafkaW::BrokerOpt broker_opt;
 
-void init_after_parse();
+void init_logger();
 friend class ::MainOpt_T;
 };
 

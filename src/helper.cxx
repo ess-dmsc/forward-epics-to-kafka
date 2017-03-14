@@ -4,6 +4,8 @@
 #include <array>
 #include <vector>
 #include <string>
+#include <thread>
+#include <chrono>
 
 std::vector<char> gulp(std::string fname) {
 	std::vector<char> ret;
@@ -105,4 +107,61 @@ TEST(helper, split_07) {
 	ASSERT_TRUE(v == vector<string>({"some", "longer", "thing", "for", "testing"}));
 }
 
+#endif
+
+
+std::string get_string(rapidjson::Value const * v, std::string path) {
+	auto a = split(path, ".");
+	int i1 = 0;
+	for (auto & x : a) {
+		if (!v->IsObject()) return "";
+		auto it = v->FindMember(x.c_str());
+		if (it == v->MemberEnd()) {
+			return "";
+		}
+		if (i1 == a.size() - 1) {
+			if (it->value.IsString()) {
+				return it->value.GetString();
+			}
+		}
+		else {
+			v = &it->value;
+		}
+		++i1;
+	}
+	return "";
+}
+
+#if HAVE_GTEST
+#include <gtest/gtest.h>
+
+TEST(RapidTools, get_string_01) {
+	using namespace rapidjson;
+	Document d;
+	d.SetObject();
+	auto & a = d.GetAllocator();
+	d.AddMember("mem00", Value("s1", a), a);
+	Value v2;
+	v2.SetObject();
+	v2.AddMember("mem10", Value("s2", a), a);
+	d.AddMember("mem01", v2.Move(), a);
+	auto s1 = get_string(&d, "mem00");
+	ASSERT_EQ(s1, "s1");
+	s1 = get_string(&d, "mem01.mem10");
+	ASSERT_EQ(s1, "s2");
+}
+
+#endif
+
+
+void sleep_ms(uint32_t ms) {
+	std::this_thread::sleep_for(std::chrono::milliseconds(ms));
+}
+
+#if HAVE_GTEST
+#include <gtest/gtest.h>
+TEST(Sleep, sleep_ms) {
+	sleep_ms(1);
+	// ;-)
+}
 #endif

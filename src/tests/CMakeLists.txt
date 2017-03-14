@@ -4,6 +4,7 @@ set(tgt "tests")
 set(sources
 tests.cxx
 MainOpt.cxx
+remote.cxx
 $<TARGET_OBJECTS:__objects>
 )
 add_executable(${tgt} ${sources})
