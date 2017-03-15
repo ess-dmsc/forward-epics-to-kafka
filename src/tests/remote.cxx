@@ -12,6 +12,9 @@
 #include "tests.h"
 #include "../Main.h"
 #include "../schemas/f142_logdata_generated.h"
+#include <rapidjson/document.h>
+#include <rapidjson/stringbuffer.h>
+#include <rapidjson/writer.h>
 
 namespace BrightnESS {
 namespace ForwardEpicsToKafka {
@@ -62,11 +65,12 @@ void Consumer::run() {
 class Remote_T : public testing::Test {
 public:
 static void simple_f142();
+static void simple_f142_via_config_message();
+static void requirements();
 };
 
-void Remote_T::simple_f142() {
-	auto requirements = []{
-		LOG(0, "\n\n"
+void Remote_T::requirements() {
+	LOG(0, "\n\n"
 		"This test requires an available Epics PV of normative types array double\n"
 		"called 'forwarder_test_nt_array_double' running somewhere on the network.\n"
 		"It has to update that PV during the runtime of this test.\n"
@@ -74,9 +78,10 @@ void Remote_T::simple_f142() {
 		"This test also requires a broker which you can specify using --broker\n"
 		"when running the test.\n"
 		"The broker has to automatically create the topics that we use.\n"
-		);
-	};
+	);
+}
 
+void Remote_T::simple_f142() {
 	rapidjson::Document d0;
 	{
 		using namespace rapidjson;
@@ -139,8 +144,87 @@ void Remote_T::simple_f142() {
 }
 
 
+void Remote_T::simple_f142_via_config_message() {
+	rapidjson::Document d0;
+	{
+		using namespace rapidjson;
+		d0.SetObject();
+		auto & a = d0.GetAllocator();
+		d0.AddMember("channel", StringRef("forwarder_test_nt_array_double"), a);
+		d0.AddMember("topic", StringRef("tmp-test-f142"), a);
+		d0.AddMember("type", StringRef("f142"), a);
+	}
+
+	using std::thread;
+	KafkaW::BrokerOpt bopt;
+	bopt.conf_strings["group.id"] = "forwarder-tests-123213ab";
+	bopt.conf_ints["receive.message.max.bytes"] = 25100100;
+	bopt.address = Tests::main_opt->brokers_as_comma_list();
+	Consumer consumer(bopt, get_string(&d0, "topic"));
+	consumer.source_name = get_string(&d0, "channel");
+	thread thr_consumer([&consumer]{
+		consumer.run();
+	});
+
+	//sleep_ms(500);
+
+	BrightnESS::ForwardEpicsToKafka::Main main(*Tests::main_opt);
+	thread thr_forwarder([&main]{
+		try {
+			main.forward_epics_to_kafka();
+		}
+		catch (std::runtime_error & e) {
+			LOG(0, "CATCH runtime error in main watchdog thread: {}", e.what());
+		}
+		catch (std::exception & e) {
+			LOG(0, "CATCH EXCEPTION in main watchdog thread");
+		}
+	});
+
+	sleep_ms(2000);
+
+	{
+		using namespace rapidjson;
+		using namespace KafkaW;
+		StringBuffer buf1;
+		Writer<StringBuffer> wr(buf1);
+		d0.Accept(wr);
+		BrokerOpt bopt;
+		bopt.address = Tests::main_opt->broker_config.host_port;
+		Producer pr(bopt);
+		ProducerTopic pt(pr, Tests::main_opt->broker_config.topic);
+		pt.produce((uchar*)buf1.GetString(), buf1.GetSize());
+	}
+
+	// Let it do its thing for a few seconds...
+	sleep_ms(10000);
+
+	main.forwarding_exit();
+	if (thr_forwarder.joinable()) {
+		thr_forwarder.join();
+	}
+
+	sleep_ms(500);
+	consumer.do_run = 0;
+	if (thr_consumer.joinable()) {
+		thr_consumer.join();
+	}
+
+	if (consumer.msgs_good <= 0) {
+		requirements();
+	}
+	ASSERT_GT(consumer.msgs_good, 0);
+
+	LOG(4, "All done, test exit");
+}
+
+
 TEST_F(Remote_T, simple_f142) {
 	Remote_T::simple_f142();
+}
+
+TEST_F(Remote_T, simple_f142_via_config_message) {
+	Remote_T::simple_f142_via_config_message();
 }
 
 }

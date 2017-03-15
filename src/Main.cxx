@@ -74,15 +74,10 @@ void ConfigCB::operator() (std::string const & msg) {
 
 
 void Main::forward_epics_to_kafka() {
-	#define do_config_kafka_listener true
-
-	#if do_config_kafka_listener
-		Config::Listener config_listener({
-			main_opt.broker_config.host_port,
-			main_opt.broker_config.topic
-		});
-		ConfigCB config_cb(*this);
-	#endif
+	KafkaW::BrokerOpt bopt;
+	bopt.conf_strings["group.id"] = "forwarder-command-listener";
+	Config::Listener config_listener(bopt, main_opt.broker_config);
+	ConfigCB config_cb(*this);
 
 	while (forwarding_run == 1) {
 		release_deleted_mappings();
@@ -93,9 +88,7 @@ void Main::forward_epics_to_kafka() {
 		collect_and_revive_failed_mappings();
 		check_instances();
 
-		#if do_config_kafka_listener
-			config_listener.poll(config_cb);
-		#endif
+		config_listener.poll(config_cb);
 
 		report_stats(started);
 		std::this_thread::sleep_for(std::chrono::milliseconds(1000));
