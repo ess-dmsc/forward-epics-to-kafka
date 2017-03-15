@@ -84,7 +84,7 @@ void Main::forward_epics_to_kafka() {
 		ConfigCB config_cb(*this);
 	#endif
 
-	while (forwarding_run == 1 and g__run == 1) {
+	while (forwarding_run == 1) {
 		release_deleted_mappings();
 		move_failed_to_startup_queue();
 		// keep in this wider scope for later log output:

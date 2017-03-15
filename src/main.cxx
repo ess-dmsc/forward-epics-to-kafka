@@ -3,6 +3,8 @@
 #include <thread>
 #include <vector>
 #include <string>
+#include <atomic>
+#include <mutex>
 #include <cstring>
 #include <csignal>
 
@@ -22,11 +24,15 @@ namespace ForwardEpicsToKafka {
 }
 
 
-
+static std::mutex g__mutex_main;
+static std::atomic<BrightnESS::ForwardEpicsToKafka::Main*> g__main {nullptr};
 
 void signal_handler(int signal) {
+	std::lock_guard<std::mutex> lock(g__mutex_main);
 	LOG(0, "SIGNAL {}", signal);
-	BrightnESS::ForwardEpicsToKafka::g__run = 0;
+	if (auto x = g__main.load()) {
+		x->forwarding_exit();
+	}
 }
 
 
@@ -48,6 +54,10 @@ int main(int argc, char ** argv) {
 	}
 
 	BrightnESS::ForwardEpicsToKafka::Main main(opt);
+	{
+		std::lock_guard<std::mutex> lock(g__mutex_main);
+		g__main = &main;
+	}
 	try {
 		main.forward_epics_to_kafka();
 	}
@@ -56,6 +66,12 @@ int main(int argc, char ** argv) {
 	}
 	catch (std::exception & e) {
 		LOG(0, "CATCH EXCEPTION in main watchdog thread");
+	}
+	std::signal(SIGINT, SIG_DFL);
+	std::signal(SIGTERM, SIG_DFL);
+	{
+		std::lock_guard<std::mutex> lock(g__mutex_main);
+		g__main = nullptr;
 	}
 	return 0;
 }

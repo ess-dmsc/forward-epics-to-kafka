@@ -10,8 +10,6 @@
 namespace BrightnESS {
 namespace ForwardEpicsToKafka {
 
-extern std::atomic<int> g__run;
-
 class Main {
 public:
 Main(MainOpt & opt);
