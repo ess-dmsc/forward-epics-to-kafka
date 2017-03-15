@@ -8,7 +8,7 @@
 
 namespace KafkaW {
 
-using uchar = uint8_t;
+using uchar = unsigned char;
 
 
 /// POD to collect the options
@@ -133,7 +133,7 @@ class ProducerTopic {
 public:
 ProducerTopic(Producer const & producer, std::string name);
 ~ProducerTopic();
-int produce(void * msg_data, int msg_size, void * opaque, bool print_err = false);
+int produce(uchar * msg_data, int msg_size, void * opaque = nullptr, bool print_err = false);
 // Currently it's nice to have access to these for statistics:
 Producer const & producer;
 rd_kafka_topic_t * rkt = nullptr;

@@ -615,7 +615,7 @@ ProducerTopic::ProducerTopic(Producer const & producer, std::string name) : prod
 }
 
 
-int ProducerTopic::produce(void * msg_data, int msg_size, void * opaque, bool print_err) {
+int ProducerTopic::produce(uchar * msg_data, int msg_size, void * opaque, bool print_err) {
 	static_assert(RD_KAFKA_RESP_ERR_NO_ERROR == 0, "Currently return lies on NO_ERROR == 0");
 	if (not rkt) {
 		throw std::runtime_error("ERROR tried to produce on uninitialized rkt");
@@ -629,7 +629,7 @@ int ProducerTopic::produce(void * msg_data, int msg_size, void * opaque, bool pr
 
 	// no flags means that we reown our buffer when Kafka calls our callback.
 	int msgflags = 0; // 0, RD_KAFKA_MSG_F_COPY, RD_KAFKA_MSG_F_FREE
-	if (_do_copy) msgflags = RD_KAFKA_MSG_F_COPY;
+	if (_do_copy || opaque == nullptr) msgflags = RD_KAFKA_MSG_F_COPY;
 
 	// TODO
 	// How does Kafka report the error?
