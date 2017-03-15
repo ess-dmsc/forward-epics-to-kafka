@@ -265,7 +265,7 @@ int Main::mapping_add(rapidjson::Value & mapping) {
 		LOG(3, "mapping topic is not specified");
 		return -1;
 	}
-	auto r1 = main_opt.schema_registry.items().find("f140");
+	auto r1 = main_opt.schema_registry.items().find(type);
 	if (r1 == main_opt.schema_registry.items().end()) {
 		LOG(3, "can not handle (yet?) schema id {}", type);
 		return -2;
