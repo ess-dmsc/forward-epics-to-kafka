@@ -8,8 +8,10 @@ namespace KafkaW {
 std::atomic<int> g_kafka_instance_count;
 
 
-#define KERR(err) if (err != 0) { \
-	LOG(4, "Kafka error code: {}, {}, {}", err, rd_kafka_err2name((rd_kafka_resp_err_t)err), rd_kafka_err2str((rd_kafka_resp_err_t)err)); \
+using std::move;
+
+#define KERR(rk, err) if (err != 0) { \
+	LOG(4, "Kafka {}  error: {}, {}, {}", rd_kafka_name(rk), err, rd_kafka_err2name((rd_kafka_resp_err_t)err), rd_kafka_err2str((rd_kafka_resp_err_t)err)); \
 }
 
 
@@ -195,9 +197,24 @@ std::unique_ptr<Msg> PollStatus::is_Msg() {
 
 
 Consumer::Consumer(BrokerOpt opt) : opt(opt) {
-	start();
+	//on_rebalance_start = nullptr;
+	//on_rebalance_assign = nullptr;
+	init();
 	id = g_kafka_instance_count++;
 }
+
+
+/*
+Consumer::Consumer(Consumer && x) {
+	using std::swap;
+	swap(on_rebalance_assign, x.on_rebalance_assign);
+	swap(on_rebalance_start, x.on_rebalance_start);
+	swap(rk, x.rk);
+	swap(opt, x.opt);
+	swap(plist, x.plist);
+	swap(id, x.id);
+}
+*/
 
 
 Consumer::~Consumer() {
@@ -269,7 +286,7 @@ void Consumer::cb_rebalance(rd_kafka_t * rk, rd_kafka_resp_err_t err, rd_kafka_t
 	auto self = static_cast<Consumer*>(opaque);
 	switch (err) {
 	case RD_KAFKA_RESP_ERR__ASSIGN_PARTITIONS:
-		LOG(6, "cb_rebalance assign:");
+		LOG(6, "cb_rebalance assign {}", rd_kafka_name(rk));
 		if (auto & cb = self->on_rebalance_start) {
 			cb(plist);
 		}
@@ -278,8 +295,8 @@ void Consumer::cb_rebalance(rd_kafka_t * rk, rd_kafka_resp_err_t err, rd_kafka_t
 		if (err2 != RD_KAFKA_RESP_ERR_NO_ERROR) {
 			LOG(0, "rebalance error: {}  {}", rd_kafka_err2name(err2), rd_kafka_err2str(err2));
 		}
-		if (self->on_rebalance_assign) {
-			(*self->on_rebalance_assign)();
+		if (auto & cb = self->on_rebalance_assign) {
+			cb(plist);
 		}
 		break;
 	case RD_KAFKA_RESP_ERR__REVOKE_PARTITIONS:
@@ -309,7 +326,7 @@ void Consumer::cb_rebalance(rd_kafka_t * rk, rd_kafka_resp_err_t err, rd_kafka_t
 
 
 
-void Consumer::start() {
+void Consumer::init() {
 	// librdkafka API sometimes wants to write errors into a buffer:
 	int const errstr_N = 512;
 	char errstr[errstr_N];
@@ -342,7 +359,6 @@ void Consumer::start() {
 
 	// Allocate some default size.  This is not a limit.
 	plist = rd_kafka_topic_partition_list_new(16);
-
 }
 
 
@@ -351,7 +367,7 @@ void Consumer::add_topic(std::string topic) {
 	int partition = RD_KAFKA_PARTITION_UA;
 	rd_kafka_topic_partition_list_add(plist, topic.c_str(), partition);
 	int err = rd_kafka_subscribe(rk, plist);
-	KERR(err);
+	KERR(rk, err);
 	if (err) {
 		LOG(0, "ERROR could not subscribe");
 		throw std::runtime_error("can not subscribe");
@@ -438,13 +454,13 @@ void Producer::cb_delivered(rd_kafka_t * rk, rd_kafka_message_t const * msg, voi
 		if (msg->err == RD_KAFKA_RESP_ERR__MSG_TIMED_OUT) {
 			// TODO
 		}
-		if (auto p = self->on_delivery_failed) {
-			(*p)(msg);
+		if (auto & cb = self->on_delivery_failed) {
+			cb(msg);
 		}
 	}
 	else {
-		if (auto p = self->on_delivery_ok) {
-			(*p)(msg);
+		if (auto & cb = self->on_delivery_ok) {
+			cb(msg);
 		}
 		if (true) {
 			LOG(7, "IID: {}  Ok delivered ({}, p {}, offset {}, len {})",
@@ -460,15 +476,15 @@ void Producer::cb_delivered(rd_kafka_t * rk, rd_kafka_message_t const * msg, voi
 void Producer::cb_error(rd_kafka_t * rk, int err_i, char const * msg, void * opaque) {
 	auto self = reinterpret_cast<Producer*>(opaque);
 	rd_kafka_resp_err_t err = (rd_kafka_resp_err_t) err_i;
-	LOG(0, "IID: {}  ERROR  {}, {}, {}, {}", self->id, err_i, rd_kafka_err2name(err), rd_kafka_err2str(err), msg);
+	int ll = 2;
 	if (err == RD_KAFKA_RESP_ERR__TRANSPORT) {
+		ll = 5;
 		//rd_kafka_dump(stdout, rk);
 	}
 	else {
-		// TODO
-		//self->error_from_kafka_callback();
 		if (self->on_error) self->on_error(self, err);
 	}
+	LOG(ll, "Kafka cb_error  IID: {}  {}, {}, {}, {}", self->id, err_i, rd_kafka_err2name(err), rd_kafka_err2str(err), msg);
 }
 
 
@@ -553,6 +569,16 @@ Producer::Producer(BrokerOpt opt) : opt(opt) {
 	}
 }
 
+
+Producer::Producer(Producer && x) {
+	using std::swap;
+	swap(rk, x.rk);
+	swap(on_delivery_ok, x.on_delivery_ok);
+	swap(on_delivery_failed, x.on_delivery_failed);
+	swap(on_error, x.on_error);
+	swap(opt, x.opt);
+	swap(id, x.id);
+}
 
 
 void Producer::poll() {

@@ -10,14 +10,27 @@
 namespace BrightnESS {
 namespace ForwardEpicsToKafka {
 
+class Remote_T;
+
+namespace Config {
+class Listener;
+}
+
+enum class ForwardingStatus : int32_t {
+NORMAL,
+STOPPED,
+};
+
 class Main {
 public:
 Main(MainOpt & opt);
+~Main();
 void forward_epics_to_kafka();
 int mapping_add(rapidjson::Value & mapping);
 void mapping_add(TopicMappingSettings tmsettings);
 void mapping_start(TopicMappingSettings tmsettings);
 void mapping_remove_topic(string topic);
+void mapping_remove_all();
 void mapping_list();
 void forwarding_exit();
 void start_some_test_mappings(int n1);
@@ -30,7 +43,6 @@ void release_deleted_mappings();
 void stop();
 private:
 int const init_pool_max = 64;
-bool const do_release_memory = true;
 int const memory_release_grace_time = 45;
 MainOpt & main_opt;
 std::list<TopicMappingSettings> tms_to_start;
@@ -49,10 +61,13 @@ std::list<std::unique_ptr<TopicMapping>> tms_to_delete;
 // invoke any callbacks on them.
 std::list<std::unique_ptr<TopicMapping>> tms_zombies;
 Kafka::InstanceSet & kafka_instance_set;
+std::unique_ptr<Config::Listener> config_listener;
 friend class ConfigCB;
+friend class Remote_T;
 
 uint32_t topic_mappings_started = 0;
 std::atomic<int32_t> forwarding_run {1};
+std::atomic<ForwardingStatus> forwarding_status {ForwardingStatus::NORMAL};
 };
 
 }

@@ -6,11 +6,13 @@
 #include <thread>
 #include <chrono>
 #include <atomic>
+#include <condition_variable>
 #include "../helper.h"
 #include "../logger.h"
 #include "../MainOpt.h"
 #include "tests.h"
 #include "../Main.h"
+#include "../Config.h"
 #include "../schemas/f142_logdata_generated.h"
 #include <rapidjson/document.h>
 #include <rapidjson/stringbuffer.h>
@@ -20,6 +22,10 @@ namespace BrightnESS {
 namespace ForwardEpicsToKafka {
 
 using std::string;
+using std::mutex;
+using std::unique_lock;
+using std::condition_variable;
+using MS = std::chrono::milliseconds;
 
 class Consumer {
 public:
@@ -30,6 +36,10 @@ KafkaW::BrokerOpt bopt;
 string topic;
 int msgs_good = 0;
 string source_name;
+int catched_up = 0;
+mutex mx;
+condition_variable cv;
+std::function<void()> on_catched_up;
 };
 
 Consumer::Consumer(KafkaW::BrokerOpt bopt, string topic) :
@@ -38,9 +48,14 @@ Consumer::Consumer(KafkaW::BrokerOpt bopt, string topic) :
 { }
 
 void Consumer::run() {
-	//LOG(3, "TOPIC: {}", topic);
-	bopt.conf_ints["session.timeout.ms"] = 6000;
 	KafkaW::Consumer consumer(bopt);
+	consumer.on_rebalance_assign = [this](rd_kafka_topic_partition_list_t * plist){
+		{
+			unique_lock<mutex> lock(mx);
+			catched_up = 1;
+		}
+		cv.notify_all();
+	};
 	consumer.add_topic(topic);
 	while (do_run) {
 		auto x = consumer.poll();
@@ -148,25 +163,37 @@ void Remote_T::simple_f142_via_config_message() {
 	rapidjson::Document d0;
 	{
 		using namespace rapidjson;
+		using V = rapidjson::Value;
 		d0.SetObject();
 		auto & a = d0.GetAllocator();
-		d0.AddMember("channel", StringRef("forwarder_test_nt_array_double"), a);
-		d0.AddMember("topic", StringRef("tmp-test-f142"), a);
-		d0.AddMember("type", StringRef("f142"), a);
+		d0.AddMember("cmd", StringRef("add"), a);
+		V v1;
+		v1.SetObject();
+		v1.AddMember("channel", StringRef("forwarder_test_nt_array_double"), a);
+		v1.AddMember("topic", StringRef("tmp-test-f142"), a);
+		v1.AddMember("type", StringRef("f142"), a);
+		V va;
+		va.SetArray();
+		va.PushBack(v1, a);
+		d0.AddMember("streams", va, a);
 	}
 
 	using std::thread;
 	KafkaW::BrokerOpt bopt;
-	bopt.conf_strings["group.id"] = "forwarder-tests-123213ab";
+	bopt.conf_strings["group.id"] = fmt::format("forwarder-tests-{}", getpid());
 	bopt.conf_ints["receive.message.max.bytes"] = 25100100;
+	//bopt.conf_ints["session.timeout.ms"] = 1000;
 	bopt.address = Tests::main_opt->brokers_as_comma_list();
-	Consumer consumer(bopt, get_string(&d0, "topic"));
-	consumer.source_name = get_string(&d0, "channel");
+	Consumer consumer(bopt, get_string(&d0, "streams.0.topic"));
+	consumer.source_name = get_string(&d0, "streams.0.channel");
 	thread thr_consumer([&consumer]{
 		consumer.run();
 	});
-
-	//sleep_ms(500);
+	{
+		unique_lock<mutex> lock(consumer.mx);
+		consumer.cv.wait_for(lock, MS(100), [&consumer]{return consumer.catched_up == 1;});
+		LOG(3, "CATCHED UP");
+	}
 
 	BrightnESS::ForwardEpicsToKafka::Main main(*Tests::main_opt);
 	thread thr_forwarder([&main]{
@@ -180,8 +207,9 @@ void Remote_T::simple_f142_via_config_message() {
 			LOG(0, "CATCH EXCEPTION in main watchdog thread");
 		}
 	});
-
-	sleep_ms(2000);
+	main.config_listener->wait_for_connected(MS(1000));
+	LOG(7, "OK config listener connected");
+	sleep_ms(1000);
 
 	{
 		using namespace rapidjson;
@@ -195,11 +223,40 @@ void Remote_T::simple_f142_via_config_message() {
 		ProducerTopic pt(pr, Tests::main_opt->broker_config.topic);
 		pt.produce((uchar*)buf1.GetString(), buf1.GetSize());
 	}
+	LOG(7, "CONFIG has been sent out...");
 
 	// Let it do its thing for a few seconds...
 	sleep_ms(10000);
 
-	main.forwarding_exit();
+	{
+		using namespace rapidjson;
+		using namespace KafkaW;
+		using V = rapidjson::Value;
+		Document d0;
+		d0.SetObject();
+		auto & a = d0.GetAllocator();
+		d0.AddMember("cmd", StringRef("exit"), a);
+		StringBuffer buf1;
+		Writer<StringBuffer> wr(buf1);
+		d0.Accept(wr);
+		BrokerOpt bopt;
+		bopt.address = Tests::main_opt->broker_config.host_port;
+		Producer pr(bopt);
+		ProducerTopic pt(pr, Tests::main_opt->broker_config.topic);
+		pt.produce((uchar*)buf1.GetString(), buf1.GetSize());
+	}
+
+	// Give it a chance to exit by itself...
+
+	// TODO
+	// test here that it has finished...
+	for (int i1 = 0; i1 < 50; ++i1) {
+		if (main.forwarding_status == ForwardingStatus::STOPPED) break;
+		sleep_ms(100);
+	}
+
+	ASSERT_EQ(main.forwarding_status.load(), ForwardingStatus::STOPPED);
+
 	if (thr_forwarder.joinable()) {
 		thr_forwarder.join();
 	}

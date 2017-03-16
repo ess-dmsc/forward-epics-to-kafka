@@ -4,6 +4,8 @@
 #include "helper.h"
 //#include "KafkaW.h"
 //#include "uri.h"
+#include <sys/types.h>
+#include <unistd.h>
 
 namespace BrightnESS {
 namespace ForwardEpicsToKafka {
@@ -17,6 +19,9 @@ KafkaW::BrokerOpt make_broker_opt(MainOpt const & opt) {
 }
 
 Main::Main(MainOpt & opt) : main_opt(opt), kafka_instance_set(Kafka::InstanceSet::Set(make_broker_opt(opt))) {
+	KafkaW::BrokerOpt bopt;
+	bopt.conf_strings["group.id"] = fmt::format("forwarder-command-listener--pid{}", getpid());
+	config_listener.reset(new Config::Listener {bopt, main_opt.broker_config});
 	if (main_opt.json) {
 		auto m1 = main_opt.json->FindMember("mappings");
 		if (m1 != main_opt.json->MemberEnd()) {
@@ -27,6 +32,9 @@ Main::Main(MainOpt & opt) : main_opt(opt), kafka_instance_set(Kafka::InstanceSet
 			}
 		}
 	}
+}
+
+Main::~Main() {
 }
 
 
@@ -49,24 +57,29 @@ void ConfigCB::operator() (std::string const & msg) {
 	LOG(7, "Command received: {}", msg.c_str());
 	Document j0;
 	j0.Parse(msg.c_str());
-	if (j0["cmd"] == "add") {
-		auto channel = j0["channel"].GetString();
-		auto topic   = j0["topic"].GetString();
-		if (channel && topic) {
-			//main.mapping_add(channel, topic);
-			LOG(0, "ERROR this command handler needs fecatoring, need to look up fb converter first");
+	if (j0.HasParseError()) {
+		return;
+	}
+	auto m1 = j0.FindMember("cmd");
+	if (m1 == j0.MemberEnd()) {
+		return;
+	}
+	if (!m1->value.IsString()) {
+		return;
+	}
+	string cmd = m1->value.GetString();
+	if (cmd == "add") {
+		auto m2 = j0.FindMember("streams");
+		if (m2 == j0.MemberEnd()) {
+			return;
+		}
+		if (m2->value.IsArray()) {
+			for (auto & x : m2->value.GetArray()) {
+				main.mapping_add(x);
+			}
 		}
 	}
-	if (j0["cmd"] == "remove") {
-		auto channel = j0["channel"].GetString();
-		if (channel) {
-			main.mapping_remove_topic(channel);
-		}
-	}
-	if (j0["cmd"] == "list") {
-		main.mapping_list();
-	}
-	if (j0["cmd"] == "exit") {
+	if (cmd == "exit") {
 		main.forwarding_exit();
 	}
 }
@@ -74,12 +87,8 @@ void ConfigCB::operator() (std::string const & msg) {
 
 
 void Main::forward_epics_to_kafka() {
-	KafkaW::BrokerOpt bopt;
-	bopt.conf_strings["group.id"] = "forwarder-command-listener";
-	Config::Listener config_listener(bopt, main_opt.broker_config);
 	ConfigCB config_cb(*this);
-
-	while (forwarding_run == 1) {
+	while (forwarding_run.load() == 1) {
 		release_deleted_mappings();
 		move_failed_to_startup_queue();
 		// keep in this wider scope for later log output:
@@ -88,18 +97,24 @@ void Main::forward_epics_to_kafka() {
 		collect_and_revive_failed_mappings();
 		check_instances();
 
-		config_listener.poll(config_cb);
+		config_listener->poll(config_cb);
 
 		report_stats(started);
 		std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 	}
+	{
+		RMLG lg1(m_tms_zombies_mutex);
+		tms_zombies.clear();
+	}
+	{
+		RMLG lg2(m_tms_to_delete_mutex);
+		tms_to_delete.clear();
+	}
+	forwarding_status.store(ForwardingStatus::STOPPED);
 }
 
 
 void Main::release_deleted_mappings() {
-	// House keeping.  After some grace period, clean up the zombies.
-	if (!do_release_memory) return;
-
 	{
 		RMLG lg1(m_tms_zombies_mutex);
 		auto & l1 = tms_zombies;
@@ -108,7 +123,6 @@ void Main::release_deleted_mappings() {
 		});
 		l1.erase(it2, l1.end());
 	}
-
 	{
 		RMLG lg2(m_tms_to_delete_mutex);
 		auto now = std::chrono::system_clock::now();
@@ -241,7 +255,7 @@ void Main::report_stats(int started_in_current_round) {
 
 
 int Main::mapping_add(rapidjson::Value & mapping) {
-	// TODO Validate
+	LOG(3, "MAPPING ADD");
 	using std::string;
 	string type = get_string(&mapping, "type");
 	string channel = get_string(&mapping, "channel");
@@ -308,6 +322,20 @@ void Main::mapping_remove_topic(string topic) {
 	tms.erase(it2, tms.end());
 }
 
+void Main::mapping_remove_all() {
+	RMLG lg1(m_tms_mutex);
+	RMLG lg2(m_tms_to_delete_mutex);
+	for (auto & x : tms) {
+		x->stop_forwarding();
+		x->ts_removed = std::chrono::system_clock::now();
+		tms_to_delete.push_back(std::move(x));
+	}
+	auto it2 = std::remove_if(tms.begin(), tms.end(), [](std::unique_ptr<TopicMapping> const & x){
+		return x.get() == 0;
+	});
+	tms.erase(it2, tms.end());
+}
+
 void Main::mapping_list() {
 	RMLG lg1(m_tms_mutex);
 	for (auto & tm : tms) {
@@ -317,8 +345,7 @@ void Main::mapping_list() {
 
 
 void Main::forwarding_exit() {
-	LOG(4, "exit requested");
-	forwarding_run = 0;
+	forwarding_run.store(0);
 }
 
 

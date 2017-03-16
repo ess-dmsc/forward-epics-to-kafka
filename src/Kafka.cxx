@@ -118,8 +118,8 @@ sptr<Instance> Instance::create(KafkaW::BrokerOpt opt) {
 
 
 void Instance::init() {
-	producer.on_delivery_ok = &impl->on_delivery_ok;
-	producer.on_delivery_failed = &impl->on_delivery_failed;
+	producer.on_delivery_ok = impl->on_delivery_ok;
+	producer.on_delivery_failed = impl->on_delivery_failed;
 	poll_start();
 }
 

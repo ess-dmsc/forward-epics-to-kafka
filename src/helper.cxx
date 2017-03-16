@@ -6,6 +6,9 @@
 #include <string>
 #include <thread>
 #include <chrono>
+#include <rapidjson/document.h>
+#include <rapidjson/stringbuffer.h>
+#include <rapidjson/prettywriter.h>
 
 std::vector<char> gulp(std::string fname) {
 	std::vector<char> ret;
@@ -109,23 +112,44 @@ TEST(helper, split_07) {
 
 #endif
 
+#include "logger.h"
 
 std::string get_string(rapidjson::Value const * v, std::string path) {
 	auto a = split(path, ".");
 	int i1 = 0;
 	for (auto & x : a) {
-		if (!v->IsObject()) return "";
-		auto it = v->FindMember(x.c_str());
-		if (it == v->MemberEnd()) {
-			return "";
+		bool num = true;
+		for (char & c : x) {
+			if (c < 48 || c > 57) { num = false; break; }
 		}
-		if (i1 == a.size() - 1) {
-			if (it->value.IsString()) {
-				return it->value.GetString();
+		if (num) {
+			if (!v->IsArray()) return "";
+			int n1 = (int)strtol(x.c_str(), nullptr, 10);
+			if (n1 >= v->Size()) return "";
+			auto & v2 = v->GetArray()[n1];
+			if (i1 == a.size() - 1) {
+				if (v2.IsString()) {
+					return v2.GetString();
+				}
+			}
+			else {
+				v = &v2;
 			}
 		}
 		else {
-			v = &it->value;
+			if (!v->IsObject()) return "";
+			auto it = v->FindMember(x.c_str());
+			if (it == v->MemberEnd()) {
+				return "";
+			}
+			if (i1 == a.size() - 1) {
+				if (it->value.IsString()) {
+					return it->value.GetString();
+				}
+			}
+			else {
+				v = &it->value;
+			}
 		}
 		++i1;
 	}
@@ -145,10 +169,26 @@ TEST(RapidTools, get_string_01) {
 	v2.SetObject();
 	v2.AddMember("mem10", Value("s2", a), a);
 	d.AddMember("mem01", v2.Move(), a);
+
+	{
+		Value va;
+		va.SetArray();
+		va.PushBack(Value("something_a_0", a), a);
+		va.PushBack(Value("something_a_1", a), a);
+		va.PushBack(Value(1234), a);
+		d.AddMember("mem02", va, a);
+	}
+
+	StringBuffer buf1;
+	PrettyWriter<StringBuffer> wr(buf1);
+	d.Accept(wr);
+	LOG(0, "test doc: {}", buf1.GetString());
 	auto s1 = get_string(&d, "mem00");
 	ASSERT_EQ(s1, "s1");
 	s1 = get_string(&d, "mem01.mem10");
 	ASSERT_EQ(s1, "s2");
+	s1 = get_string(&d, "mem02.1");
+	ASSERT_EQ(s1, "something_a_1");
 }
 
 #endif
