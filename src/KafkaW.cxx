@@ -262,7 +262,7 @@ void Consumer::cb_error(rd_kafka_t * rk, int err_i, char const * msg, void * opa
 		ll = 5;
 		//rd_kafka_dump(stdout, rk);
 	}
-	LOG(ll, "Kafka cb_error  IID: {}  {}, {}, {}, {}, {}", self->id, err_i, rd_kafka_err2name(err), rd_kafka_err2str(err), msg);
+	LOG(ll, "Kafka cb_error  IID: {}  [{}] {} {}, {}", self->id, err_i, rd_kafka_err2name(err), rd_kafka_err2str(err), msg);
 }
 
 
@@ -487,7 +487,7 @@ void Producer::cb_error(rd_kafka_t * rk, int err_i, char const * msg, void * opa
 	else {
 		if (self->on_error) self->on_error(self, err);
 	}
-	LOG(ll, "Kafka cb_error  IID: {}  {}, {}, {}, {}", self->id, err_i, rd_kafka_err2name(err), rd_kafka_err2str(err), msg);
+	LOG(ll, "Kafka cb_error  IID: {}  [{}] {} {}, {}", self->id, err_i, rd_kafka_err2name(err), rd_kafka_err2str(err), msg);
 }
 
 
