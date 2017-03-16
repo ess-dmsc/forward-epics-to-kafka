@@ -253,13 +253,16 @@ void Consumer::cb_log(rd_kafka_t const * rk, int level, char const * fac, char c
 	LOG(level, "IID: {}  {}  fac: {}", self->id, buf, fac);
 }
 
-// Called from the poll() thread
-void Consumer::cb_error(rd_kafka_t * rk, int err_i, char const * reason, void * opaque) {
-	// cast necessary because of Kafka API design
+
+void Consumer::cb_error(rd_kafka_t * rk, int err_i, char const * msg, void * opaque) {
+	auto self = reinterpret_cast<Consumer*>(opaque);
 	rd_kafka_resp_err_t err = (rd_kafka_resp_err_t) err_i;
-	LOG(0, "ERROR Kafka Config: {}, {}, {}, {}", err_i, rd_kafka_err2name(err), rd_kafka_err2str(err), reason);
-	// Could do something with this opaque:
-	//auto self = static_cast<Consumer*>(opaque);
+	int ll = 2;
+	if (err == RD_KAFKA_RESP_ERR__TRANSPORT) {
+		ll = 5;
+		//rd_kafka_dump(stdout, rk);
+	}
+	LOG(ll, "Kafka cb_error  IID: {}  {}, {}, {}, {}, {}", self->id, err_i, rd_kafka_err2name(err), rd_kafka_err2str(err), msg);
 }
 
 
@@ -498,7 +501,7 @@ int Producer::cb_stats(rd_kafka_t * rk, char * json, size_t json_len, void * opa
 
 void Producer::cb_log(rd_kafka_t const * rk, int level, char const * fac, char const * buf) {
 	auto self = reinterpret_cast<Producer*>(rd_kafka_opaque(rk));
-	LOG(level, "IID: {}  {}  fac: {}", self->id, buf, fac);
+	LOG(5, "IID: {}  {}  fac: {}", self->id, buf, fac);
 }
 
 
