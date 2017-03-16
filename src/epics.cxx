@@ -8,6 +8,7 @@ watchdog thread.
 */
 
 #include "epics.h"
+#include "epics-to-fb.h"
 #include "logger.h"
 #include "TopicMapping.h"
 #include <exception>

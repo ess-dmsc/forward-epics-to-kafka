@@ -1,16 +1,12 @@
 #pragma once
-
 #include <memory>
 #include <condition_variable>
 #include <string>
 #include <chrono>
 #include <random>
-
 #include "Kafka.h"
 #include "fbhelper.h"
-
-// for MakeFlatBufferFromPVStructure
-#include "epics-to-fb.h"
+#include "MakeFlatBufferFromPVStructure.h"
 
 namespace BrightnESS {
 namespace ForwardEpicsToKafka {

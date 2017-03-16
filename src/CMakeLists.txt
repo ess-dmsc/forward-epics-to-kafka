@@ -195,6 +195,23 @@ endforeach()
 add_custom_target(flatbuffers_generate ALL DEPENDS ${flatbuffers_generated_headers})
 
 
+set(xxd_inputs "schema-config-global.json")
+set(xxd_generated "")
+foreach (f0 ${xxd_inputs})
+	set(src "${f0}")
+	set(tgt "${f0}.cxx")
+	add_custom_command(
+		OUTPUT ${tgt}
+		COMMAND xxd -i <${src} >${CMAKE_CURRENT_BINARY_DIR}/${f0}.cxx
+		DEPENDS ${src}
+		WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+		COMMENT "Process ${f0}"
+	)
+	list(APPEND xxd_generated "${tgt}")
+endforeach()
+add_custom_target(xxd_generate ALL DEPENDS ${xxd_generated})
+
+
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -fPIC -g")
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0 -fno-inline")
@@ -243,6 +260,8 @@ endif()
 
 
 set(SOURCES
+MainOpt.cxx
+Main.cxx
 helper.cxx
 logger.cxx
 configuration.cxx
@@ -252,17 +271,18 @@ KafkaW.cxx
 epics.cxx
 Config.cxx
 fbschemas.cxx
-epics-to-fb.cxx
+SchemaRegistry.cxx
 uri.cxx
+blobs.cxx
 schema_f140_general.cxx
 schema_f141_epics_nt.cxx
+schemas/f142/f142.cxx
 ${path_include_fmt}/fmt/format.cc
 ${CMAKE_CURRENT_BINARY_DIR}/git_commit_current.cxx
 )
 if (WIN32)
 set(SOURCES ${SOURCES} wingetopt.c)
 endif (WIN32)
-
 
 set(tgt __objects)
 add_library(${tgt} OBJECT ${SOURCES})
@@ -285,7 +305,7 @@ if (have_gtest)
 target_compile_definitions(${tgt} PRIVATE HAVE_GTEST=1)
 target_include_directories(${tgt} PRIVATE ${path_include_gtest})
 endif()
-add_dependencies(${tgt} flatbuffers_generate git_commit_current)
+add_dependencies(${tgt} flatbuffers_generate xxd_generate git_commit_current)
 
 
 set(tgt forward-epics-to-kafka)

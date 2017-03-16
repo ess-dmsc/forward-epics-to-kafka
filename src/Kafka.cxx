@@ -4,6 +4,7 @@
 
 #include <map>
 #include <algorithm>
+#include <functional>
 
 #ifdef _MSC_VER
 	#define TLOG(level, fmt, ...) { \
@@ -73,14 +74,35 @@ int Instance::load() {
 }
 
 
+struct Instance_impl {
+Instance_impl();
+~Instance_impl();
+std::function<void(rd_kafka_message_t const * msg)> on_delivery_ok;
+std::function<void(rd_kafka_message_t const * msg)> on_delivery_failed;
+};
+
+Instance_impl::Instance_impl() {
+	on_delivery_ok = [] (rd_kafka_message_t const * msg) {
+		BrightnESS::FlatBufs::FB_uptr p1((BrightnESS::FlatBufs::FB *)msg->_private);
+	};
+	on_delivery_failed = [] (rd_kafka_message_t const * msg) {
+		BrightnESS::FlatBufs::FB_uptr p1((BrightnESS::FlatBufs::FB *)msg->_private);
+	};
+}
+
+Instance_impl::~Instance_impl() {
+}
+
+
 Instance::Instance(KafkaW::BrokerOpt opt) : opt(opt), producer(KafkaW::Producer(opt)) {
+	impl.reset(new Instance_impl);
 	static int id_ = 0;
 	id = id_++;
-	LOG(2, "Instance {} created.", id.load());
+	LOG(4, "Instance {} created.", id.load());
 }
 
 Instance::~Instance() {
-	LOG(2, "Instance {} goes away.", id.load());
+	LOG(4, "Instance {} goes away.", id.load());
 	poll_stop();
 }
 
@@ -95,9 +117,9 @@ sptr<Instance> Instance::create(KafkaW::BrokerOpt opt) {
 
 
 
-
-
 void Instance::init() {
+	producer.on_delivery_ok = impl->on_delivery_ok;
+	producer.on_delivery_failed = impl->on_delivery_failed;
 	poll_start();
 }
 
@@ -115,13 +137,13 @@ void Instance::poll_run() {
 		i1 += 1;
 		std::this_thread::sleep_for(std::chrono::milliseconds(750));
 	}
-	ILOG(4, "Poll finished");
+	ILOG(7, "Poll finished");
 }
 
 void Instance::poll_stop() {
 	do_poll = false;
 	poll_thread.join();
-	ILOG(4, "Poll thread joined");
+	ILOG(7, "Poll thread joined");
 }
 
 
@@ -161,7 +183,7 @@ sptr<Topic> Instance::get_or_create_topic(std::string topic_name, int id) {
 	}
 	auto ins = self.lock();
 	if (!ins) {
-		LOG(4, "ERROR self is no longer alive");
+		LOG(3, "ERROR self is no longer alive");
 		return nullptr;
 	}
 	auto sp = sptr<Topic>(new Topic(ins, topic_name, id));

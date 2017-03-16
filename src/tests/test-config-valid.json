@@ -1,0 +1,9 @@
+{
+	"broker": " localhost:9092,   //127.0.0.1:9092   ",
+	"streams": [
+		{
+			"channel": "epics-channel-name",
+			"converter": { "id": "f142", "topic": "kafka-target-topic" }
+		}
+	]
+}
