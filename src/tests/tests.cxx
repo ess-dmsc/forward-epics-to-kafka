@@ -16,5 +16,10 @@ int main(int argc, char ** argv) {
 	auto opt = std::move(po.second);
 	BrightnESS::ForwardEpicsToKafka::Tests::main_opt = opt.get();
 	::testing::InitGoogleTest(&argc, argv);
+	std::string f = ::testing::GTEST_FLAG(filter);
+	if (f.find("Remote") == std::string::npos) {
+		f = f + std::string(":-*Remote*");
+	}
+	::testing::GTEST_FLAG(filter) = f;
 	return RUN_ALL_TESTS();
 }
