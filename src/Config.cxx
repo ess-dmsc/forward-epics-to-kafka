@@ -39,7 +39,6 @@ Listener::~Listener() {
 
 void Listener::poll(Callback & cb) {
 	if (auto m = impl->consumer->poll().is_Msg()) {
-		LOG(0, "CONFIG MESSAGE");
 		cb({(char*)m->data(), m->size()});
 	}
 }

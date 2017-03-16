@@ -255,7 +255,6 @@ void Main::report_stats(int started_in_current_round) {
 
 
 int Main::mapping_add(rapidjson::Value & mapping) {
-	LOG(3, "MAPPING ADD");
 	using std::string;
 	string type = get_string(&mapping, "type");
 	string channel = get_string(&mapping, "channel");
