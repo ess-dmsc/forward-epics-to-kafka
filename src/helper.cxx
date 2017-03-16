@@ -182,7 +182,6 @@ TEST(RapidTools, get_string_01) {
 	StringBuffer buf1;
 	PrettyWriter<StringBuffer> wr(buf1);
 	d.Accept(wr);
-	LOG(0, "test doc: {}", buf1.GetString());
 	auto s1 = get_string(&d, "mem00");
 	ASSERT_EQ(s1, "s1");
 	s1 = get_string(&d, "mem01.mem10");

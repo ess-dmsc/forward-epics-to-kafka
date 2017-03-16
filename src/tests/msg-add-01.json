@@ -1,5 +1,5 @@
 {
-	"broker": " localhost:9092,   //127.0.0.1:9092   ",
+	"cmd": "add",
 	"streams": [
 		{
 			"channel": "forwarder_test_nt_array_double",

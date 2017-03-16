@@ -29,3 +29,4 @@ target_link_libraries(${tgt} gtest)
 endif()
 
 configure_file(test-config-valid.json ../../tests/test-config-valid.json)
+configure_file(msg-add-01.json ../../tests/msg-add-01.json)

@@ -167,12 +167,9 @@ void Remote_T::simple_f142() {
 void Remote_T::simple_f142_via_config_message() {
 	LOG(3, "This test should complete within about 20 seconds.");
 	// Make a sample configuration with two streams
+	auto msg = gulp("tests/msg-add-01.json");
 	rapidjson::Document d0;
-	d0.Parse("{\"cmd\":\"add\", \"streams\":["
-		"{\"channel\":\"forwarder_test_nt_array_double\", \"topic\":\"tmp-test-f142-double\", \"type\":\"f142\"},"
-		"{\"channel\":\"forwarder_test_nt_array_int32\", \"topic\":\"tmp-test-f142-int32\", \"type\":\"f142\"}"
-	"]}"
-	);
+	d0.Parse(msg.data(), msg.size());
 	ASSERT_FALSE(d0.HasParseError());
 
 	deque<Consumer> consumers;
@@ -184,7 +181,7 @@ void Remote_T::simple_f142_via_config_message() {
 		bopt.conf_ints["receive.message.max.bytes"] = 25100100;
 		//bopt.conf_ints["session.timeout.ms"] = 1000;
 		bopt.address = Tests::main_opt->brokers_as_comma_list();
-		consumers.emplace_back(bopt, get_string(&d0, fmt::format("streams.{}.topic", i1)));
+		consumers.emplace_back(bopt, get_string(&d0, fmt::format("streams.{}.converter.topic", i1)));
 		auto & c = consumers.back();
 		c.source_name = get_string(&d0, fmt::format("streams.{}.channel", i1));
 		consumer_threads.emplace_back([&c]{

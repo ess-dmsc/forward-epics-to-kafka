@@ -256,11 +256,11 @@ void Main::report_stats(int started_in_current_round) {
 
 int Main::mapping_add(rapidjson::Value & mapping) {
 	using std::string;
-	string type = get_string(&mapping, "type");
 	string channel = get_string(&mapping, "channel");
-	string topic = get_string(&mapping, "topic");
-	if (type.size() == 0) {
-		LOG(3, "mapping type is not specified");
+	string schema = get_string(&mapping, "converter.schema");
+	string topic = get_string(&mapping, "converter.topic");
+	if (schema.size() == 0) {
+		LOG(3, "mapping schema is not specified");
 		return -1;
 	}
 	if (channel.size() == 0) {
@@ -271,9 +271,9 @@ int Main::mapping_add(rapidjson::Value & mapping) {
 		LOG(3, "mapping topic is not specified");
 		return -1;
 	}
-	auto r1 = main_opt.schema_registry.items().find(type);
+	auto r1 = main_opt.schema_registry.items().find(schema);
 	if (r1 == main_opt.schema_registry.items().end()) {
-		LOG(3, "can not handle (yet?) schema id {}", type);
+		LOG(3, "can not handle (yet?) schema id {}", schema);
 		return -2;
 	}
 	TopicMappingSettings tms(channel, topic);

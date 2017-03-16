@@ -9,12 +9,12 @@
 		"converter": {
 			"type": "object",
 			"properties": {
-				"id": {"type":"string"},
+				"schema": {"type":"string"},
 				"name": {"type":"string"},
 				"__NOTE__": "One could in the future make broker/topic optional and allow a default",
 				"topic": {"type":"string"}
 			},
-			"required": ["id", "topic"]
+			"required": ["schema", "topic"]
 		}
 	},
 
