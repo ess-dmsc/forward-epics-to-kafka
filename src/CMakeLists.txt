@@ -310,7 +310,7 @@ add_dependencies(${tgt} flatbuffers_generate xxd_generate git_commit_current)
 
 set(tgt forward-epics-to-kafka)
 add_executable(${tgt}
-main.cxx
+forward-epics-to-kafka.cxx
 $<TARGET_OBJECTS:__objects>
 )
 add_dependencies(${tgt} flatbuffers_generate git_commit_current)
