@@ -24,7 +24,7 @@ if [ ! -d "googletest/.git" ]
 then
 echo "THIS LOOKS LIKE A BROKEN BUILD DIRECTORY.  SHOULD WIPE EVERYTHING."
 else
-cd googletest && git pull
+cd googletest && git pull origin release-1.8.0
 fi
 
 else
