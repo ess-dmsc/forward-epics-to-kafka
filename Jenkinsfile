@@ -21,5 +21,10 @@ node('eee') {
         stage("Build") {
             sh "make VERBOSE=1"
         }
+
+        stage("Unit Tests") {
+            sh "./tests/tests -- --gtest_output=xml"
+            junit 'test_detail.xml'
+        }
     }
 }
