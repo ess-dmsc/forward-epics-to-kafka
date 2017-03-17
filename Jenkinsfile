@@ -12,11 +12,9 @@ node('eee') {
 
         stage("CMake") {
             sh "cmake ../code \
-                -Dflatc=\$DM_ROOT/usr/bin/flatc \
-                -Dpath_include_rdkafka=\$DM_ROOT/usr/include \
-                -Dpath_lib_rdkafka=\$DM_ROOT/usr/lib \
-                -Dpath_include_flatbuffers=\$DM_ROOT/usr/lib \
-                -Dpath_include_streaming_data_types=../streaming-data-types"
+                -DCMAKE_INCLUDE_PATH=../streaming-data-types;\$DM_ROOT/usr/include;\$DM_ROOT/usr/lib \
+                -DCMAKE_LIBRARY_PATH=\$DM_ROOT/usr/lib \
+                -Dflatc=\$DM_ROOT/usr/bin/flatc"
         }
 
         stage("Build") {
