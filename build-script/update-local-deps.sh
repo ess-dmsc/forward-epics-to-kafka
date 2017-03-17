@@ -9,6 +9,6 @@ cd streaming-data-types && git pull
 fi
 
 else
-git clone https://github.com/ess-dmsc/streaming-data-types.git
+git clone -b master https://github.com/ess-dmsc/streaming-data-types.git
 
 fi
