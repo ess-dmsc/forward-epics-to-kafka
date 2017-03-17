@@ -1,15 +1,15 @@
+BDIR=`pwd`
+echo "BDIR: $BDIR"
 uname -a
-pwd
 ls
 ls ..
 
 echo "EPICS_HOST_ARCH: $EPICS_HOST_ARCH"
 
-mkdir -p repos
 cd repos
-git clone -b master https://github.com/ess-dmsc/forward-epics-to-kafka.git
 git clone -b release-1.8.0 https://github.com/google/googletest.git
 git clone -b master https://github.com/ess-dmsc/streaming-data-types.git
+cd "$BDIR"
 
 find . -maxdepth 3
 
