@@ -104,12 +104,8 @@ void Remote_T::requirements() {
 void Remote_T::simple_f142() {
 	rapidjson::Document d0;
 	{
-		using namespace rapidjson;
-		d0.SetObject();
-		auto & a = d0.GetAllocator();
-		d0.AddMember("channel", StringRef("forwarder_test_nt_array_double"), a);
-		d0.AddMember("topic", StringRef("tmp-test-f142"), a);
-		d0.AddMember("type", StringRef("f142"), a);
+		d0.Parse("{\"channel\": \"forwarder_test_nt_array_double\", \"converter\": {\"schema\":\"f142\", \"topic\":\"tmp-test-f142\"}}");
+		ASSERT_FALSE(d0.HasParseError());
 	}
 
 	using std::thread;
@@ -117,13 +113,11 @@ void Remote_T::simple_f142() {
 	bopt.conf_strings["group.id"] = "forwarder-tests-123213ab";
 	bopt.conf_ints["receive.message.max.bytes"] = 25100100;
 	bopt.address = Tests::main_opt->brokers_as_comma_list();
-	Consumer consumer(bopt, get_string(&d0, "topic"));
+	Consumer consumer(bopt, get_string(&d0, "converter.topic"));
 	consumer.source_name = get_string(&d0, "channel");
 	thread thr_consumer([&consumer]{
 		consumer.run();
 	});
-
-	//sleep_ms(500);
 
 	BrightnESS::ForwardEpicsToKafka::Main main(*Tests::main_opt);
 	thread thr_forwarder([&main]{
@@ -210,6 +204,10 @@ void Remote_T::simple_f142_via_config_message() {
 			LOG(0, "CATCH EXCEPTION in main watchdog thread");
 		}
 	});
+	if (!main.config_listener) {
+		LOG(0, "\n\nNOTE:  Please use --broker-config <//host[:port]/topic> of your configuration topic.\n");
+	}
+	ASSERT_NE(main.config_listener.get(), nullptr);
 	main.config_listener->wait_for_connected(MS(1000));
 	LOG(7, "OK config listener connected");
 	sleep_ms(1000);
