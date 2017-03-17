@@ -12,9 +12,11 @@
 				"schema": {"type":"string"},
 				"name": {"type":"string"},
 				"__NOTE__": "One could in the future make broker/topic optional and allow a default",
-				"topic": {"type":"string"}
+				"topic": {"type":"string"},
+				"broker": {"type":"string"}
 			},
-			"required": ["schema", "topic"]
+			"required": ["schema", "topic"],
+			"additionalProperties": false
 		}
 	},
 
@@ -74,6 +76,5 @@
 			"additionalProperties": false
 		}
 	},
-	"required": ["streams"],
 	"additionalProperties": false
 }

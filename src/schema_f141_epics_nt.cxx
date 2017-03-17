@@ -3,6 +3,7 @@
 #include "helper.h"
 #include "schemas/f141_epics_nt_generated.h"
 #include "epics-to-fb.h"
+#include "epics-pvstr.h"
 
 namespace BrightnESS {
 namespace FlatBufs {
@@ -264,9 +265,10 @@ PV_t make_PV(flatbuffers::FlatBufferBuilder & builder, epics::pvData::PVFieldPtr
 class Converter : public MakeFlatBufferFromPVStructure {
 public:
 BrightnESS::FlatBufs::FB_uptr convert(EpicsPVUpdate const & up) override {
+	auto & pvstr = up.epics_pvstr;
 	auto fb = BrightnESS::FlatBufs::FB_uptr(new BrightnESS::FlatBufs::FB);
 	uint64_t ts_data = 0;
-	if (auto x = up.pvstr->getSubField<epics::pvData::PVScalarValue<uint64_t>>("ts")) {
+	if (auto x = pvstr->getSubField<epics::pvData::PVScalarValue<uint64_t>>("ts")) {
 		ts_data = x->get();
 	}
 
@@ -275,12 +277,12 @@ BrightnESS::FlatBufs::FB_uptr convert(EpicsPVUpdate const & up) override {
 	auto builder = fb->builder.get();
 	// this is the field type ID string: up.pvstr->getStructure()->getID()
 	auto n = builder->CreateString(up.channel);
-	auto vF = make_PV(*builder, up.pvstr->getSubField("value"));
+	auto vF = make_PV(*builder, pvstr->getSubField("value"));
 	//some kind of 'union F' offset:   flatbuffers::Offset<void>
 
 	fwdinfo_2_tBuilder bf(*builder);
 	uint64_t seq_data = 0;
-	if (auto x = up.pvstr->getSubField<epics::pvData::PVScalarValue<uint64_t>>("seq")) {
+	if (auto x = pvstr->getSubField<epics::pvData::PVScalarValue<uint64_t>>("seq")) {
 		seq_data = x->get();
 	}
 	bf.add_seq_data(seq_data);
@@ -296,7 +298,7 @@ BrightnESS::FlatBufs::FB_uptr convert(EpicsPVUpdate const & up) override {
 	b.add_pv_type(vF.type);
 	b.add_pv(vF.off);
 
-	if (auto pvTimeStamp = up.pvstr->getSubField<epics::pvData::PVStructure>("timeStamp")) {
+	if (auto pvTimeStamp = pvstr->getSubField<epics::pvData::PVStructure>("timeStamp")) {
 		timeStamp_t timeStamp(
 			pvTimeStamp->getSubField<epics::pvData::PVScalarValue<int64_t>>("secondsPastEpoch")->get(),
 			pvTimeStamp->getSubField<epics::pvData::PVScalarValue<int32_t>>("nanoseconds")->get()

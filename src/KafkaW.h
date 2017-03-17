@@ -17,7 +17,7 @@ public:
 BrokerOpt();
 void apply(rd_kafka_conf_t * conf);
 std::string address;
-int poll_timeout_ms = 10;
+int poll_timeout_ms = 100;
 std::map<std::string, int> conf_ints;
 std::map<std::string, std::string> conf_strings;
 };
@@ -96,10 +96,13 @@ int id = 0;
 class ProducerTopic;
 
 
-
 class ProducerMsg {
 public:
 virtual ~ProducerMsg();
+virtual void delivery_ok();
+virtual void delivery_fail();
+uchar * data;
+uint32_t size;
 };
 
 
@@ -134,11 +137,13 @@ int id = 0;
 
 class ProducerTopic {
 public:
-ProducerTopic(Producer const & producer, std::string name);
+ProducerTopic(ProducerTopic &&);
+ProducerTopic(std::shared_ptr<Producer> producer, std::string name);
 ~ProducerTopic();
 int produce(uchar * msg_data, int msg_size, void * opaque = nullptr, bool print_err = false);
+int produce(Producer::Msg & msg);
 // Currently it's nice to have access to these for statistics:
-Producer const & producer;
+std::shared_ptr<Producer> producer;
 rd_kafka_topic_t * rkt = nullptr;
 void do_copy();
 private:

@@ -109,3 +109,10 @@ Please send any feature requests you have (dominik.werder@psi.ch).
 - Multiple converters per epics channel
 - Pinned converters:  Multiple channels can be routed to the same converter
 - Optionally read from (the future) configuration service
+
+
+## Release notes
+
+### Breaking change around 2017-03-20
+
+EpicsPVUpdate changed, access via `epics_pvstr->pvstr`

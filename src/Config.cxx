@@ -17,6 +17,7 @@ int connected = 0;
 
 Listener::Listener(KafkaW::BrokerOpt bopt, uri::URI uri) {
 	bopt.address = uri.host_port;
+	bopt.poll_timeout_ms = 0;
 	impl.reset(new Listener_impl);
 	impl->consumer.reset(new KafkaW::Consumer(bopt));
 	auto & consumer = *impl->consumer;
