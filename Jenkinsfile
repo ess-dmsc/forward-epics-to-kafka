@@ -6,8 +6,8 @@ node('eee') {
     }
 
     dir("build") {
-        stage("Update streaming-data-types") {
-            sh "cd ..; git clone https://github.com/ess-dmsc/streaming-data-types.git; cd streaming-data-types; git pull"
+        stage("Update local dependencies") {
+            sh "bash -c 'cd .. && . code/build-script/update-local-deps.sh'"
         }
 
         stage("CMake") {
