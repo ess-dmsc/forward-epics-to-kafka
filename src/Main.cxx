@@ -19,9 +19,20 @@ KafkaW::BrokerOpt make_broker_opt(MainOpt const & opt) {
 }
 
 Main::Main(MainOpt & opt) : main_opt(opt), kafka_instance_set(Kafka::InstanceSet::Set(make_broker_opt(opt))) {
-	KafkaW::BrokerOpt bopt;
-	bopt.conf_strings["group.id"] = fmt::format("forwarder-command-listener--pid{}", getpid());
-	config_listener.reset(new Config::Listener {bopt, main_opt.broker_config});
+	bool use_config = true;
+	if (main_opt.broker_config.topic.size() == 0) {
+		LOG(3, "Name for configuration topic is empty");
+		use_config = false;
+	}
+	if (main_opt.broker_config.host.size() == 0) {
+		LOG(3, "Host for configuration topic broker is empty");
+		use_config = false;
+	}
+	if (use_config) {
+		KafkaW::BrokerOpt bopt;
+		bopt.conf_strings["group.id"] = fmt::format("forwarder-command-listener--pid{}", getpid());
+		config_listener.reset(new Config::Listener {bopt, main_opt.broker_config});
+	}
 	if (main_opt.json) {
 		auto m1 = main_opt.json->FindMember("mappings");
 		if (m1 != main_opt.json->MemberEnd()) {
@@ -97,7 +108,7 @@ void Main::forward_epics_to_kafka() {
 		collect_and_revive_failed_mappings();
 		check_instances();
 
-		config_listener->poll(config_cb);
+		if (config_listener) config_listener->poll(config_cb);
 
 		report_stats(started);
 		std::this_thread::sleep_for(std::chrono::milliseconds(1000));
