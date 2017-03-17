@@ -346,6 +346,7 @@ target_link_libraries(${tgt} libpvAccess)
 target_link_libraries(${tgt} libNormativeTypes)
 target_link_libraries(${tgt} librdkafka)
 target_link_libraries(${tgt} pcre2-8)
+target_link_libraries(${tgt} pthread)
 
 
 
