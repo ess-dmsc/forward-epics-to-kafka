@@ -1,0 +1,79 @@
+{
+	"$schema": "http://json-schema.org/schema#",
+	"id": "ess.schema.forward-epics-to-kafka.config-global",
+	"definitions": {
+		"uint": {
+			"type": "integer",
+			"minimum": 0
+		},
+		"converter": {
+			"type": "object",
+			"properties": {
+				"schema": {"type":"string"},
+				"name": {"type":"string"},
+				"__NOTE__": "One could in the future make broker/topic optional and allow a default",
+				"topic": {"type":"string"}
+			},
+			"required": ["schema", "topic"]
+		}
+	},
+
+	"type": "object",
+	"properties": {
+		"broker": {
+			"___DOC___": "Address of the default brokers to use, separate by comma.",
+			"type": "string",
+			"__DISABLED_pattern": "^ *([-.a-zA-Z0-9]+(:[0-9]+){0,1})( *, *[-.a-zA-Z0-9]+(:[0-9]+){0,1})* *$"
+		},
+		"streams": {
+			"type": "array",
+			"items": {
+				"allOf": [
+					{
+						"type": "object",
+						"properties": {
+							"channel": { "type": "string" }
+						},
+						"required": ["channel"]
+					},
+					{
+						"anyOf": [
+							{
+								"type": "object",
+								"properties": {
+									"converter": {"$ref": "#/definitions/converter"}
+								},
+								"required": ["converter"]
+							},
+							{
+								"type": "object",
+								"properties": {
+									"converter": {
+										"type": "array",
+										"items": {"$ref": "#/definitions/converter"}
+									}
+								},
+								"required": ["converter"]
+							}
+						]
+					}
+				]
+			}
+		},
+		"kafka": {
+			"type": "object",
+			"properties": {
+				"broker": {
+					"type": "object",
+					"properties": {
+						"asdasd": {"type":"string"}
+					},
+					"additionalProperties": {"anyOf":[{"type":"integer"},{"type":"string"}]}
+				}
+			},
+			"additionalProperties": false
+		}
+	},
+	"required": ["streams"],
+	"additionalProperties": false
+}

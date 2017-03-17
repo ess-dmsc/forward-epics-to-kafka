@@ -56,19 +56,19 @@ std::vector<char> gulp(FILE * f1) {
 		auto d1 = cap - c1;
 		auto n1 = fread(ret.data() + c1, 1, d1, f1);
 		if (n1 > 0) {
-			LOG(5, "read n1 {}", n1);
+			LOG(2, "read n1 {}", n1);
 		}
 		else {
 			if (feof(f1)) {
 				break;
 			}
 			if (ferror(f1)) {
-				LOG(5, "error on file read");
+				LOG(2, "error on file read");
 				break;
 			}
 		}
 		if (2*c1/cap >= 1) {
-			LOG(5, "re");
+			LOG(2, "re");
 			cap = 4 * cap / 3;
 			ret.reserve(cap);
 		}
@@ -87,22 +87,22 @@ int main(int argc, char ** argv) {
 	//std::vector<char> buf2;
 	//fclose(f1);
 	auto hex = binary_to_hex(buf1.data(), buf1.size());
-	LOG(5, "buf1: {:.{}}", hex.data(), hex.size());
+	LOG(2, "buf1: {:.{}}", hex.data(), hex.size());
 	auto b1 = GetEpicsPV(buf1.data());
 	if (b1->pv_type() == PV::NTScalarShort) {
 		auto pv = static_cast<NTScalarShort const *>(b1->pv());
 		short sv = pv->value();
-		LOG(5, "short [{}] value: {}", sizeof(sv), sv);
+		LOG(2, "short [{}] value: {}", sizeof(sv), sv);
 		auto hex = binary_to_hex((char*)&sv, sizeof(sv));
-		LOG(5, "short binary: {:.{}}", hex.data(), hex.size());
+		LOG(2, "short binary: {:.{}}", hex.data(), hex.size());
 	}
 	if (b1->pv_type() == PV::NTScalarDouble) {
 		auto pv = static_cast<NTScalarDouble const *>(b1->pv());
-		LOG(5, "double value: {}", pv->value());
+		LOG(2, "double value: {}", pv->value());
 	}
 	if (b1->pv_type() == PV::NTScalarFloat) {
 		auto pv = static_cast<NTScalarFloat const *>(b1->pv());
-		LOG(5, "float value: {}", pv->value());
+		LOG(2, "float value: {}", pv->value());
 	}
 	if (b1->pv_type() == PV::NTScalarArrayDouble) {
 		print_array<NTScalarArrayDouble>(b1);

@@ -59,6 +59,8 @@ KafkaW::Producer::Topic topic;
 };
 
 
+struct Instance_impl;
+
 class Instance {
 public:
 static sptr<Instance> create(KafkaW::BrokerOpt opt);
@@ -87,6 +89,7 @@ public:
 KafkaW::Producer producer;
 private:
 std::weak_ptr<Instance> self;
+std::unique_ptr<Instance_impl> impl;
 
 void poll_start();
 void poll_run();

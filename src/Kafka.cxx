@@ -4,6 +4,7 @@
 
 #include <map>
 #include <algorithm>
+#include <functional>
 
 #ifdef _MSC_VER
 	#define TLOG(level, fmt, ...) { \
@@ -30,7 +31,7 @@ namespace ForwardEpicsToKafka {
 namespace Kafka {
 
 InstanceSet & InstanceSet::Set(KafkaW::BrokerOpt opt) {
-	LOG(3, "Kafka InstanceSet with rdkafka version: {}", rd_kafka_version_str());
+	LOG(4, "Kafka InstanceSet with rdkafka version: {}", rd_kafka_version_str());
 	static std::unique_ptr<InstanceSet> kset;
 	if (!kset) {
 		kset.reset(new InstanceSet(opt));
@@ -73,14 +74,35 @@ int Instance::load() {
 }
 
 
+struct Instance_impl {
+Instance_impl();
+~Instance_impl();
+std::function<void(rd_kafka_message_t const * msg)> on_delivery_ok;
+std::function<void(rd_kafka_message_t const * msg)> on_delivery_failed;
+};
+
+Instance_impl::Instance_impl() {
+	on_delivery_ok = [] (rd_kafka_message_t const * msg) {
+		BrightnESS::FlatBufs::FB_uptr p1((BrightnESS::FlatBufs::FB *)msg->_private);
+	};
+	on_delivery_failed = [] (rd_kafka_message_t const * msg) {
+		BrightnESS::FlatBufs::FB_uptr p1((BrightnESS::FlatBufs::FB *)msg->_private);
+	};
+}
+
+Instance_impl::~Instance_impl() {
+}
+
+
 Instance::Instance(KafkaW::BrokerOpt opt) : opt(opt), producer(KafkaW::Producer(opt)) {
+	impl.reset(new Instance_impl);
 	static int id_ = 0;
 	id = id_++;
-	LOG(5, "Instance {} created.", id.load());
+	LOG(4, "Instance {} created.", id.load());
 }
 
 Instance::~Instance() {
-	LOG(5, "Instance {} goes away.", id.load());
+	LOG(4, "Instance {} goes away.", id.load());
 	poll_stop();
 }
 
@@ -95,15 +117,15 @@ sptr<Instance> Instance::create(KafkaW::BrokerOpt opt) {
 
 
 
-
-
 void Instance::init() {
+	producer.on_delivery_ok = impl->on_delivery_ok;
+	producer.on_delivery_failed = impl->on_delivery_failed;
 	poll_start();
 }
 
 
 void Instance::poll_start() {
-	ILOG(0, "START polling");
+	ILOG(7, "START polling");
 	do_poll = true;
 	poll_thread = std::thread(&Instance::poll_run, this);
 }
@@ -115,13 +137,13 @@ void Instance::poll_run() {
 		i1 += 1;
 		std::this_thread::sleep_for(std::chrono::milliseconds(750));
 	}
-	ILOG(3, "Poll finished");
+	ILOG(7, "Poll finished");
 }
 
 void Instance::poll_stop() {
 	do_poll = false;
 	poll_thread.join();
-	ILOG(3, "Poll thread joined");
+	ILOG(7, "Poll thread joined");
 }
 
 
@@ -153,7 +175,7 @@ sptr<Topic> Instance::get_or_create_topic(std::string topic_name, int id) {
 		for (auto & x : topics) {
 			if (auto sp = x.lock()) {
 				if (sp->topic_name() == topic_name) {
-					LOG(3, "reuse topic \"{}\", using {} so far", topic_name.c_str(), topics.size());
+					LOG(4, "reuse topic \"{}\", using {} so far", topic_name.c_str(), topics.size());
 					return sp;
 				}
 			}
@@ -186,13 +208,13 @@ void Instance::check_topic_health() {
 		if (!top) {
 			// Expired pointer should be the only reason why we do not get a lock
 			if (!t1.expired()) {
-				LOG(9, "WEIRD, shouldnt that be expired?");
+				LOG(0, "WEIRD, shouldnt that be expired?");
 			}
-			LOG(3, "No producer.  Already dtored?");
+			LOG(4, "No producer.  Already dtored?");
 			return true;
 		}
 		if (t1.lock() == nullptr && !t1.expired()) {
-			LOG(9, "ERROR weak ptr: no lock(), but not expired() either");
+			LOG(0, "ERROR weak ptr: no lock(), but not expired() either");
 			return true;
 		}
 		return false;
@@ -224,7 +246,7 @@ Topic::~Topic() {
 void Topic::produce(BrightnESS::FlatBufs::FB_uptr fb) {
 	void * opaque = fb.get();
 	auto m1 = fb->message();
-	//LOG(0, "produce seq {}  ts {}  len {}", seq, ts, m1.size);
+	//LOG(7, "produce seq {}  ts {}  len {}", seq, ts, m1.size);
 
 	// TODO
 	// Change KafkaW to return errors and check what is to be done with fb.
@@ -233,19 +255,19 @@ void Topic::produce(BrightnESS::FlatBufs::FB_uptr fb) {
 	auto rkt = topic.rkt;
 
 	if (x == RD_KAFKA_RESP_ERR_NO_ERROR) {
-		LOG(0, "sent seq {} to topic {} partition ??", fb->seq, rd_kafka_topic_name(rkt));
+		LOG(7, "sent seq {} to topic {} partition ??", fb->seq, rd_kafka_topic_name(rkt));
 		fb.release();
 		return;
 	}
 
 	if (x == RD_KAFKA_RESP_ERR__QUEUE_FULL) {
-		TLOG(7, "ERROR OutQ: {}  QUEUE_FULL  Dropping message seq {}", rd_kafka_outq_len(ins->producer.rk), fb->seq);
+		TLOG(0, "ERROR OutQ: {}  QUEUE_FULL  Dropping message seq {}", rd_kafka_outq_len(ins->producer.rk), fb->seq);
 	}
 	if (x == RD_KAFKA_RESP_ERR_MSG_SIZE_TOO_LARGE) {
-		TLOG(7, "ERROR OutQ: {}  TOO_LARGE seq {}", rd_kafka_outq_len(ins->producer.rk), fb->seq);
+		TLOG(0, "ERROR OutQ: {}  TOO_LARGE seq {}", rd_kafka_outq_len(ins->producer.rk), fb->seq);
 	}
 	if (x != 0) {
-		TLOG(7, "ERROR on produce topic {}  partition ??  seq {}: {}",
+		TLOG(0, "ERROR on produce topic {}  partition ??  seq {}: {}",
 			rd_kafka_topic_name(rkt),
 			fb->seq,
 			rd_kafka_err2str(rd_kafka_last_error())

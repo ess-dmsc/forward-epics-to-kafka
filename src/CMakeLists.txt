@@ -1,3 +1,5 @@
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ..)
+
 if (NOT CMAKE_BUILD_TYPE)
 set(CMAKE_BUILD_TYPE Release)
 endif()
@@ -193,6 +195,23 @@ endforeach()
 add_custom_target(flatbuffers_generate ALL DEPENDS ${flatbuffers_generated_headers})
 
 
+set(xxd_inputs "schema-config-global.json")
+set(xxd_generated "")
+foreach (f0 ${xxd_inputs})
+	set(src "${f0}")
+	set(tgt "${f0}.cxx")
+	add_custom_command(
+		OUTPUT ${tgt}
+		COMMAND xxd -i <${src} >${CMAKE_CURRENT_BINARY_DIR}/${f0}.cxx
+		DEPENDS ${src}
+		WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+		COMMENT "Process ${f0}"
+	)
+	list(APPEND xxd_generated "${tgt}")
+endforeach()
+add_custom_target(xxd_generate ALL DEPENDS ${xxd_generated})
+
+
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -fPIC -g")
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0 -fno-inline")
@@ -228,14 +247,21 @@ set_property(TARGET libNormativeTypes PROPERTY IMPORTED_LOCATION ${path_lib_epic
 add_library(librdkafka SHARED IMPORTED)
 set_property(TARGET librdkafka PROPERTY IMPORTED_LOCATION ${path_lib_rdkafka})
 
+if (have_gtest)
+add_library(gtest_static STATIC IMPORTED)
+set_property(TARGET gtest_static PROPERTY IMPORTED_LOCATION "${CMAKE_CURRENT_BINARY_DIR}/../googletest/googlemock/gtest/libgtest.a")
+endif()
+
+if (have_graylog_logger)
 add_library(libgraylog_logger SHARED IMPORTED)
 set_property(TARGET libgraylog_logger PROPERTY IMPORTED_LOCATION ${path_lib_graylog_logger})
+endif()
 
 
 
-set(tgt forward-epics-to-kafka)
-
-set (SOURCES
+set(SOURCES
+MainOpt.cxx
+Main.cxx
 helper.cxx
 logger.cxx
 configuration.cxx
@@ -244,25 +270,22 @@ Kafka.cxx
 KafkaW.cxx
 epics.cxx
 Config.cxx
-main.cxx
 fbschemas.cxx
-epics-to-fb.cxx
+SchemaRegistry.cxx
+uri.cxx
+blobs.cxx
 schema_f140_general.cxx
 schema_f141_epics_nt.cxx
+schemas/f142/f142.cxx
 ${path_include_fmt}/fmt/format.cc
 ${CMAKE_CURRENT_BINARY_DIR}/git_commit_current.cxx
 )
-
 if (WIN32)
 set(SOURCES ${SOURCES} wingetopt.c)
 endif (WIN32)
 
-add_executable(${tgt} ${SOURCES})
-set_property(TARGET ${tgt} PROPERTY RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/..")
-
-add_dependencies(${tgt} flatbuffers_generate)
-add_dependencies(${tgt} git_commit_current)
-
+set(tgt __objects)
+add_library(${tgt} OBJECT ${SOURCES})
 target_include_directories(${tgt} PRIVATE
 ${path_include_fmt}
 ${path_include_epics_base}
@@ -278,17 +301,37 @@ ${path_include_flatbuffers}
 ${path_include_rapidjson}
 ${CMAKE_CURRENT_BINARY_DIR}
 )
-
-if (path_include_configuration_manager)
-set_property(TARGET ${tgt} APPEND PROPERTY INCLUDE_DIRECTORIES ${path_include_configuration_manager})
-set_property(TARGET ${tgt} APPEND PROPERTY INCLUDE_DIRECTORIES ${path_include_configuration_manager}/redox/include)
-set_property(TARGET ${tgt} APPEND PROPERTY INCLUDE_DIRECTORIES ${path_include_configuration_manager}/cppzmq)
-endif()
-
-
-if (REQUIRE_GTEST)
+if (have_gtest)
 target_compile_definitions(${tgt} PRIVATE HAVE_GTEST=1)
-target_link_libraries(${tgt} gtest)
+target_include_directories(${tgt} PRIVATE ${path_include_gtest})
+endif()
+add_dependencies(${tgt} flatbuffers_generate xxd_generate git_commit_current)
+
+
+set(tgt forward-epics-to-kafka)
+add_executable(${tgt}
+forward-epics-to-kafka.cxx
+$<TARGET_OBJECTS:__objects>
+)
+add_dependencies(${tgt} flatbuffers_generate git_commit_current)
+target_include_directories(${tgt} PRIVATE
+${path_include_fmt}
+${path_include_flatbuffers}
+${path_include_rdkafka}
+${path_include_rapidjson}
+${path_include_epics_base}
+${path_include_epics_pvData}
+${path_include_epics_base}/os/Linux
+${path_include_epics_base}/os/Darwin
+${path_include_epics_base}/compiler/gcc
+${path_include_epics_base}/compiler/clang
+)
+
+if (have_gtest)
+add_dependencies(${tgt} gtest)
+target_compile_definitions(${tgt} PRIVATE HAVE_GTEST=1)
+target_include_directories(${tgt} PRIVATE ${path_include_gtest})
+target_link_libraries(${tgt} gtest_static)
 endif()
 
 if (have_graylog_logger)
@@ -297,12 +340,12 @@ target_include_directories(${tgt} PRIVATE ${path_include_graylog_logger})
 target_link_libraries(${tgt} libgraylog_logger)
 endif()
 
-
 target_link_libraries(${tgt} epicsbase)
 target_link_libraries(${tgt} libpvData)
 target_link_libraries(${tgt} libpvAccess)
 target_link_libraries(${tgt} libNormativeTypes)
 target_link_libraries(${tgt} librdkafka)
+target_link_libraries(${tgt} pcre2-8)
 
 
 
@@ -348,4 +391,8 @@ ${path_include_rdkafka}
 ${path_include_rapidjson}
 )
 target_link_libraries(${tgt} librdkafka)
+endif()
+
+if (have_gtest)
+add_subdirectory(tests)
 endif()

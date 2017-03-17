@@ -11,14 +11,6 @@ namespace FlatBufs {
 
 class FB;
 
-class fballoc : public flatbuffers::simple_allocator {
-public:
-fballoc();
-uint8_t * allocate(size_t size) const override;
-void deallocate(uint8_t * p) const override;
-~fballoc() { }
-};
-
 // POD
 class FBmsg {
 public:
@@ -29,7 +21,7 @@ size_t size;
 class FB : public KafkaW::ProducerMsg {
 public:
 FB();
-//void finalize();
+FB(uint32_t initial_size);
 FBmsg message();
 std::unique_ptr<flatbuffers::FlatBufferBuilder> builder;
 // Used for performance measurements:
