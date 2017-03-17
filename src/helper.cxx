@@ -116,7 +116,7 @@ TEST(helper, split_07) {
 
 std::string get_string(rapidjson::Value const * v, std::string path) {
 	auto a = split(path, ".");
-	int i1 = 0;
+	uint32_t i1 = 0;
 	for (auto & x : a) {
 		bool num = true;
 		for (char & c : x) {
@@ -124,7 +124,7 @@ std::string get_string(rapidjson::Value const * v, std::string path) {
 		}
 		if (num) {
 			if (!v->IsArray()) return "";
-			int n1 = (int)strtol(x.c_str(), nullptr, 10);
+			auto n1 = (uint32_t)strtol(x.c_str(), nullptr, 10);
 			if (n1 >= v->Size()) return "";
 			auto & v2 = v->GetArray()[n1];
 			if (i1 == a.size() - 1) {
