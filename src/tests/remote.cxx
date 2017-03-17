@@ -232,7 +232,6 @@ void Remote_T::simple_f142_via_config_message() {
 	{
 		using namespace rapidjson;
 		using namespace KafkaW;
-		using V = rapidjson::Value;
 		Document d0;
 		d0.SetObject();
 		auto & a = d0.GetAllocator();
