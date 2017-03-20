@@ -5,6 +5,7 @@ set(CMAKE_BUILD_TYPE Release)
 endif()
 message(STATUS "CMAKE_BUILD_TYPE: ${CMAKE_BUILD_TYPE}")
 
+link_directories("/opt/local/lib")
 
 file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/git_commit_current.cxx "extern \"C\" char const GIT_COMMIT[] = \"NOTSET\";\n")
 
@@ -20,7 +21,13 @@ DEPENDS git_commit_now
 
 
 # Allows for easier testing with multiple versions on local hosts:
-set(epicsv4_dir        $ENV{epicsv4_dir})
+if (EXISTS $ENV{epicsv4_dir})
+    set(epicsv4_dir        $ENV{epicsv4_dir})
+elseif(EXISTS $ENV{EPICSV4})
+    set(epicsv4_dir        $ENV{EPICSV4})
+else()
+    message(FATAL_ERROR "EPICS v4 location not found.")
+endif()
 
 set(epicsbase_dir      $ENV{EPICS_BASE})
 set(epics_arch         $ENV{EPICS_HOST_ARCH})
@@ -300,6 +307,7 @@ ${path_include_rdkafka}
 ${path_include_flatbuffers}
 ${path_include_rapidjson}
 ${CMAKE_CURRENT_BINARY_DIR}
+"/opt/local/include/"
 )
 if (have_gtest)
 target_compile_definitions(${tgt} PRIVATE HAVE_GTEST=1)
@@ -325,6 +333,7 @@ ${path_include_epics_base}/os/Linux
 ${path_include_epics_base}/os/Darwin
 ${path_include_epics_base}/compiler/gcc
 ${path_include_epics_base}/compiler/clang
+"/opt/local/include/"
 )
 
 if (have_gtest)
