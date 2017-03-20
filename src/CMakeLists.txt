@@ -21,12 +21,10 @@ DEPENDS git_commit_now
 
 
 # Allows for easier testing with multiple versions on local hosts:
-if (EXISTS $ENV{epicsv4_dir})
-    set(epicsv4_dir        $ENV{epicsv4_dir})
-elseif(EXISTS $ENV{EPICSV4})
+if (EXISTS $ENV{EPICSV4})
     set(epicsv4_dir        $ENV{EPICSV4})
 else()
-    message(FATAL_ERROR "EPICS v4 location not found.")
+    set(epicsv4_dir        $ENV{epicsv4_dir})
 endif()
 
 set(epicsbase_dir      $ENV{EPICS_BASE})
