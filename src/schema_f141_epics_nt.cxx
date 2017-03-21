@@ -97,8 +97,8 @@ using T1 = typename std::conditional<
 
 static PV_t convert(flatbuffers::FlatBufferBuilder * builder, epics::pvData::PVScalar * field_) {
 	auto field = static_cast<epics::pvData::PVScalarValue<T0>*>(field_);
-	T1 pv_builder(*builder);
 	T0 val = field->get();
+	T1 pv_builder(*builder);
 	pv_builder.add_value(val);
 	return {BuilderType_to_Enum_PV<T1>::v(), pv_builder.Finish().Union()};
 }
@@ -139,10 +139,10 @@ using T3 = typename std::conditional< std::is_same<T0, epics::pvData::boolean>::
 
 static PV_t convert(flatbuffers::FlatBufferBuilder * builder, epics::pvData::PVScalarArray * field_) {
 	auto field = static_cast<epics::pvData::PVValueArray<T0>*>(field_);
-	T1 pv_builder(*builder);
 	auto svec = field->view();
 	auto nlen = svec.size();
 	auto val = builder->CreateVector((T3*)svec.data(), nlen);
+	T1 pv_builder(*builder);
 	pv_builder.add_value(val);
 	return {BuilderType_to_Enum_PV<T1>::v(), pv_builder.Finish().Union()};
 }
