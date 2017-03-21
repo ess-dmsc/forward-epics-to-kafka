@@ -157,12 +157,12 @@ static void msg_delivered_cb(
 
 	// TODO
 	// Use callback to reuse our message buffers
-	LOG(1, "delivery: {}   offset {}", rd_kafka_message_errstr(rkmessage), rkmessage->offset);
+	LOG(6, "delivery: {}   offset {}", rd_kafka_message_errstr(rkmessage), rkmessage->offset);
 	if (rkmessage->err) {
-		LOG(6, "ERROR on delivery, topic {}, {}", rd_kafka_topic_name(rkmessage->rkt), rd_kafka_err2str(rkmessage->err));
+		LOG(1, "ERROR on delivery, topic {}, {}", rd_kafka_topic_name(rkmessage->rkt), rd_kafka_err2str(rkmessage->err));
 	}
 	else {
-		LOG(0, "OK delivered ({} bytes, offset {}, partition {}): {:.{}}\n",
+		LOG(7, "OK delivered ({} bytes, offset {}, partition {}): {:.{}}\n",
 			rkmessage->len, rkmessage->offset, rkmessage->partition, (const char *)rkmessage->payload, (int)rkmessage->len);
 	}
 }
@@ -171,7 +171,7 @@ static void msg_delivered_cb(
 static void kafka_error_cb(rd_kafka_t * rk, int err_i, const char * reason, void * opaque) {
 	// cast necessary because of Kafka API design
 	rd_kafka_resp_err_t err = (rd_kafka_resp_err_t) err_i;
-	LOG(7, "ERROR Kafka: {}, {}, {}, {}", err_i, rd_kafka_err2name(err), rd_kafka_err2str(err), reason);
+	LOG(0, "ERROR Kafka: {}, {}, {}, {}", err_i, rd_kafka_err2name(err), rd_kafka_err2str(err), reason);
 
 	// Can not throw, as it's Kafka's thread.
 	// Must notify my watchdog though.
@@ -182,7 +182,7 @@ static void kafka_error_cb(rd_kafka_t * rk, int err_i, const char * reason, void
 
 
 static int stats_cb(rd_kafka_t * rk, char * json, size_t json_len, void * opaque) {
-	LOG(3, "INFO stats_cb length {}", json_len);
+	LOG(4, "INFO stats_cb length {}", json_len);
 	// TODO
 	// What does Kafka want us to return from this callback?
 	return 0;
@@ -209,13 +209,13 @@ void init_kafka() {
 
 	rk = rd_kafka_new(RD_KAFKA_PRODUCER, conf, errstr, errstr_N);
 	if (!rk) {
-		LOG(7, "ERROR can not create kafka handle: {}", errstr);
+		LOG(0, "ERROR can not create kafka handle: {}", errstr);
 		throw std::runtime_error("can not create Kafka handle");
 	}
-	LOG(3, "Name of the new Kafka handle: {}", rd_kafka_name(rk));
+	LOG(4, "Name of the new Kafka handle: {}", rd_kafka_name(rk));
 	rd_kafka_set_log_level(rk, 10);
 	if (rd_kafka_brokers_add(rk, main_opt.broker_configuration_address.c_str()) == 0) {
-		LOG(7, "ERROR could not add brokers");
+		LOG(0, "ERROR could not add brokers");
 		throw std::runtime_error("can not add brokers");
 	}
 
@@ -227,10 +227,10 @@ void init_kafka() {
 	if (rkt == nullptr) {
 		// Seems like Kafka uses the system error code?
 		auto errstr = rd_kafka_err2str(rd_kafka_errno2err(errno));
-		LOG(7, "ERROR could not create Kafka topic: {}", errstr);
+		LOG(0, "ERROR could not create Kafka topic: {}", errstr);
 		throw std::runtime_error("can not create kafka topic");
 	}
-	LOG(1, "OK, seems like we've created topic {}", rd_kafka_topic_name(rkt));
+	LOG(6, "OK, seems like we've created topic {}", rd_kafka_topic_name(rkt));
 	//rd_kafka_poll(rk, 10);
 }
 
@@ -249,15 +249,15 @@ void msg(std::string msg) {
 	void * callback_data = NULL;
 	int msgflags = RD_KAFKA_MSG_F_COPY; // 0, RD_KAFKA_MSG_F_COPY, RD_KAFKA_MSG_F_FREE
 
-	LOG(1, "Sending: {}", msg.c_str());
+	LOG(6, "Sending: {}", msg.c_str());
 
 	x = rd_kafka_produce(rkt, partition, msgflags, (void*)msg.c_str(), msg.size(), key, key_len, callback_data);
 	if (x != 0) {
-		LOG(7, "ERROR on produce topic {}  partition {}: {}", rd_kafka_topic_name(rkt), partition, rd_kafka_err2str(rd_kafka_last_error()));
+		LOG(0, "ERROR on produce topic {}  partition {}: {}", rd_kafka_topic_name(rkt), partition, rd_kafka_err2str(rd_kafka_last_error()));
 		throw std::runtime_error("ERROR on message send");
 	}
 
-	LOG(1, "produced for topic {} partition {}", rd_kafka_topic_name(rkt), partition);
+	LOG(6, "produced for topic {} partition {}", rd_kafka_topic_name(rkt), partition);
 }
 
 void wait_queue_out() {
@@ -294,7 +294,7 @@ int main(int argc, char ** argv) {
 		int c = getopt_long(argc, argv, "", long_options, &option_index);
 		if (c == -1) break;
 		if (c == '?') {
-			//LOG(5, "option argument missing");
+			//LOG(2, "option argument missing");
 			getopt_error = true;
 		}
 		//printf("at option %s\n", long_options[option_index].name);
@@ -339,7 +339,7 @@ int main(int argc, char ** argv) {
 	}
 
 	if (getopt_error) {
-		LOG(5, "ERROR parsing command line options");
+		LOG(2, "ERROR parsing command line options");
 		opt.help = true;
 		return 1;
 	}

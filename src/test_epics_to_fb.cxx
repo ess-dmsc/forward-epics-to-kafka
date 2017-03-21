@@ -41,7 +41,7 @@ int epics_test_fb_general() {
 			throw std::runtime_error("Bad buffer");
 		}
 		else {
-			LOG(3, "Verified");
+			LOG(4, "Verified");
 		}
 	}
 	if (true) {

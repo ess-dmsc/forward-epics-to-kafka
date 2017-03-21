@@ -1,6 +1,7 @@
 #include "logger.h"
-#include "epics-to-fb.h"
+#include "SchemaRegistry.h"
 #include "schemas/f140_general_generated.h"
+#include "epics-to-fb.h"
 
 namespace BrightnESS {
 namespace FlatBufs {
@@ -68,7 +69,7 @@ namespace fbg {
 				FLOG(level, "[size(): {}]", sa->view().size());
 				vector<flatbuffers::Offset<Obj>> v1;
 				for (auto & x : sa->view()) {
-					FLOG(1+level, "OK");
+					FLOG(6+level, "OK");
 					auto sub = Field(builder, x, 1+level);
 					if (sub.type != F::Obj) {
 						throw std::runtime_error("mismatched types in the EPICS structure");

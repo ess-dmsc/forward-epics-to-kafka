@@ -1,4 +1,4 @@
-#include "epics-to-fb.h"
+#include "SchemaRegistry.h"
 
 namespace BrightnESS {
 namespace FlatBufs {
