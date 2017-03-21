@@ -34,7 +34,7 @@ Main::Main(MainOpt & opt) : main_opt(opt), kafka_instance_set(Kafka::InstanceSet
 		config_listener.reset(new Config::Listener {bopt, main_opt.broker_config});
 	}
 	if (main_opt.json) {
-		auto m1 = main_opt.json->FindMember("mappings");
+		auto m1 = main_opt.json->FindMember("streams");
 		if (m1 != main_opt.json->MemberEnd()) {
 			if (m1->value.IsArray()) {
 				for (auto & m : m1->value.GetArray()) {
