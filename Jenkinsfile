@@ -10,8 +10,8 @@ node('eee') {
             sh "cd .. && bash code/build-script/update-local-deps.sh"
         }
 
-        stage("make clean") {
-            sh "make clean; rm CMakeCache.txt"
+        stage("Clean") {
+            sh "rm -rf *"
         }
 
         stage("CMake") {
