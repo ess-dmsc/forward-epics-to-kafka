@@ -26,5 +26,9 @@ node('eee') {
             sh "./tests/tests -- --gtest_output=xml"
             junit 'test_detail.xml'
         }
+
+        stage("Archive") {
+            archiveArtifacts 'forward-epics-to-kafka'
+        }
     }
 }
