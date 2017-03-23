@@ -30,7 +30,7 @@ Main::Main(MainOpt & opt) :
 	finfo = std::shared_ptr<ForwarderInfo>(new ForwarderInfo(this));
 	finfo->teamid = main_opt.teamid;
 
-	for (int i1 = 0; i1 < 8; ++i1) {
+	for (int i1 = 0; i1 < opt.conversion_threads; ++i1) {
 		conversion_workers.emplace_back(new ConversionWorker(&conversion_scheduler));
 	}
 

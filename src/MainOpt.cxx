@@ -121,6 +121,12 @@ int MainOpt::parse_json_file(string config_file) {
 		}
 	}
 	{
+		auto & v = d.FindMember("conversion-threads")->value;
+		if (v.IsInt()) {
+			conversion_threads = v.GetInt();
+		}
+	}
+	{
 		auto & v = d.FindMember("kafka")->value;
 		if (v.IsObject()) {
 			auto & v2 = v.FindMember("broker")->value;

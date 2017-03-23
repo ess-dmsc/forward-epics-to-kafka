@@ -87,7 +87,7 @@ Exit the forwarder:
 ### Using a configuration file
 
 The forwarding can be also set up with a configuration file, e.g:
-```
+```json
 {
 	"broker": "kafkabroker:9092",
 	"streams": [
@@ -96,6 +96,15 @@ The forwarding can be also set up with a configuration file, e.g:
 			"converter": { "schema": "f142", "topic": "Kafka_topic_name" }
 		}
 	]
+}
+```
+
+#### More options possible in the configuration file
+These are optional.
+Given are the defaults:
+```json
+{
+  "conversion-threads": 1
 }
 ```
 

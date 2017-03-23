@@ -27,6 +27,7 @@
 			"type": "string",
 			"__DISABLED_pattern": "^ *([-.a-zA-Z0-9]+(:[0-9]+){0,1})( *, *[-.a-zA-Z0-9]+(:[0-9]+){0,1})* *$"
 		},
+		"conversion-threads": {"type":"integer"},
 		"streams": {
 			"type": "array",
 			"items": {

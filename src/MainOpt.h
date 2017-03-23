@@ -22,6 +22,7 @@ uri::URI broker_config {"//localhost:9092/forward_epics_to_kafka_commands"};
 vector<uri::URI> brokers;
 string kafka_gelf = "";
 string graylog_logger_address = "";
+int conversion_threads = 1;
 bool help = false;
 string log_file;
 string config_file;
