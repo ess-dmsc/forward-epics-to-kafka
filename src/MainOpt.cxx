@@ -260,7 +260,7 @@ std::pair<int, std::unique_ptr<MainOpt>> parse_opt(int argc, char ** argv) {
 	}
 	if (opt.help) {
 		fmt::print(
-			"forward-epics-to-kafka-0.0.1 {:.7} (ESS, BrightnESS)\n"
+			"forward-epics-to-kafka-0.1.0 {:.7} (ESS, BrightnESS)\n"
 			"  Contact: dominik.werder@psi.ch\n\n",
 			GIT_COMMIT
 		);

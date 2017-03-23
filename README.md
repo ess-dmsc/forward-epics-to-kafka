@@ -1,10 +1,14 @@
 # Forward EPICS to Kafka
 
 - Forward EPICS process variables to Kafka topics
-- Translates EPICS data into FlatBuffers according to the configured schema
-- New translations from EPICS to FlatBuffers can be easily registered
+- Converts EPICS data into FlatBuffers according to the configured schema
+- New converters from EPICS to FlatBuffers can be easily
+  [added](#adding-new-converter-plugins).
 - FlatBuffer schemas are taken from repository `streaming-data-types`
 - Comes with support for `f140_general` and `f142_logdata`
+- One EPICS PV can be forwarded through [multiple](#forwarding-a-pv-through-multiple-converters)
+  converters
+- Conversion to FlatBuffers is distributed over threads
 
 
 ## Installation
@@ -50,11 +54,51 @@ Run
 ./tests/tests
 ```
 
+#### Tests with actual traffic
+The tests which involve actual EPICS and Kafka traffic are disabled by default.
+They can be run with:
+```
+./tests/tests -- --gtest_filter=Remote
+```
+Please note that you probably have to specify your broker, so a more complete
+command looks like:
+```
+./tests/tests --broker //<host> --broker-config //<host>/tmp-commands -- --gtest_filter=Remote\*
+```
+Please note also that you need to have an EPICS PV running:
+- Normative Types Array Double, name: `forwarder_test_nt_array_double`
+- Normative Types Array Int32, name: `forwarder_test_nt_array_int32`
+and they need to update during the runtime of the test.
 
-### Performance
+
+
+## Performance
 
 Some more thorough figures are to be included here, but we have forwarded
-about 200MB/s without problems.
+about 200MB/s without problems for extended periods of time.
+Higher bandwidth has been done, but not yet tested over long time periods.
+
+### Conversion bandwidth
+
+If we run as usual except that we do not actually write to Kafka, tests show
+on my quite standard 4 core desktop PC a flatbuffer conversion rate of about
+2.8 GB/s. with all cores at a ~80% usage.
+These numbers are of course very rough estimates and depend on a lot of
+factors.  For systematic tests are to be done.
+
+### Update Frequency
+
+Note that EPICS is not made for very high frequency updates as it will happily
+loose updates.
+
+That being said, a process variable updated at 10 kHz containing 2048 doubles,
+with 3 EPICS to flatbuffer converters attached and therefore producing 460MB/s
+of data works just fine, utilizing about 30% of each core on my desktop machine
+including the EPICS producer.
+
+Higher frequency updates over EPICS should be batched into a PV which contains
+many events at a time.
+
 
 
 ## Usage
@@ -110,19 +154,45 @@ Given are the defaults:
 ```
 
 
+### Forwarding a PV through Multiple Converters
+If you pass an array of converters instead, the EPICS PV will be forwarded
+through multiple converters:
+```
+{
+  "channel": "Epics_PV_name",
+  "converter": [
+    { "schema": "f142", "topic": "Kafka_topic_name" },
+    { "schema": "f999", "topic": "some_other_topic" }
+  ]
+}
+```
 
-## Features planned for the future
+
+## Adding New Converter Plugins
+
+New converters from EPICS to Flatbuffers can be easily added.
+Please have a look at the last 20 lines of `src/schemas/f142/f142.cxx` on how
+to register your plugin with the SchemaRegistry.
+There is no need to touch existing code at all to register a new plugin,
+but you probably want to at it to `CMakeLists.txt`.
+There will be support for dynamic loading of shared objects also soon.
+
+
+
+## Features Coming Soon
+
+- Pinned converters:  Multiple channels can be routed to the same converter
+- Configure options for threading (number of workers, queue lengths, ...)
+- More dynamic scheduling of work
+- Dynamically load converter plugins from shared objects
+
+
+## For the future
 
 Please send any feature requests you have (dominik.werder@psi.ch).
 
-- More options for threading
-- Multiple converters per epics channel
-- Pinned converters:  Multiple channels can be routed to the same converter
 - Optionally read from (the future) configuration service
 
 
+
 ## Release notes
-
-### Breaking change around 2017-03-20
-
-EpicsPVUpdate changed, access via `epics_pvstr->pvstr`
