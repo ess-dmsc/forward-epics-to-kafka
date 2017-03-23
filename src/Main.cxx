@@ -31,7 +31,7 @@ Main::Main(MainOpt & opt) :
 	finfo->teamid = main_opt.teamid;
 
 	for (int i1 = 0; i1 < opt.conversion_threads; ++i1) {
-		conversion_workers.emplace_back(new ConversionWorker(&conversion_scheduler));
+		conversion_workers.emplace_back(new ConversionWorker(&conversion_scheduler, opt.conversion_worker_queue_size));
 	}
 
 	bool use_config = true;

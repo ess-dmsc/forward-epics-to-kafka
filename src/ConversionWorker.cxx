@@ -18,8 +18,8 @@ static uint16_t _fmt(std::unique_ptr<ConversionWorkPacket> & x) {
 	return (uint16_t)(((uint64_t)x->up.get())>>0);
 }
 
-ConversionWorker::ConversionWorker(ConversionScheduler * scheduler) :
-	queue(1024),
+ConversionWorker::ConversionWorker(ConversionScheduler * scheduler, uint32_t queue_size) :
+	queue(queue_size),
 	id(s_id++),
 	scheduler(scheduler)
 {

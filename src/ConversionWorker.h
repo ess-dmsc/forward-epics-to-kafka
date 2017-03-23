@@ -23,7 +23,7 @@ Stream * stream = nullptr;
 
 class ConversionWorker {
 public:
-ConversionWorker(ConversionScheduler * scheduler);
+ConversionWorker(ConversionScheduler * scheduler, uint32_t queue_size);
 int start();
 int stop();
 int run();

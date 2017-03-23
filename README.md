@@ -104,7 +104,8 @@ These are optional.
 Given are the defaults:
 ```json
 {
-  "conversion-threads": 1
+  "conversion-threads": 1,
+  "conversion-worker-queue-size": 1024
 }
 ```
 
