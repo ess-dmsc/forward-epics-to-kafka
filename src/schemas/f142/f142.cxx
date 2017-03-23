@@ -2,6 +2,7 @@
 #include "../../SchemaRegistry.h"
 #include "../../helper.h"
 #include "../../epics-to-fb.h"
+#include "../../epics-pvstr.h"
 #include "schemas/f142_logdata_generated.h"
 
 namespace BrightnESS {
@@ -134,6 +135,7 @@ using T3 = typename std::conditional< std::is_same<T0, epics::pvData::boolean>::
 
 static Value_t convert(flatbuffers::FlatBufferBuilder * builder, epics::pvData::PVScalarArray * field_) {
 	auto field = static_cast<epics::pvData::PVValueArray<T0>*>(field_);
+	field->setImmutable();
 	auto svec = field->view();
 	auto nlen = svec.size();
 	auto val = builder->CreateVector((T3*)svec.data(), nlen);
@@ -259,12 +261,13 @@ Value_t make_Value(flatbuffers::FlatBufferBuilder & builder, epics::pvData::PVFi
 class Converter : public MakeFlatBufferFromPVStructure {
 public:
 BrightnESS::FlatBufs::FB_uptr convert(EpicsPVUpdate const & up) override {
+	auto & pvstr = up.epics_pvstr;
 	auto fb = BrightnESS::FlatBufs::FB_uptr(new BrightnESS::FlatBufs::FB);
 
 	auto builder = fb->builder.get();
 	// this is the field type ID string: up.pvstr->getStructure()->getID()
 	auto n = builder->CreateString(up.channel);
-	auto vF = make_Value(*builder, up.pvstr->getSubField("value"));
+	auto vF = make_Value(*builder, pvstr->getSubField("value"));
 
 	flatbuffers::Offset<void> fwdinfo = 0;
 	if (true) {
@@ -273,11 +276,11 @@ BrightnESS::FlatBufs::FB_uptr convert(EpicsPVUpdate const & up) override {
 		fb->seq = up.seq;
 		fb->fwdix = up.fwdix;
 		uint64_t seq_data = 0;
-		if (auto x = up.pvstr->getSubField<epics::pvData::PVScalarValue<uint64_t>>("seq")) {
+		if (auto x = pvstr->getSubField<epics::pvData::PVScalarValue<uint64_t>>("seq")) {
 			seq_data = x->get();
 		}
 		uint64_t ts_data = 0;
-		if (auto x = up.pvstr->getSubField<epics::pvData::PVScalarValue<uint64_t>>("ts")) {
+		if (auto x = pvstr->getSubField<epics::pvData::PVScalarValue<uint64_t>>("ts")) {
 			ts_data = x->get();
 		}
 		bf.add_seq_data(seq_data);
@@ -294,7 +297,7 @@ BrightnESS::FlatBufs::FB_uptr convert(EpicsPVUpdate const & up) override {
 	b.add_value_type(vF.type);
 	b.add_value(vF.off);
 
-	if (auto pvTimeStamp = up.pvstr->getSubField<epics::pvData::PVStructure>("timeStamp")) {
+	if (auto pvTimeStamp = pvstr->getSubField<epics::pvData::PVStructure>("timeStamp")) {
 		uint64_t ts = (uint64_t)pvTimeStamp->getSubField<epics::pvData::PVScalarValue<int64_t>>("secondsPastEpoch")->get();
 		ts *= 1000000000;
 		ts += pvTimeStamp->getSubField<epics::pvData::PVScalarValue<int32_t>>("nanoseconds")->get();

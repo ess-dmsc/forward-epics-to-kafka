@@ -2,6 +2,7 @@
 #include "SchemaRegistry.h"
 #include "schemas/f140_general_generated.h"
 #include "epics-to-fb.h"
+#include "epics-pvstr.h"
 
 namespace BrightnESS {
 namespace FlatBufs {
@@ -30,7 +31,7 @@ namespace fbg {
 	F_t Field(flatbuffers::FlatBufferBuilder & builder, epics::pvData::PVFieldPtr const & field, int level) {
 		auto etype = field->getField()->getType();
 		if (etype == epics::pvData::Type::structure) {
-			auto pvstr = reinterpret_cast<epics::pvData::PVStructure*>(field.get());
+			auto pvstr = reinterpret_cast<epics::pvData::PVStructure const *>(field.get());
 			auto & subfields = pvstr->getPVFields();
 			FLOG(level, "subfields.size(): {}", subfields.size());
 
@@ -196,16 +197,17 @@ class Converter : public MakeFlatBufferFromPVStructure {
 public:
 BrightnESS::FlatBufs::FB_uptr convert(EpicsPVUpdate const & up) override {
 	// Passing initial size:
+	auto & pvstr = up.epics_pvstr;
 	auto fb = BrightnESS::FlatBufs::FB_uptr(new BrightnESS::FlatBufs::FB);
 	uint64_t ts_data = 0;
-	if (auto x = up.pvstr->getSubField<epics::pvData::PVScalarValue<uint64_t>>("ts")) {
+	if (auto x = pvstr->getSubField<epics::pvData::PVScalarValue<uint64_t>>("ts")) {
 		ts_data = x->get();
 	}
 	fb->seq = up.seq;
 	fb->fwdix = up.fwdix;
 	auto builder = fb->builder.get();
 	auto n = builder->CreateString("some-name-must-go-here");
-	auto vF = fbg::Field(*builder, up.pvstr, 0);
+	auto vF = fbg::Field(*builder, pvstr, 0);
 	//some kind of 'union F' offset:   flatbuffers::Offset<void>
 	FlatBufs::f140_general::PVBuilder b(*builder);
 	b.add_n(n);

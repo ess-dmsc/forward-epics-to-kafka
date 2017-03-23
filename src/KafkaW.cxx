@@ -24,8 +24,8 @@ BrokerOpt::BrokerOpt() {
 		{"message.max.bytes",                 23 * 1024 * 1024},
 		{"fetch.message.max.bytes",           23 * 1024 * 1024},
 		{"receive.message.max.bytes",         23 * 1024 * 1024},
-		{"queue.buffering.max.messages",              2 * 1024},
-		{"queue.buffering.max.ms",                         100},
+		{"queue.buffering.max.messages",            100 * 1000},
+		{"queue.buffering.max.ms",                          50},
 		{"batch.num.messages",                      100 * 1000},
 		//{"socket.send.buffer.bytes",          23 * 1024 * 1024},
 		//{"socket.receive.buffer.bytes",       23 * 1024 * 1024},
@@ -411,12 +411,12 @@ PollStatus Consumer::poll() {
 		//auto topic_name = rd_kafka_topic_name(msg->rkt);
 		//int partition = msg->partition;
 		if (msg->err == RD_KAFKA_RESP_ERR_NO_ERROR) {
-			LOG(7, "Consuming offset: {}  partition: {}", m2->offset(), m2->partition());
+			//LOG(7, "Consuming offset: {}  partition: {}", m2->offset(), m2->partition());
 			return PollStatus::make_Msg(std::move(m2));
 		}
 		else if (msg->err == RD_KAFKA_RESP_ERR__PARTITION_EOF) {
 			// Just an advisory.  msg contains which partition it is.
-			LOG(7, "RD_KAFKA_RESP_ERR__PARTITION_EOF");
+			//LOG(7, "RD_KAFKA_RESP_ERR__PARTITION_EOF");
 		}
 		else if (msg->err == RD_KAFKA_RESP_ERR__ALL_BROKERS_DOWN) {
 			LOG(4, "RD_KAFKA_RESP_ERR__ALL_BROKERS_DOWN");
@@ -465,7 +465,7 @@ void Producer::cb_delivered(rd_kafka_t * rk, rd_kafka_message_t const * msg, voi
 		if (auto & cb = self->on_delivery_ok) {
 			cb(msg);
 		}
-		if (true) {
+		if (false) {
 			LOG(7, "IID: {}  Ok delivered ({}, p {}, offset {}, len {})",
 				self->id,
 				rd_kafka_name(rk),
@@ -609,7 +609,7 @@ rd_kafka_t * Producer::rd_kafka_ptr() const {
 ProducerTopic::~ProducerTopic() {
 	LOG(7, "~ProducerTopic");
 	if (rkt) {
-		auto rk = producer.rd_kafka_ptr();
+		auto rk = producer->rd_kafka_ptr();
 		int ns = 10;
 		while (rd_kafka_outq_len(rk) > 0) {
 			auto n1 = rd_kafka_poll(rk, ns);
@@ -625,7 +625,7 @@ ProducerTopic::~ProducerTopic() {
 }
 
 
-ProducerTopic::ProducerTopic(Producer const & producer, std::string name) : producer(producer), _name(name) {
+ProducerTopic::ProducerTopic(std::shared_ptr<Producer> producer, std::string name) : producer(producer), _name(name) {
 	TopicOpt opt;
 	rd_kafka_topic_conf_t * topic_conf = rd_kafka_topic_conf_new();
 	opt.apply(topic_conf);
@@ -633,19 +633,27 @@ ProducerTopic::ProducerTopic(Producer const & producer, std::string name) : prod
 	// rd_kafka_msg_partitioner_random, rd_kafka_msg_partitioner_consistent, rd_kafka_msg_partitioner_consistent_random
 	//rd_kafka_topic_conf_set_partitioner_cb(topic_conf, rd_kafka_msg_partitioner_random);
 
-	rkt = rd_kafka_topic_new(producer.rd_kafka_ptr(), _name.c_str(), topic_conf);
+	rkt = rd_kafka_topic_new(producer->rd_kafka_ptr(), _name.c_str(), topic_conf);
 	if (rkt == nullptr) {
 		// Seems like Kafka uses the system error code?
 		auto errstr = rd_kafka_err2str(rd_kafka_errno2err(errno));
 		LOG(0, "ERROR could not create Kafka topic: {}", errstr);
 		throw std::exception();
 	}
-	LOG(7, "ctor topic: {}  producer: {}", rd_kafka_topic_name(rkt), rd_kafka_name(producer.rd_kafka_ptr()));
+	LOG(7, "ctor topic: {}  producer: {}", rd_kafka_topic_name(rkt), rd_kafka_name(producer->rd_kafka_ptr()));
+}
+
+
+ProducerTopic::ProducerTopic(ProducerTopic && x) {
+	std::swap(producer, x.producer);
+	std::swap(rkt, x.rkt);
+	std::swap(_name, x._name);
+	std::swap(_do_copy, x._do_copy);
 }
 
 
 int ProducerTopic::produce(uchar * msg_data, int msg_size, void * opaque, bool print_err) {
-	static_assert(RD_KAFKA_RESP_ERR_NO_ERROR == 0, "Currently return lies on NO_ERROR == 0");
+	static_assert(RD_KAFKA_RESP_ERR_NO_ERROR == 0, "We rely on NO_ERROR == 0");
 	if (not rkt) {
 		throw std::runtime_error("ERROR tried to produce on uninitialized rkt");
 	}
@@ -660,19 +668,22 @@ int ProducerTopic::produce(uchar * msg_data, int msg_size, void * opaque, bool p
 	int msgflags = 0; // 0, RD_KAFKA_MSG_F_COPY, RD_KAFKA_MSG_F_FREE
 	if (_do_copy || opaque == nullptr) msgflags = RD_KAFKA_MSG_F_COPY;
 
+	// This overload does always copy because non-copy should use the new Msg based one.
+	msgflags = RD_KAFKA_MSG_F_COPY;
+
 	// TODO
 	// How does Kafka report the error?
 	// API docs state that error codes are given in 'errno'
 	// Check that this is thread safe ?!?
 
-	x = rd_kafka_produce(rkt, partition, msgflags, msg_data, msg_size, key, key_len, opaque);
+	x = rd_kafka_produce(rkt, partition, msgflags, msg_data, msg_size, key, key_len, nullptr);
 
 	if (print_err) {
 		if (x == RD_KAFKA_RESP_ERR__QUEUE_FULL) {
-			LOG(0, "ERROR OutQ: {}  QUEUE_FULL", rd_kafka_outq_len(producer.rd_kafka_ptr()));
+			LOG(0, "ERROR OutQ: {}  QUEUE_FULL", rd_kafka_outq_len(producer->rd_kafka_ptr()));
 		}
 		else if (x == RD_KAFKA_RESP_ERR_MSG_SIZE_TOO_LARGE) {
-			LOG(0, "ERROR OutQ: {}  TOO_LARGE", rd_kafka_outq_len(producer.rd_kafka_ptr()));
+			LOG(0, "ERROR OutQ: {}  TOO_LARGE", rd_kafka_outq_len(producer->rd_kafka_ptr()));
 		}
 		else if (x != 0) {
 			LOG(0, "ERROR on produce topic {}  partition {}   {}",
@@ -691,6 +702,53 @@ int ProducerTopic::produce(uchar * msg_data, int msg_size, void * opaque, bool p
 
 
 
+
+
+int ProducerTopic::produce(Producer::Msg & msg) {
+	if (not rkt) {
+		throw std::runtime_error("ERROR tried to produce on uninitialized rkt");
+	}
+	int x;
+	int32_t partition = RD_KAFKA_PARTITION_UA;
+
+	// Optional:
+	void const * key = NULL;
+	size_t key_len = 0;
+
+	// no flags means that we reown our buffer when Kafka calls our callback.
+	int msgflags = 0; // 0, RD_KAFKA_MSG_F_COPY, RD_KAFKA_MSG_F_FREE
+
+	// TODO
+	// How does Kafka report the error?
+	// API docs state that error codes are given in 'errno'
+	// Check that this is thread safe ?!?
+
+	x = rd_kafka_produce(rkt, partition, msgflags, msg.data, msg.size, key, key_len, &msg);
+
+	if (true) {
+		if (x == RD_KAFKA_RESP_ERR__QUEUE_FULL) {
+			LOG(3, "ERROR OutQ: {}  QUEUE_FULL", rd_kafka_outq_len(producer->rd_kafka_ptr()));
+		}
+		else if (x == RD_KAFKA_RESP_ERR_MSG_SIZE_TOO_LARGE) {
+			LOG(3, "ERROR OutQ: {}  TOO_LARGE", rd_kafka_outq_len(producer->rd_kafka_ptr()));
+		}
+		else if (x != 0) {
+			LOG(3, "ERROR on produce topic {}  partition {}   {}",
+				rd_kafka_topic_name(rkt),
+				partition,
+				rd_kafka_err2str(rd_kafka_last_error())
+			);
+		}
+		else {
+			//LOG(7, "sent to topic {} partition {}", rd_kafka_topic_name(rkt), partition);
+		}
+	}
+
+	return x;
+}
+
+
+
 void ProducerTopic::do_copy() {
 	_do_copy = true;
 }
@@ -698,6 +756,12 @@ void ProducerTopic::do_copy() {
 
 
 ProducerMsg::~ProducerMsg() {
+}
+
+void ProducerMsg::delivery_ok() {
+}
+
+void ProducerMsg::delivery_fail() {
 }
 
 

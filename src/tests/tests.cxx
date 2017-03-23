@@ -4,7 +4,9 @@
 
 namespace BrightnESS {
 namespace ForwardEpicsToKafka {
+namespace tests {
 MainOpt * Tests::main_opt = nullptr;
+}
 }
 }
 
@@ -14,7 +16,7 @@ int main(int argc, char ** argv) {
 		return 1;
 	}
 	auto opt = std::move(po.second);
-	BrightnESS::ForwardEpicsToKafka::Tests::main_opt = opt.get();
+	BrightnESS::ForwardEpicsToKafka::tests::Tests::main_opt = opt.get();
 	::testing::InitGoogleTest(&argc, argv);
 	std::string f = ::testing::GTEST_FLAG(filter);
 	if (f.find("Remote") == std::string::npos) {

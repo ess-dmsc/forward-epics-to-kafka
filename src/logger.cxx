@@ -3,6 +3,7 @@
 #include <cstdio>
 #include <cstdarg>
 #include <cstring>
+#include <unistd.h>
 #include <atomic>
 #include <memory>
 #include <thread>
@@ -31,18 +32,20 @@ void use_log_file(std::string fname);
 void log_kafka_gelf_start(std::string broker, std::string topic);
 void log_kafka_gelf_stop();
 FILE * log_file = stdout;
-void dwlog_inner(int level, char const * file, int line, char const * func, std::string const & s1);
+int is_tty = 1;
+void dwlog_inner(int level, int color, char const * file, int line, char const * func, std::string const & s1);
 int prefix_len();
 void fwd_graylog_logger_enable(std::string address);
 private:
 std::atomic<bool> do_run_kafka { false };
 std::atomic<bool> do_use_graylog_logger { false };
-std::unique_ptr<KafkaW::Producer> producer;
+std::shared_ptr<KafkaW::Producer> producer;
 std::unique_ptr<KafkaW::Producer::Topic> topic;
 std::thread thread_poll;
 };
 
 Logger::Logger() {
+	is_tty = isatty(fileno(log_file));
 }
 
 Logger::~Logger() {
@@ -59,13 +62,14 @@ Logger::~Logger() {
 void Logger::use_log_file(std::string fname) {
 	FILE * f1 = fopen(fname.c_str(), "wb");
 	log_file = f1;
+	is_tty = isatty(fileno(log_file));
 }
 
 void Logger::log_kafka_gelf_start(std::string address, std::string topicname) {
 	KafkaW::BrokerOpt opt;
 	opt.address = address;
 	producer.reset(new KafkaW::Producer(opt));
-	topic.reset(new KafkaW::Producer::Topic(*producer, topicname));
+	topic.reset(new KafkaW::Producer::Topic(producer, topicname));
 	topic->do_copy();
 	thread_poll = std::thread([this]{
 		while (do_run_kafka.load()) {
@@ -101,7 +105,7 @@ void Logger::fwd_graylog_logger_enable(std::string address) {
 	#endif
 }
 
-void Logger::dwlog_inner(int level, char const * file, int line, char const * func, std::string const & s1) {
+void Logger::dwlog_inner(int level, int color, char const * file, int line, char const * func, std::string const & s1) {
 	int npre = prefix_len();
 	int const n2 = strlen(file);
 	if (npre > n2) {
@@ -109,9 +113,30 @@ void Logger::dwlog_inner(int level, char const * file, int line, char const * fu
 		npre = 0;
 	}
 	auto f1 = file + npre;
-	auto lmsg = fmt::format("{}:{} [{}]:  {}\n", f1, line, level, s1);
-	fwrite(lmsg.c_str(), 1, lmsg.size(), log_file);
+	{
+		// only use color for stdout
+		std::string lmsg;
+		if (is_tty && color > 0 && color < 8) {
+			static char const * cols[] {
+				"",
+				"\x1b[107;1;31m",
+				"\x1b[100;1;33m",
+				"\x1b[107;1;35m",
+				"\x1b[107;1;36m",
+				"\x1b[107;1;34m",
+				"\x1b[107;1;32m",
+				"\x1b[107;1;30m",
+			};
+			lmsg = fmt::format("{}:{} [{}]:  {}{}\x1b[0m\n", f1, line, level, cols[color], s1);
+		}
+		else {
+			lmsg = fmt::format("{}:{} [{}]:  {}\n", f1, line, level, s1);
+		}
+		fwrite(lmsg.c_str(), 1, lmsg.size(), log_file);
+	}
 	if (level < 7 && do_run_kafka.load()) {
+		// Format again without color
+		auto lmsg = fmt::format("{}:{} [{}]:  {}\n", f1, line, level, s1);
 		// If we will use logging to Kafka in the future, refactor a bit to reduce duplicate work..
 		using namespace rapidjson;
 		Document d;
@@ -130,6 +155,8 @@ void Logger::dwlog_inner(int level, char const * file, int line, char const * fu
 	}
 	#ifdef HAVE_GRAYLOG_LOGGER
 	if (do_use_graylog_logger.load() and level < 7) {
+		// Format again without color
+		auto lmsg = fmt::format("{}:{} [{}]:  {}\n", f1, line, level, s1);
 		Log::Msg(level, lmsg);
 	}
 	#endif
@@ -150,8 +177,8 @@ void use_log_file(std::string fname) {
 	DW::g__logger.use_log_file(fname);
 }
 
-void dwlog_inner(int level, char const * file, int line, char const * func, std::string const & s1) {
-	DW::g__logger.dwlog_inner(level, file, line, func, s1);
+void dwlog_inner(int level, int c, char const * file, int line, char const * func, std::string const & s1) {
+	DW::g__logger.dwlog_inner(level, c, file, line, func, s1);
 }
 
 void log_kafka_gelf_start(std::string broker, std::string topic) {
