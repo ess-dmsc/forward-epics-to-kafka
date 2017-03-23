@@ -68,11 +68,11 @@ int MainOpt::parse_json_file(string config_file) {
 		schema_.Parse(s.data(), s.size());
 	}
 	catch (...) {
-		LOG(7, "ERROR schema is not valid!");
+		LOG(3, "schema is not valid!");
 		return -2;
 	}
 	if (schema_.HasParseError()) {
-		LOG(7, "ERROR could not parse schema");
+		LOG(3, "could not parse schema");
 		return -3;
 	}
 	SchemaDocument schema(schema_);
@@ -81,7 +81,7 @@ int MainOpt::parse_json_file(string config_file) {
 	// Currently, these parameters take precedence over what is given on the command line.
 	FILE * f1 = fopen(config_file.c_str(), "rb");
 	if (not f1) {
-		LOG(3, "can not find the requested config-file");
+		LOG(3, "can not open the requested config-file");
 		return -4;
 	}
 	int const N1 = 16000;
@@ -94,7 +94,7 @@ int MainOpt::parse_json_file(string config_file) {
 	f1 = 0;
 
 	if (d.HasParseError()) {
-		LOG(7, "ERROR configuration is not well formed");
+		LOG(3, "configuration is not well formed");
 		return -5;
 	}
 	SchemaValidator vali(schema);
@@ -102,14 +102,14 @@ int MainOpt::parse_json_file(string config_file) {
 		StringBuffer sb1, sb2;
 		vali.GetInvalidSchemaPointer().StringifyUriFragment(sb1);
 		vali.GetInvalidDocumentPointer().StringifyUriFragment(sb2);
-		LOG(7, "ERROR command message schema validation:  Invalid schema: {}  keyword: {}",
+		LOG(3, "command message schema validation:  Invalid schema: {}  keyword: {}",
 			sb1.GetString(),
 			vali.GetInvalidSchemaKeyword()
 		);
 		if (std::string("additionalProperties") == vali.GetInvalidSchemaKeyword()) {
-			LOG(7, "Sorry, you have probably specified more properties than what is allowed by the schema.");
+			LOG(3, "Sorry, you have probably specified more properties than what is allowed by the schema.");
 		}
-		LOG(7, "ERROR configuration is not valid");
+		LOG(3, "configuration is not valid");
 		return -6;
 	}
 	vali.Reset();
@@ -118,6 +118,18 @@ int MainOpt::parse_json_file(string config_file) {
 		auto & v = d.FindMember("broker")->value;
 		if (v.IsString()) {
 			set_broker(v.GetString());
+		}
+	}
+	{
+		auto & v = d.FindMember("conversion-threads")->value;
+		if (v.IsInt()) {
+			conversion_threads = v.GetInt();
+		}
+	}
+	{
+		auto & v = d.FindMember("conversion-worker-queue-size")->value;
+		if (v.IsInt()) {
+			conversion_worker_queue_size = v.GetInt();
 		}
 	}
 	{
@@ -248,7 +260,7 @@ std::pair<int, std::unique_ptr<MainOpt>> parse_opt(int argc, char ** argv) {
 	}
 	if (opt.help) {
 		fmt::print(
-			"forward-epics-to-kafka-0.0.1 {:.7} (ESS, BrightnESS)\n"
+			"forward-epics-to-kafka-0.1.0 {:.7} (ESS, BrightnESS)\n"
 			"  Contact: dominik.werder@psi.ch\n\n",
 			GIT_COMMIT
 		);

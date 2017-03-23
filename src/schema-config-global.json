@@ -12,9 +12,11 @@
 				"schema": {"type":"string"},
 				"name": {"type":"string"},
 				"__NOTE__": "One could in the future make broker/topic optional and allow a default",
-				"topic": {"type":"string"}
+				"topic": {"type":"string"},
+				"broker": {"type":"string"}
 			},
-			"required": ["schema", "topic"]
+			"required": ["schema", "topic"],
+			"additionalProperties": false
 		}
 	},
 
@@ -25,6 +27,8 @@
 			"type": "string",
 			"__DISABLED_pattern": "^ *([-.a-zA-Z0-9]+(:[0-9]+){0,1})( *, *[-.a-zA-Z0-9]+(:[0-9]+){0,1})* *$"
 		},
+		"conversion-threads": {"type":"integer"},
+		"conversion-worker-queue-size": {"type":"integer"},
 		"streams": {
 			"type": "array",
 			"items": {
@@ -74,6 +78,5 @@
 			"additionalProperties": false
 		}
 	},
-	"required": ["streams"],
 	"additionalProperties": false
 }

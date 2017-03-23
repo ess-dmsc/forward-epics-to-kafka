@@ -21,6 +21,7 @@
 
 namespace BrightnESS {
 namespace ForwardEpicsToKafka {
+namespace tests {
 
 using std::string;
 using std::vector;
@@ -71,7 +72,15 @@ void Consumer::run() {
 					if (VerifyLogDataBuffer(veri)) {
 						auto fb = GetLogData(m->data());
 						if (string(fb->source_name()->c_str()) == source_name) {
-							LOG(7, "Consumer got msg:  size: {}  fbid: {:.4}", m->size(), fbid);
+							if (false) {
+								LOG(9, "Consumer got msg:  size: {}  fbid: {:.4}", m->size(), fbid);
+								if (fb->value_type() == Value::ArrayDouble) {
+									auto a1 = (ArrayDouble*)fb->value();
+									for (uint32_t i1 = 0; i1 < a1->value()->Length(); ++i1) {
+										LOG(9, "{}", a1->value()->Get(i1));
+									}
+								}
+							}
 							msgs_good += 1;
 						}
 					}
@@ -159,9 +168,9 @@ void Remote_T::simple_f142() {
 
 
 void Remote_T::simple_f142_via_config_message() {
-	LOG(3, "This test should complete within about 20 seconds.");
+	LOG(3, "This test should complete within about 30 seconds.");
 	// Make a sample configuration with two streams
-	auto msg = gulp("tests/msg-add-01.json");
+	auto msg = gulp("tests/msg-add-03.json");
 	rapidjson::Document d0;
 	d0.Parse(msg.data(), msg.size());
 	ASSERT_FALSE(d0.HasParseError());
@@ -169,20 +178,47 @@ void Remote_T::simple_f142_via_config_message() {
 	deque<Consumer> consumers;
 	vector<thread> consumer_threads;
 
-	for (int i1 = 0; i1 < 2; ++i1) {
-		KafkaW::BrokerOpt bopt;
-		bopt.conf_strings["group.id"] = fmt::format("forwarder-tests-{}--{}", getpid(), i1);
-		bopt.conf_ints["receive.message.max.bytes"] = 25100100;
-		//bopt.conf_ints["session.timeout.ms"] = 1000;
-		bopt.address = Tests::main_opt->brokers_as_comma_list();
-		consumers.emplace_back(bopt, get_string(&d0, fmt::format("streams.{}.converter.topic", i1)));
-		auto & c = consumers.back();
-		c.source_name = get_string(&d0, fmt::format("streams.{}.channel", i1));
-		consumer_threads.emplace_back([&c]{
-			c.run();
-		});
+	{
+		int cid = 0;
+		auto m = d0.FindMember("streams");
+		if (m != d0.MemberEnd()) {
+			if (m->value.IsArray()) {
+				for (auto & s : m->value.GetArray()) {
+					KafkaW::BrokerOpt bopt;
+					bopt.conf_strings["group.id"] = fmt::format("forwarder-tests-{}--{}", getpid(), cid);
+					bopt.conf_ints["receive.message.max.bytes"] = 25100100;
+					//bopt.conf_ints["session.timeout.ms"] = 1000;
+					bopt.address = Tests::main_opt->brokers_as_comma_list();
+					auto channel = get_string(&s, "channel");
+					auto mconv = s.FindMember("converter");
+					auto push_conv = [&cid, &consumers, &bopt, &channel] (rapidjson::Value & s) {
+						auto topic = get_string(&s, "topic");
+						LOG(7, "topic: {}  channel: {}", topic, channel);
+						consumers.emplace_back(bopt, topic);
+						auto & c = consumers.back();
+						c.source_name = channel;
+						++cid;
+					};
+					if (mconv != s.MemberEnd()) {
+						if (mconv->value.IsObject()) {
+							push_conv(mconv->value);
+						}
+						else if (mconv->value.IsArray()) {
+							for (auto & s : mconv->value.GetArray()) {
+								push_conv(s);
+							}
+						}
+					}
+				}
+			}
+		}
 	}
 	{
+		for (auto & c : consumers) {
+			consumer_threads.emplace_back([&c]{
+				c.run();
+			});
+		}
 		int i1 = 0;
 		for (auto & c : consumers) {
 			unique_lock<mutex> lock(c.mx);
@@ -192,10 +228,10 @@ void Remote_T::simple_f142_via_config_message() {
 		}
 	}
 
-	BrightnESS::ForwardEpicsToKafka::Main main(*Tests::main_opt);
+	std::unique_ptr<BrightnESS::ForwardEpicsToKafka::Main> main(new BrightnESS::ForwardEpicsToKafka::Main(*Tests::main_opt));
 	thread thr_forwarder([&main]{
 		try {
-			main.forward_epics_to_kafka();
+			main->forward_epics_to_kafka();
 		}
 		catch (std::runtime_error & e) {
 			LOG(0, "CATCH runtime error in main watchdog thread: {}", e.what());
@@ -203,12 +239,13 @@ void Remote_T::simple_f142_via_config_message() {
 		catch (std::exception & e) {
 			LOG(0, "CATCH EXCEPTION in main watchdog thread");
 		}
+		LOG(7, "thr_forwarder done");
 	});
-	if (!main.config_listener) {
+	if (!main->config_listener) {
 		LOG(0, "\n\nNOTE:  Please use --broker-config <//host[:port]/topic> of your configuration topic.\n");
 	}
-	ASSERT_NE(main.config_listener.get(), nullptr);
-	main.config_listener->wait_for_connected(MS(1000));
+	ASSERT_NE(main->config_listener.get(), nullptr);
+	main->config_listener->wait_for_connected(MS(1000));
 	LOG(7, "OK config listener connected");
 	sleep_ms(1000);
 
@@ -220,14 +257,14 @@ void Remote_T::simple_f142_via_config_message() {
 		d0.Accept(wr);
 		BrokerOpt bopt;
 		bopt.address = Tests::main_opt->broker_config.host_port;
-		Producer pr(bopt);
+		auto pr = std::make_shared<Producer>(bopt);
 		ProducerTopic pt(pr, Tests::main_opt->broker_config.topic);
 		pt.produce((uchar*)buf1.GetString(), buf1.GetSize());
 	}
 	LOG(7, "CONFIG has been sent out...");
 
 	// Let it do its thing for a few seconds...
-	sleep_ms(10000);
+	sleep_ms(30000);
 
 	{
 		using namespace rapidjson;
@@ -241,21 +278,29 @@ void Remote_T::simple_f142_via_config_message() {
 		d0.Accept(wr);
 		BrokerOpt bopt;
 		bopt.address = Tests::main_opt->broker_config.host_port;
-		Producer pr(bopt);
+		auto pr = std::make_shared<Producer>(bopt);
 		ProducerTopic pt(pr, Tests::main_opt->broker_config.topic);
 		pt.produce((uchar*)buf1.GetString(), buf1.GetSize());
 	}
 
 	// Give it a chance to exit by itself...
-	for (int i1 = 0; i1 < 50; ++i1) {
-		if (main.forwarding_status == ForwardingStatus::STOPPED) break;
-		sleep_ms(100);
+	{
+		auto t1 = std::chrono::system_clock::now();
+		for (int i1 = 0; i1 < 200; ++i1) {
+			if (main->forwarding_status == ForwardingStatus::STOPPED) break;
+			sleep_ms(100);
+		}
+		auto t2 = std::chrono::system_clock::now();
+		LOG(7, "Took Main {} ms to stop", std::chrono::duration_cast<std::chrono::milliseconds>(t2-t1).count());
 	}
-	ASSERT_EQ(main.forwarding_status.load(), ForwardingStatus::STOPPED);
+	ASSERT_EQ(main->forwarding_status.load(), ForwardingStatus::STOPPED);
 
 	if (thr_forwarder.joinable()) {
 		thr_forwarder.join();
 	}
+	main.reset();
+	sleep_ms(2000);
+	LOG(7, "Main should be dtored by now");
 
 	for (auto & c : consumers) {
 		c.do_run = 0;
@@ -287,5 +332,6 @@ TEST_F(Remote_T, simple_f142_via_config_message) {
 	Remote_T::simple_f142_via_config_message();
 }
 
+}
 }
 }

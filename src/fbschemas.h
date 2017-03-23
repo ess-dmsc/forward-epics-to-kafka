@@ -8,9 +8,6 @@
 namespace BrightnESS {
 namespace FlatBufs {
 
-
-class FB;
-
 // POD
 class FBmsg {
 public:
@@ -18,21 +15,31 @@ uint8_t * data;
 size_t size;
 };
 
-class FB : public KafkaW::ProducerMsg {
+namespace f140 { class Converter; }
+namespace f141 { class Converter; }
+namespace f142 { class Converter; }
+
+class FB : public KafkaW::Producer::Msg {
 public:
 FB();
 FB(uint32_t initial_size);
+~FB() override;
 FBmsg message();
 std::unique_ptr<flatbuffers::FlatBufferBuilder> builder;
-// Used for performance measurements:
+private:
+FB(FB const &) = delete;
+// Used for performance tests, please do not touch.
 uint64_t seq = 0;
 uint32_t fwdix = 0;
+friend class Kafka;
+// Only here for some specific tests:
+friend class f140::Converter;
+friend class f141::Converter;
+friend class f142::Converter;
 };
 using FB_uptr = std::unique_ptr<FB>;
 
 void inspect(FB const & fb);
-
-
 
 }
 }

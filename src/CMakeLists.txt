@@ -267,18 +267,24 @@ endif()
 set(SOURCES
 MainOpt.cxx
 Main.cxx
+ForwarderInfo.cxx
+EpicsClient.cxx
 helper.cxx
 logger.cxx
 configuration.cxx
-TopicMapping.cxx
 Kafka.cxx
 KafkaW.cxx
-epics.cxx
+Ring.cxx
+ConversionWorker.cxx
+epics-to-fb.cxx
 Config.cxx
 fbschemas.cxx
 SchemaRegistry.cxx
 uri.cxx
 blobs.cxx
+Converter.cxx
+KafkaOutput.cxx
+Stream.cxx
 schema_f140_general.cxx
 schema_f141_epics_nt.cxx
 schemas/f142/f142.cxx
@@ -354,52 +360,6 @@ target_link_libraries(${tgt} libNormativeTypes)
 target_link_libraries(${tgt} librdkafka)
 target_link_libraries(${tgt} pcre2-8)
 target_link_libraries(${tgt} pthread)
-
-
-
-if (false)
-set(tgt read-buffer)
-add_executable(${tgt}
-helper.cxx
-logger.cxx
-read-buffer.cxx
-files.cxx
-${path_include_fmt}/fmt/format.cc
-${CMAKE_CURRENT_BINARY_DIR}/git_commit_current.cxx
-)
-add_dependencies(${tgt} git_commit_current)
-target_include_directories(${tgt} PRIVATE ${path_include_fmt})
-set_property(TARGET ${tgt} APPEND PROPERTY INCLUDE_DIRECTORIES ${path_include_flatbuffers})
-set_property(TARGET ${tgt} APPEND PROPERTY INCLUDE_DIRECTORIES ${CMAKE_CURRENT_BINARY_DIR})
-add_dependencies(${tgt} flatbuffers_generate)
-
-set (SOURCES
-helper.cxx
-logger.cxx
-config-msg.cxx
-${path_include_fmt}/fmt/format.cc
-${CMAKE_CURRENT_BINARY_DIR}/git_commit_current.cxx
-)
-
-if (WIN32)
-set(SOURCES ${SOURCES} wingetopt.c)
-endif (WIN32)
-
-endif()
-
-
-
-if (false)
-set(tgt config-msg)
-add_executable(${tgt} ${SOURCES})
-add_dependencies(${tgt} git_commit_current)
-target_include_directories(${tgt} PRIVATE ${path_include_fmt})
-set_property(TARGET ${tgt} APPEND PROPERTY INCLUDE_DIRECTORIES
-${path_include_rdkafka}
-${path_include_rapidjson}
-)
-target_link_libraries(${tgt} librdkafka)
-endif()
 
 if (have_gtest)
 add_subdirectory(tests)

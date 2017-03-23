@@ -14,6 +14,14 @@ ${path_include_fmt}
 ${path_include_rdkafka}
 ${path_include_flatbuffers}
 ${path_include_rapidjson}
+${path_include_epics_base}
+${path_include_epics_base}/os/Linux
+${path_include_epics_base}/os/Darwin
+${path_include_epics_base}/compiler/gcc
+${path_include_epics_base}/compiler/clang
+${path_include_epics_pvData}
+${path_include_epics_pvAccess}
+${path_include_epics_NT}
 ${CMAKE_CURRENT_BINARY_DIR}
 )
 target_link_libraries(${tgt} librdkafka)
@@ -30,3 +38,6 @@ endif()
 
 configure_file(test-config-valid.json ../../tests/test-config-valid.json)
 configure_file(msg-add-01.json ../../tests/msg-add-01.json)
+configure_file(msg-add-02.json ../../tests/msg-add-02.json)
+configure_file(msg-add-03.json ../../tests/msg-add-03.json)
+configure_file(config-default.json ../../tests/config-default.json)

@@ -5,7 +5,7 @@
 namespace BrightnESS {
 namespace FlatBufs {
 
-class EpicsPVUpdate;
+struct EpicsPVUpdate;
 
 /// Interface for flat buffer creators for the different schemas
 class MakeFlatBufferFromPVStructure {
