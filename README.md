@@ -130,7 +130,12 @@ Exit the forwarder:
 
 ### Using a configuration file
 
-The forwarding can be also set up with a configuration file, e.g:
+The forwarding can be also set up with a configuration file:
+```bash
+./forward-epics-to-kafka --config-file <your-file>
+```
+
+with e.g:
 ```json
 {
 	"broker": "kafkabroker:9092",
@@ -142,6 +147,7 @@ The forwarding can be also set up with a configuration file, e.g:
 	]
 }
 ```
+
 
 #### More options possible in the configuration file
 These are optional.
