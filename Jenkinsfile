@@ -14,7 +14,7 @@ node('eee') {
             sh "make clean; rm CMakeCache.txt"
         }
 
-        stage("CMake") {
+        stage("cmake") {
             sh "bash ../code/build-script/invoke-cmake-from-jenkinsfile.sh"
         }
 
