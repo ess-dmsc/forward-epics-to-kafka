@@ -217,7 +217,10 @@ std::pair<int, std::unique_ptr<MainOpt>> parse_opt(int argc, char ** argv) {
 				opt.help = true;
 			}
 			if (std::string("config-file") == lname) {
-				opt.parse_json_file(optarg);
+				if (opt.parse_json_file(optarg) != 0) {
+					opt.help = 1;
+					ret.first = 1;
+				}
 			}
 			if (std::string("log-file") == lname) {
 				opt.log_file = optarg;
