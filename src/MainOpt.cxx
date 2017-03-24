@@ -121,6 +121,12 @@ int MainOpt::parse_json_file(string config_file) {
 		}
 	}
 	{
+		auto & v = d.FindMember("broker-config")->value;
+		if (v.IsString()) {
+			broker_config = { v.GetString() };
+		}
+	}
+	{
 		auto & v = d.FindMember("conversion-threads")->value;
 		if (v.IsInt()) {
 			conversion_threads = v.GetInt();

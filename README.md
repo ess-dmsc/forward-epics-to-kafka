@@ -148,16 +148,26 @@ with e.g:
 }
 ```
 
+All entries in the configuration file are optional.
+The following keys can be set in the configuration file at the top level.
+Given are the defaults.
 
-#### More options possible in the configuration file
-These are optional.
-Given are the defaults:
-```json
-{
-  "conversion-threads": 1,
-  "conversion-worker-queue-size": 1024
-}
-```
+- `broker` (string)
+  - `localhost:9092`
+  - Default Kafka host to send the converted data to.
+
+- `broker-config` (string)
+  - `//localhost:9092/forward_epics_to_kafka_commands`
+  - URI of the Kafka topic which should be monitored for commands.
+
+- `conversion-threads` (int)
+  - 1
+  - Number of worker threads for the EPICS to FlatBuffers conversion.
+
+- `conversion-worker-queue-size` (int)
+  - 1024
+  - Maximum queue size of each conversion worker thread.
+
 
 
 ### Forwarding a PV through Multiple Converters
