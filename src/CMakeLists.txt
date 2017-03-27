@@ -1,8 +1,5 @@
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ..)
 
-if (NOT CMAKE_BUILD_TYPE)
-set(CMAKE_BUILD_TYPE Release)
-endif()
 message(STATUS "CMAKE_BUILD_TYPE: ${CMAKE_BUILD_TYPE}")
 
 link_directories("/opt/local/lib")
@@ -34,11 +31,10 @@ string(REGEX REPLACE ".+/base-([.0-9]+)$" "\\1" epics_base_version $ENV{EPICS_BA
 #message(FATAL_ERROR "[${epics_base_version}]")
 #set(epics_base_version $ENV{EPICS_V4_BASE_VERSION})
 
-set(epics_pvData_version 5.0.2)
-set(epics_pvAccess_version 4.1.2)
-set(epics_pvDatabase_version 4.1.1)
-set(epics_normativeTypes_version 5.0.2)
-
+set(epics_pvData_version 5.0.2 CACHE STRING "pvData version")
+set(epics_pvAccess_version 4.1.2 CACHE STRING "pvAccess version")
+set(epics_pvDatabase_version 4.1.1 CACHE STRING "pvDatabase version")
+set(epics_normativeTypes_version 5.0.2 CACHE STRING "normativeTypes version")
 set(USE_GRAYLOG_LOGGER TRUE CACHE BOOL "Try to use graylog_logger")
 
 # fmt not in the EPEL pinned by the dev-env crew.
