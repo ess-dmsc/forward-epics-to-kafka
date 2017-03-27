@@ -9,11 +9,12 @@ namespace FlatBufs {
 namespace f140 {
 
 
-
 #include <fmt/format.h>
-#if 0
+
+#define DO_FLOG 0
+#if DO_FLOG
+using fmt::print;
 #define FLOG(level, fmt, args...)  print("{:{}s}" fmt "\n", "", 2*(level), ## args);
-#define DO_FLOG
 #else
 #define FLOG(level, fmt, args...)
 #endif
@@ -29,11 +30,12 @@ namespace fbg {
 	typedef struct { F type; flatbuffers::Offset<void> off; } F_t;
 
 	F_t Field(flatbuffers::FlatBufferBuilder & builder, epics::pvData::PVFieldPtr const & field, int level) {
+		FLOG(level, "N: {}", field->getFieldName());
 		auto etype = field->getField()->getType();
 		if (etype == epics::pvData::Type::structure) {
 			auto pvstr = reinterpret_cast<epics::pvData::PVStructure const *>(field.get());
 			auto & subfields = pvstr->getPVFields();
-			FLOG(level, "subfields.size(): {}", subfields.size());
+			FLOG(level, "structure  subfields.size(): {}", subfields.size());
 
 			// For each subfield, collect the offsets:
 			vector<F_t> fs;
@@ -41,7 +43,7 @@ namespace fbg {
 				fs.push_back(Field(builder, f1ptr, 1+level));
 			}
 
-			#ifdef DO_FLOG
+			#if DO_FLOG
 			for (auto & x : fs) {
 				FLOG(level, "off: {:d}", x.off.o);
 			}
@@ -66,28 +68,25 @@ namespace fbg {
 		else if (etype == epics::pvData::Type::structureArray) {
 			// Serialize all objects, collect the offsets, and store an array of those.
 			auto sa = reinterpret_cast<epics::pvData::PVValueArray<epics::pvData::PVStructurePtr> const *>(field.get());
-			if (sa) {
-				FLOG(level, "[size(): {}]", sa->view().size());
-				vector<flatbuffers::Offset<Obj>> v1;
-				for (auto & x : sa->view()) {
-					FLOG(6+level, "OK");
-					auto sub = Field(builder, x, 1+level);
-					if (sub.type != F::Obj) {
-						throw std::runtime_error("mismatched types in the EPICS structure");
-						// TODO could return NONE?
-					}
-					v1.push_back(sub.off.o);
+			if (!sa) {
+				FLOG(level, "ERROR got nullptr");
+				return { F::NONE, 111333 };
+			}
+			FLOG(level, "structureArray  [size(): {}]", sa->view().size());
+			vector<flatbuffers::Offset<Obj>> v1;
+			for (auto & x : sa->view()) {
+				FLOG(6+level, "OK");
+				auto sub = Field(builder, x, 1+level);
+				if (sub.type != F::Obj) {
+					FLOG(level, "ERROR mismatched types in the EPICS structure");
 				}
-				auto v2 = builder.CreateVector(v1);
-				Obj_aBuilder b(builder);
-				b.add_v(v2);
-				// Normally, we should reach this return:
-				return {F::Obj_a, b.Finish().Union()};
+				v1.push_back(sub.off.o);
 			}
-			else {
-				FLOG(level+2, "[ERROR could not dynamic_cast]");
-			}
-			return { F::NONE, 111333 };
+			auto v2 = builder.CreateVector(v1);
+			Obj_aBuilder b(builder);
+			b.add_v(v2);
+			// Normally, we should reach this return:
+			return {F::Obj_a, b.Finish().Union()};
 		}
 
 		else if (etype == epics::pvData::Type::scalar) {
@@ -98,7 +97,9 @@ namespace fbg {
 				auto p1 = reinterpret_cast<epics::pvData::PVScalarValue<T> const *>(field.get()); \
 				B b(builder); \
 				b.add_v(p1->get()); \
-				return {F::E, b.Finish().Union()}; \
+				auto off = b.Finish().Union(); \
+				FLOG(level, "off: {}", off.o); \
+				return {F::E, off}; \
 			}
 			M( int8_t,  pvByteBuilder,   pvByte);
 			M( int16_t, pvShortBuilder,  pvShort);
@@ -118,7 +119,16 @@ namespace fbg {
 				b.add_v(s1);
 				return { F::pvString, b.Finish().Union() };
 			}
-			return { F::NONE, 887700 };
+			if (stype == epics::pvData::ScalarType::pvBoolean) {
+				FLOG(level, "WARNING boolean handled as byte");
+				auto p1 = reinterpret_cast<epics::pvData::PVScalarValue<bool> const *>(field.get());
+				pvByteBuilder b(builder);
+				b.add_v(p1->get());
+				auto off = b.Finish().Union();
+				FLOG(level, "off: {}", off.o);
+				return {F::pvByte, off};
+			}
+			return { F::NONE, 0 };
 		}
 
 		else if (etype == epics::pvData::Type::scalarArray) {
@@ -146,7 +156,10 @@ namespace fbg {
 			M(double,   pvDouble_aBuilder, pvDouble_a, pvDouble);
 			#undef M
 
-			if (auto p1 = reinterpret_cast<epics::pvData::PVValueArray<std::string> const *>(field.get())) {
+			if (stype == epics::pvData::ScalarType::pvString) {
+				auto p1 = reinterpret_cast<epics::pvData::PVValueArray<std::string> const *>(field.get());
+				FLOG(level, "WARNING serializing string arrays is disabled...");
+				return {F::NONE, 555};
 				vector<flatbuffers::Offset<flatbuffers::String>> v1;
 				for (auto & s0 : p1->view()) {
 					v1.push_back(builder.CreateString(s0));
@@ -156,37 +169,33 @@ namespace fbg {
 				b.add_v(v2);
 				return { F::pvString_a, b.Finish().Union() };
 			}
-			throw std::runtime_error("is a type missing here?");
-			return {F::NONE, 555};
+			if (stype == epics::pvData::ScalarType::pvBoolean) {
+				FLOG(level, "WARNING array of booleans are not handled so far");
+			}
+			return {F::NONE, 0};
 		}
 
 		else if (etype == epics::pvData::Type::union_) {
 			FLOG(level, "union");
 			auto f2 = reinterpret_cast<epics::pvData::PVUnion*>(field.get());
-			if (f2) {
-				auto f3 = f2->get();
-				if (f3) {
-					return Field(builder, f2->get(), 1+level);
-				}
-				else {
-					// The union does not contain anything:
-					return {F::NONE, 0};
-				}
+			auto f3 = f2->get();
+			if (f3) {
+				return Field(builder, f2->get(), 1+level);
 			}
 			else {
-				throw std::runtime_error("should never happen");
-				// TODO we could ignore this and return NONE
+				// The union does not contain anything:
+				return {F::NONE, 0};
 			}
 		}
 
 		else if (etype == epics::pvData::Type::unionArray) {
 			FLOG(level, "union array");
-			throw std::runtime_error("union array not yet supported");
+			FLOG(level, "union array not yet supported");
 			return {F::NONE, 777};
 		}
 
 		else {
-			throw std::runtime_error("Somethings wrong, none of the known types match");
+			FLOG(level, "ERROR unknown type");
 		}
 	}
 }
