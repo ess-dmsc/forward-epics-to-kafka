@@ -2,6 +2,7 @@
 #include "helper.h"
 #include "logger.h"
 #include "Config.h"
+#include "Converter.h"
 #include "Stream.h"
 #include "ForwarderInfo.h"
 #include <sys/types.h>
@@ -17,6 +18,7 @@ static KafkaW::BrokerOpt make_broker_opt(MainOpt const & opt) {
 	return ret;
 }
 
+using ulock = std::unique_lock<std::mutex>;
 
 /**
 \class Main
@@ -221,6 +223,7 @@ int Main::mapping_add(rapidjson::Value & mapping) {
 	{
 		auto push_conv = [this, &stream] (rapidjson::Value & c) {
 			string schema = get_string(&c, "schema");
+			string cname = get_string(&c, "name");
 			string topic = get_string(&c, "topic");
 			if (schema.size() == 0) {
 				LOG(3, "mapping schema is not specified");
@@ -237,7 +240,26 @@ int Main::mapping_add(rapidjson::Value & mapping) {
 				uri = main_opt.brokers.at(0);
 			}
 			uri.topic = topic;
-			stream->converter_add(*kafka_instance_set, main_opt.schema_registry, schema, uri);
+			Converter::sptr conv;
+			if (cname.size() > 0) {
+				ulock(mutex_converters);
+				auto c1 = converters.find(cname);
+				if (c1 != converters.end()) {
+					conv = c1->second.lock();
+					if (!conv) {
+						conv = Converter::create(main_opt.schema_registry, schema);
+						converters[cname] = std::weak_ptr<Converter>(conv);
+					}
+				}
+				else {
+					conv = Converter::create(main_opt.schema_registry, schema);
+					converters[cname] = std::weak_ptr<Converter>(conv);
+				}
+			}
+			else {
+				conv = Converter::create(main_opt.schema_registry, schema);
+			}
+			stream->converter_add(*kafka_instance_set, conv, uri);
 		};
 		auto mconv = mapping.FindMember("converter");
 		if (mconv != mapping.MemberEnd()) {

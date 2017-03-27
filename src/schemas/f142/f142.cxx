@@ -1,3 +1,4 @@
+#include <atomic>
 #include "../../logger.h"
 #include "../../SchemaRegistry.h"
 #include "../../helper.h"
@@ -334,6 +335,60 @@ BrightnESS::FlatBufs::FB_uptr convert(EpicsPVUpdate const & up) override {
 
 
 
+/// This class is purely for testing
+class ConverterTestNamed : public MakeFlatBufferFromPVStructure {
+public:
+BrightnESS::FlatBufs::FB_uptr convert(EpicsPVUpdate const & up) override {
+	auto & pvstr = up.epics_pvstr;
+
+	{
+		// epics madness
+		auto f1 = pvstr->getSubField<epics::pvData::PVField>("value");
+		if (f1) {
+			auto f2 = f1->getField();
+			auto ft = f2->getType();
+			if (ft == epics::pvData::Type::scalarArray) {
+				auto f3 = pvstr->getSubField<epics::pvData::PVScalarArray>("value");
+				auto f4 = f3->getScalarArray();
+				if (f4->getElementType() == epics::pvData::ScalarType::pvInt) {
+					had_int32 += 1;
+				}
+				if (f4->getElementType() == epics::pvData::ScalarType::pvDouble) {
+					had_double += 1;
+				}
+			}
+		}
+	}
+
+	auto fb = BrightnESS::FlatBufs::FB_uptr(new BrightnESS::FlatBufs::FB);
+	auto builder = fb->builder.get();
+	using uchar = unsigned char;
+	static_assert(sizeof(uchar) == 1, "");
+	{
+		uint32_t * p1 = nullptr;
+		auto fba = builder->CreateUninitializedVector(2, 4, (uint8_t**)&p1);
+		p1[0] = had_int32.load();
+		p1[1] = had_double.load();
+		ArrayUIntBuilder b2(*builder);
+		b2.add_value(fba);
+		auto fbval = b2.Finish().Union();
+		auto n = builder->CreateString(up.channel);
+		LogDataBuilder b(*builder);
+		b.add_source_name(n);
+		b.add_value_type(Value::ArrayUInt);
+		b.add_value(fbval);
+		FinishLogDataBuffer(*builder, b.Finish());
+		return fb;
+	}
+}
+
+std::atomic<uint32_t> had_int32 {0};
+std::atomic<uint32_t> had_double {0};
+
+};
+
+
+
 class Info : public SchemaInfo {
 public:
 MakeFlatBufferFromPVStructure::ptr create_converter() override;
@@ -344,8 +399,18 @@ MakeFlatBufferFromPVStructure::ptr Info::create_converter() {
 }
 
 
-FlatBufs::SchemaRegistry::Registrar<Info> g_registrar_info("f142", Info::ptr(new Info));
+class InfoNamedConverter : public SchemaInfo {
+public:
+MakeFlatBufferFromPVStructure::ptr create_converter() override;
+};
 
+MakeFlatBufferFromPVStructure::ptr InfoNamedConverter::create_converter() {
+	return MakeFlatBufferFromPVStructure::ptr(new ConverterTestNamed);
+}
+
+
+FlatBufs::SchemaRegistry::Registrar<Info> g_registrar_info("f142", Info::ptr(new Info));
+FlatBufs::SchemaRegistry::Registrar<Info> g_registrar_info_test_named_converter("f142-test-named-converter", Info::ptr(new InfoNamedConverter));
 
 
 }

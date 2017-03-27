@@ -56,8 +56,7 @@ Stream::~Stream() {
 	CLOG(7, 2, "~Stop DONE");
 }
 
-int Stream::converter_add(Kafka::InstanceSet & kset, FlatBufs::SchemaRegistry const & schema_registry, std::string schema, uri::URI uri_kafka_output) {
-	auto conv = Converter::create(schema_registry, schema);
+int Stream::converter_add(Kafka::InstanceSet & kset, Converter::sptr conv, uri::URI uri_kafka_output) {
 	auto pt = kset.producer_topic(uri_kafka_output);
 	std::unique_ptr<ConversionPath> cp(new ConversionPath( {std::move(conv)}, std::unique_ptr<KafkaOutput>(new KafkaOutput(std::move(pt))) ));
 	conversion_paths.push_back(std::move(cp));
