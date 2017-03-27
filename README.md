@@ -9,6 +9,8 @@
 - One EPICS PV can be forwarded through [multiple](#forwarding-a-pv-through-multiple-converters)
   converters
 - Conversion to FlatBuffers is distributed over threads
+- The same converter instance can be [shared](#share-converter-instance-between-channels)
+  between different channels
 
 
 ## Installation
@@ -192,12 +194,39 @@ to register your plugin with the SchemaRegistry.
 There is no need to touch existing code at all to register a new plugin,
 but you probably want to at it to `CMakeLists.txt`.
 There will be support for dynamic loading of shared objects also soon.
+Beware that converter instances are used from different threads.  If the
+converter instance has state, it must take care of thread safety itself.
+
+
+
+## Share Converter Instance between Channels
+
+The same converter instance can be shared for usage on different channels.
+This allows one converter instance to process events coming from different
+EPICS channels.
+Beware that converter instances are used from different threads.  If the
+converter instance has state, it must take care of thread safety itself.
+
+Example:
+```json
+{
+  "streams": [
+    {
+      "channel": "Epics_PV_One",
+      "converter": {"schema": "f142", "name": "my-named-conv", "topic": "Kafka_topic_name" }
+    },
+    {
+      "channel": "Epics_PV_Two",
+      "converter": {"schema": "f142", "name": "my-named-conv", "topic": "Kafka_topic_name" }
+    }
+  ]
+}
+```
 
 
 
 ## Features Coming Soon
 
-- Pinned converters:  Multiple channels can be routed to the same converter
 - Configure options for threading (number of workers, queue lengths, ...)
 - More dynamic scheduling of work
 - Dynamically load converter plugins from shared objects
