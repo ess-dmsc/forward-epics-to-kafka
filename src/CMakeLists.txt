@@ -169,6 +169,14 @@ message(STATUS "path_lib_graylog_logger ${path_lib_graylog_logger}")
 
 
 
+# Minimum commit of streaming-data-types that we need:
+set(need_commit 0a4766575da44764ee43f2347b3d1106bdf098df)
+
+add_custom_target(check_streaming_data_types ALL
+COMMAND bash -c '\(cd ${path_include_streaming_data_types} && git merge-base --is-ancestor ${need_commit} HEAD \) || \( echo && echo ERROR\ Your\ streaming-data-types\ repository\ is\ too\ old && echo && exit 1 \) '
+)
+
+
 set(flatbuffers_generated_headers "")
 
 # Search the dev env standard locations, but it will also look in PATH
@@ -198,6 +206,7 @@ foreach (f0 ${flatbuffers_schemata2})
 endforeach()
 
 add_custom_target(flatbuffers_generate ALL DEPENDS ${flatbuffers_generated_headers})
+add_dependencies(flatbuffers_generate check_streaming_data_types)
 
 
 set(xxd_inputs "schema-config-global.json")
