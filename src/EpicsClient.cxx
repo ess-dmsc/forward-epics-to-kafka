@@ -159,7 +159,7 @@ class EpicsClient_impl {
 public:
 EpicsClient_impl(EpicsClient * epics_client);
 ~EpicsClient_impl();
-int init();
+int init(string epics_channel_provider_type);
 int initiate_value_monitoring();
 int stop();
 int emit(std::unique_ptr<FlatBufs::EpicsPVUpdate>);
@@ -373,14 +373,15 @@ EpicsClient_impl::EpicsClient_impl(EpicsClient * epics_client) :
 {
 }
 
-int EpicsClient_impl::init() {
+int EpicsClient_impl::init(string epics_channel_provider_type) {
 	factory_init = EpicsClientFactoryInit::factory_init();
 	{
 		ulock(mx);
 		provider = ::epics::pvAccess::getChannelProviderRegistry()
-			->getProvider("pva");
+			->getProvider(epics_channel_provider_type);
 		if (!provider) {
 			CLOG(3, 1, "Can not initialize provider");
+			return 1;
 		}
 		channel_requester.reset(new ChannelRequester(
 			this, std::unique_ptr<StartMonitorChannel>(new StartMonitorChannel(this) )
@@ -437,7 +438,7 @@ int EpicsClient_impl::initiate_value_monitoring() {
 }
 
 
-EpicsClient::EpicsClient(Stream * stream, std::shared_ptr<ForwarderInfo> finfo, string channel_name) :
+EpicsClient::EpicsClient(Stream * stream, std::shared_ptr<ForwarderInfo> finfo, string epics_channel_provider_type, string channel_name) :
 		finfo(finfo),
 		stream(stream)
 {
@@ -445,7 +446,10 @@ EpicsClient::EpicsClient(Stream * stream, std::shared_ptr<ForwarderInfo> finfo, 
 	CLOG(7, 7, "channel_name: {}", channel_name);
 	impl->channel_name = channel_name;
 	impl->teamid = finfo->teamid;
-	impl->init();
+	if (impl->init(epics_channel_provider_type) != 0) {
+		impl.reset();
+		throw std::runtime_error("could not initialize");
+	}
 }
 
 EpicsClient::~EpicsClient() {

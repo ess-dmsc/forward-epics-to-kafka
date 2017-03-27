@@ -44,10 +44,16 @@ static uint16_t _fmt(std::unique_ptr<FlatBufs::EpicsPVUpdate> & x) {
 }
 
 Stream::Stream(std::shared_ptr<ForwarderInfo> finfo, ChannelInfo channel_info) :
-		channel_info(channel_info),
-		epics_client(new EpicsClient::EpicsClient(this, finfo, channel_info.channel_name))
+		channel_info(channel_info)
 {
 	emit_queue.formatter = _fmt;
+	try {
+		auto x = new EpicsClient::EpicsClient(this, finfo, channel_info.provider_type, channel_info.channel_name);
+		epics_client.reset(x);
+	}
+	catch (std::runtime_error & e) {
+		throw std::runtime_error("can not construct Stream");
+	}
 }
 
 Stream::~Stream() {

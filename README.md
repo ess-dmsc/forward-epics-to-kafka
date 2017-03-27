@@ -112,16 +112,36 @@ forward-epics-to-kafka --help
 The forwarder will listen to the Kafka topic given on the command line for
 commands.  Configuration updates are JSON messages.  For example:
 
-Add a topic:
+Example which adds 2 EPICS PVs via `pva` (default) and a third EPICS variable
+using `ca` Channel Access:
 ```
-{"cmd":"add", "streams": [
-  {"channel": "<EPICS PV name>", "converter": {
-    "schema":"<schema-id>", "topic":"<Kafka-topic>"}
-  },
-  {"channel": "<EPICS PV name..>", "converter": {
-    "schema":"<schema-id>", "topic":"//<host>:<port>/<Kafka-topic..>"}
-  }
-]}
+{
+  "cmd": "add",
+  "streams": [
+    {
+      "channel": "<EPICS PV name>",
+      "converter": {
+        "schema": "<schema-id>",
+        "topic": "<Kafka-topic>"
+      }
+    },
+    {
+      "channel": "<EPICS PV name..>",
+      "converter": {
+        "schema": "<schema-id>",
+        "topic": "//<host-if-we-do-not-like-the-default-host>[:port]/<Kafka-topic..>"
+      }
+    },
+    {
+      "channel": "<EPICS Channel Access channel name>",
+      "channel_provider_type": "ca",
+      "converter": {
+        "schema": "<schema-id>",
+        "topic": "<Kafka-topic..>"
+      }
+    }
+  ]
+}
 ```
 
 The `topic` in the above stream configuration can contain the Kafka broker

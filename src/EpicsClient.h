@@ -20,7 +20,7 @@ class EpicsClient_impl;
 
 class EpicsClient {
 public:
-EpicsClient(Stream * stream, std::shared_ptr<ForwarderInfo> finfo, string channel_name);
+EpicsClient(Stream * stream, std::shared_ptr<ForwarderInfo> finfo, string epics_channel_provider_type, string channel_name);
 ~EpicsClient();
 int emit(std::unique_ptr<FlatBufs::EpicsPVUpdate> up);
 int stop();

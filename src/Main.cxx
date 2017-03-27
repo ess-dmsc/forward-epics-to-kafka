@@ -210,12 +210,21 @@ void Main::report_stats(int dt) {
 int Main::mapping_add(rapidjson::Value & mapping) {
 	using std::string;
 	string channel = get_string(&mapping, "channel");
+	string channel_provider_type = get_string(&mapping, "channel_provider_type");
 	if (channel.size() == 0) {
 		LOG(3, "mapping channel is not specified");
 		return -1;
 	}
+	if (channel_provider_type.size() == 0) {
+		channel_provider_type = "pva";
+	}
 	std::unique_lock<std::mutex> lock(streams_mutex);
-	streams.emplace_back(new Stream(finfo, {channel}));
+	try {
+		streams.emplace_back(new Stream(finfo, {channel_provider_type, channel}));
+	}
+	catch (std::runtime_error & e) {
+		return -1;
+	}
 	auto & stream = streams.back();
 	if (main_opt.teamid != 0) {
 		stream->teamid(main_opt.teamid);

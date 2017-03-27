@@ -24,6 +24,7 @@ class EpicsClient;
 }
 
 struct ChannelInfo {
+std::string provider_type;
 std::string channel_name;
 };
 
