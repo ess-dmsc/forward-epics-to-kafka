@@ -6,12 +6,12 @@ node('eee') {
     }
 
     dir("build") {
-        stage("Update local dependencies") {
-            sh "cd .. && bash code/build-script/update-local-deps.sh"
+        stage("make clean") {
+            sh "rm -rf ../build/*"
         }
 
-        stage("make clean") {
-            sh "make clean; rm CMakeCache.txt"
+        stage("Update local dependencies") {
+            sh "cd .. && bash code/build-script/update-local-deps.sh"
         }
 
         stage("cmake") {
