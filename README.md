@@ -119,10 +119,15 @@ Add a topic:
     "schema":"<schema-id>", "topic":"<Kafka-topic>"}
   },
   {"channel": "<EPICS PV name..>", "converter": {
-    "schema":"<schema-id>", "topic":"<Kafka-topic..>"}
+    "schema":"<schema-id>", "topic":"//<host>:<port>/<Kafka-topic..>"}
   }
 ]}
 ```
+
+The `topic` in the above stream configuration can contain the Kafka broker
+hostname like `//<host>[:port]/<topic>` otherwise the default boker given in
+the configuration file or on the command line is used.
+
 
 Exit the forwarder:
 ```

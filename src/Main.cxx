@@ -231,6 +231,7 @@ int Main::mapping_add(rapidjson::Value & mapping) {
 			if (topic.size() == 0) {
 				LOG(3, "mapping topic is not specified");
 			}
+			uri::URI topic_uri(topic);
 			auto r1 = main_opt.schema_registry.items().find(schema);
 			if (r1 == main_opt.schema_registry.items().end()) {
 				LOG(3, "can not handle (yet?) schema id {}", schema);
@@ -239,7 +240,8 @@ int Main::mapping_add(rapidjson::Value & mapping) {
 			if (main_opt.brokers.size() > 0) {
 				uri = main_opt.brokers.at(0);
 			}
-			uri.topic = topic;
+			topic_uri.default_host(uri.host);
+			topic_uri.default_port(uri.port);
 			Converter::sptr conv;
 			if (cname.size() > 0) {
 				ulock(mutex_converters);
@@ -259,7 +261,7 @@ int Main::mapping_add(rapidjson::Value & mapping) {
 			else {
 				conv = Converter::create(main_opt.schema_registry, schema);
 			}
-			stream->converter_add(*kafka_instance_set, conv, uri);
+			stream->converter_add(*kafka_instance_set, conv, topic_uri);
 		};
 		auto mconv = mapping.FindMember("converter");
 		if (mconv != mapping.MemberEnd()) {

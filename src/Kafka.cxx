@@ -47,17 +47,20 @@ static void prod_delivery_failed(rd_kafka_message_t const * msg) {
 
 
 KafkaW::Producer::Topic InstanceSet::producer_topic(uri::URI uri) {
-	auto k = uri.host_port;
-	auto it = producers_by_host.find(k);
+	LOG(7, "InstanceSet::producer_topic  for:  {}, {}", uri.host_port, uri.topic);
+	auto host_port = uri.host_port;
+	auto it = producers_by_host.find(host_port);
 	if (it != producers_by_host.end()) {
 		return KafkaW::Producer::Topic(it->second, uri.topic);
 	}
-	auto p = std::make_shared<KafkaW::Producer>(opt);
+	auto bopt = opt;
+	bopt.address = host_port;
+	auto p = std::make_shared<KafkaW::Producer>(bopt);
 	p->on_delivery_ok = prod_delivery_ok;
 	p->on_delivery_failed = prod_delivery_failed;
 	{
 		std::unique_lock<std::mutex> lock(mx_producers_by_host);
-		producers_by_host[k] = p;
+		producers_by_host[host_port] = p;
 	}
 	return KafkaW::Producer::Topic(p, uri.topic);
 }

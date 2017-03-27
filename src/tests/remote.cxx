@@ -324,8 +324,12 @@ TEST_F(Remote_T, simple_f142_via_config_message) {
 						auto mconv = s.FindMember("converter");
 						auto push_conv = [&cid, &consumers, &bopt, &channel] (rapidjson::Value & s) {
 							auto topic = get_string(&s, "topic");
-							LOG(7, "topic: {}  channel: {}", topic, channel);
-							consumers.push_back(uptr<Consumer>(new Consumer(bopt, topic)));
+							uri::URI topic_uri(topic);
+							topic_uri.default_host(Tests::main_opt->brokers.at(0).host);
+							topic_uri.default_port(Tests::main_opt->brokers.at(0).port);
+							LOG(7, "broker: {}  topic: {}  channel: {}", topic_uri.host_port, topic_uri.topic, channel);
+							bopt.address = topic_uri.host_port;
+							consumers.push_back(uptr<Consumer>(new Consumer(bopt, topic_uri.topic)));
 							auto & c = consumers.back();
 							c->source_name = channel;
 							++cid;
@@ -390,8 +394,12 @@ TEST_F(Remote_T, named_converter) {
 						auto mconv = s.FindMember("converter");
 						auto push_conv = [&cid, &consumers, &bopt, &channel] (rapidjson::Value & s) {
 							auto topic = get_string(&s, "topic");
-							LOG(7, "topic: {}  channel: {}", topic, channel);
-							consumers.push_back(uptr<Consumer>(new Cons(bopt, topic)));
+							uri::URI topic_uri(topic);
+							topic_uri.default_host(Tests::main_opt->brokers.at(0).host);
+							topic_uri.default_port(Tests::main_opt->brokers.at(0).port);
+							LOG(7, "broker: {}  topic: {}  channel: {}", topic_uri.host_port, topic_uri.topic, channel);
+							bopt.address = topic_uri.host_port;
+							consumers.push_back(uptr<Consumer>(new Cons(bopt, topic_uri.topic)));
 							auto & c = consumers.back();
 							c->source_name = channel;
 							++cid;
@@ -430,6 +438,67 @@ TEST_F(Remote_T, named_converter) {
 	};
 	A cv;
 	Remote_T::simple_f142_via_config_message("tests/msg-add-named-converter.json", cv);
+}
+
+TEST_F(Remote_T, different_brokers) {
+	// Disabled because we have to use different brokers
+	return;
+	struct A : public ConsumerVerifier {
+		int create(deque<uptr<Consumer>> & consumers, rapidjson::Value & d0) {
+			int cid = 0;
+			auto m = d0.FindMember("streams");
+			if (m != d0.MemberEnd()) {
+				if (m->value.IsArray()) {
+					for (auto & s : m->value.GetArray()) {
+						KafkaW::BrokerOpt bopt;
+						bopt.conf_strings["group.id"] = fmt::format("forwarder-tests-{}--{}", getpid(), cid);
+						bopt.conf_ints["receive.message.max.bytes"] = 25100100;
+						//bopt.conf_ints["session.timeout.ms"] = 1000;
+						bopt.address = Tests::main_opt->brokers_as_comma_list();
+						auto channel = get_string(&s, "channel");
+						auto mconv = s.FindMember("converter");
+						auto push_conv = [&cid, &consumers, &bopt, &channel] (rapidjson::Value & s) {
+							auto topic = get_string(&s, "topic");
+							uri::URI topic_uri(topic);
+							topic_uri.default_host(Tests::main_opt->brokers.at(0).host);
+							topic_uri.default_port(Tests::main_opt->brokers.at(0).port);
+							LOG(7, "broker: {}  topic: {}  channel: {}", topic_uri.host_port, topic_uri.topic, channel);
+							bopt.address = topic_uri.host_port;
+							consumers.push_back(uptr<Consumer>(new Consumer(bopt, topic_uri.topic)));
+							auto & c = consumers.back();
+							c->source_name = channel;
+							++cid;
+						};
+						if (mconv != s.MemberEnd()) {
+							if (mconv->value.IsObject()) {
+								push_conv(mconv->value);
+							}
+							else if (mconv->value.IsArray()) {
+								for (auto & s : mconv->value.GetArray()) {
+									push_conv(s);
+								}
+							}
+						}
+					}
+				}
+			}
+			return 0;
+		}
+		int verify(deque<uptr<Consumer>> & consumers) {
+			int ret = 0;
+			for (auto & c_ : consumers) {
+				auto & c = *c_.get();
+				LOG(6, "Consumer received {} messages", c.msgs_good);
+				if (c.msgs_good < 5) {
+					ret = 1;
+					requirements();
+				}
+			}
+			return ret;
+		}
+	};
+	A cv;
+	Remote_T::simple_f142_via_config_message("tests/msg-add-different-brokers.json", cv);
 }
 
 }
