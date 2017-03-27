@@ -98,7 +98,7 @@ namespace fbg {
 				B b(builder); \
 				b.add_v(p1->get()); \
 				auto off = b.Finish().Union(); \
-				FLOG(level, "off: {}", off.o); \
+				FLOG(level, "off: {}  v: {}", off.o, p1->get()); \
 				return {F::E, off}; \
 			}
 			M( int8_t,  pvByteBuilder,   pvByte);
