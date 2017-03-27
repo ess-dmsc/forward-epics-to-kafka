@@ -191,12 +191,13 @@ namespace fbg {
 		else if (etype == epics::pvData::Type::unionArray) {
 			FLOG(level, "union array");
 			FLOG(level, "union array not yet supported");
-			return {F::NONE, 777};
+			return {F::NONE, 0};
 		}
 
 		else {
 			FLOG(level, "ERROR unknown type");
 		}
+		return {F::NONE, 0};
 	}
 }
 
