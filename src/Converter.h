@@ -11,7 +11,7 @@ class Converter {
 public:
 using ptr = std::unique_ptr<Converter>;
 using sptr = std::shared_ptr<Converter>;
-static ptr create(FlatBufs::SchemaRegistry const & schema_registry, std::string schema);
+static sptr create(FlatBufs::SchemaRegistry const & schema_registry, std::string schema);
 BrightnESS::FlatBufs::FB_uptr convert(FlatBufs::EpicsPVUpdate const & up);
 private:
 std::string schema;

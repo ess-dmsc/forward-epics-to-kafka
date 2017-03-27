@@ -31,6 +31,7 @@ using std::mutex;
 using std::unique_lock;
 using std::condition_variable;
 using MS = std::chrono::milliseconds;
+template <typename T> using uptr = std::unique_ptr<T>;
 
 class Consumer {
 public:
@@ -45,6 +46,8 @@ int catched_up = 0;
 mutex mx;
 condition_variable cv;
 std::function<void()> on_catched_up;
+void process_msg(LogData const * fb);
+virtual void process_msg_impl(LogData const * fb);
 };
 
 Consumer::Consumer(KafkaW::BrokerOpt bopt, string topic) :
@@ -71,17 +74,11 @@ void Consumer::run() {
 					flatbuffers::Verifier veri(m->data(), m->size());
 					if (VerifyLogDataBuffer(veri)) {
 						auto fb = GetLogData(m->data());
-						if (string(fb->source_name()->c_str()) == source_name) {
-							if (false) {
-								LOG(9, "Consumer got msg:  size: {}  fbid: {:.4}", m->size(), fbid);
-								if (fb->value_type() == Value::ArrayDouble) {
-									auto a1 = (ArrayDouble*)fb->value();
-									for (uint32_t i1 = 0; i1 < a1->value()->Length(); ++i1) {
-										LOG(9, "{}", a1->value()->Get(i1));
-									}
-								}
+						auto sn = fb->source_name();
+						if (sn) {
+							if (string(sn->c_str()) == source_name) {
+								process_msg(fb);
 							}
-							msgs_good += 1;
 						}
 					}
 				}
@@ -90,10 +87,34 @@ void Consumer::run() {
 	}
 }
 
+void Consumer::process_msg(LogData const * fb) {
+	process_msg_impl(fb);
+	msgs_good += 1;
+	if (false) {
+		//LOG(9, "Consumer got msg:  size: {}  fbid: {:.4}", m->size(), fbid);
+		if (fb->value_type() == Value::ArrayDouble) {
+			auto a1 = (ArrayDouble*)fb->value();
+			for (uint32_t i1 = 0; i1 < a1->value()->Length(); ++i1) {
+				LOG(7, "{}", a1->value()->Get(i1));
+			}
+		}
+	}
+}
+
+void Consumer::process_msg_impl(LogData const * fb) {
+}
+
+
+class ConsumerVerifier {
+public:
+virtual int create(deque<uptr<Consumer>> & consumers, rapidjson::Value & d0) = 0;
+virtual int verify(deque<uptr<Consumer>> & consumers) = 0;
+};
+
 class Remote_T : public testing::Test {
 public:
 static void simple_f142();
-static void simple_f142_via_config_message();
+static void simple_f142_via_config_message(string cmd_msg_fname, ConsumerVerifier & consumer_verifier);
 static void requirements();
 };
 
@@ -167,60 +188,27 @@ void Remote_T::simple_f142() {
 }
 
 
-void Remote_T::simple_f142_via_config_message() {
+void Remote_T::simple_f142_via_config_message(string cmd_msg_fname, ConsumerVerifier & consumer_verifier) {
 	LOG(3, "This test should complete within about 30 seconds.");
 	// Make a sample configuration with two streams
-	auto msg = gulp("tests/msg-add-03.json");
+	auto msg = gulp(cmd_msg_fname);
 	rapidjson::Document d0;
 	d0.Parse(msg.data(), msg.size());
 	ASSERT_FALSE(d0.HasParseError());
 
-	deque<Consumer> consumers;
+	deque<uptr<Consumer>> consumers;
 	vector<thread> consumer_threads;
 
-	{
-		int cid = 0;
-		auto m = d0.FindMember("streams");
-		if (m != d0.MemberEnd()) {
-			if (m->value.IsArray()) {
-				for (auto & s : m->value.GetArray()) {
-					KafkaW::BrokerOpt bopt;
-					bopt.conf_strings["group.id"] = fmt::format("forwarder-tests-{}--{}", getpid(), cid);
-					bopt.conf_ints["receive.message.max.bytes"] = 25100100;
-					//bopt.conf_ints["session.timeout.ms"] = 1000;
-					bopt.address = Tests::main_opt->brokers_as_comma_list();
-					auto channel = get_string(&s, "channel");
-					auto mconv = s.FindMember("converter");
-					auto push_conv = [&cid, &consumers, &bopt, &channel] (rapidjson::Value & s) {
-						auto topic = get_string(&s, "topic");
-						LOG(7, "topic: {}  channel: {}", topic, channel);
-						consumers.emplace_back(bopt, topic);
-						auto & c = consumers.back();
-						c.source_name = channel;
-						++cid;
-					};
-					if (mconv != s.MemberEnd()) {
-						if (mconv->value.IsObject()) {
-							push_conv(mconv->value);
-						}
-						else if (mconv->value.IsArray()) {
-							for (auto & s : mconv->value.GetArray()) {
-								push_conv(s);
-							}
-						}
-					}
-				}
-			}
-		}
-	}
+	consumer_verifier.create(consumers, d0);
 	{
 		for (auto & c : consumers) {
 			consumer_threads.emplace_back([&c]{
-				c.run();
+				c->run();
 			});
 		}
 		int i1 = 0;
-		for (auto & c : consumers) {
+		for (auto & c_ : consumers) {
+			auto & c = *c_;
 			unique_lock<mutex> lock(c.mx);
 			c.cv.wait_for(lock, MS(100), [&c]{return c.catched_up == 1;});
 			LOG(7, "Consumer {} catched up", i1);
@@ -264,15 +252,13 @@ void Remote_T::simple_f142_via_config_message() {
 	LOG(7, "CONFIG has been sent out...");
 
 	// Let it do its thing for a few seconds...
-	sleep_ms(30000);
+	sleep_ms(20000);
 
 	{
 		using namespace rapidjson;
 		using namespace KafkaW;
 		Document d0;
-		d0.SetObject();
-		auto & a = d0.GetAllocator();
-		d0.AddMember("cmd", StringRef("exit"), a);
+		d0.Parse("{\"cmd\":\"exit\"}");
 		StringBuffer buf1;
 		Writer<StringBuffer> wr(buf1);
 		d0.Accept(wr);
@@ -303,7 +289,7 @@ void Remote_T::simple_f142_via_config_message() {
 	LOG(7, "Main should be dtored by now");
 
 	for (auto & c : consumers) {
-		c.do_run = 0;
+		c->do_run = 0;
 	}
 	for (auto & t : consumer_threads) {
 		if (t.joinable()) {
@@ -311,14 +297,7 @@ void Remote_T::simple_f142_via_config_message() {
 		}
 	}
 
-	for (auto & c : consumers) {
-		LOG(6, "Consumer received {} messages", c.msgs_good);
-		// Arbitrarily require at least 3 received messages
-		if (c.msgs_good < 3) {
-			requirements();
-		}
-		ASSERT_GT(c.msgs_good, 0);
-	}
+	ASSERT_EQ(consumer_verifier.verify(consumers), 0);
 
 	LOG(4, "All done, test exit");
 }
@@ -329,7 +308,128 @@ TEST_F(Remote_T, simple_f142) {
 }
 
 TEST_F(Remote_T, simple_f142_via_config_message) {
-	Remote_T::simple_f142_via_config_message();
+	struct A : public ConsumerVerifier {
+		int create(deque<uptr<Consumer>> & consumers, rapidjson::Value & d0) {
+			int cid = 0;
+			auto m = d0.FindMember("streams");
+			if (m != d0.MemberEnd()) {
+				if (m->value.IsArray()) {
+					for (auto & s : m->value.GetArray()) {
+						KafkaW::BrokerOpt bopt;
+						bopt.conf_strings["group.id"] = fmt::format("forwarder-tests-{}--{}", getpid(), cid);
+						bopt.conf_ints["receive.message.max.bytes"] = 25100100;
+						//bopt.conf_ints["session.timeout.ms"] = 1000;
+						bopt.address = Tests::main_opt->brokers_as_comma_list();
+						auto channel = get_string(&s, "channel");
+						auto mconv = s.FindMember("converter");
+						auto push_conv = [&cid, &consumers, &bopt, &channel] (rapidjson::Value & s) {
+							auto topic = get_string(&s, "topic");
+							LOG(7, "topic: {}  channel: {}", topic, channel);
+							consumers.push_back(uptr<Consumer>(new Consumer(bopt, topic)));
+							auto & c = consumers.back();
+							c->source_name = channel;
+							++cid;
+						};
+						if (mconv != s.MemberEnd()) {
+							if (mconv->value.IsObject()) {
+								push_conv(mconv->value);
+							}
+							else if (mconv->value.IsArray()) {
+								for (auto & s : mconv->value.GetArray()) {
+									push_conv(s);
+								}
+							}
+						}
+					}
+				}
+			}
+			return 0;
+		}
+		int verify(deque<uptr<Consumer>> & consumers) {
+			int ret = 0;
+			for (auto & c : consumers) {
+				LOG(6, "Consumer received {} messages", c->msgs_good);
+				if (c->msgs_good < 5) {
+					ret = 1;
+					requirements();
+				}
+			}
+			return ret;
+		}
+	};
+	A cv;
+	Remote_T::simple_f142_via_config_message("tests/msg-add-03.json", cv);
+}
+
+TEST_F(Remote_T, named_converter) {
+	struct Cons : public Consumer {
+		std::array<uint32_t,2> had {{0,0}};
+		Cons(KafkaW::BrokerOpt bopt, string topic) : Consumer(bopt, topic) {
+		}
+		void process_msg_impl(LogData const * fb) {
+			if (fb->value_type() == Value::ArrayUInt) {
+				auto a = ((ArrayUInt*)fb->value())->value();
+				had[0] = a->data()[0];
+				had[1] = a->data()[1];
+			}
+		}
+	};
+	struct A : public ConsumerVerifier {
+		int create(deque<uptr<Consumer>> & consumers, rapidjson::Value & d0) {
+			int cid = 0;
+			auto m = d0.FindMember("streams");
+			if (m != d0.MemberEnd()) {
+				if (m->value.IsArray()) {
+					for (auto & s : m->value.GetArray()) {
+						KafkaW::BrokerOpt bopt;
+						bopt.conf_strings["group.id"] = fmt::format("forwarder-tests-{}--{}", getpid(), cid);
+						bopt.conf_ints["receive.message.max.bytes"] = 25100100;
+						//bopt.conf_ints["session.timeout.ms"] = 1000;
+						bopt.address = Tests::main_opt->brokers_as_comma_list();
+						auto channel = get_string(&s, "channel");
+						auto mconv = s.FindMember("converter");
+						auto push_conv = [&cid, &consumers, &bopt, &channel] (rapidjson::Value & s) {
+							auto topic = get_string(&s, "topic");
+							LOG(7, "topic: {}  channel: {}", topic, channel);
+							consumers.push_back(uptr<Consumer>(new Cons(bopt, topic)));
+							auto & c = consumers.back();
+							c->source_name = channel;
+							++cid;
+						};
+						if (mconv != s.MemberEnd()) {
+							if (mconv->value.IsObject()) {
+								push_conv(mconv->value);
+							}
+							else if (mconv->value.IsArray()) {
+								for (auto & s : mconv->value.GetArray()) {
+									push_conv(s);
+								}
+							}
+						}
+					}
+				}
+			}
+			return 0;
+		}
+		int verify(deque<uptr<Consumer>> & consumers) {
+			int ret = 0;
+			for (auto & c_ : consumers) {
+				auto & c = *(Cons*)c_.get();
+				LOG(6, "Consumer received {} messages", c.msgs_good);
+				if (c.msgs_good < 5) {
+					ret = 1;
+					requirements();
+				}
+				if (c.had[0] < 8 || c.had[1] < 8) {
+					LOG(3, "The single converter instance did not receive messages from both channels");
+					ret = 1;
+				}
+			}
+			return ret;
+		}
+	};
+	A cv;
+	Remote_T::simple_f142_via_config_message("tests/msg-add-named-converter.json", cv);
 }
 
 }

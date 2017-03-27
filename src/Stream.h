@@ -52,7 +52,7 @@ public:
 Stream(std::shared_ptr<ForwarderInfo> finfo, ChannelInfo channel_info);
 Stream(Stream &&) = delete;
 ~Stream();
-int converter_add(Kafka::InstanceSet & kset, FlatBufs::SchemaRegistry const & schema_registry, std::string schema, uri::URI uri_kafka_output);
+int converter_add(Kafka::InstanceSet & kset, std::shared_ptr<Converter> conv, uri::URI uri_kafka_output);
 int emit(std::unique_ptr<FlatBufs::EpicsPVUpdate> up);
 int32_t fill_conversion_work(Ring<std::unique_ptr<ConversionWorkPacket>> & queue, uint32_t max);
 int stop();
