@@ -2,8 +2,6 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ..)
 
 message(STATUS "CMAKE_BUILD_TYPE: ${CMAKE_BUILD_TYPE}")
 
-link_directories("/opt/local/lib")
-
 file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/git_commit_current.cxx "extern \"C\" char const GIT_COMMIT[] = \"NOTSET\";\n")
 
 add_custom_target(git_commit_now ALL
