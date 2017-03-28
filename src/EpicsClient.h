@@ -24,6 +24,7 @@ EpicsClient(Stream * stream, std::shared_ptr<ForwarderInfo> finfo, string epics_
 ~EpicsClient();
 int emit(std::unique_ptr<FlatBufs::EpicsPVUpdate> up);
 int stop();
+void error_in_epics();
 private:
 std::string channel_name;
 std::shared_ptr<ForwarderInfo> finfo;
