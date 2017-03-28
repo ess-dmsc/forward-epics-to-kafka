@@ -370,8 +370,8 @@ int EpicsClient_impl::stop() {
 	if (channel) {
 		channel->destroy();
 	}
-	monitor = nullptr;
-	channel = nullptr;
+	monitor.reset();
+	channel.reset();
 	return 0;
 }
 
@@ -382,8 +382,8 @@ int EpicsClient_impl::monitoring_stop() {
 		monitor->stop();
 		monitor->destroy();
 	}
-	monitor_requester = nullptr;
-	monitor = nullptr;
+	monitor_requester.reset();
+	monitor.reset();
 	return 0;
 }
 
