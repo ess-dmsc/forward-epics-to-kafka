@@ -294,9 +294,7 @@ void FwdMonitorRequester::monitorEvent(::epics::pvData::MonitorPtr const & monit
 	//CLOG(7, 7, "FwdMonitorRequester::monitorEvent");
 	std::vector<std::unique_ptr<FlatBufs::EpicsPVUpdate>> ups;
 	while (true) {
-		auto ele_ptr = new epics::pvData::MonitorElementPtr;
-		auto & ele = *ele_ptr;
-		ele = monitor->poll();
+		auto ele = monitor->poll();
 		if (!ele) break;
 		//CLOG(7, 7, "monitorEvent seq {}", seq);
 		static_assert(sizeof(uint64_t) == sizeof(std::chrono::nanoseconds::rep), "Types not compatible");
