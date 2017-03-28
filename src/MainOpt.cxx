@@ -139,28 +139,34 @@ int MainOpt::parse_json_file(string config_file) {
 		}
 	}
 	{
-		auto & v = d.FindMember("kafka")->value;
-		if (v.IsObject()) {
-			auto & v2 = v.FindMember("broker")->value;
-			if (v2.IsObject()) {
-				for (auto & x : v2.GetObject()) {
-					auto const & n = x.name.GetString();
-					if (strncmp("___", n, 3) == 0) {
-						// ignore
-					}
-					else {
-						if (x.value.IsString()) {
-							auto const & v = x.value.GetString();
-							LOG(6, "kafka broker config {}: {}", n, v);
-							broker_opt.conf_strings[n] = v;
-						}
-						else if (x.value.IsInt()) {
-							auto const & v = x.value.GetInt();
-							LOG(6, "kafka broker config {}: {}", n, v);
-							broker_opt.conf_ints[n] = v;
-						}
-						else {
-							LOG(3, "ERROR can not understand option: {}", n);
+		auto m1 = d.FindMember("kafka");
+		if (m1 != d.MemberEnd()) {
+			auto & v = m1->value;
+			if (v.IsObject()) {
+				auto m2 = v.FindMember("broker");
+				if (m2 != d.MemberEnd()) {
+					auto & v2 = m2->value;
+					if (v2.IsObject()) {
+						for (auto & x : v2.GetObject()) {
+							auto const & n = x.name.GetString();
+							if (strncmp("___", n, 3) == 0) {
+								// ignore
+							}
+							else {
+								if (x.value.IsString()) {
+									auto const & v = x.value.GetString();
+									LOG(6, "kafka broker config {}: {}", n, v);
+									broker_opt.conf_strings[n] = v;
+								}
+								else if (x.value.IsInt()) {
+									auto const & v = x.value.GetInt();
+									LOG(6, "kafka broker config {}: {}", n, v);
+									broker_opt.conf_ints[n] = v;
+								}
+								else {
+									LOG(3, "ERROR can not understand option: {}", n);
+								}
+							}
 						}
 					}
 				}
