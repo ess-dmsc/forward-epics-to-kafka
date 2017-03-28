@@ -44,7 +44,7 @@ static uint16_t _fmt(std::unique_ptr<FlatBufs::EpicsPVUpdate> & x) {
 }
 
 Stream::Stream(std::shared_ptr<ForwarderInfo> finfo, ChannelInfo channel_info) :
-		channel_info(channel_info)
+		channel_info_(channel_info)
 {
 	emit_queue.formatter = _fmt;
 	try {
@@ -176,6 +176,10 @@ void Stream::error_in_epics() {
 
 int Stream::status() {
 	return status_;
+}
+
+ChannelInfo const & Stream::channel_info() {
+	return channel_info_;
 }
 
 }

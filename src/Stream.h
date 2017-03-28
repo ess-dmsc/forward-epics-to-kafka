@@ -60,12 +60,13 @@ int stop();
 void teamid(uint64_t);
 void error_in_epics();
 int status();
+ChannelInfo const & channel_info();
 using mutex = std::mutex;
 using ulock = std::unique_lock<mutex>;
 private:
 /// Each Epics update is converted by each Converter in the list
 //std::vector<std::shared_ptr<Converter>> converters;
-ChannelInfo channel_info;
+ChannelInfo channel_info_;
 std::vector<std::unique_ptr<ConversionPath>> conversion_paths;
 uint64_t teamid_;
 std::unique_ptr<EpicsClient::EpicsClient> epics_client;

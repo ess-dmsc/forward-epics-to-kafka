@@ -94,6 +94,7 @@ void ConfigCB::operator() (std::string const & msg) {
 	Document j0;
 	j0.Parse(msg.c_str());
 	if (j0.HasParseError()) {
+		LOG(3, "Command does not look like valid json");
 		return;
 	}
 	auto m1 = j0.FindMember("cmd");
@@ -113,6 +114,12 @@ void ConfigCB::operator() (std::string const & msg) {
 			for (auto & x : m2->value.GetArray()) {
 				main.mapping_add(x);
 			}
+		}
+	}
+	if (cmd == "stop_channel") {
+		auto channel = get_string(&j0, "channel");
+		if (channel.size() > 0) {
+			main.channel_stop(channel);
 		}
 	}
 	if (cmd == "exit") {
@@ -222,6 +229,22 @@ void Main::check_stream_status() {
 			++it;
 		}
 	}
+}
+
+int Main::channel_stop(std::string const & channel) {
+	std::unique_lock<std::mutex> lock(streams_mutex);
+	auto it = streams.begin();
+	while (true) {
+		if (it == streams.end()) break;
+		auto & s = *it;
+		if (s->channel_info().channel_name == channel) {
+			it = streams.erase(it);
+		}
+		else {
+			++it;
+		}
+	}
+	return 0;
 }
 
 
