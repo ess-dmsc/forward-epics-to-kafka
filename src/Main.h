@@ -33,6 +33,7 @@ int mapping_add(rapidjson::Value & mapping);
 void forwarding_exit();
 void report_stats(int started_in_current_round);
 void stop();
+void check_stream_status();
 int streams_clear();
 int conversion_workers_clear();
 std::unique_lock<std::mutex> get_lock_streams();

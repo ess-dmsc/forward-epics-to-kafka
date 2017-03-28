@@ -2,6 +2,7 @@
 #include <atomic>
 #include <mutex>
 #include <chrono>
+#include <sstream>
 #include <pv/pvData.h>
 #include <pv/pvAccess.h>
 // For epics::pvAccess::ClientFactory::start()
@@ -26,11 +27,13 @@ using epics::pvData::MessageType;
 using epics::pvAccess::Channel;
 using std::mutex;
 using ulock = std::unique_lock<mutex>;
+using urlock = std::unique_lock<std::recursive_mutex>;
 
 #define STRINGIFY2(x) #x
 #define STRINGIFY(x) STRINGIFY2(x)
 
 char const * channel_state_name(epics::pvAccess::Channel::ConnectionState x) {
+	// Channel::ConnectionStateNames[cstate]
 #define DWTN1(N) DWTN2(N, STRINGIFY(N))
 #define DWTN2(N, S) if (x == epics::pvAccess::Channel::ConnectionState::N) { return S; }
 	DWTN1(NEVER_CONNECTED);
@@ -56,37 +59,24 @@ EpicsClient_impl * epics_client_impl;
 
 
 
+static std::string channel_info(epics::pvAccess::Channel::shared_pointer const & channel) {
+	std::ostringstream ss;
+	channel->printInfo(ss);
+	return ss.str();
+}
+
 class ChannelRequester : public epics::pvAccess::ChannelRequester {
 public:
-ChannelRequester(EpicsClient_impl * epics_client_impl, std::unique_ptr<ActionOnChannel> action);
-
+ChannelRequester(EpicsClient_impl * epics_client_impl);
 // From class pvData::Requester
 std::string getRequesterName() override;
 void message(std::string const & message, MessageType messageType) override;
-
 void channelCreated(const epics::pvData::Status& status, epics::pvAccess::Channel::shared_pointer const & channel) override;
 void channelStateChange(epics::pvAccess::Channel::shared_pointer const & channel, epics::pvAccess::Channel::ConnectionState connectionState) override;
-
 private:
-//FwdGetFieldRequester::shared_pointer gfr;
-//epics::pvAccess::ChannelGetRequester::shared_pointer cgr;
-//ChannelGet::shared_pointer cg;
-
-std::unique_ptr<ActionOnChannel> action;
-
-// Monitor operation:
 epics::pvData::MonitorRequester::shared_pointer monitor_requester;
 epics::pvData::MonitorPtr monitor;
 EpicsClient_impl * epics_client_impl = nullptr;
-};
-
-
-class StartMonitorChannel : public ActionOnChannel {
-public:
-StartMonitorChannel(EpicsClient_impl * epics_client_impl);
-void operator () (epics::pvAccess::Channel::shared_pointer const & channel) override;
-private:
-epics::pvAccess::GetFieldRequester::shared_pointer gfr;
 };
 
 
@@ -160,7 +150,9 @@ public:
 EpicsClient_impl(EpicsClient * epics_client);
 ~EpicsClient_impl();
 int init(string epics_channel_provider_type);
-int initiate_value_monitoring();
+int monitoring_start();
+int monitoring_stop();
+int channel_destroyed();
 int stop();
 int emit(std::unique_ptr<FlatBufs::EpicsPVUpdate>);
 void monitor_requester_error(FwdMonitorRequester *);
@@ -170,7 +162,7 @@ epics::pvAccess::ChannelProvider::shared_pointer provider;
 epics::pvAccess::ChannelRequester::shared_pointer channel_requester;
 epics::pvAccess::Channel::shared_pointer channel;
 epics::pvData::Monitor::shared_pointer monitor;
-mutex mx;
+std::recursive_mutex mx;
 int state = 0;
 uint64_t teamid = 0;
 uint64_t fwdix = 0;
@@ -187,8 +179,7 @@ std::unique_ptr<EpicsClientFactoryInit> factory_init;
 
 
 
-ChannelRequester::ChannelRequester(EpicsClient_impl * epics_client_impl, std::unique_ptr<ActionOnChannel> action) :
-	action(std::move(action)),
+ChannelRequester::ChannelRequester(EpicsClient_impl * epics_client_impl) :
 	epics_client_impl(epics_client_impl)
 {
 }
@@ -230,27 +221,29 @@ void ChannelRequester::channelCreated(epics::pvData::Status const & status, Chan
 }
 
 void ChannelRequester::channelStateChange(Channel::shared_pointer const & channel, Channel::ConnectionState cstate) {
-	CLOG(7, 7, "channel state change: {}", Channel::ConnectionStateNames[cstate]);
+	CLOG(7, 7, "channel state change: {}", channel_state_name(cstate));
 	if (!channel) {
 		CLOG(2, 2, "no channel, even though we should have.  state: {}", channel_state_name(cstate));
 		epics_client_impl->error_channel_requester();
+		return;
 	}
 	if (cstate == Channel::CONNECTED) {
 		CLOG(7, 7, "Epics channel connected");
-		action->operator()(channel);
+		if (log_level >= 9) {
+			LOG(9, "ChannelRequester::channelStateChange  channelinfo: {}", channel_info(channel));
+		}
+		epics_client_impl->monitoring_start();
 	}
 	else if (cstate == Channel::DISCONNECTED) {
 		CLOG(7, 6, "Epics channel disconnect");
-		epics_client_impl->error_channel_requester();
-		return;
+		epics_client_impl->monitoring_stop();
 	}
 	else if (cstate == Channel::DESTROYED) {
 		CLOG(7, 6, "Epics channel destroyed");
-		epics_client_impl->error_channel_requester();
-		return;
+		epics_client_impl->channel_destroyed();
 	}
 	else if (cstate != Channel::CONNECTED) {
-		CLOG(3, 3, "Unhandled channel state change: {}", channel_state_name(cstate));
+		CLOG(3, 3, "Unhandled channel state change: {} {}", cstate, channel_state_name(cstate));
 		epics_client_impl->error_channel_requester();
 	}
 }
@@ -288,12 +281,12 @@ void FwdMonitorRequester::monitorConnect(::epics::pvData::Status const & status,
 	else {
 		if (status.isOK()) {
 			CLOG(7, 7, "success and OK");
+			monitor->start();
 		}
 		else {
 			CLOG(7, 6, "success with warning");
 		}
 	}
-	monitor->start();
 }
 
 
@@ -346,25 +339,6 @@ void FwdMonitorRequester::unlisten(epics::pvData::MonitorPtr const & monitor) {
 
 
 
-StartMonitorChannel::StartMonitorChannel(EpicsClient_impl * epics_client_impl) :
-	ActionOnChannel(epics_client_impl)
-{ }
-
-void StartMonitorChannel::operator () (epics::pvAccess::Channel::shared_pointer const & channel) {
-	epics_client_impl->initiate_value_monitoring();
-}
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -376,31 +350,64 @@ EpicsClient_impl::EpicsClient_impl(EpicsClient * epics_client) :
 int EpicsClient_impl::init(string epics_channel_provider_type) {
 	factory_init = EpicsClientFactoryInit::factory_init();
 	{
-		ulock(mx);
+		urlock(mx);
 		provider = ::epics::pvAccess::getChannelProviderRegistry()
 			->getProvider(epics_channel_provider_type);
 		if (!provider) {
 			CLOG(3, 1, "Can not initialize provider");
 			return 1;
 		}
-		channel_requester.reset(new ChannelRequester(
-			this, std::unique_ptr<StartMonitorChannel>(new StartMonitorChannel(this) )
-		));
+		channel_requester.reset(new ChannelRequester(this));
 		channel = provider->createChannel(channel_name, channel_requester);
 	}
 	return 0;
 }
 
 int EpicsClient_impl::stop() {
-	{
-		ulock(mx);
-		if (monitor) {
-			monitor->stop();
-			monitor.reset();
-		}
-		if (channel) {
-			channel.reset();
-		}
+	urlock(mx);
+	if (monitor) {
+		monitor->stop();
+		monitor->destroy();
+	}
+	if (channel) {
+		channel->destroy();
+	}
+	monitor = nullptr;
+	channel = nullptr;
+	return 0;
+}
+
+int EpicsClient_impl::monitoring_stop() {
+	urlock(mx);
+	LOG(7, "monitoring_stop");
+	if (monitor) {
+		monitor->stop();
+		monitor->destroy();
+	}
+	monitor_requester = nullptr;
+	monitor = nullptr;
+	return 0;
+}
+
+int EpicsClient_impl::monitoring_start() {
+	urlock(mx);
+	if (!channel) {
+		LOG(7, "monitoring_start:  want to start but we have no channel");
+		return -1;
+	}
+	LOG(7, "monitoring_start");
+	// Leaving it empty seems to be the full channel, including name.  That's good.
+	// Can also specify subfields, e.g. "value, timeStamp"  or also "field(value)"
+	string request = "";
+	PVStructure::shared_pointer pvreq = epics::pvData::CreateRequest::create()->createRequest(request);
+	if (monitor) {
+		monitoring_stop();
+	}
+	monitor_requester.reset(new FwdMonitorRequester(this, channel_name));
+	monitor = channel->createMonitor(monitor_requester, pvreq);
+	if (!monitor) {
+		CLOG(3, 1, "could not create EPICS monitor instance");
+		return -2;
 	}
 	return 0;
 }
@@ -410,33 +417,31 @@ EpicsClient_impl::~EpicsClient_impl() {
 }
 
 int EpicsClient_impl::emit(std::unique_ptr<FlatBufs::EpicsPVUpdate> up) {
+	#if TEST_PROVOKE_ERROR == 1
+	static std::atomic<int> c1 {0};
+	if (c1 > 10) {
+		epics_client->error_in_epics();
+	}
+	++c1;
+	#endif
 	return epics_client->emit(std::move(up));
 }
 
 
 void EpicsClient_impl::monitor_requester_error(FwdMonitorRequester * ptr) {
+	LOG(4, "monitor_requester_error()");
+	epics_client->error_in_epics();
 }
 
-void EpicsClient_impl::error_channel_requester() {
-}
-
-int EpicsClient_impl::initiate_value_monitoring() {
-	CLOG(7, 7, "initiate_value_monitoring");
-	// Leaving it empty seems to be the full channel, including name.  That's good.
-	// Can also specify subfields, e.g. "value, timeStamp"  or also "field(value)"
-	string request = "";
-	PVStructure::shared_pointer pvreq = epics::pvData::CreateRequest::create()->createRequest(request);
-	{
-		ulock(mx);
-		monitor_requester.reset(new FwdMonitorRequester(this, channel_name));
-		monitor = channel->createMonitor(monitor_requester, pvreq);
-		if (!monitor) {
-			CLOG(3, 1, "could not create EPICS monitor instance");
-		}
-	}
+int EpicsClient_impl::channel_destroyed() {
+	LOG(4, "channel_destroyed()");
+	monitoring_stop();
 	return 0;
 }
 
+void EpicsClient_impl::error_channel_requester() {
+	LOG(4, "error_channel_requester()");
+}
 
 EpicsClient::EpicsClient(Stream * stream, std::shared_ptr<ForwarderInfo> finfo, string epics_channel_provider_type, string channel_name) :
 		finfo(finfo),
@@ -462,6 +467,10 @@ int EpicsClient::stop() {
 
 int EpicsClient::emit(std::unique_ptr<FlatBufs::EpicsPVUpdate> up) {
 	return stream->emit(std::move(up));
+}
+
+void EpicsClient::error_in_epics() {
+	stream->error_in_epics();
 }
 
 

@@ -177,6 +177,7 @@ void Main::forward_epics_to_kafka() {
 		auto t1 = CLK::now();
 		if (config_listener) config_listener->poll(config_cb);
 		kafka_instance_set->poll();
+		check_stream_status();
 
 		auto t2 = CLK::now();
 		auto dt = std::chrono::duration_cast<MS>(t2-t1);
@@ -204,6 +205,23 @@ void Main::report_stats(int dt) {
 	auto b3 = b2 / 1024;
 	b2 %= 1024;
 	CLOG(6, 5, "dt: {:4}  m: {:4}.{:03}  MB: {:3}.{:03}.{:03}", dt, m2, m1, b3, b2, b1);
+}
+
+
+void Main::check_stream_status() {
+	std::unique_lock<std::mutex> lock(streams_mutex);
+	auto it = streams.begin();
+	while (true) {
+		if (it == streams.end()) break;
+		auto & s = *it;
+		if (s->status() < 0) {
+			s->stop();
+			it = streams.erase(it);
+		}
+		else {
+			++it;
+		}
+	}
 }
 
 

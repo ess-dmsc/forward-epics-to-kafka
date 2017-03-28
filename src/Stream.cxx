@@ -170,5 +170,13 @@ void Stream::teamid(uint64_t teamid) {
 	teamid_ = teamid;
 }
 
+void Stream::error_in_epics() {
+	status_ = -1;
+}
+
+int Stream::status() {
+	return status_;
+}
+
 }
 }
