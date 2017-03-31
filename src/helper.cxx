@@ -6,9 +6,8 @@
 #include <string>
 #include <thread>
 #include <chrono>
+#include "logger.h"
 #include <rapidjson/document.h>
-#include <rapidjson/stringbuffer.h>
-#include <rapidjson/prettywriter.h>
 
 std::vector<char> gulp(std::string fname) {
 	std::vector<char> ret;
@@ -58,62 +57,6 @@ std::vector<std::string> split(std::string const & input, std::string token) {
 	return ret;
 }
 
-#if HAVE_GTEST
-#include <gtest/gtest.h>
-
-TEST(helper, split_01) {
-	using std::vector;
-	using std::string;
-	auto v = split("", "");
-	ASSERT_TRUE(v == vector<string>({""}));
-}
-
-TEST(helper, split_02) {
-	using std::vector;
-	using std::string;
-	auto v = split("abc", "");
-	ASSERT_TRUE(v == vector<string>({"abc"}));
-}
-
-TEST(helper, split_03) {
-	using std::vector;
-	using std::string;
-	auto v = split("a/b", "/");
-	ASSERT_TRUE(v == vector<string>({"a", "b"}));
-}
-
-TEST(helper, split_04) {
-	using std::vector;
-	using std::string;
-	auto v = split("/a/b", "/");
-	ASSERT_TRUE(v == vector<string>({"a", "b"}));
-}
-
-TEST(helper, split_05) {
-	using std::vector;
-	using std::string;
-	auto v = split("ac/dc/", "/");
-	ASSERT_TRUE(v == vector<string>({"ac", "dc"}));
-}
-
-TEST(helper, split_06) {
-	using std::vector;
-	using std::string;
-	auto v = split("/ac/dc/", "/");
-	ASSERT_TRUE(v == vector<string>({"ac", "dc"}));
-}
-
-TEST(helper, split_07) {
-	using std::vector;
-	using std::string;
-	auto v = split("/some/longer/thing/for/testing", "/");
-	ASSERT_TRUE(v == vector<string>({"some", "longer", "thing", "for", "testing"}));
-}
-
-#endif
-
-#include "logger.h"
-
 std::string get_string(rapidjson::Value const * v, std::string path) {
 	auto a = split(path, ".");
 	uint32_t i1 = 0;
@@ -156,51 +99,6 @@ std::string get_string(rapidjson::Value const * v, std::string path) {
 	return "";
 }
 
-#if HAVE_GTEST
-#include <gtest/gtest.h>
-
-TEST(RapidTools, get_string_01) {
-	using namespace rapidjson;
-	Document d;
-	d.SetObject();
-	auto & a = d.GetAllocator();
-	d.AddMember("mem00", Value("s1", a), a);
-	Value v2;
-	v2.SetObject();
-	v2.AddMember("mem10", Value("s2", a), a);
-	d.AddMember("mem01", v2.Move(), a);
-
-	{
-		Value va;
-		va.SetArray();
-		va.PushBack(Value("something_a_0", a), a);
-		va.PushBack(Value("something_a_1", a), a);
-		va.PushBack(Value(1234), a);
-		d.AddMember("mem02", va, a);
-	}
-
-	StringBuffer buf1;
-	PrettyWriter<StringBuffer> wr(buf1);
-	d.Accept(wr);
-	auto s1 = get_string(&d, "mem00");
-	ASSERT_EQ(s1, "s1");
-	s1 = get_string(&d, "mem01.mem10");
-	ASSERT_EQ(s1, "s2");
-	s1 = get_string(&d, "mem02.1");
-	ASSERT_EQ(s1, "something_a_1");
-}
-
-#endif
-
-
 void sleep_ms(uint32_t ms) {
 	std::this_thread::sleep_for(std::chrono::milliseconds(ms));
 }
-
-#if HAVE_GTEST
-#include <gtest/gtest.h>
-TEST(Sleep, sleep_ms) {
-	sleep_ms(1);
-	// ;-)
-}
-#endif
