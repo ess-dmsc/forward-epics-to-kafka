@@ -127,6 +127,9 @@ $ENV{streaming_data_types_dir}
 ${CMAKE_CURRENT_SOURCE_DIR}/../../streaming-data-types
 )
 
+find_path(path_include_pcre2 NAMES pcre2.h)
+find_library(path_lib_pcre2 NAMES pcre2-8)
+
 if (USE_GRAYLOG_LOGGER)
 find_path(path_include_graylog_logger NAMES graylog_logger/Log.hpp PATHS
 $ENV{graylog_logger_dir}/include
@@ -256,6 +259,9 @@ set_property(TARGET libNormativeTypes PROPERTY IMPORTED_LOCATION ${path_lib_epic
 add_library(librdkafka SHARED IMPORTED)
 set_property(TARGET librdkafka PROPERTY IMPORTED_LOCATION ${path_lib_rdkafka})
 
+add_library(libpcre2-8 SHARED IMPORTED)
+set_property(TARGET libpcre2-8 PROPERTY IMPORTED_LOCATION ${path_lib_pcre2})
+
 if (have_gtest)
 add_library(gtest_static STATIC IMPORTED)
 set_property(TARGET gtest_static PROPERTY IMPORTED_LOCATION "${CMAKE_CURRENT_BINARY_DIR}/../googletest/googlemock/gtest/libgtest.a")
@@ -314,6 +320,7 @@ ${path_include_epics_NT}
 ${path_include_rdkafka}
 ${path_include_flatbuffers}
 ${path_include_rapidjson}
+${path_include_pcre2}
 ${CMAKE_CURRENT_BINARY_DIR}
 "/opt/local/include/"
 )
@@ -335,6 +342,7 @@ ${path_include_fmt}
 ${path_include_flatbuffers}
 ${path_include_rdkafka}
 ${path_include_rapidjson}
+${path_include_pcre2}
 ${path_include_epics_base}
 ${path_include_epics_pvData}
 ${path_include_epics_base}/os/Linux
@@ -362,7 +370,7 @@ target_link_libraries(${tgt} libpvData)
 target_link_libraries(${tgt} libpvAccess)
 target_link_libraries(${tgt} libNormativeTypes)
 target_link_libraries(${tgt} librdkafka)
-target_link_libraries(${tgt} pcre2-8)
+target_link_libraries(${tgt} libpcre2-8)
 target_link_libraries(${tgt} pthread)
 
 if (have_gtest)
