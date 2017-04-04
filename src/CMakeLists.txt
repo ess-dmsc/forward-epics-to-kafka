@@ -25,9 +25,11 @@ endif()
 set(epicsbase_dir      $ENV{EPICS_BASE})
 set(epics_arch         $ENV{EPICS_HOST_ARCH})
 
+if (DEFINED ENV{EPICS_BASE})
 string(REGEX REPLACE ".+/base-([.0-9]+)$" "\\1" epics_base_version $ENV{EPICS_BASE})
 #message(FATAL_ERROR "[${epics_base_version}]")
 #set(epics_base_version $ENV{EPICS_V4_BASE_VERSION})
+endif()
 
 set(epics_pvData_version 5.0.2 CACHE STRING "pvData version")
 set(epics_pvAccess_version 4.1.2 CACHE STRING "pvAccess version")
