@@ -14,22 +14,28 @@ COMMAND git diff --name-only --no-index ${CMAKE_CURRENT_BINARY_DIR}/git_commit_n
 DEPENDS git_commit_now
 )
 
+# According to the official ESS wiki documentation, the base path to the
+# EPICS v4 modules is given by EPICS_MODULES_PATH
+# Also, all EPICS bases can be found in EPICS_BASES_PATH
 
-# Allows for easier testing with multiple versions on local hosts:
-if (EXISTS $ENV{EPICSV4})
-    set(epicsv4_dir        $ENV{EPICSV4})
-else()
-    set(epicsv4_dir        $ENV{epicsv4_dir})
+# Even though not mentioned on the wiki, the official ESS EPICS installation
+# provides the version of the EPICS base as used by EPICS v4
+# in EPICS_V4_BASE_VERSION
+
+set(epics_base_version "$ENV{EPICS_V4_BASE_VERSION}")
+set(epicsbase_dir      ".")
+if (DEFINED ENV{EPICS_BASES_PATH})
+set(epicsbase_dir      "$ENV{EPICS_BASES_PATH}/base-${epics_base_version}")
+endif()
+set(epics_arch         "$ENV{EPICS_HOST_ARCH}")
+set(epicsv4_dir        ".")
+if (DEFINED ENV{EPICS_MODULES_PATH})
+set(epicsv4_dir        "$ENV{EPICS_MODULES_PATH}")
 endif()
 
-set(epicsbase_dir      $ENV{EPICS_BASE})
-set(epics_arch         $ENV{EPICS_HOST_ARCH})
-
-if (DEFINED ENV{EPICS_BASE})
-string(REGEX REPLACE ".+/base-([.0-9]+)$" "\\1" epics_base_version $ENV{EPICS_BASE})
-#message(FATAL_ERROR "[${epics_base_version}]")
-#set(epics_base_version $ENV{EPICS_V4_BASE_VERSION})
-endif()
+# Currently, the official environment gives no hint about which specific
+# version of the modules we should use.  We therefore pin it to the ones
+# which are currently considered as 'production' for our purposes.
 
 set(epics_pvData_version 5.0.2 CACHE STRING "pvData version")
 set(epics_pvAccess_version 4.1.2 CACHE STRING "pvAccess version")
@@ -39,93 +45,65 @@ set(USE_GRAYLOG_LOGGER TRUE CACHE BOOL "Try to use graylog_logger")
 
 # fmt not in the EPEL pinned by the dev-env crew.
 # So use the source version:
-find_path(path_include_fmt NAMES fmt/format.cc PATHS
-$ENV{fmt_dir}/include
-/opt/local/fmt
-# For DMSC build node:
-$ENV{DM_ROOT}/usr/include
-)
+find_path(path_include_fmt NAMES fmt/format.cc)
 
-find_path(path_include_epics_base NAMES epicsTypes.h PATHS
+find_path(path_include_epics_base NAMES epicsTypes.h HINTS
 ${epicsbase_dir}/include
-/opt/epics/bases/base-${epics_base_version}/include
 )
 
-find_library(path_lib_epics_ca NAMES ca PATHS
+find_library(path_lib_epics_ca NAMES ca HINTS
 ${epicsbase_dir}/lib/${epics_arch}
-/opt/epics/bases/base-${epics_base_version}/lib/${epics_arch}
 )
 
-find_path(path_include_epics_pvData NAMES pv/pvData.h PATHS
+find_path(path_include_epics_pvData NAMES pv/pvData.h HINTS
 ${epicsv4_dir}/pvDataCPP/include
-/opt/epics/modules/pvDataCPP/${epics_pvData_version}/${epics_base_version}/include
+${epicsv4_dir}/pvDataCPP/${epics_pvData_version}/${epics_base_version}/include
 )
 
-find_library(path_lib_epics_pvData NAMES pvData pvDataCPP PATHS
+find_library(path_lib_epics_pvData NAMES pvData pvDataCPP HINTS
 ${epicsv4_dir}/pvDataCPP/lib/${epics_arch}
- /opt/epics/modules/pvDataCPP/${epics_pvData_version}/${epics_base_version}/lib/${epics_arch}
+${epicsv4_dir}/pvDataCPP/${epics_pvData_version}/${epics_base_version}/lib/${epics_arch}
 )
 
-find_path(path_include_epics_pvAccess NAMES pv/pvAccess.h PATHS
+find_path(path_include_epics_pvAccess NAMES pv/pvAccess.h HINTS
 ${epicsv4_dir}/pvAccessCPP/include
-/opt/epics/modules/pvAccessCPP/${epics_pvAccess_version}/${epics_base_version}/include
+${epicsv4_dir}/pvAccessCPP/${epics_pvAccess_version}/${epics_base_version}/include
 )
 
-find_library(path_lib_epics_pvAccess NAMES pvAccess pvAccessCPP PATHS
+find_library(path_lib_epics_pvAccess NAMES pvAccess pvAccessCPP HINTS
 ${epicsv4_dir}/pvAccessCPP/lib/${epics_arch}
-/opt/epics/modules/pvAccessCPP/${epics_pvAccess_version}/${epics_base_version}/lib/${epics_arch}
+${epicsv4_dir}/pvAccessCPP/${epics_pvAccess_version}/${epics_base_version}/lib/${epics_arch}
 )
 
-find_path(path_include_epics_pvDatabase NAMES pv/pvDatabase.h PATHS
+find_path(path_include_epics_pvDatabase NAMES pv/pvDatabase.h HINTS
 ${epicsv4_dir}/pvDatabaseCPP/include
-/opt/epics/modules/pvDatabaseCPP/${epics_pvDatabase_version}/${epics_base_version}/include
+${epicsv4_dir}/pvDatabaseCPP/${epics_pvDatabase_version}/${epics_base_version}/include
 )
 
-find_library(path_lib_epics_pvDatabase NAMES pvDatabase pvDatabaseCPP PATHS
+find_library(path_lib_epics_pvDatabase NAMES pvDatabase pvDatabaseCPP HINTS
 ${epicsv4_dir}/pvDatabaseCPP/lib/${epics_arch}
-/opt/epics/modules/pvDatabaseCPP/${epics_pvDatabase_version}/${epics_base_version}/lib/${epics_arch}
+${epicsv4_dir}/pvDatabaseCPP/${epics_pvDatabase_version}/${epics_base_version}/lib/${epics_arch}
 )
 
-find_path(path_include_epics_NT NAMES pv/nt.h PATHS
+find_path(path_include_epics_NT NAMES pv/nt.h HINTS
 ${epicsv4_dir}/normativeTypesCPP/include
-/opt/epics/modules/normativeTypesCPP/${epics_normativeTypes_version}/${epics_base_version}/include
+${epicsv4_dir}/normativeTypesCPP/${epics_normativeTypes_version}/${epics_base_version}/include
 )
 
-find_library(path_lib_epics_NT NAMES nt ntCPP normativeTypesCPP PATHS
+find_library(path_lib_epics_NT NAMES nt ntCPP normativeTypesCPP HINTS
 ${epicsv4_dir}/normativeTypesCPP/lib/${epics_arch}
-/opt/epics/modules/normativeTypesCPP/${epics_normativeTypes_version}/${epics_base_version}/lib/${epics_arch}
+${epicsv4_dir}/normativeTypesCPP/${epics_normativeTypes_version}/${epics_base_version}/lib/${epics_arch}
 )
 
-find_path(path_include_rapidjson NAMES rapidjson/document.h PATHS
-$ENV{rapidjson_dir}/include
-/opt/local/rapidjson.git/include
-# For DMSC build node:
-$ENV{DM_ROOT}/usr/include
-)
+find_path(path_include_rapidjson NAMES rapidjson/document.h)
 
-find_path(path_include_rdkafka NAMES librdkafka/rdkafka.h PATHS
-$ENV{librdkafka_dir}/include
-/opt/local/rdkafka/install/include
-# For the 'master' on DMSC build node, and another machine at PSI:
-/usr/local/include
-)
+find_path(path_include_rdkafka NAMES librdkafka/rdkafka.h)
+find_library(path_lib_rdkafka NAMES rdkafka)
 
-find_library(path_lib_rdkafka NAMES rdkafka PATHS
-$ENV{librdkafka_dir}/lib
-/opt/local/rdkafka/install/lib
-# For DMSC build node and a machine at PSI:
-/usr/local/lib
-)
+find_path(path_include_flatbuffers NAMES flatbuffers/flatbuffers.h)
 
-find_path(path_include_flatbuffers NAMES flatbuffers/flatbuffers.h PATHS
-$ENV{flatbuffers_dir}/include
-/opt/local/flatbuffers.git/include
-# For DMSC build node:
-$ENV{DM_ROOT}/usr/include
-)
-
-find_path(path_include_streaming_data_types NAMES schemas/f141_epics_nt.fbs PATHS
-$ENV{streaming_data_types_dir}
+find_path(path_include_streaming_data_types NAMES schemas/f141_epics_nt.fbs HINTS
+# The common case as fallback:
 ${CMAKE_CURRENT_SOURCE_DIR}/../../streaming-data-types
 )
 
@@ -133,14 +111,8 @@ find_path(path_include_pcre2 NAMES pcre2.h)
 find_library(path_lib_pcre2 NAMES pcre2-8)
 
 if (USE_GRAYLOG_LOGGER)
-find_path(path_include_graylog_logger NAMES graylog_logger/Log.hpp PATHS
-$ENV{graylog_logger_dir}/include
-/opt/local/graylog_logger-install
-)
-find_library(path_lib_graylog_logger NAMES graylog_logger PATHS
-$ENV{graylog_logger_dir}/lib
-/opt/local/graylog_logger-install
-)
+find_path(path_include_graylog_logger NAMES graylog_logger/Log.hpp)
+find_library(path_lib_graylog_logger NAMES graylog_logger)
 if (path_include_graylog_logger AND path_lib_graylog_logger)
 message(STATUS "Using graylog_logger")
 set(have_graylog_logger TRUE)
@@ -176,12 +148,10 @@ add_custom_target(check_streaming_data_types ALL
 COMMAND bash -c '\(cd ${path_include_streaming_data_types} && git merge-base --is-ancestor ${need_commit} HEAD \) || \( echo && echo ERROR\ Your\ streaming-data-types\ repository\ is\ too\ old && echo && exit 1 \) '
 )
 
+find_program(flatc flatc)
+message(STATUS "flatc in ${flatc}")
 
 set(flatbuffers_generated_headers "")
-
-# Search the dev env standard locations, but it will also look in PATH
-find_program(flatc flatc PATHS "$ENV{flatc}" "$ENV{flatc_dir}" "/opt/local/flatbuffers")
-message(STATUS "flatc in ${flatc}")
 
 set(schemas_subdir "schemas")
 set(head_out_dir "${CMAKE_CURRENT_BINARY_DIR}/${schemas_subdir}")
@@ -190,11 +160,8 @@ file(GLOB_RECURSE flatbuffers_schemata2 RELATIVE "${path_include_streaming_data_
 
 foreach (f0 ${flatbuffers_schemata2})
 	string(REGEX REPLACE "\\.fbs$" "" s0 ${f0})
-	#message(STATUS "s0: ${s0}")
 	set(fbs "${s0}.fbs")
 	set(fbh "${s0}_generated.h")
-	#message(STATUS "fbs: ${fbs}")
-	#message(STATUS "fbh: ${fbh}")
 	add_custom_command(
 		OUTPUT "${head_out_dir}/${fbh}"
 		COMMAND ${flatc} --cpp --gen-mutable --gen-name-strings --scoped-enums "${path_include_streaming_data_types}/schemas/${fbs}"
@@ -312,10 +279,6 @@ add_library(${tgt} OBJECT ${SOURCES})
 target_include_directories(${tgt} PRIVATE
 ${path_include_fmt}
 ${path_include_epics_base}
-${path_include_epics_base}/os/Linux
-${path_include_epics_base}/os/Darwin
-${path_include_epics_base}/compiler/gcc
-${path_include_epics_base}/compiler/clang
 ${path_include_epics_pvData}
 ${path_include_epics_pvAccess}
 ${path_include_epics_NT}
@@ -326,6 +289,18 @@ ${path_include_pcre2}
 ${CMAKE_CURRENT_BINARY_DIR}
 "/opt/local/include/"
 )
+if (EXISTS "${path_include_epics_base}/os/Linux")
+target_include_directories(${tgt} PRIVATE "${path_include_epics_base}/os/Linux")
+endif()
+if (EXISTS "${path_include_epics_base}/os/Darwin")
+target_include_directories(${tgt} PRIVATE "${path_include_epics_base}/os/Darwin")
+endif()
+if (EXISTS "${path_include_epics_base}/compiler/gcc")
+target_include_directories(${tgt} PRIVATE "${path_include_epics_base}/compiler/gcc")
+endif()
+if (EXISTS "${path_include_epics_base}/compiler/clang")
+target_include_directories(${tgt} PRIVATE "${path_include_epics_base}/compiler/clang")
+endif()
 if (have_gtest)
 target_compile_definitions(${tgt} PRIVATE HAVE_GTEST=1)
 target_include_directories(${tgt} PRIVATE ${path_include_gtest})
@@ -347,12 +322,19 @@ ${path_include_rapidjson}
 ${path_include_pcre2}
 ${path_include_epics_base}
 ${path_include_epics_pvData}
-${path_include_epics_base}/os/Linux
-${path_include_epics_base}/os/Darwin
-${path_include_epics_base}/compiler/gcc
-${path_include_epics_base}/compiler/clang
-"/opt/local/include/"
 )
+if (EXISTS "${path_include_epics_base}/os/Linux")
+target_include_directories(${tgt} PRIVATE "${path_include_epics_base}/os/Linux")
+endif()
+if (EXISTS "${path_include_epics_base}/os/Darwin")
+target_include_directories(${tgt} PRIVATE "${path_include_epics_base}/os/Darwin")
+endif()
+if (EXISTS "${path_include_epics_base}/compiler/gcc")
+target_include_directories(${tgt} PRIVATE "${path_include_epics_base}/compiler/gcc")
+endif()
+if (EXISTS "${path_include_epics_base}/compiler/clang")
+target_include_directories(${tgt} PRIVATE "${path_include_epics_base}/compiler/clang")
+endif()
 
 if (have_gtest)
 add_dependencies(${tgt} gtest)
