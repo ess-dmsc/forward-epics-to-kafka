@@ -55,6 +55,16 @@ find_library(path_lib_epics_ca NAMES ca HINTS
 ${epicsbase_dir}/lib/${epics_arch}
 )
 
+# The ESS EPICS v4 installation uses a non-standard schema:
+# .../pv<Module>/<module-version>/<base-version>/...
+# whereas a standard local EPICS compile produces
+# .../pv<Module>/...
+# so we support both schemes in the following.
+
+# Of course, you can also just point the standard CMAKE_*_PATH variables to
+# your custom EPICS installation.  This is what we do to test different
+# EPICS versions quickly.
+
 find_path(path_include_epics_pvData NAMES pv/pvData.h HINTS
 ${epicsv4_dir}/pvDataCPP/include
 ${epicsv4_dir}/pvDataCPP/${epics_pvData_version}/${epics_base_version}/include
