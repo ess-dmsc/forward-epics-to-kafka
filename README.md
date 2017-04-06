@@ -31,12 +31,13 @@ environment variables (see `src/CMakeLists.txt`):
 - pcre2 (e.g. `yum install pcre2 pcre2-devel` or `brew install pcre2`)
 
 Tooling
-- cmake (above 2.8.11)
+- cmake (minimum tested is 2.8.11)
 - C++ compiler with c++11 support
-- Doxygen if you would like to make docs
+- Doxygen if you would like to `make docs`
 
 Others (optional)
-- Google Test  (clone the gtest repository parallel to this repository)
+- Google Test  (git clone `https://github.com/google/googletest.git` in
+  parallel to this repository)
 
 
 ### Build
@@ -53,7 +54,7 @@ make docs
 The `forward-epics-to-kafka` follows standard `CMake` conventions.
 You can use the standard `CMAKE_INCLUDE_PATH`, `CMAKE_LIBRARY_PATH` and
 `CMAKE_PROGRAM_PATH` to point `CMake` into the right direction.
-It will prefer dependencies found there over the in the system directories.
+It will prefer dependencies found there over those in the system directories.
 
 We of course also support the ESS EPICS installation scheme.
 To that end, we use as specified in the ESS wiki:
@@ -80,7 +81,7 @@ cmake \
 -DCMAKE_INCLUDE_PATH="$D1/fmt;$D1/rapidjson/include;$D1/flatbuffers/include;$D1/librdkafka/include;$D1/googletest;$D1/epics/base-3.16.0.1/include" \
 -DCMAKE_LIBRARY_PATH="$D1/librdkafka/lib;$D1/epics/base-3.16.0.1/lib/$EPICS_HOST_ARCH" \
 -DCMAKE_PROGRAM_PATH="$D1/flatbuffers/bin" \
-<path-to-repository>
+<path-to-forward-epics-to-kafka-repository>
 ```
 
 Note that in this example, there is no need for `EPICS_V4_BASE_VERSION`
@@ -256,7 +257,7 @@ New converters from EPICS to Flatbuffers can be easily added.
 Please have a look at the last 20 lines of `src/schemas/f142/f142.cxx` on how
 to register your plugin with the SchemaRegistry.
 There is no need to touch existing code at all to register a new plugin,
-but you probably want to at it to `CMakeLists.txt`.
+but you probably want to add it to `CMakeLists.txt`.
 There will be support for dynamic loading of shared objects also soon.
 Beware that converter instances are used from different threads.  If the
 converter instance has state, it must take care of thread safety itself.
