@@ -41,12 +41,51 @@ Others (optional)
 
 ### Build
 
-Assuming you have `make`
+Assuming you have `make` and all dependencies in standard locations:
 ```
 cmake <path-to-source>
 make
 make docs
 ```
+
+#### Dependencies in custom locations
+
+The `forward-epics-to-kafka` follows standard `CMake` conventions.
+You can use the standard `CMAKE_INCLUDE_PATH`, `CMAKE_LIBRARY_PATH` and
+`CMAKE_PROGRAM_PATH` to point `CMake` into the right direction.
+It will prefer dependencies found there over the in the system directories.
+
+We of course also support the ESS EPICS installation scheme.
+To that end, we use as specified in the ESS wiki:
+- `EPICS_V4_BASE_VERSION`
+- `EPICS_BASES_PATH`
+- `EPICS_HOST_ARCH`
+- `EPICS_MODULES_PATH`
+
+
+#### Fully non-standard dependencies
+
+If you like full control over the dependencies:
+
+Here follows an example where all dependencies are in non-standard locations.
+Also EPICS is a custom build from source.
+No additional environment variables are needed.
+Only a few basic dependencies (like PCRE) are in standard locations.
+```
+export D1=$HOME/software/;
+export EPICS_MODULES_PATH=$D1/epics/EPICS-CPP-4.6.0;
+export EPICS_HOST_ARCH=darwin-x86;
+cmake \
+-DREQUIRE_GTEST=1 \
+-DCMAKE_INCLUDE_PATH="$D1/fmt;$D1/rapidjson/include;$D1/flatbuffers/include;$D1/librdkafka/include;$D1/googletest;$D1/epics/base-3.16.0.1/include" \
+-DCMAKE_LIBRARY_PATH="$D1/librdkafka/lib;$D1/epics/base-3.16.0.1/lib/$EPICS_HOST_ARCH" \
+-DCMAKE_PROGRAM_PATH="$D1/flatbuffers/bin" \
+<path-to-repository>
+```
+
+Note that in this example, there is no need for `EPICS_V4_BASE_VERSION`
+or `EPICS_BASES_PATH` because we give them explicitly in `CMAKE_*_PATH`.
+
 
 
 ### Tests
@@ -262,7 +301,3 @@ Example:
 Please send any feature requests you have (dominik.werder@psi.ch).
 
 - Optionally read from (the future) configuration service
-
-
-
-## Release notes
