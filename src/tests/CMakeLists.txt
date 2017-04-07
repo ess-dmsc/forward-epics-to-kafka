@@ -11,40 +11,10 @@ $<TARGET_OBJECTS:__objects>
 )
 add_executable(${tgt} ${sources})
 add_dependencies(${tgt} flatbuffers_generate)
-target_include_directories(${tgt} PRIVATE
-${path_include_fmt}
-${path_include_rdkafka}
-${path_include_flatbuffers}
-${path_include_rapidjson}
-${path_include_epics_base}
-${path_include_epics_pvData}
-${path_include_epics_pvAccess}
-${path_include_epics_NT}
-${CMAKE_CURRENT_BINARY_DIR}
-)
-if (EXISTS "${path_include_epics_base}/os/Linux")
-target_include_directories(${tgt} PRIVATE "${path_include_epics_base}/os/Linux")
-endif()
-if (EXISTS "${path_include_epics_base}/os/Darwin")
-target_include_directories(${tgt} PRIVATE "${path_include_epics_base}/os/Darwin")
-endif()
-if (EXISTS "${path_include_epics_base}/compiler/gcc")
-target_include_directories(${tgt} PRIVATE "${path_include_epics_base}/compiler/gcc")
-endif()
-if (EXISTS "${path_include_epics_base}/compiler/clang")
-target_include_directories(${tgt} PRIVATE "${path_include_epics_base}/compiler/clang")
-endif()
-target_link_libraries(${tgt} librdkafka)
-target_link_libraries(${tgt} pcre2-8)
-target_link_libraries(${tgt} epicsbase)
-target_link_libraries(${tgt} libpvData)
-target_link_libraries(${tgt} libpvAccess)
-target_link_libraries(${tgt} libNormativeTypes)
-if (have_gtest)
-target_compile_definitions(${tgt} PRIVATE HAVE_GTEST=1)
-target_include_directories(${tgt} PRIVATE ${path_include_gtest})
-target_link_libraries(${tgt} gtest)
-endif()
+target_include_directories(${tgt} PRIVATE ${path_include_common})
+target_link_libraries(${tgt} ${libraries_common})
+
+add_gtest_to_target(${tgt})
 
 configure_file(test-config-valid.json ../../tests/test-config-valid.json)
 configure_file(msg-add-01.json ../../tests/msg-add-01.json)
