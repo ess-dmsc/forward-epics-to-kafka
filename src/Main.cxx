@@ -192,7 +192,9 @@ void Main::forward_epics_to_kafka() {
 		if (dt >= Dt) {
 			CLOG(3, 1, "slow main loop");
 		}
-		std::this_thread::sleep_for(Dt-dt);
+		else {
+			std::this_thread::sleep_for(Dt-dt);
+		}
 	}
 	LOG(7, "Main::forward_epics_to_kafka   shutting down");
 	conversion_workers_clear();
