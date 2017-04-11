@@ -1,2 +1,7 @@
 find_path(path_include_flatbuffers NAMES flatbuffers/flatbuffers.h)
 message(STATUS "path_include_flatbuffers ${path_include_flatbuffers}")
+find_program(flatc flatc)
+if (NOT flatc)
+	message(FATAL_ERROR "could not find the 'flatc' executable using find_program()")
+endif()
+message(STATUS "flatc: ${flatc}")

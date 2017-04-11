@@ -26,12 +26,6 @@ endif()
 
 
 
-find_program(flatc flatc)
-if (NOT flatc)
-	message(FATAL_ERROR "could not find the 'flatc' executable using find_program()")
-endif()
-message(STATUS "flatc in ${flatc}")
-
 set(flatbuffers_generated_headers "")
 
 set(schemas_subdir "schemas")
