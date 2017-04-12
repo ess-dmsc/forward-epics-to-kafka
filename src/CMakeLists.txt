@@ -63,6 +63,7 @@ epics-to-fb.cxx
 Config.cxx
 fbschemas.cxx
 SchemaRegistry.cxx
+MakeFlatBufferFromPVStructure.cxx
 uri.cxx
 blobs.cxx
 Converter.cxx

@@ -301,17 +301,20 @@ int Main::mapping_add(rapidjson::Value & mapping) {
 				if (c1 != converters.end()) {
 					conv = c1->second.lock();
 					if (!conv) {
-						conv = Converter::create(main_opt.schema_registry, schema);
+						conv = Converter::create(main_opt.schema_registry, schema, main_opt);
 						converters[cname] = std::weak_ptr<Converter>(conv);
 					}
 				}
 				else {
-					conv = Converter::create(main_opt.schema_registry, schema);
+					conv = Converter::create(main_opt.schema_registry, schema, main_opt);
 					converters[cname] = std::weak_ptr<Converter>(conv);
 				}
 			}
 			else {
-				conv = Converter::create(main_opt.schema_registry, schema);
+				conv = Converter::create(main_opt.schema_registry, schema, main_opt);
+			}
+			if (!conv) {
+				LOG(3, "can not create a converter");
 			}
 			stream->converter_add(*kafka_instance_set, conv, topic_uri);
 		};

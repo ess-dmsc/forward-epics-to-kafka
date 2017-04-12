@@ -77,7 +77,8 @@
 				}
 			},
 			"additionalProperties": false
-		}
+		},
+		"converters": {"type":"object"}
 	},
 	"additionalProperties": false
 }
