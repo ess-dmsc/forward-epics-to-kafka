@@ -277,6 +277,12 @@ BrightnESS::FlatBufs::FB_uptr convert(EpicsPVUpdate const & up) override {
 	b.add_name(n);
 	b.add_value_type(vF.type);
 	b.add_value(vF.off);
+	if (auto pvTimeStamp = pvstr->getSubField<epics::pvData::PVStructure>("timeStamp")) {
+		uint64_t ts = (uint64_t)pvTimeStamp->getSubField<epics::pvData::PVScalarValue<int64_t>>("secondsPastEpoch")->get();
+		ts *= 1000000000;
+		ts += pvTimeStamp->getSubField<epics::pvData::PVScalarValue<int32_t>>("nanoseconds")->get();
+		b.add_timestamp(ts);
+	}
 	b.add_fwdinfo_type(forwarder_internal::fwdinfo_1_t);
 	b.add_fwdinfo(fwdinfo);
 	FinishStructureBuffer(*builder, b.Finish());
