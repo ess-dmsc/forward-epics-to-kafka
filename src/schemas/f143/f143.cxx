@@ -271,7 +271,7 @@ BrightnESS::FlatBufs::FB_uptr convert(EpicsPVUpdate const & up) override {
 		fwdinfo = bf.Finish().Union();
 	}
 
-	auto n = builder->CreateString(std::string("getFieldName:") + pvstr->getFieldName());
+	auto n = builder->CreateString(up.channel);
 	auto vF = fbg::Field(*builder, pvstr, llevel);
 	f143_structure::StructureBuilder b(*builder);
 	b.add_name(n);
