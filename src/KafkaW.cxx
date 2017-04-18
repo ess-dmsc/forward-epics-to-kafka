@@ -594,8 +594,11 @@ Producer::Producer(Producer && x) {
 
 void Producer::poll() {
 	int n1 = rd_kafka_poll(rk, opt.poll_timeout_ms);
-	if (n1 > 0) {
-		LOG(7, "IID: {}  INFO rd_kafka_poll()  served: {}  outq_len: {}", id, n1, rd_kafka_outq_len(rk));
+	int level = 7;
+	if (n1 == 0) level = 8;
+	LOG(level, "IID: {}  INFO rd_kafka_poll()  served: {}  outq_len: {}", id, n1, rd_kafka_outq_len(rk));
+	if (log_level >= 8) {
+		rd_kafka_dump(stdout, rk);
 	}
 }
 
