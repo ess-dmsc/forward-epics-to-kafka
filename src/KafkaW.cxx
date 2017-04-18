@@ -33,6 +33,7 @@ BrokerOpt::BrokerOpt() {
 		{"coordinator.query.interval.ms",             2 * 1000},
 		{"heartbeat.interval.ms",                          500},
 		{"statistics.interval.ms",                  600 * 1000},
+		//{"message.timeout.ms",                            6000},
 		/*
 		{"message.max.bytes",                 23 * 1024 * 1024},
 
@@ -522,13 +523,20 @@ void Producer::cb_throttle(rd_kafka_t * rk, char const * broker_name, int32_t br
 Producer::~Producer() {
 	LOG(7, "~Producer");
 	if (rk) {
-		int ns = 10;
-		while (rd_kafka_outq_len(rk) > 0) {
-			auto n1 = rd_kafka_poll(rk, ns);
+		int ms = 1;
+		uint32_t n0 = 0;
+		while (true) {
+			n0 = rd_kafka_outq_len(rk);
+			if (n0 == 0) break;
+			auto n1 = rd_kafka_poll(rk, ms);
 			if (n1 > 0) {
-				LOG(7, "rd_kafka_poll handled {}, timeout {}", n1, ns);
+				LOG(7, "rd_kafka_poll handled: {}  outq before: {}  timeout: {}", n1, n0, ms);
 			}
-			ns = std::min(500, ns * 3 / 2);
+			ms = ms << 1;
+			if (ms > 8 * 1024) break;
+		}
+		if (n0 > 0) {
+			LOG(3, "Kafka out queue still not empty: {}  destroy producer anyway.", n0);
 		}
 		LOG(7, "rd_kafka_destroy");
 		rd_kafka_destroy(rk);
@@ -615,17 +623,8 @@ uint64_t Producer::total_produced() {
 
 
 ProducerTopic::~ProducerTopic() {
-	LOG(7, "~ProducerTopic");
+	LOG(7, "~ProducerTopic {}", _name);
 	if (rkt) {
-		auto rk = producer->rd_kafka_ptr();
-		int ns = 10;
-		while (rd_kafka_outq_len(rk) > 0) {
-			auto n1 = rd_kafka_poll(rk, ns);
-			if (n1 > 0) {
-				LOG(7, "rd_kafka_poll handled {}, timeout {}", n1, ns);
-			}
-			ns = std::min(500, ns << 2);
-		}
 		LOG(7, "rd_kafka_topic_destroy");
 		rd_kafka_topic_destroy(rkt);
 		rkt = nullptr;
