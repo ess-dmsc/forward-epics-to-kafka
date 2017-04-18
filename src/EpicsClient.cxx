@@ -446,6 +446,9 @@ EpicsClient::EpicsClient(Stream * stream, std::shared_ptr<ForwarderInfo> finfo, 
 		stream(stream)
 {
 	impl.reset(new EpicsClient_impl(this));
+	if (finfo->teamid != 0) {
+		channel_name = fmt::format("{}__teamid_{:016x}", channel_name, finfo->teamid);
+	}
 	CLOG(7, 7, "channel_name: {}", channel_name);
 	impl->channel_name = channel_name;
 	impl->teamid = finfo->teamid;

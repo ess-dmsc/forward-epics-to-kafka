@@ -269,9 +269,6 @@ int Main::mapping_add(rapidjson::Value & mapping) {
 		return -1;
 	}
 	auto & stream = streams.back();
-	if (main_opt.teamid != 0) {
-		stream->teamid(main_opt.teamid);
-	}
 	{
 		auto push_conv = [this, &stream] (rapidjson::Value & c) {
 			string schema = get_string(&c, "schema");

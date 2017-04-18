@@ -44,6 +44,7 @@ static uint16_t _fmt(std::unique_ptr<FlatBufs::EpicsPVUpdate> & x) {
 }
 
 Stream::Stream(std::shared_ptr<ForwarderInfo> finfo, ChannelInfo channel_info) :
+		finfo(finfo),
 		channel_info_(channel_info)
 {
 	emit_queue.formatter = _fmt;
@@ -164,10 +165,6 @@ int32_t Stream::fill_conversion_work(Ring<std::unique_ptr<ConversionWorkPacket>>
 int Stream::stop() {
 	epics_client->stop();
 	return 0;
-}
-
-void Stream::teamid(uint64_t teamid) {
-	teamid_ = teamid;
 }
 
 void Stream::error_in_epics() {
