@@ -26,6 +26,7 @@ BrokerOpt::BrokerOpt() {
 		{"receive.message.max.bytes",         23 * 1024 * 1024},
 		{"queue.buffering.max.messages",            100 * 1000},
 		{"queue.buffering.max.ms",                          50},
+		{"queue.buffering.max.kbytes",              800 * 1024},
 		{"batch.num.messages",                      100 * 1000},
 		//{"socket.send.buffer.bytes",          23 * 1024 * 1024},
 		//{"socket.receive.buffer.bytes",       23 * 1024 * 1024},
@@ -40,7 +41,6 @@ BrokerOpt::BrokerOpt() {
 		{"receive.message.max.bytes",          3 * 1024 * 1024},
 
 		{"queue.buffering.max.messages",       2 * 1000 * 1000},
-		//{"queue.buffering.max.kbytes",              800 * 1024},
 		{"queue.buffering.max.ms",                        1000},
 
 		// Total MessageSet size limited by message.max.bytes
