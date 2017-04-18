@@ -151,7 +151,7 @@ void Logger::dwlog_inner(int level, int color, char const * file, int line, char
 		Writer<StringBuffer> wr(buf1);
 		d.Accept(wr);
 		auto s1 = buf1.GetString();
-		topic->produce((KafkaW::uchar *)s1, strlen(s1), nullptr);
+		topic->produce((KafkaW::uchar *)s1, strlen(s1), true);
 	}
 	#ifdef HAVE_GRAYLOG_LOGGER
 	if (do_use_graylog_logger.load() and level < 7) {

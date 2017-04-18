@@ -652,30 +652,16 @@ ProducerTopic::ProducerTopic(ProducerTopic && x) {
 }
 
 
-int ProducerTopic::produce(uchar * msg_data, int msg_size, void * opaque, bool print_err) {
+int ProducerTopic::produce(uchar * msg_data, int msg_size, bool print_err) {
 	static_assert(RD_KAFKA_RESP_ERR_NO_ERROR == 0, "We rely on NO_ERROR == 0");
 	if (not rkt) {
 		throw std::runtime_error("ERROR tried to produce on uninitialized rkt");
 	}
 	int x;
 	int32_t partition = RD_KAFKA_PARTITION_UA;
-
-	// Optional:
 	void const * key = NULL;
 	size_t key_len = 0;
-
-	// no flags means that we reown our buffer when Kafka calls our callback.
-	int msgflags = 0; // 0, RD_KAFKA_MSG_F_COPY, RD_KAFKA_MSG_F_FREE
-	if (_do_copy || opaque == nullptr) msgflags = RD_KAFKA_MSG_F_COPY;
-
-	// This overload does always copy because non-copy should use the new Msg based one.
-	msgflags = RD_KAFKA_MSG_F_COPY;
-
-	// TODO
-	// How does Kafka report the error?
-	// API docs state that error codes are given in 'errno'
-	// Check that this is thread safe ?!?
-
+	int msgflags = RD_KAFKA_MSG_F_COPY; // 0, RD_KAFKA_MSG_F_COPY, RD_KAFKA_MSG_F_FREE
 	x = rd_kafka_produce(rkt, partition, msgflags, msg_data, msg_size, key, key_len, nullptr);
 
 	if (print_err) {
@@ -710,19 +696,9 @@ int ProducerTopic::produce(Producer::Msg & msg) {
 	}
 	int x;
 	int32_t partition = RD_KAFKA_PARTITION_UA;
-
-	// Optional:
 	void const * key = NULL;
 	size_t key_len = 0;
-
-	// no flags means that we reown our buffer when Kafka calls our callback.
 	int msgflags = 0; // 0, RD_KAFKA_MSG_F_COPY, RD_KAFKA_MSG_F_FREE
-
-	// TODO
-	// How does Kafka report the error?
-	// API docs state that error codes are given in 'errno'
-	// Check that this is thread safe ?!?
-
 	x = rd_kafka_produce(rkt, partition, msgflags, msg.data, msg.size, key, key_len, &msg);
 
 	if (true) {
