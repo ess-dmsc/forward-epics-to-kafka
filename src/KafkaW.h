@@ -3,6 +3,7 @@
 #include <functional>
 #include <vector>
 #include <map>
+#include <atomic>
 #include <string>
 #include <librdkafka/rdkafka.h>
 
@@ -117,6 +118,8 @@ Producer(Producer && x);
 ~Producer();
 void poll_while_outq();
 void poll();
+uint64_t total_produced();
+uint64_t outq();
 static void cb_delivered(rd_kafka_t * rk, rd_kafka_message_t const * msg, void * opaque);
 static void cb_error(rd_kafka_t * rk, int err_i, char const * reason, void * opaque);
 static int cb_stats(rd_kafka_t * rk, char * json, size_t json_len, void * opaque);
@@ -129,6 +132,7 @@ std::function<void(Producer *, rd_kafka_resp_err_t)> on_error;
 // Currently it's nice to have acces to these two for statistics:
 BrokerOpt opt;
 rd_kafka_t * rk = nullptr;
+std::atomic<uint64_t> total_produced_ {0};
 private:
 int id = 0;
 };

@@ -69,7 +69,9 @@ KafkaW::Producer::Topic InstanceSet::producer_topic(uri::URI uri) {
 int InstanceSet::poll() {
 	std::unique_lock<std::mutex> lock(mx_producers_by_host);
 	for (auto m : producers_by_host) {
-		m.second->poll();
+		auto & p = m.second;
+		p->poll();
+		LOG(5, "{}  {} {}", m.first, p->total_produced(), p->outq());
 	}
 	return 0;
 }

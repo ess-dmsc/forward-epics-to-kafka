@@ -603,6 +603,14 @@ rd_kafka_t * Producer::rd_kafka_ptr() const {
 	return rk;
 }
 
+uint64_t Producer::outq() {
+	return rd_kafka_outq_len(rk);
+}
+
+uint64_t Producer::total_produced() {
+	return total_produced_;
+}
+
 
 
 
@@ -717,6 +725,7 @@ int ProducerTopic::produce(Producer::Msg & msg) {
 		}
 		else {
 			//LOG(7, "sent to topic {} partition {}", rd_kafka_topic_name(rkt), partition);
+			++producer->total_produced_;
 		}
 	}
 
