@@ -3,12 +3,12 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ..)
 message(STATUS "CMAKE_BUILD_TYPE: ${CMAKE_BUILD_TYPE}")
 
 find_package(EPICSv4)
-find_package(Fmt)
-find_package(Rapidjson)
-find_package(RdKafka)
+find_package(Fmt REQUIRED)
+find_package(Rapidjson REQUIRED)
+find_package(RdKafka REQUIRED)
 find_package(Flatbuffers)
 find_package(StreamingDataTypes COMPONENTS ce9a4745431e54bc45b0c927857a866fa77b84ec)
-find_package(PCRE2)
+find_package(PCRE2 REQUIRED)
 find_package(GraylogLogger)
 find_package(StaticData COMPONENTS "schema-config-global.json")
 find_package(GitCommitExtract)
@@ -23,11 +23,11 @@ endif()
 
 
 set(path_include_common
-${path_include_fmt}
-${path_include_rdkafka}
+${FMT_INCLUDE_DIR}
+${RDKAFKA_INCLUDE_DIR}
 ${path_include_flatbuffers}
-${path_include_rapidjson}
-${path_include_pcre2}
+${RAPIDJSON_INCLUDE_DIR}
+${PCRE2_INCLUDE_DIR}
 ${path_include_epics_all}
 ${PROJECT_SOURCE_DIR}/src
 ${PROJECT_BINARY_DIR}/src
@@ -71,7 +71,7 @@ Stream.cxx
 schema_f140_general.cxx
 schema_f141_epics_nt.cxx
 schemas/f142/f142.cxx
-${path_include_fmt}/fmt/format.cc
+${FMT_SRC}
 ${CMAKE_CURRENT_BINARY_DIR}/git_commit_current.cxx
 )
 if (WIN32)
@@ -93,10 +93,13 @@ $<TARGET_OBJECTS:__objects>
 add_dependencies(${tgt} flatbuffers_generate git_commit_current)
 target_include_directories(${tgt} PRIVATE ${path_include_common})
 
-if (have_graylog_logger)
-target_compile_definitions(${tgt} PRIVATE HAVE_GRAYLOG_LOGGER=1)
-target_include_directories(${tgt} PRIVATE ${path_include_graylog_logger})
-target_link_libraries(${tgt} libgraylog_logger)
+if (${GRAYLOGLOGGER_FOUND} AND ${USE_GRAYLOG_LOGGER})
+    message(STATUS "Using graylog_logger")
+    target_compile_definitions(${tgt} PRIVATE HAVE_GRAYLOG_LOGGER=1)
+    target_include_directories(${tgt} PRIVATE ${GRAYLOGLOGGER_INCLUDE_DIR})
+    target_link_libraries(${tgt} libgraylog_logger)
+elseif(NOT GRAYLOGLOGGER_FOUND AND USE_GRAYLOG_LOGGER)
+    message(WARNING "graylog_logger requested but not found")
 endif()
 
 target_link_libraries(${tgt} ${libraries_common})
