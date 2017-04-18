@@ -1,2 +1,5 @@
-find_path(path_include_rapidjson NAMES rapidjson/document.h)
-message(STATUS "path_include_rapidjson ${path_include_rapidjson}")
+find_path(RAPIDJSON_INCLUDE_DIR NAMES rapidjson/document.h)
+include(FindPackageHandleStandardArgs)
+find_package_handle_standard_args(RAPIDJSON DEFAULT_MSG
+    RAPIDJSON_INCLUDE_DIR
+)
