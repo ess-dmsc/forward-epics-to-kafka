@@ -139,7 +139,17 @@ static Value_t convert(flatbuffers::FlatBufferBuilder * builder, epics::pvData::
 	field->setImmutable();
 	auto svec = field->view();
 	auto nlen = svec.size();
-	auto val = builder->CreateVector((T3*)svec.data(), nlen);
+
+	flatbuffers::Offset<flatbuffers::Vector<T3>> val;
+	if (false) {
+		T0 * p1 = nullptr;
+		val = builder->CreateUninitializedVector(nlen, sizeof(T0), (uint8_t**)&p1);
+		memcpy(p1, svec.data(), nlen * sizeof(T0));
+	}
+	else {
+		val = builder->CreateVector((T3*)svec.data(), nlen);
+	}
+
 	T1 pv_builder(*builder);
 	pv_builder.add_value(val);
 	return {BuilderType_to_Enum_Value<T1>::v(), pv_builder.Finish().Union()};
