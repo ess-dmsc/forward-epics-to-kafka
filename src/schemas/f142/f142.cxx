@@ -134,14 +134,14 @@ using T1 = typename std::conditional<
 
 using T3 = typename std::conditional< std::is_same<T0, epics::pvData::boolean>::value, signed char, T0 >::type;
 
-static Value_t convert(flatbuffers::FlatBufferBuilder * builder, epics::pvData::PVScalarArray * field_) {
+static Value_t convert(flatbuffers::FlatBufferBuilder * builder, epics::pvData::PVScalarArray * field_, uint8_t opts) {
 	auto field = static_cast<epics::pvData::PVValueArray<T0>*>(field_);
 	field->setImmutable();
 	auto svec = field->view();
 	auto nlen = svec.size();
 
 	flatbuffers::Offset<flatbuffers::Vector<T3>> val;
-	if (false) {
+	if (opts == 1) {
 		T0 * p1 = nullptr;
 		val = builder->CreateUninitializedVector(nlen, sizeof(T0), (uint8_t**)&p1);
 		memcpy(p1, svec.data(), nlen * sizeof(T0));
@@ -198,33 +198,33 @@ Value_t make_Value_scalar(flatbuffers::FlatBufferBuilder & builder, epics::pvDat
 	return {Value::Byte, 0};
 }
 
-Value_t make_Value_array(flatbuffers::FlatBufferBuilder & builder, epics::pvData::PVScalarArray * field) {
+Value_t make_Value_array(flatbuffers::FlatBufferBuilder & builder, epics::pvData::PVScalarArray * field, uint8_t opts) {
 	using S = epics::pvData::ScalarType;
 	using namespace epics::pvData;
 	using namespace PVStructureToFlatBufferN;
 	switch (field->getScalarArray()->getElementType()) {
 	case S::pvBoolean:
-		return Make_ScalarArray< epics::pvData::boolean >::convert(&builder, field);
+		return Make_ScalarArray< epics::pvData::boolean >::convert(&builder, field, opts);
 	case S::pvByte:
-		return Make_ScalarArray<  int8_t >::convert(&builder, field);
+		return Make_ScalarArray<  int8_t >::convert(&builder, field, opts);
 	case S::pvShort:
-		return Make_ScalarArray<  int16_t >::convert(&builder, field);
+		return Make_ScalarArray<  int16_t >::convert(&builder, field, opts);
 	case S::pvInt:
-		return Make_ScalarArray<  int32_t >::convert(&builder, field);
+		return Make_ScalarArray<  int32_t >::convert(&builder, field, opts);
 	case S::pvLong:
-		return Make_ScalarArray<  int64_t >::convert(&builder, field);
+		return Make_ScalarArray<  int64_t >::convert(&builder, field, opts);
 	case S::pvUByte:
-		return Make_ScalarArray< uint8_t >::convert(&builder, field);
+		return Make_ScalarArray< uint8_t >::convert(&builder, field, opts);
 	case S::pvUShort:
-		return Make_ScalarArray< uint16_t >::convert(&builder, field);
+		return Make_ScalarArray< uint16_t >::convert(&builder, field, opts);
 	case S::pvUInt:
-		return Make_ScalarArray< uint32_t >::convert(&builder, field);
+		return Make_ScalarArray< uint32_t >::convert(&builder, field, opts);
 	case S::pvULong:
-		return Make_ScalarArray< uint64_t >::convert(&builder, field);
+		return Make_ScalarArray< uint64_t >::convert(&builder, field, opts);
 	case S::pvFloat:
-		return Make_ScalarArray< float >::convert(&builder, field);
+		return Make_ScalarArray< float >::convert(&builder, field, opts);
 	case S::pvDouble:
-		return Make_ScalarArray< double >::convert(&builder, field);
+		return Make_ScalarArray< double >::convert(&builder, field, opts);
 	case S::pvString:
 		// Sorry, not implemented yet
 		LOG(5, "ERROR pvString not implemented yet");
@@ -233,7 +233,7 @@ Value_t make_Value_array(flatbuffers::FlatBufferBuilder & builder, epics::pvData
 	return {Value::Byte, 0};
 }
 
-Value_t make_Value(flatbuffers::FlatBufferBuilder & builder, epics::pvData::PVFieldPtr const & field) {
+Value_t make_Value(flatbuffers::FlatBufferBuilder & builder, epics::pvData::PVFieldPtr const & field, uint8_t opts) {
 	if (!field) {
 		LOG(2, "can not do anything with a null pointer");
 		return {Value::Byte, 0};
@@ -248,7 +248,7 @@ Value_t make_Value(flatbuffers::FlatBufferBuilder & builder, epics::pvData::PVFi
 	case T::scalar:
 		return make_Value_scalar(builder, static_cast< epics::pvData::PVScalar*>(field.get()));
 	case T::scalarArray:
-		return make_Value_array(builder, static_cast< epics::pvData::PVScalarArray*>(field.get()));
+		return make_Value_array(builder, static_cast< epics::pvData::PVScalarArray*>(field.get()), opts);
 	case T::structure:
 		LOG(5, "Type::structure can not be handled");
 		break;
@@ -278,7 +278,7 @@ BrightnESS::FlatBufs::FB_uptr convert(EpicsPVUpdate const & up) override {
 	auto builder = fb->builder.get();
 	// this is the field type ID string: up.pvstr->getStructure()->getID()
 	auto n = builder->CreateString(up.channel);
-	auto vF = make_Value(*builder, pvstr->getSubField("value"));
+	auto vF = make_Value(*builder, pvstr->getSubField("value"), 0);
 
 	flatbuffers::Offset<void> fwdinfo = 0;
 	if (true) {
