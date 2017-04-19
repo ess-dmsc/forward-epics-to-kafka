@@ -71,7 +71,7 @@ int InstanceSet::poll() {
 	for (auto m : producers_by_host) {
 		auto & p = m.second;
 		p->poll();
-		LOG(5, "{}  {} {}", m.first, p->total_produced(), p->outq());
+		LOG(6, "Broker: {}  total: {}  outq: {}", m.first, p->total_produced(), p->outq());
 	}
 	return 0;
 }
