@@ -9,6 +9,7 @@ find_package(RdKafka REQUIRED)
 find_package(Flatbuffers)
 find_package(StreamingDataTypes COMPONENTS ce9a4745431e54bc45b0c927857a866fa77b84ec)
 find_package(PCRE2 REQUIRED)
+find_package(CURL)
 find_package(GraylogLogger)
 find_package(StaticData COMPONENTS "schema-config-global.json")
 find_package(GitCommitExtract)
@@ -28,6 +29,7 @@ ${RDKAFKA_INCLUDE_DIR}
 ${path_include_flatbuffers}
 ${RAPIDJSON_INCLUDE_DIR}
 ${PCRE2_INCLUDE_DIR}
+${CURL_INCLUDE_DIRS}
 ${path_include_epics_all}
 ${PROJECT_SOURCE_DIR}/src
 ${PROJECT_BINARY_DIR}/src
@@ -40,6 +42,7 @@ libpvAccess
 libNormativeTypes
 librdkafka
 libpcre2-8
+${CURL_LIBRARIES}
 pthread
 )
 
