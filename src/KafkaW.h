@@ -10,7 +10,19 @@
 namespace KafkaW {
 
 using uchar = unsigned char;
+using std::unique_ptr;
+using std::shared_ptr;
+using std::array;
+using std::vector;
+using std::string;
 
+}
+
+#if HAVE_KAFKAW_INSPECT
+#include "KafkaW-inspect.h"
+#endif
+
+namespace KafkaW {
 
 /// POD to collect the options
 class BrokerOpt {
@@ -52,6 +64,8 @@ class PollStatus {
 public:
 static PollStatus Ok();
 static PollStatus Err();
+static PollStatus EOP();
+static PollStatus Empty();
 static PollStatus make_Msg(std::unique_ptr<Msg> x);
 PollStatus(PollStatus &&);
 PollStatus & operator = (PollStatus &&);
@@ -60,13 +74,15 @@ void reset();
 PollStatus();
 bool is_Ok();
 bool is_Err();
+bool is_EOP();
+bool is_Empty();
 std::unique_ptr<Msg> is_Msg();
 private:
 int state = -1;
 void * data = nullptr;
 };
 
-
+class Inspect;
 
 class Consumer {
 public:
@@ -135,6 +151,10 @@ rd_kafka_t * rk = nullptr;
 std::atomic<uint64_t> total_produced_ {0};
 private:
 int id = 0;
+public:
+#if HAVE_KAFKAW_INSPECT
+unique_ptr<Inspect> inspect();
+#endif
 };
 
 

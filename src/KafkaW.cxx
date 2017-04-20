@@ -144,6 +144,18 @@ PollStatus PollStatus::Err() {
 	return ret;
 }
 
+PollStatus PollStatus::EOP() {
+	PollStatus ret;
+	ret.state = -2;
+	return ret;
+}
+
+PollStatus PollStatus::Empty() {
+	PollStatus ret;
+	ret.state = -3;
+	return ret;
+}
+
 PollStatus PollStatus::make_Msg(std::unique_ptr<Msg> x) {
 	PollStatus ret;
 	ret.state = 1;
@@ -183,6 +195,14 @@ bool PollStatus::is_Ok() {
 
 bool PollStatus::is_Err() {
 	return state == -1;
+}
+
+bool PollStatus::is_EOP() {
+	return state == -2;
+}
+
+bool PollStatus::is_Empty() {
+	return state == -3;
 }
 
 std::unique_ptr<Msg> PollStatus::is_Msg() {
@@ -368,6 +388,7 @@ void Consumer::init() {
 
 void Consumer::add_topic(std::string topic) {
 	//rd_kafka_topic_partition_list_set_offset(plist, opt.topic.c_str(), partition, RD_KAFKA_OFFSET_BEGINNING);
+	LOG(7, "Consumer::add_topic  {}", topic);
 	int partition = RD_KAFKA_PARTITION_UA;
 	rd_kafka_topic_partition_list_add(plist, topic.c_str(), partition);
 	int err = rd_kafka_subscribe(rk, plist);
@@ -400,40 +421,43 @@ PollStatus Consumer::poll() {
 	if (0) dump_current_subscription();
 	if (0) rd_kafka_dump(stdout, rk);
 
-	auto ret = PollStatus::Err();
+	auto ret = PollStatus::Empty();
 
 	//LOG(4, "rd_kafka_consumer_poll");
 	auto msg = rd_kafka_consumer_poll(rk, opt.poll_timeout_ms);
 
-	if (msg != nullptr) {
-		static_assert(sizeof(char) == 1, "Failed: sizeof(char) == 1");
-		std::unique_ptr<Msg> m2(new Msg);
-		m2->kmsg = msg;
-		//auto topic_name = rd_kafka_topic_name(msg->rkt);
-		//int partition = msg->partition;
-		if (msg->err == RD_KAFKA_RESP_ERR_NO_ERROR) {
-			//LOG(7, "Consuming offset: {}  partition: {}", m2->offset(), m2->partition());
-			return PollStatus::make_Msg(std::move(m2));
-		}
-		else if (msg->err == RD_KAFKA_RESP_ERR__PARTITION_EOF) {
-			// Just an advisory.  msg contains which partition it is.
-			//LOG(7, "RD_KAFKA_RESP_ERR__PARTITION_EOF");
-		}
-		else if (msg->err == RD_KAFKA_RESP_ERR__ALL_BROKERS_DOWN) {
-			LOG(4, "RD_KAFKA_RESP_ERR__ALL_BROKERS_DOWN");
-		}
-		else if (msg->err == RD_KAFKA_RESP_ERR__BAD_MSG) {
-			LOG(0, "RD_KAFKA_RESP_ERR__BAD_MSG");
-		}
-		else if (msg->err == RD_KAFKA_RESP_ERR__DESTROY) {
-			LOG(4, "RD_KAFKA_RESP_ERR__DESTROY");
-			// Broker will go away soon
-		}
-		else {
-			LOG(0, "ERROR unhandled msg error: {} {}", rd_kafka_err2name(msg->err), rd_kafka_err2str(msg->err));
-		}
+	if (msg == nullptr) {
+		return PollStatus::Empty();
 	}
-	return ret;
+
+	static_assert(sizeof(char) == 1, "Failed: sizeof(char) == 1");
+	std::unique_ptr<Msg> m2(new Msg);
+	m2->kmsg = msg;
+	//auto topic_name = rd_kafka_topic_name(msg->rkt);
+	//int partition = msg->partition;
+	if (msg->err == RD_KAFKA_RESP_ERR_NO_ERROR) {
+		//LOG(7, "Consuming offset: {}  partition: {}", m2->offset(), m2->partition());
+		return PollStatus::make_Msg(std::move(m2));
+	}
+	else if (msg->err == RD_KAFKA_RESP_ERR__PARTITION_EOF) {
+		// Just an advisory.  msg contains which partition it is.
+		//LOG(7, "RD_KAFKA_RESP_ERR__PARTITION_EOF");
+		return PollStatus::EOP();
+	}
+	else if (msg->err == RD_KAFKA_RESP_ERR__ALL_BROKERS_DOWN) {
+		LOG(4, "RD_KAFKA_RESP_ERR__ALL_BROKERS_DOWN");
+	}
+	else if (msg->err == RD_KAFKA_RESP_ERR__BAD_MSG) {
+		LOG(0, "RD_KAFKA_RESP_ERR__BAD_MSG");
+	}
+	else if (msg->err == RD_KAFKA_RESP_ERR__DESTROY) {
+		LOG(4, "RD_KAFKA_RESP_ERR__DESTROY");
+		// Broker will go away soon
+	}
+	else {
+		LOG(0, "ERROR unhandled msg error: {} {}", rd_kafka_err2name(msg->err), rd_kafka_err2str(msg->err));
+	}
+	return PollStatus::Err();
 }
 
 
