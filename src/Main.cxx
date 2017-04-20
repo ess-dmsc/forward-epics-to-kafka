@@ -214,8 +214,8 @@ void Main::report_stats(int dt) {
 	b1 %= 1024;
 	auto b3 = b2 / 1024;
 	b2 %= 1024;
-	CLOG(6, 5, "dt: {:4}  m: {:4}.{:03}  MB: {:3}.{:03}.{:03}", dt, m2, m1, b3, b2, b1);
 	if (main_opt.influx_url.size() != 0) {
+	CLOG(6, 5, "dt: {:4}  m: {:4}.{:03}  b: {:3}.{:03}.{:03}", dt, m2, m1, b3, b2, b1);
 		fmt::MemoryWriter m1;
 		m1.write("forward-epics-to-kafka,hostname={}", main_opt.hostname.data());
 		for (auto & s : kafka_instance_set->stats_all()) {
@@ -226,6 +226,7 @@ void Main::report_stats(int dt) {
 			m1.write(",produce_cb_fail={}", s.produce_cb_fail);
 			m1.write(",poll_served={}", s.poll_served);
 			m1.write(",msg_too_large={}", s.msg_too_large);
+			m1.write(",produced_bytes={}", double(s.produced_bytes));
 		}
 		curl_global_init(CURL_GLOBAL_ALL);
 		LOG(7, "influx msg: {}", m1.c_str());

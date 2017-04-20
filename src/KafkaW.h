@@ -134,6 +134,7 @@ atomic<uint64_t> produce_cb {0};
 atomic<uint64_t> produce_cb_fail {0};
 atomic<uint64_t> poll_served {0};
 atomic<uint64_t> msg_too_large {0};
+atomic<uint64_t> produced_bytes {0};
 ProducerStats();
 ProducerStats(ProducerStats const &);
 };
