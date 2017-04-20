@@ -470,7 +470,6 @@ void Producer::cb_delivered(rd_kafka_t * rk, rd_kafka_message_t const * msg, voi
 	if (!msg) {
 		LOG(2, "IID: {}  ERROR msg should never be null", self->id);
 		++self->stats.produce_cb_fail;
-		++self->stats.iter;
 		return;
 	}
 	if (msg->err) {
@@ -489,7 +488,6 @@ void Producer::cb_delivered(rd_kafka_t * rk, rd_kafka_message_t const * msg, voi
 			cb(msg);
 		}
 		++self->stats.produce_cb_fail;
-		++self->stats.iter;
 	}
 	else {
 		if (auto & cb = self->on_delivery_ok) {
@@ -503,7 +501,6 @@ void Producer::cb_delivered(rd_kafka_t * rk, rd_kafka_message_t const * msg, voi
 			);
 		}
 		++self->stats.produce_cb;
-		++self->stats.iter;
 	}
 }
 
@@ -632,14 +629,12 @@ void Producer::poll() {
 		rd_kafka_dump(stdout, rk);
 	}
 	stats.poll_served += n1;
-	++stats.iter;
 }
 
 void Producer::poll_while_outq() {
 	while (rd_kafka_outq_len(rk) > 0) {
 		int n1 = rd_kafka_poll(rk, opt.poll_timeout_ms);
 		stats.poll_served += n1;
-		++stats.iter;
 	}
 }
 
@@ -658,6 +653,17 @@ uint64_t Producer::total_produced() {
 }
 
 
+ProducerStats::ProducerStats() {
+}
+
+ProducerStats::ProducerStats(ProducerStats const & x) {
+	produced = x.produced.load();
+	produce_fail = x.produce_fail.load();
+	local_queue_full = x.local_queue_full.load();
+	produce_cb = x.produce_cb.load();
+	produce_cb_fail = x.produce_cb_fail.load();
+	poll_served = x.poll_served.load();
+}
 
 
 ProducerTopic::~ProducerTopic() {
@@ -725,21 +731,18 @@ int ProducerTopic::produce(unique_ptr<Producer::Msg> & msg) {
 	auto & s = producer->stats;
 	if (x == RD_KAFKA_RESP_ERR__QUEUE_FULL) {
 		++s.local_queue_full;
-		++s.iter;
 		if (print_err) {
 			LOG(3, "OutQ: {}  QUEUE_FULL", rd_kafka_outq_len(producer->rd_kafka_ptr()));
 		}
 	}
 	else if (x == RD_KAFKA_RESP_ERR_MSG_SIZE_TOO_LARGE) {
 		++s.local_queue_full;
-		++s.iter;
 		if (print_err) {
 			LOG(3, "OutQ: {}  TOO_LARGE", rd_kafka_outq_len(producer->rd_kafka_ptr()));
 		}
 	}
 	else if (x != 0) {
 		++s.produce_fail;
-		++s.iter;
 		if (print_err) {
 			LOG(3, "produce topic {}  partition {}   {}",
 				rd_kafka_topic_name(rkt),
@@ -751,7 +754,6 @@ int ProducerTopic::produce(unique_ptr<Producer::Msg> & msg) {
 	else {
 		msg.release();
 		++s.produced;
-		++s.iter;
 		++producer->total_produced_;
 		if (log_level >= 8) {
 			LOG(8, "sent to topic {} partition {}", rd_kafka_topic_name(rkt), partition);

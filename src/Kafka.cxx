@@ -77,6 +77,16 @@ int InstanceSet::poll() {
 }
 
 
+std::vector<KafkaW::Producer::Stats> InstanceSet::stats_all() {
+	std::vector<KafkaW::Producer::Stats> ret;
+	std::unique_lock<std::mutex> lock(mx_producers_by_host);
+	for (auto m : producers_by_host) {
+		ret.push_back(m.second->stats);
+	}
+	return ret;
+}
+
+
 }
 }
 }

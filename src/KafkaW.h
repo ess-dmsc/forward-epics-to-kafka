@@ -127,13 +127,14 @@ uint32_t size;
 
 
 struct ProducerStats {
-uint64_t produced = 0;
-uint32_t produce_fail = 0;
-uint32_t local_queue_full = 0;
-uint64_t produce_cb = 0;
-uint64_t produce_cb_fail = 0;
-uint64_t poll_served = 0;
-atomic<uint32_t> iter {0};
+atomic<uint64_t> produced {0};
+atomic<uint32_t> produce_fail {0};
+atomic<uint32_t> local_queue_full {0};
+atomic<uint64_t> produce_cb {0};
+atomic<uint64_t> produce_cb_fail {0};
+atomic<uint64_t> poll_served {0};
+ProducerStats();
+ProducerStats(ProducerStats const &);
 };
 
 

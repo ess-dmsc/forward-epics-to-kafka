@@ -6,6 +6,7 @@
 #include "Stream.h"
 #include "ForwarderInfo.h"
 #include <sys/types.h>
+#include <curl/curl.h>
 #include <unistd.h>
 
 namespace BrightnESS {
@@ -214,6 +215,34 @@ void Main::report_stats(int dt) {
 	auto b3 = b2 / 1024;
 	b2 %= 1024;
 	CLOG(6, 5, "dt: {:4}  m: {:4}.{:03}  MB: {:3}.{:03}.{:03}", dt, m2, m1, b3, b2, b1);
+	if (main_opt.influx_url.size() != 0) {
+		fmt::MemoryWriter m1;
+		m1.write("forward-epics-to-kafka,hostname={}", main_opt.hostname.data());
+		for (auto & s : kafka_instance_set->stats_all()) {
+			m1.write(" produced={}", s.produced);
+			m1.write(",produce_fail={}", s.produce_fail);
+			m1.write(",local_queue_full={}", s.local_queue_full);
+			m1.write(",produce_cb={}", s.produce_cb);
+			m1.write(",produce_cb_fail={}", s.produce_cb_fail);
+			m1.write(",poll_served={}", s.poll_served);
+		}
+		curl_global_init(CURL_GLOBAL_ALL);
+		LOG(7, "influx msg: {}", m1.c_str());
+		CURL * curl;
+		CURLcode res;
+		curl = curl_easy_init();
+		if (curl) {
+			curl_easy_setopt(curl, CURLOPT_URL, main_opt.influx_url.c_str());
+			curl_easy_setopt(curl, CURLOPT_POSTFIELDS, m1.c_str());
+			res = curl_easy_perform(curl);
+			if (res != CURLE_OK) {
+				LOG(5, "curl_easy_perform() failed: {}",
+					curl_easy_strerror(res));
+			}
+		}
+		curl_easy_cleanup(curl);
+		curl_global_cleanup();
+	}
 }
 
 

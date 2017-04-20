@@ -18,6 +18,7 @@
 #include "blobs.h"
 #include "SchemaRegistry.h"
 #include "git_commit_current.h"
+#include <unistd.h>
 
 namespace BrightnESS {
 namespace ForwardEpicsToKafka {
@@ -27,6 +28,12 @@ using std::vector;
 
 
 MainOpt::MainOpt() {
+	hostname.resize(128);
+	gethostname(hostname.data(), hostname.size());
+	if (hostname.back() != 0) {
+		// likely an error
+		hostname.back() = 0;
+	}
 	set_broker("localhost:9092");
 }
 
@@ -187,6 +194,7 @@ std::pair<int, std::unique_ptr<MainOpt>> parse_opt(int argc, char ** argv) {
 		{"broker",                          required_argument,        0,  0 },
 		{"kafka-gelf",                      required_argument,        0,  0 },
 		{"graylog-logger-address",          required_argument,        0,  0 },
+		{"influx-url",                      required_argument,        0,  0 },
 		{"config-file",                     required_argument,        0,  0 },
 		{"log-file",                        required_argument,        0,  0 },
 		{"forwarder-ix",                    required_argument,        0,  0 },
@@ -251,6 +259,9 @@ std::pair<int, std::unique_ptr<MainOpt>> parse_opt(int argc, char ** argv) {
 			}
 			if (std::string("graylog-logger-address") == lname) {
 				opt.graylog_logger_address = optarg;
+			}
+			if (std::string("influx-url") == lname) {
+				opt.influx_url = optarg;
 			}
 			if (std::string("forwarder-ix") == lname) {
 				opt.forwarder_ix = strtol(optarg, nullptr, 10);
