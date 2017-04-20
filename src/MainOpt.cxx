@@ -91,9 +91,12 @@ int MainOpt::parse_json_file(string config_file) {
 		LOG(3, "can not open the requested config-file");
 		return -4;
 	}
-	int const N1 = 16000;
-	char buf1[N1];
-	FileReadStream is(f1, buf1, N1);
+	fseek(f1, 0, SEEK_END);
+	int N1 = ftell(f1);
+	fseek(f1, 0, SEEK_SET);
+	std::vector<char> buf1;
+	buf1.resize(N1);
+	FileReadStream is(f1, buf1.data(), N1);
 	json = std::make_shared<Document>();
 	auto & d = * json;
 	d.ParseStream(is);
