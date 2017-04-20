@@ -133,6 +133,7 @@ atomic<uint32_t> local_queue_full {0};
 atomic<uint64_t> produce_cb {0};
 atomic<uint64_t> produce_cb_fail {0};
 atomic<uint64_t> poll_served {0};
+atomic<uint64_t> msg_too_large {0};
 ProducerStats();
 ProducerStats(ProducerStats const &);
 };

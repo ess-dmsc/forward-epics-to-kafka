@@ -225,6 +225,7 @@ void Main::report_stats(int dt) {
 			m1.write(",produce_cb={}", s.produce_cb);
 			m1.write(",produce_cb_fail={}", s.produce_cb_fail);
 			m1.write(",poll_served={}", s.poll_served);
+			m1.write(",msg_too_large={}", s.msg_too_large);
 		}
 		curl_global_init(CURL_GLOBAL_ALL);
 		LOG(7, "influx msg: {}", m1.c_str());
