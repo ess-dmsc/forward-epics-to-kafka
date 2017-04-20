@@ -24,6 +24,8 @@ NORMAL,
 STOPPED,
 };
 
+struct stub_curl;
+
 class Main {
 public:
 Main(MainOpt & opt);
@@ -57,6 +59,7 @@ friend class tests::Remote_T;
 friend class ConversionScheduler;
 std::atomic<int32_t> forwarding_run {1};
 std::atomic<ForwardingStatus> forwarding_status {ForwardingStatus::NORMAL};
+std::unique_ptr<stub_curl> curl;
 };
 
 extern std::atomic<uint64_t> g__total_msgs_to_kafka;

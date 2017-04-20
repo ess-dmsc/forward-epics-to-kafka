@@ -6,7 +6,9 @@
 #include "Stream.h"
 #include "ForwarderInfo.h"
 #include <sys/types.h>
+#if HAVE_CURL
 #include <curl/curl.h>
+#endif
 #include <unistd.h>
 
 namespace BrightnESS {
@@ -20,6 +22,46 @@ static KafkaW::BrokerOpt make_broker_opt(MainOpt const & opt) {
 }
 
 using ulock = std::unique_lock<std::mutex>;
+
+struct stub_curl {
+static bool use;
+stub_curl();
+~stub_curl();
+void send(fmt::MemoryWriter & m1, std::string const & url);
+};
+#if HAVE_CURL
+stub_curl::stub_curl() {
+	curl_global_init(CURL_GLOBAL_ALL);
+}
+stub_curl::~stub_curl() {
+	curl_global_cleanup();
+}
+bool stub_curl::use = true;
+void stub_curl::send(fmt::MemoryWriter & m1, std::string const & url) {
+	CURL * curl;
+	CURLcode res;
+	curl = curl_easy_init();
+	if (curl) {
+		curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
+		curl_easy_setopt(curl, CURLOPT_POSTFIELDS, m1.c_str());
+		res = curl_easy_perform(curl);
+		if (res != CURLE_OK) {
+			LOG(5, "curl_easy_perform() failed: {}",
+				curl_easy_strerror(res));
+		}
+	}
+	curl_easy_cleanup(curl);
+}
+#else
+stub_curl::stub_curl() {
+}
+stub_curl::~stub_curl() {
+}
+bool stub_curl::use = false;
+void stub_curl::send(fmt::MemoryWriter & m1, std::string const & url) {
+}
+#endif
+
 
 /**
 \class Main
@@ -61,6 +103,7 @@ Main::Main(MainOpt & opt) :
 			}
 		}
 	}
+	curl = make_unique<stub_curl>();
 }
 
 
@@ -214,8 +257,8 @@ void Main::report_stats(int dt) {
 	b1 %= 1024;
 	auto b3 = b2 / 1024;
 	b2 %= 1024;
-	if (main_opt.influx_url.size() != 0) {
 	CLOG(6, 5, "dt: {:4}  m: {:4}.{:03}  b: {:3}.{:03}.{:03}", dt, m2, m1, b3, b2, b1);
+	if (stub_curl::use && main_opt.influx_url.size() != 0) {
 		fmt::MemoryWriter m1;
 		m1.write("forward-epics-to-kafka,hostname={}", main_opt.hostname.data());
 		for (auto & s : kafka_instance_set->stats_all()) {
@@ -228,22 +271,8 @@ void Main::report_stats(int dt) {
 			m1.write(",msg_too_large={}", s.msg_too_large);
 			m1.write(",produced_bytes={}", double(s.produced_bytes));
 		}
-		curl_global_init(CURL_GLOBAL_ALL);
 		LOG(7, "influx msg: {}", m1.c_str());
-		CURL * curl;
-		CURLcode res;
-		curl = curl_easy_init();
-		if (curl) {
-			curl_easy_setopt(curl, CURLOPT_URL, main_opt.influx_url.c_str());
-			curl_easy_setopt(curl, CURLOPT_POSTFIELDS, m1.c_str());
-			res = curl_easy_perform(curl);
-			if (res != CURLE_OK) {
-				LOG(5, "curl_easy_perform() failed: {}",
-					curl_easy_strerror(res));
-			}
-		}
-		curl_easy_cleanup(curl);
-		curl_global_cleanup();
+		curl->send(m1, main_opt.influx_url);
 	}
 }
 
