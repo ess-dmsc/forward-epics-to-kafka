@@ -331,7 +331,7 @@ std::pair<int, std::unique_ptr<MainOpt>> parse_opt(int argc, char ** argv) {
 
 void MainOpt::init_logger() {
 	if (kafka_gelf != "") {
-		BrightnESS::uri::URI uri(kafka_gelf);
+		uri::URI uri(kafka_gelf);
 		log_kafka_gelf_start(uri.host, uri.topic);
 		LOG(3, "Enabled kafka_gelf: //{}/{}", uri.host, uri.topic);
 	}

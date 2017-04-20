@@ -8,7 +8,6 @@
 #include <gtest/gtest.h>
 #endif
 
-namespace BrightnESS {
 namespace uri {
 
 struct static_ini {
@@ -44,5 +43,4 @@ void update_deps();
 friend struct static_ini;
 };
 
-}
 }

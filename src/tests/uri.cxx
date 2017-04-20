@@ -1,7 +1,7 @@
 #include "../uri.h"
 #include <gtest/gtest.h>
 
-using namespace BrightnESS::uri;
+using namespace uri;
 
 TEST(URI, host) {
 	URI u1("//myhost");

@@ -2,7 +2,6 @@
 #include "logger.h"
 #include <array>
 
-namespace BrightnESS {
 namespace uri {
 
 // POD
@@ -197,5 +196,4 @@ void URI::default_host(std::string host_) {
 
 static_ini URI::compiled;
 
-}
 }
