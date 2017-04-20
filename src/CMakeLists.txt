@@ -88,6 +88,10 @@ add_library(${tgt} OBJECT ${SOURCES})
 target_include_directories(${tgt} PRIVATE ${path_include_common})
 add_dependencies(${tgt} flatbuffers_generate xxd_generate git_commit_current)
 
+if (CURL_FOUND)
+target_compile_definitions(${tgt} PRIVATE HAVE_CURL=1)
+endif()
+
 
 
 set(tgt forward-epics-to-kafka)
