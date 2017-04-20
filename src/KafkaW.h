@@ -15,6 +15,8 @@ using std::shared_ptr;
 using std::array;
 using std::vector;
 using std::string;
+using std::atomic;
+using std::move;
 
 }
 
@@ -124,10 +126,23 @@ uint32_t size;
 
 
 
+struct ProducerStats {
+uint64_t produced = 0;
+uint32_t produce_fail = 0;
+uint32_t local_queue_full = 0;
+uint64_t produce_cb = 0;
+uint64_t produce_cb_fail = 0;
+uint64_t poll_served = 0;
+atomic<uint32_t> iter {0};
+};
+
+
+
 class Producer {
 public:
 typedef ProducerTopic Topic;
 typedef ProducerMsg Msg;
+typedef ProducerStats Stats;
 Producer(BrokerOpt opt);
 Producer(Producer const &) = delete;
 Producer(Producer && x);
@@ -149,6 +164,7 @@ std::function<void(Producer *, rd_kafka_resp_err_t)> on_error;
 BrokerOpt opt;
 rd_kafka_t * rk = nullptr;
 std::atomic<uint64_t> total_produced_ {0};
+Stats stats;
 private:
 int id = 0;
 public:
@@ -165,7 +181,7 @@ ProducerTopic(ProducerTopic &&);
 ProducerTopic(std::shared_ptr<Producer> producer, std::string name);
 ~ProducerTopic();
 int produce(uchar * msg_data, int msg_size, bool print_err = false);
-int produce(Producer::Msg & msg);
+int produce(unique_ptr<Producer::Msg> & msg);
 // Currently it's nice to have access to these for statistics:
 std::shared_ptr<Producer> producer;
 rd_kafka_topic_t * rkt = nullptr;

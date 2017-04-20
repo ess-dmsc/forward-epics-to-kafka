@@ -19,9 +19,9 @@ int KafkaOutput::emit(std::unique_ptr<BrightnESS::FlatBufs::FB> fb) {
 	auto m1 = fb->message();
 	fb->data = m1.data;
 	fb->size = m1.size;
-	auto x = pt.produce(*fb.get());
+	std::unique_ptr<KafkaW::Producer::Msg> msg(fb.release());
+	auto x = pt.produce(msg);
 	if (x == 0) {
-		fb.release();
 		++g__total_msgs_to_kafka;
 		g__total_bytes_to_kafka += m1.size;
 	}
