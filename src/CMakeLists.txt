@@ -8,8 +8,7 @@ find_package(Rapidjson REQUIRED)
 find_package(RdKafka REQUIRED)
 find_package(Flatbuffers)
 find_package(StreamingDataTypes COMPONENTS ce9a4745431e54bc45b0c927857a866fa77b84ec)
-find_package(PCRE REQUIRED)
-find_package(PCRE2 REQUIRED)
+find_package(PCREX REQUIRED)
 find_package(CURL)
 find_package(GraylogLogger)
 find_package(StaticData COMPONENTS "schema-config-global.json")
@@ -31,6 +30,7 @@ ${path_include_flatbuffers}
 ${RAPIDJSON_INCLUDE_DIR}
 ${PCRE2_INCLUDE_DIR}
 ${CURL_INCLUDE_DIRS}
+${PCREX_INCLUDE_DIRS}
 ${path_include_epics_all}
 ${PROJECT_SOURCE_DIR}/src
 ${PROJECT_BINARY_DIR}/src
@@ -43,28 +43,19 @@ libpvAccess
 libNormativeTypes
 librdkafka
 ${CURL_LIBRARIES}
+${PCREX_LIBRARIES}
 pthread
 )
 
-set(compile_defs_common "")
+set(compile_defs_common ${PCREX_COMPILER_DEFINITIONS})
+
+if (PCREX_MAJOR EQUAL 2)
+	list(APPEND compile_defs_common "use_pcre2=1")
+endif()
 
 if (CURL_FOUND)
-list(APPEND compile_defs_common "HAVE_CURL=1")
+	list(APPEND compile_defs_common "HAVE_CURL=1")
 endif()
-
-if (path_include_pcre)
-message(STATUS "Using PCRE")
-list(APPEND path_include_common ${path_include_pcre})
-list(APPEND libraries_common libpcre)
-elseif(path_include_pcre2)
-message(STATUS "Using PCRE2")
-list(APPEND path_include_common ${path_include_pcre2})
-list(APPEND libraries_common libpcre2-8)
-list(APPEND compile_defs_common "use_pcre2=1")
-else()
-message(FATAL_ERROR "Could not find PCRE nor PCRE2")
-endif()
-
 
 
 
