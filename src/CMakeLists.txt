@@ -8,6 +8,7 @@ find_package(Rapidjson REQUIRED)
 find_package(RdKafka REQUIRED)
 find_package(Flatbuffers)
 find_package(StreamingDataTypes COMPONENTS ce9a4745431e54bc45b0c927857a866fa77b84ec)
+find_package(PCRE REQUIRED)
 find_package(PCRE2 REQUIRED)
 find_package(CURL)
 find_package(GraylogLogger)
@@ -41,10 +42,28 @@ libpvData
 libpvAccess
 libNormativeTypes
 librdkafka
-libpcre2-8
 ${CURL_LIBRARIES}
 pthread
 )
+
+set(compile_defs_common "")
+
+if (CURL_FOUND)
+list(APPEND compile_defs_common "HAVE_CURL=1")
+endif()
+
+if (path_include_pcre)
+message(STATUS "Using PCRE")
+list(APPEND path_include_common ${path_include_pcre})
+list(APPEND libraries_common libpcre)
+elseif(path_include_pcre2)
+message(STATUS "Using PCRE2")
+list(APPEND path_include_common ${path_include_pcre2})
+list(APPEND libraries_common libpcre2-8)
+list(APPEND compile_defs_common "use_pcre2=1")
+else()
+message(FATAL_ERROR "Could not find PCRE nor PCRE2")
+endif()
 
 
 
@@ -87,10 +106,7 @@ set(tgt __objects)
 add_library(${tgt} OBJECT ${SOURCES})
 target_include_directories(${tgt} PRIVATE ${path_include_common})
 add_dependencies(${tgt} flatbuffers_generate xxd_generate git_commit_current)
-
-if (CURL_FOUND)
-target_compile_definitions(${tgt} PRIVATE HAVE_CURL=1)
-endif()
+target_compile_definitions(${tgt} PRIVATE ${compile_defs_common})
 
 
 
@@ -100,6 +116,7 @@ forward-epics-to-kafka.cxx
 $<TARGET_OBJECTS:__objects>
 )
 add_dependencies(${tgt} flatbuffers_generate git_commit_current)
+target_compile_definitions(${tgt} PRIVATE ${compile_defs_common})
 target_include_directories(${tgt} PRIVATE ${path_include_common})
 
 if (${GRAYLOGLOGGER_FOUND} AND ${USE_GRAYLOG_LOGGER})
