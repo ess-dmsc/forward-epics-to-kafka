@@ -6,16 +6,6 @@
 # provides the version of the EPICS base as used by EPICS v4
 # in EPICS_V4_BASE_VERSION
 
-set(epicsbase_dir ".")
-
-if (DEFINED ENV{EPICS_BASE})
-	set(epicsbase_dir      "$ENV{EPICS_BASE}")
-	# It is NOT an error if this variable is not set.
-	# We want to be able to discover it using standard CMAKE_PATH variables too.
-endif()
-
-set(epics_arch "$ENV{EPICS_HOST_ARCH}")
-
 if (DEFINED ENV{EPICS_V4_BASE_VERSION})
 	set(epics_base_version "$ENV{EPICS_V4_BASE_VERSION}")
 elseif (DEFINED ENV{BASE})
@@ -23,6 +13,21 @@ elseif (DEFINED ENV{BASE})
 else()
 	message(STATUS "Unable to determine EPICS base version.")
 endif()
+
+if (DEFINED ENV{EPICS_BASE})
+	set(epicsbase_dir      "$ENV{EPICS_BASE}")
+	# It is NOT an error if this variable is not set.
+	# We want to be able to discover it using standard CMAKE_PATH variables too.
+
+elseif (DEFINED ENV{EPICS_BASES_PATH})
+	# Yes, we do use this possibility.  Please do not remove.
+	set(x "$ENV{EPICS_BASES_PATH}/base-${epics_base_version}")
+	if (EXISTS "${x}")
+		set(epicsbase_dir "${x}")
+	endif()
+endif()
+
+set(epics_arch "$ENV{EPICS_HOST_ARCH}")
 
 if (DEFINED epicsv4_dir)
 	message(STATUS "EPICSv4 path manually set to ${epicsv4_dir}.")
