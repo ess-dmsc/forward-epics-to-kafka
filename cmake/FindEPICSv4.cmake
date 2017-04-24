@@ -6,32 +6,36 @@
 # provides the version of the EPICS base as used by EPICS v4
 # in EPICS_V4_BASE_VERSION
 
+set(epicsbase_dir ".")
+
 if (DEFINED ENV{EPICS_BASE})
-    set(epicsbase_dir      "$ENV{EPICS_BASE}")
-else()
-    message(FATAL_ERROR "EPICS base installation not found, make sure that the \"EPICS_BASE\" environment variable is set.")
+	set(epicsbase_dir      "$ENV{EPICS_BASE}")
+	# It is NOT an error if this variable is not set.
+	# We want to be able to discover it using standard CMAKE_PATH variables too.
 endif()
-set(epics_arch         "$ENV{EPICS_HOST_ARCH}")
+
+set(epics_arch "$ENV{EPICS_HOST_ARCH}")
+
 if (DEFINED ENV{EPICS_V4_BASE_VERSION})
-    set(epics_base_version "$ENV{EPICS_V4_BASE_VERSION}")
+	set(epics_base_version "$ENV{EPICS_V4_BASE_VERSION}")
 elseif (DEFINED ENV{BASE})
-    set(epics_base_version "$ENV{BASE}")
+	set(epics_base_version "$ENV{BASE}")
 else()
-    message(STATUS "Unable to determine EPICS base version.")
+	message(STATUS "Unable to determine EPICS base version.")
 endif()
 
 if (DEFINED epicsv4_dir)
-    message(STATUS "EPICSv4 path manually set to ${epicsv4_dir}.")
+	message(STATUS "EPICSv4 path manually set to ${epicsv4_dir}.")
 elseif (DEFINED ENV{EPICS_MODULES_PATH})
-    if (EXISTS "$ENV{EPICS_MODULES_PATH}/pvDataCPP/")
-        set(epicsv4_dir        "$ENV{EPICS_MODULES_PATH}")
-    elseif(EXISTS "$ENV{EPICS_MODULES_PATH}/epicsv4/pvDataCPP/")
-        set(epicsv4_dir        "$ENV{EPICS_MODULES_PATH}/epicsv4")
-    else()
-        message(FATAL_ERROR "Unable to locate EPICS v4.")
-    endif()
-else()
-    message(FATAL_ERROR "Unable to locate EPICS v4.")
+	# NOTE
+	# It is NOT a fatal error is we do not find it here.
+	# find_path() can still find it if specified using CMAKE_PATH variables
+	# and we do use that possibility.
+	if (EXISTS "$ENV{EPICS_MODULES_PATH}/pvDataCPP/")
+		set(epicsv4_dir        "$ENV{EPICS_MODULES_PATH}")
+  elseif(EXISTS "$ENV{EPICS_MODULES_PATH}/epicsv4/pvDataCPP/")
+    set(epicsv4_dir        "$ENV{EPICS_MODULES_PATH}/epicsv4")
+  endif()
 endif()
 
 # Currently, the official environment gives no hint about which specific
@@ -111,6 +115,18 @@ message(STATUS "path_include_epics_pvDatabase ${path_include_epics_pvDatabase}")
 message(STATUS "path_library_epics_pvDatabase ${path_library_epics_pvDatabase}")
 message(STATUS "path_include_epics_NT         ${path_include_epics_NT}")
 message(STATUS "path_library_epics_NT         ${path_library_epics_NT}")
+
+
+# We could check all of them, but is it worth it?
+
+if (NOT path_include_epics_base)
+message(FATAL_ERROR "Can not find EPICS Base")
+endif()
+
+if (NOT path_include_epics_pvData)
+message(FATAL_ERROR "Can not find EPICS v4")
+endif()
+
 
 set(path_include_epics_all ${path_include_epics_base} ${path_include_epics_pvData} ${path_include_epics_pvAccess} ${path_include_epics_pvDatabase} ${path_include_epics_NT})
 
