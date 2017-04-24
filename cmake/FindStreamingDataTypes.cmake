@@ -39,7 +39,7 @@ foreach (f0 ${flatbuffers_schemata2})
 	set(fbh "${s0}_generated.h")
 	add_custom_command(
 		OUTPUT "${head_out_dir}/${fbh}"
-		COMMAND ${flatc} --cpp --gen-mutable --gen-name-strings --scoped-enums "${path_include_streaming_data_types}/schemas/${fbs}"
+		COMMAND ${FLATBUFFERS_FLATC_EXECUTABLE} --cpp --gen-mutable --gen-name-strings --scoped-enums "${path_include_streaming_data_types}/schemas/${fbs}"
 		DEPENDS "${path_include_streaming_data_types}/schemas/${fbs}"
 		WORKING_DIRECTORY "${head_out_dir}"
 		COMMENT "Process ${fbs} using ${flatc}"

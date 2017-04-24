@@ -6,7 +6,7 @@ find_package(EPICSv4)
 find_package(Fmt REQUIRED)
 find_package(Rapidjson REQUIRED)
 find_package(RdKafka REQUIRED)
-find_package(Flatbuffers)
+find_package(FlatBuffers REQUIRED)
 find_package(StreamingDataTypes COMPONENTS ce9a4745431e54bc45b0c927857a866fa77b84ec)
 find_package(PCREX REQUIRED)
 find_package(CURL)
@@ -26,9 +26,8 @@ endif()
 set(path_include_common
 ${FMT_INCLUDE_DIR}
 ${RDKAFKA_INCLUDE_DIR}
-${path_include_flatbuffers}
+${FLATBUFFERS_INCLUDE_DIR}
 ${RAPIDJSON_INCLUDE_DIR}
-${PCRE2_INCLUDE_DIR}
 ${CURL_INCLUDE_DIRS}
 ${PCREX_INCLUDE_DIRS}
 ${path_include_epics_all}
