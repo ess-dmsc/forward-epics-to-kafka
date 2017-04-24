@@ -2,7 +2,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ..)
 
 message(STATUS "CMAKE_BUILD_TYPE: ${CMAKE_BUILD_TYPE}")
 
-find_package(EPICSv4)
+find_package(EPICSV4)
 find_package(Fmt REQUIRED)
 find_package(Rapidjson REQUIRED)
 find_package(RdKafka REQUIRED)
@@ -30,7 +30,7 @@ ${FLATBUFFERS_INCLUDE_DIR}
 ${RAPIDJSON_INCLUDE_DIR}
 ${CURL_INCLUDE_DIRS}
 ${PCREX_INCLUDE_DIRS}
-${path_include_epics_all}
+${EPICSV4_INCLUDE_DIRS}
 ${PROJECT_SOURCE_DIR}/src
 ${PROJECT_BINARY_DIR}/src
 )
