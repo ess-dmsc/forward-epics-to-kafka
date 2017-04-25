@@ -682,18 +682,18 @@ int ProducerTopic::produce(unique_ptr<Producer::Msg> &msg) {
     if (err == RD_KAFKA_RESP_ERR__QUEUE_FULL) {
       ++s.local_queue_full;
       if (print_err) {
-        LOG(3, "{}  QUEUE_FULL  outq: {}",
+        LOG(7, "QUEUE_FULL  outq: {}",
             rd_kafka_outq_len(producer->rd_kafka_ptr()));
       }
     } else if (err == RD_KAFKA_RESP_ERR_MSG_SIZE_TOO_LARGE) {
       ++s.msg_too_large;
       if (print_err) {
-        LOG(3, "TOO_LARGE  size: {}", msg->size);
+        LOG(7, "TOO_LARGE  size: {}", msg->size);
       }
     } else {
       ++s.produce_fail;
       if (print_err) {
-        LOG(3, "produce topic {}  partition {}   error: {}  {}",
+        LOG(7, "produce topic {}  partition {}   error: {}  {}",
             rd_kafka_topic_name(rkt), partition, x, rd_kafka_err2str(err));
       }
     }
