@@ -30,18 +30,18 @@ template <typename T> using sptr = std::shared_ptr<T>;
 
 class InstanceSet {
 public:
-static sptr<InstanceSet> Set(KafkaW::BrokerOpt opt);
-KafkaW::Producer::Topic producer_topic(uri::URI uri);
-int poll();
-std::vector<KafkaW::Producer::Stats> stats_all();
-private:
-InstanceSet(InstanceSet const &&) = delete;
-InstanceSet(KafkaW::BrokerOpt opt);
-KafkaW::BrokerOpt opt;
-std::mutex mx_producers_by_host;
-std::map<std::string, std::shared_ptr<KafkaW::Producer>> producers_by_host;
-};
+  static sptr<InstanceSet> Set(KafkaW::BrokerOpt opt);
+  KafkaW::Producer::Topic producer_topic(uri::URI uri);
+  int poll();
+  std::vector<KafkaW::Producer::Stats> stats_all();
 
+private:
+  InstanceSet(InstanceSet const &&) = delete;
+  InstanceSet(KafkaW::BrokerOpt opt);
+  KafkaW::BrokerOpt opt;
+  std::mutex mx_producers_by_host;
+  std::map<std::string, std::shared_ptr<KafkaW::Producer> > producers_by_host;
+};
 }
 }
 }

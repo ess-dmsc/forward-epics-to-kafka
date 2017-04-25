@@ -8,12 +8,10 @@ namespace ForwardEpicsToKafka {
 
 class Configuration {
 public:
-void read_json(std::string fname);
+  void read_json(std::string fname);
 
 private:
-//std::deque<>
+  // std::deque<>
 };
-
-
 }
 }

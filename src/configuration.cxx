@@ -5,8 +5,6 @@ namespace ForwardEpicsToKafka {
 
 using std::string;
 
-void Configuration::read_json(std::string fname) {
-}
-
+void Configuration::read_json(std::string fname) {}
 }
 }

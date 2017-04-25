@@ -7,9 +7,8 @@ namespace tests {
 
 class Tests {
 public:
-static MainOpt * main_opt;
+  static MainOpt *main_opt;
 };
-
 }
 }
 }
