@@ -4,12 +4,8 @@
 namespace BrightnESS {
 namespace ForwardEpicsToKafka {
 
-ForwarderInfo::ForwarderInfo(Main * main) : main(main) {
-}
+ForwarderInfo::ForwarderInfo(Main *main) : main(main) {}
 
-ForwarderInfo::~ForwarderInfo() {
-	main = nullptr;
-}
-
+ForwarderInfo::~ForwarderInfo() { main = nullptr; }
 }
 }
