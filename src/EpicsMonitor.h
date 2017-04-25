@@ -3,8 +3,6 @@
 namespace BrightnESS {
 namespace ForwardEpicsToKafka {
 
-class EpicsMonitor {
-};
-
+class EpicsMonitor {};
 }
 }

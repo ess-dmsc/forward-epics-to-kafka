@@ -6,8 +6,7 @@ namespace BrightnESS {
 namespace FlatBufs {
 
 struct EpicsPVstr {
-::epics::pvData::PVStructure::shared_pointer pvstr;
+  ::epics::pvData::PVStructure::shared_pointer pvstr;
 };
-
 }
 }
