@@ -255,6 +255,7 @@ void Main::report_stats(int dt) {
       m1.write(",poll_served={}", s.poll_served);
       m1.write(",msg_too_large={}", s.msg_too_large);
       m1.write(",produced_bytes={}", double(s.produced_bytes));
+      m1.write(",outq={}", s.outq);
     }
     LOG(7, "influx msg: {}", m1.c_str());
     curl->send(m1, main_opt.influx_url);

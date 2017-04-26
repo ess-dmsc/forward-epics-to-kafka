@@ -576,18 +576,20 @@ Producer::Producer(Producer &&x) {
 void Producer::poll() {
   int n1 = rd_kafka_poll(rk, opt.poll_timeout_ms);
   int level = 7;
-  if (n1 == 0)
+  if (n1 == 0) {
     level = 8;
+  }
   LOG(level, "IID: {}  INFO rd_kafka_poll()  served: {}  outq_len: {}", id, n1,
-      rd_kafka_outq_len(rk));
+      outq());
   if (log_level >= 8) {
     rd_kafka_dump(stdout, rk);
   }
   stats.poll_served += n1;
+  stats.outq = outq();
 }
 
 void Producer::poll_while_outq() {
-  while (rd_kafka_outq_len(rk) > 0) {
+  while (outq() > 0) {
     int n1 = rd_kafka_poll(rk, opt.poll_timeout_ms);
     stats.poll_served += n1;
   }
@@ -610,6 +612,7 @@ ProducerStats::ProducerStats(ProducerStats const &x) {
   poll_served = x.poll_served.load();
   msg_too_large = x.msg_too_large.load();
   produced_bytes = x.produced_bytes.load();
+  outq = x.outq.load();
 }
 
 ProducerTopic::~ProducerTopic() {
