@@ -201,7 +201,8 @@ When stop flag raised, clear all workers and streams.
 void Main::forward_epics_to_kafka() {
   using CLK = std::chrono::steady_clock;
   using MS = std::chrono::milliseconds;
-  auto Dt = MS(1000);
+  auto Dt = MS(100);
+  auto t_lf_last = CLK::now();
   ConfigCB config_cb(*this);
   {
     std::unique_lock<std::mutex> lock(conversion_workers_mx);
@@ -210,15 +211,23 @@ void Main::forward_epics_to_kafka() {
     }
   }
   while (forwarding_run.load() == 1) {
+    auto do_stats = false;
     auto t1 = CLK::now();
-    if (config_listener)
-      config_listener->poll(config_cb);
+    if (t1 - t_lf_last > MS(1000)) {
+      if (config_listener) {
+        config_listener->poll(config_cb);
+      }
+      check_stream_status();
+      t_lf_last = t1;
+      do_stats = true;
+    }
     kafka_instance_set->poll();
-    check_stream_status();
 
     auto t2 = CLK::now();
     auto dt = std::chrono::duration_cast<MS>(t2 - t1);
-    report_stats(dt.count());
+    if (do_stats) {
+      report_stats(dt.count());
+    }
     if (dt >= Dt) {
       CLOG(3, 1, "slow main loop");
     } else {
@@ -265,9 +274,7 @@ void Main::report_stats(int dt) {
 void Main::check_stream_status() {
   std::unique_lock<std::mutex> lock(streams_mutex);
   auto it = streams.begin();
-  while (true) {
-    if (it == streams.end())
-      break;
+  while (it != streams.end()) {
     auto &s = *it;
     if (s->status() < 0) {
       s->stop();
