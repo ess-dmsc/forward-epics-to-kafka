@@ -236,6 +236,10 @@ Given are the defaults.
   - 1024
   - Maximum queue size of each conversion worker thread.
 
+- `main-poll-interval` (int, milliseconds)
+  - 500
+  - Interval for main loop maintenance tasks.
+
 
 
 ### Forwarding a PV through Multiple Converters

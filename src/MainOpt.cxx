@@ -147,6 +147,12 @@ int MainOpt::parse_json_file(string config_file) {
     }
   }
   {
+    auto &v = d.FindMember("main-poll-interval")->value;
+    if (v.IsInt()) {
+      main_poll_interval = v.GetInt();
+    }
+  }
+  {
     auto m1 = d.FindMember("kafka");
     if (m1 != d.MemberEnd()) {
       auto &v = m1->value;

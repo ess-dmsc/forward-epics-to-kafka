@@ -201,7 +201,7 @@ When stop flag raised, clear all workers and streams.
 void Main::forward_epics_to_kafka() {
   using CLK = std::chrono::steady_clock;
   using MS = std::chrono::milliseconds;
-  auto Dt = MS(main_opt.main_poll_period);
+  auto Dt = MS(main_opt.main_poll_interval);
   auto t_lf_last = CLK::now();
   ConfigCB config_cb(*this);
   {
