@@ -30,6 +30,7 @@ struct MainOpt {
   string config_file;
   int forwarder_ix = 0;
   int write_per_message = 0;
+  int main_poll_period = 500;
   uint64_t teamid = 0;
   std::vector<char> hostname;
   FlatBufs::SchemaRegistry schema_registry;

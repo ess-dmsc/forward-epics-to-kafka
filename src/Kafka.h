@@ -33,6 +33,7 @@ public:
   static sptr<InstanceSet> Set(KafkaW::BrokerOpt opt);
   KafkaW::Producer::Topic producer_topic(uri::URI uri);
   int poll();
+  void log_stats();
   std::vector<KafkaW::Producer::Stats> stats_all();
 
 private:

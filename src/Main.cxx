@@ -201,7 +201,7 @@ When stop flag raised, clear all workers and streams.
 void Main::forward_epics_to_kafka() {
   using CLK = std::chrono::steady_clock;
   using MS = std::chrono::milliseconds;
-  auto Dt = MS(100);
+  auto Dt = MS(main_opt.main_poll_period);
   auto t_lf_last = CLK::now();
   ConfigCB config_cb(*this);
   {
@@ -226,18 +226,19 @@ void Main::forward_epics_to_kafka() {
     auto t2 = CLK::now();
     auto dt = std::chrono::duration_cast<MS>(t2 - t1);
     if (do_stats) {
+      kafka_instance_set->log_stats();
       report_stats(dt.count());
     }
     if (dt >= Dt) {
-      CLOG(3, 1, "slow main loop");
+      CLOG(3, 1, "slow main loop: {}", dt.count());
     } else {
       std::this_thread::sleep_for(Dt - dt);
     }
   }
-  LOG(7, "Main::forward_epics_to_kafka   shutting down");
+  LOG(6, "Main::forward_epics_to_kafka   shutting down");
   conversion_workers_clear();
   streams_clear();
-  LOG(7, "ForwardingStatus::STOPPED");
+  LOG(6, "ForwardingStatus::STOPPED");
   forwarding_status.store(ForwardingStatus::STOPPED);
 }
 
@@ -250,8 +251,8 @@ void Main::report_stats(int dt) {
   b1 %= 1024;
   auto b3 = b2 / 1024;
   b2 %= 1024;
-  CLOG(6, 5, "dt: {:4}  m: {:4}.{:03}  b: {:3}.{:03}.{:03}", dt, m2, m1, b3, b2,
-       b1);
+  LOG(6, "dt: {:4}  m: {:4}.{:03}  b: {:3}.{:03}.{:03}", dt, m2, m1, b3, b2,
+      b1);
   if (stub_curl::use && main_opt.influx_url.size() != 0) {
     fmt::MemoryWriter m1;
     m1.write("forward-epics-to-kafka,hostname={}", main_opt.hostname.data());
@@ -266,7 +267,6 @@ void Main::report_stats(int dt) {
       m1.write(",produced_bytes={}", double(s.produced_bytes));
       m1.write(",outq={}", s.outq);
     }
-    LOG(7, "influx msg: {}", m1.c_str());
     curl->send(m1, main_opt.influx_url);
   }
 }

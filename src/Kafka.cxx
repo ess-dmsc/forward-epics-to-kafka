@@ -68,10 +68,17 @@ int InstanceSet::poll() {
   for (auto m : producers_by_host) {
     auto &p = m.second;
     p->poll();
+  }
+  return 0;
+}
+
+void InstanceSet::log_stats() {
+  std::unique_lock<std::mutex> lock(mx_producers_by_host);
+  for (auto m : producers_by_host) {
+    auto &p = m.second;
     LOG(6, "Broker: {}  total: {}  outq: {}", m.first, p->total_produced(),
         p->outq());
   }
-  return 0;
 }
 
 std::vector<KafkaW::Producer::Stats> InstanceSet::stats_all() {
