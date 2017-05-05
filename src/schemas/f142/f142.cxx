@@ -1,4 +1,9 @@
 #include <atomic>
+#include <pv/pvEnumerated.h>
+#include <pv/nt.h>
+#include <pv/ntndarray.h>
+#include <pv/ntndarrayAttribute.h>
+#include <pv/ntutils.h>
 #include "../../logger.h"
 #include "../../SchemaRegistry.h"
 #include "../../helper.h"
@@ -9,6 +14,8 @@
 namespace BrightnESS {
 namespace FlatBufs {
 namespace f142 {
+
+using std::string;
 
 #define STRINGIFY2(x) #x
 #define STRINGIFY(x) STRINGIFY2(x)
@@ -28,6 +35,7 @@ M(int64_t)
 M(uint64_t)
 M(float)
 M(double)
+M(string)
 #undef M
 
 typedef struct {
@@ -260,7 +268,7 @@ Value_t make_Value_scalar(flatbuffers::FlatBufferBuilder &builder,
     LOG(5, "ERROR pvString not implemented yet");
     break;
   }
-  return { Value::Byte, 0 };
+  return { Value::NONE, 0 };
 }
 
 Value_t make_Value_array(flatbuffers::FlatBufferBuilder &builder,
@@ -297,14 +305,28 @@ Value_t make_Value_array(flatbuffers::FlatBufferBuilder &builder,
     LOG(5, "ERROR pvString not implemented yet");
     break;
   }
-  return { Value::Byte, 0 };
+  return { Value::NONE, 0 };
 }
 
+template <typename T>
+class release_deleter {
+public:
+release_deleter() : do_delete(true) {
+}
+void operator () (T * ptr) {
+	if (do_delete) delete ptr;
+}
+bool do_delete;
+};
+
 Value_t make_Value(flatbuffers::FlatBufferBuilder &builder,
-                   epics::pvData::PVFieldPtr const &field, uint8_t opts) {
+                   epics::pvData::PVStructurePtr const &field_full, uint8_t opts) {
+  if (!field_full) {
+    return { Value::NONE, 0 };
+  }
+  auto field = field_full->getSubField("value");
   if (!field) {
-    LOG(2, "can not do anything with a null pointer");
-    return { Value::Byte, 0 };
+    return { Value::NONE, 0 };
   }
   // Check the type of 'value'
   // Optionally, compare with name of the PV?
@@ -320,20 +342,29 @@ Value_t make_Value(flatbuffers::FlatBufferBuilder &builder,
     return make_Value_array(
         builder, static_cast<epics::pvData::PVScalarArray *>(field.get()),
         opts);
-  case T::structure:
-    LOG(5, "Type::structure can not be handled");
-    break;
-  case T::structureArray:
-    LOG(5, "Type::structureArray can not be handled");
-    break;
-  case T::union_:
-    LOG(5, "Type::union_ can not be handled");
-    break;
-  case T::unionArray:
-    LOG(5, "Type::unionArray can not be handled");
+  case T::structure: {
+    // supported so far:
+    // NTEnum:  we currently send the index value.  full enum identifier is coming when it
+    // is decided how we store on nexus side.
+    release_deleter<epics::pvData::PVStructure> del;
+    del.do_delete = false;
+    epics::pvData::PVStructurePtr p1((epics::pvData::PVStructure*)field_full.get(), del);
+    if (epics::nt::NTEnum::isCompatible(p1)) {
+      auto findex = ((epics::pvData::PVStructure*)(field.get()))->getSubField("index");
+      return make_Value_scalar(
+        builder, static_cast<epics::pvData::PVScalar *>(findex.get()));
+      break;
+    }
     break;
   }
-  return { Value::Byte, 0 };
+  case T::structureArray:
+    break;
+  case T::union_:
+    break;
+  case T::unionArray:
+    break;
+  }
+  return { Value::NONE, 0 };
 }
 
 class Converter : public MakeFlatBufferFromPVStructure {
@@ -345,7 +376,7 @@ public:
     auto builder = fb->builder.get();
     // this is the field type ID string: up.pvstr->getStructure()->getID()
     auto n = builder->CreateString(up.channel);
-    auto vF = make_Value(*builder, pvstr->getSubField("value"), 1);
+    auto vF = make_Value(*builder, pvstr, 1);
 
     flatbuffers::Offset<void> fwdinfo = 0;
     if (true) {
