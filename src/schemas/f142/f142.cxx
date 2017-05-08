@@ -1,15 +1,15 @@
+#include "../../SchemaRegistry.h"
+#include "../../epics-pvstr.h"
+#include "../../epics-to-fb.h"
+#include "../../helper.h"
+#include "../../logger.h"
+#include "schemas/f142_logdata_generated.h"
 #include <atomic>
-#include <pv/pvEnumerated.h>
 #include <pv/nt.h>
 #include <pv/ntndarray.h>
 #include <pv/ntndarrayAttribute.h>
 #include <pv/ntutils.h>
-#include "../../logger.h"
-#include "../../SchemaRegistry.h"
-#include "../../helper.h"
-#include "../../epics-to-fb.h"
-#include "../../epics-pvstr.h"
-#include "schemas/f142_logdata_generated.h"
+#include <pv/pvEnumerated.h>
 
 namespace BrightnESS {
 namespace FlatBufs {
@@ -308,19 +308,19 @@ Value_t make_Value_array(flatbuffers::FlatBufferBuilder &builder,
   return { Value::NONE, 0 };
 }
 
-template <typename T>
-class release_deleter {
+template <typename T> class release_deleter {
 public:
-release_deleter() : do_delete(true) {
-}
-void operator () (T * ptr) {
-	if (do_delete) delete ptr;
-}
-bool do_delete;
+  release_deleter() : do_delete(true) {}
+  void operator()(T *ptr) {
+    if (do_delete)
+      delete ptr;
+  }
+  bool do_delete;
 };
 
 Value_t make_Value(flatbuffers::FlatBufferBuilder &builder,
-                   epics::pvData::PVStructurePtr const &field_full, uint8_t opts) {
+                   epics::pvData::PVStructurePtr const &field_full,
+                   uint8_t opts) {
   if (!field_full) {
     return { Value::NONE, 0 };
   }
@@ -344,15 +344,18 @@ Value_t make_Value(flatbuffers::FlatBufferBuilder &builder,
         opts);
   case T::structure: {
     // supported so far:
-    // NTEnum:  we currently send the index value.  full enum identifier is coming when it
+    // NTEnum:  we currently send the index value.  full enum identifier is
+    // coming when it
     // is decided how we store on nexus side.
     release_deleter<epics::pvData::PVStructure> del;
     del.do_delete = false;
-    epics::pvData::PVStructurePtr p1((epics::pvData::PVStructure*)field_full.get(), del);
+    epics::pvData::PVStructurePtr p1(
+        (epics::pvData::PVStructure *)field_full.get(), del);
     if (epics::nt::NTEnum::isCompatible(p1)) {
-      auto findex = ((epics::pvData::PVStructure*)(field.get()))->getSubField("index");
+      auto findex =
+          ((epics::pvData::PVStructure *)(field.get()))->getSubField("index");
       return make_Value_scalar(
-        builder, static_cast<epics::pvData::PVScalar *>(findex.get()));
+          builder, static_cast<epics::pvData::PVScalar *>(findex.get()));
       break;
     }
     break;
@@ -524,6 +527,6 @@ FlatBufs::SchemaRegistry::Registrar<Info> g_registrar_info("f142",
 FlatBufs::SchemaRegistry::Registrar<Info>
 g_registrar_info_test_named_converter("f142-test-named-converter",
                                       Info::ptr(new InfoNamedConverter));
-}
-}
-}
+} // namespace f142
+} // namespace FlatBufs
+} // namespace BrightnESS
