@@ -68,7 +68,7 @@ void BrokerOpt::apply(rd_kafka_conf_t *conf) {
     LOG(5, "set config: {} = {}", c.first, s1);
     if (RD_KAFKA_CONF_OK != rd_kafka_conf_set(conf, c.first.c_str(), s1.c_str(),
                                               errstr.data(), errstr.size())) {
-      LOG(0, "error setting config: {} = {}", c.first, s1);
+      LOG(2, "error setting config: {} = {}", c.first, s1);
     }
   }
   for (auto &c : conf_strings) {
@@ -76,7 +76,7 @@ void BrokerOpt::apply(rd_kafka_conf_t *conf) {
     if (RD_KAFKA_CONF_OK != rd_kafka_conf_set(conf, c.first.c_str(),
                                               c.second.c_str(), errstr.data(),
                                               errstr.size())) {
-      LOG(0, "error setting config: {} = {}", c.first, c.second);
+      LOG(2, "error setting config: {} = {}", c.first, c.second);
     }
   }
 }
@@ -91,7 +91,7 @@ void TopicOpt::apply(rd_kafka_topic_conf_t *conf) {
     if (RD_KAFKA_CONF_OK != rd_kafka_topic_conf_set(conf, c.first.c_str(),
                                                     s1.c_str(), errstr.data(),
                                                     errstr.size())) {
-      LOG(0, "error setting topic config: {} = {}", c.first, s1);
+      LOG(2, "error setting topic config: {} = {}", c.first, s1);
     }
   }
   for (auto &c : conf_strings) {
@@ -99,7 +99,7 @@ void TopicOpt::apply(rd_kafka_topic_conf_t *conf) {
     if (RD_KAFKA_CONF_OK !=
         rd_kafka_topic_conf_set(conf, c.first.c_str(), c.second.c_str(),
                                 errstr.data(), errstr.size())) {
-      LOG(0, "error setting topic config: {} = {}", c.first, c.second);
+      LOG(2, "error setting topic config: {} = {}", c.first, c.second);
     }
   }
 }
@@ -302,7 +302,7 @@ void Consumer::cb_rebalance(rd_kafka_t *rk, rd_kafka_resp_err_t err,
     print_partition_list(plist);
     err2 = rd_kafka_assign(rk, NULL);
     if (err2 != RD_KAFKA_RESP_ERR_NO_ERROR) {
-      LOG(0, "rebalance error: {}  {}", rd_kafka_err2name(err2),
+      LOG(2, "rebalance error: {}  {}", rd_kafka_err2name(err2),
           rd_kafka_err2str(err2));
     }
     /*
@@ -318,7 +318,7 @@ void Consumer::cb_rebalance(rd_kafka_t *rk, rd_kafka_resp_err_t err,
     LOG(6, "cb_rebalance failure and revoke: {}", rd_kafka_err2str(err));
     err2 = rd_kafka_assign(rk, NULL);
     if (err2 != RD_KAFKA_RESP_ERR_NO_ERROR) {
-      LOG(0, "rebalance error: {}  {}", rd_kafka_err2name(err2),
+      LOG(2, "rebalance error: {}  {}", rd_kafka_err2name(err2),
           rd_kafka_err2str(err2));
     }
     break;
@@ -342,7 +342,7 @@ void Consumer::init() {
 
   rk = rd_kafka_new(RD_KAFKA_CONSUMER, conf, errstr, errstr_N);
   if (!rk) {
-    LOG(0, "ERROR can not create kafka handle: {}", errstr);
+    LOG(2, "can not create kafka handle: {}", errstr);
     throw std::runtime_error("can not create Kafka handle");
   }
 
@@ -351,7 +351,7 @@ void Consumer::init() {
   LOG(4, "New Kafka consumer {} with brokers: {}", rd_kafka_name(rk),
       opt.address.c_str());
   if (rd_kafka_brokers_add(rk, opt.address.c_str()) == 0) {
-    LOG(0, "ERROR could not add brokers");
+    LOG(2, "could not add brokers");
     throw std::runtime_error("could not add brokers");
   }
 
@@ -370,7 +370,7 @@ void Consumer::add_topic(std::string topic) {
   int err = rd_kafka_subscribe(rk, plist);
   KERR(rk, err);
   if (err) {
-    LOG(0, "ERROR could not subscribe");
+    LOG(2, "could not subscribe");
     throw std::runtime_error("can not subscribe");
   }
 }
@@ -419,12 +419,12 @@ PollStatus Consumer::poll() {
   } else if (msg->err == RD_KAFKA_RESP_ERR__ALL_BROKERS_DOWN) {
     LOG(4, "RD_KAFKA_RESP_ERR__ALL_BROKERS_DOWN");
   } else if (msg->err == RD_KAFKA_RESP_ERR__BAD_MSG) {
-    LOG(0, "RD_KAFKA_RESP_ERR__BAD_MSG");
+    LOG(2, "RD_KAFKA_RESP_ERR__BAD_MSG");
   } else if (msg->err == RD_KAFKA_RESP_ERR__DESTROY) {
     LOG(4, "RD_KAFKA_RESP_ERR__DESTROY");
     // Broker will go away soon
   } else {
-    LOG(0, "ERROR unhandled msg error: {} {}", rd_kafka_err2name(msg->err),
+    LOG(2, "unhandled msg error: {} {}", rd_kafka_err2name(msg->err),
         rd_kafka_err2str(msg->err));
   }
   return PollStatus::Err();
@@ -553,7 +553,7 @@ Producer::Producer(BrokerOpt opt) : opt(opt) {
 
   rk = rd_kafka_new(RD_KAFKA_PRODUCER, conf, errstr.data(), errstr.size());
   if (!rk) {
-    LOG(0, "ERROR can not create kafka handle: {}", errstr.data());
+    LOG(2, "can not create kafka handle: {}", errstr.data());
     throw std::runtime_error("can not create Kafka handle");
   }
 
@@ -562,7 +562,7 @@ Producer::Producer(BrokerOpt opt) : opt(opt) {
   LOG(4, "New Kafka {} with brokers: {}", rd_kafka_name(rk),
       opt.address.c_str());
   if (rd_kafka_brokers_add(rk, opt.address.c_str()) == 0) {
-    LOG(0, "ERROR could not add brokers");
+    LOG(2, "could not add brokers");
     throw std::runtime_error("could not add brokers");
   }
 }
@@ -583,7 +583,7 @@ void Producer::poll() {
   if (n1 == 0) {
     level = 8;
   }
-  LOG(level, "IID: {}  INFO rd_kafka_poll()  served: {}  outq_len: {}", id, n1,
+  LOG(level, "IID: {}  broker: {}  rd_kafka_poll()  served: {}  outq_len: {}", id, opt.address, n1,
       outq());
   if (log_level >= 8) {
     rd_kafka_dump(stdout, rk);
@@ -644,7 +644,7 @@ ProducerTopic::ProducerTopic(std::shared_ptr<Producer> producer,
   if (rkt == nullptr) {
     // Seems like Kafka uses the system error code?
     auto errstr = rd_kafka_err2str(rd_kafka_errno2err(errno));
-    LOG(0, "ERROR could not create Kafka topic: {}", errstr);
+    LOG(2, "could not create Kafka topic: {}", errstr);
     throw std::exception();
   }
   LOG(7, "ctor topic: {}  producer: {}", rd_kafka_topic_name(rkt),
