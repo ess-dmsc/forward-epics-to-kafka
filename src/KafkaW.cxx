@@ -255,8 +255,10 @@ void Consumer::cb_error(rd_kafka_t *rk, int err_i, char const *msg,
     ll = 5;
     // rd_kafka_dump(stdout, rk);
   }
-  LOG(ll, "Kafka cb_error  IID: {}  [{}] {} {}, {}", self->id, err_i,
-      rd_kafka_err2name(err), rd_kafka_err2str(err), msg);
+  LOG(ll, "Kafka cb_error id: {}  broker: {}  errno: {}  errorname: {}  "
+          "errorstring: {}  message: {}",
+      self->id, self->opt.address, err_i, rd_kafka_err2name(err),
+      rd_kafka_err2str(err), msg);
 }
 
 int Consumer::cb_stats(rd_kafka_t *rk, char *json, size_t json_size,
@@ -471,8 +473,10 @@ void Producer::cb_error(rd_kafka_t *rk, int err_i, char const *msg,
     if (self->on_error)
       self->on_error(self, err);
   }
-  LOG(ll, "Kafka cb_error  IID: {}  [{}] {} {}, {}", self->id, err_i,
-      rd_kafka_err2name(err), rd_kafka_err2str(err), msg);
+  LOG(ll, "Kafka cb_error id: {}  broker: {}  errno: {}  errorname: {}  "
+          "errorstring: {}  message: {}",
+      self->id, self->opt.address, err_i, rd_kafka_err2name(err),
+      rd_kafka_err2str(err), msg);
 }
 
 int Producer::cb_stats(rd_kafka_t *rk, char *json, size_t json_len,
