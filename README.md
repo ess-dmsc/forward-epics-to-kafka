@@ -38,7 +38,9 @@ Tooling
 
 Others (optional)
 - Google Test  (git clone `https://github.com/google/googletest.git` in
-  parallel to this repository)
+  parallel to this repository, or give the repository location in
+  `GOOGLETEST_REPOSITORY_DIR` or in `CMAKE_INCLUDE_PATH` and specify
+  `cmake -DREQUIRE_GTEST=1`)
 
 
 ### Build

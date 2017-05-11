@@ -583,8 +583,8 @@ void Producer::poll() {
   if (n1 == 0) {
     level = 8;
   }
-  LOG(level, "IID: {}  broker: {}  rd_kafka_poll()  served: {}  outq_len: {}", id, opt.address, n1,
-      outq());
+  LOG(level, "IID: {}  broker: {}  rd_kafka_poll()  served: {}  outq_len: {}",
+      id, opt.address, n1, outq());
   if (log_level >= 8) {
     rd_kafka_dump(stdout, rk);
   }
