@@ -48,6 +48,9 @@ char const *channel_state_name(epics::pvAccess::Channel::ConnectionState x) {
   return "[unknown]";
 }
 
+// Testing alternative
+#define RLOCK() urlock lock(mx);
+
 class EpicsClient_impl;
 
 class ActionOnChannel {
@@ -346,7 +349,7 @@ EpicsClient_impl::EpicsClient_impl(EpicsClient *epics_client)
 int EpicsClient_impl::init(string epics_channel_provider_type) {
   factory_init = EpicsClientFactoryInit::factory_init();
   {
-    urlock(mx);
+    RLOCK();
     provider = ::epics::pvAccess::getChannelProviderRegistry()->getProvider(
         epics_channel_provider_type);
     if (!provider) {
@@ -360,7 +363,7 @@ int EpicsClient_impl::init(string epics_channel_provider_type) {
 }
 
 int EpicsClient_impl::stop() {
-  urlock(mx);
+  RLOCK();
   if (monitor) {
     monitor->stop();
     monitor->destroy();
@@ -374,7 +377,7 @@ int EpicsClient_impl::stop() {
 }
 
 int EpicsClient_impl::monitoring_stop() {
-  urlock(mx);
+  RLOCK();
   LOG(7, "monitoring_stop");
   if (monitor) {
     monitor->stop();
@@ -386,7 +389,7 @@ int EpicsClient_impl::monitoring_stop() {
 }
 
 int EpicsClient_impl::monitoring_start() {
-  urlock(mx);
+  RLOCK();
   if (!channel) {
     LOG(7, "monitoring_start:  want to start but we have no channel");
     return -1;

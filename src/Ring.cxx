@@ -8,18 +8,21 @@ namespace ForwardEpicsToKafka {
 
 static uint32_t const cap_max = 1024 * 1024;
 
+// Switchable for testing
+#define LOCK() ulock lock(mx);
+
 template <typename TP> Ring<TP>::Ring() {
-  ulock(mx);
+  LOCK();
   resize_unsafe(16);
 }
 
 template <typename TP> Ring<TP>::Ring(uint32_t n) {
-  ulock(mx);
+  LOCK();
   resize_unsafe(n);
 }
 
 template <typename TP> int Ring<TP>::resize(uint32_t n) {
-  ulock(mx);
+  LOCK();
   return resize_unsafe(n);
 }
 
@@ -52,7 +55,7 @@ template <typename TP> int Ring<TP>::resize_unsafe(uint32_t n) {
 }
 
 template <typename TP> int Ring<TP>::push(TP &x) {
-  ulock(mx);
+  LOCK();
   return push_unsafe(x);
 }
 
@@ -75,7 +78,7 @@ template <typename TP> int Ring<TP>::push_unsafe(TP &x) {
 }
 
 template <typename TP> int Ring<TP>::push_enlarge(TP &x) {
-  ulock(mx);
+  LOCK();
   return push_enlarge_unsafe(x);
 }
 
@@ -88,7 +91,7 @@ template <typename TP> int Ring<TP>::push_enlarge_unsafe(TP &p) {
 }
 
 template <typename TP> std::pair<int, TP> Ring<TP>::pop() {
-  ulock(mx);
+  LOCK();
   return pop_unsafe();
 }
 
@@ -123,7 +126,7 @@ template <typename TP> void Ring<TP>::inc_R() {
 }
 
 template <typename TP> uint32_t Ring<TP>::size() {
-  ulock(mx);
+  LOCK();
   return size_unsafe();
 }
 
@@ -136,7 +139,7 @@ template <typename TP> uint32_t Ring<TP>::size_unsafe() {
 }
 
 template <typename TP> uint32_t Ring<TP>::capacity() {
-  ulock(mx);
+  LOCK();
   return capacity_unsafe();
 }
 
@@ -149,8 +152,8 @@ template <typename TP> uint32_t Ring<TP>::capacity_unsafe() {
 
 template <typename TP>
 int32_t Ring<TP>::fill_from(Ring &r, uint32_t const max) {
-  ulock(mx);
-  ulock(r.mx);
+  LOCK();
+  ulock lock2(r.mx);
   uint32_t n1 = 0;
   uint32_t n2 = r.size_unsafe();
   uint32_t n3 = capacity_unsafe() - size_unsafe();
@@ -171,7 +174,7 @@ int32_t Ring<TP>::fill_from(Ring &r, uint32_t const max) {
 }
 
 template <typename TP> std::vector<char> Ring<TP>::to_vec() {
-  ulock(mx);
+  LOCK();
   return to_vec_unsafe();
 }
 
