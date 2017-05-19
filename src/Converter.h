@@ -1,5 +1,7 @@
 #pragma once
 
+#include <map>
+#include <string>
 #include "fbschemas.h"
 #include "MakeFlatBufferFromPVStructure.h"
 #include "SchemaRegistry.h"
@@ -15,6 +17,7 @@ public:
   static sptr create(FlatBufs::SchemaRegistry const &schema_registry,
                      std::string schema, MainOpt const &main_opt);
   BrightnESS::FlatBufs::FB_uptr convert(FlatBufs::EpicsPVUpdate const &up);
+  std::map<std::string, double> stats();
 
 private:
   std::string schema;
