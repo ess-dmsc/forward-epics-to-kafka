@@ -370,6 +370,42 @@ Value_t make_Value(flatbuffers::FlatBufferBuilder &builder,
   return { Value::NONE, 0 };
 }
 
+template <typename T> class Range {
+public:
+  Range(T a, T b) : a(a), b(b) {}
+  T a;
+  T b;
+  bool check_consistent() {
+    if (a > b)
+      throw std::runtime_error("not consistent");
+  }
+  std::string to_s() const { return fmt::format("<Rng {:3} {:3}>", a, b); }
+};
+
+using Rng = Range<uint64_t>;
+
+constexpr bool operator<(Rng const &a, Rng const &b) {
+  return (a.a < b.a or(a.a == b.a and a.b < b.b));
+}
+
+bool is_gapless(Rng const &a, Rng const &b) {
+  if (not(a < b)) {
+    throw std::runtime_error("expect a < b");
+  }
+  if (b.a == 0)
+    return true;
+  if (a.b >= b.a - 1)
+    return true;
+  return false;
+}
+
+Rng merge(Rng const &a, Rng const &b) {
+  if (not(a < b)) {
+    throw std::runtime_error("expect a < b");
+  }
+  return Rng(a.a, std::max(a.b, b.b));
+}
+
 class Converter : public MakeFlatBufferFromPVStructure {
 public:
   BrightnESS::FlatBufs::FB_uptr convert(EpicsPVUpdate const &up) override {
