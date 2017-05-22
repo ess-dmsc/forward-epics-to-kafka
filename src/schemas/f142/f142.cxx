@@ -5,6 +5,8 @@
 #include "../../logger.h"
 #include "schemas/f142_logdata_generated.h"
 #include <atomic>
+#include <mutex>
+#include <set>
 #include <pv/nt.h>
 #include <pv/ntndarray.h>
 #include <pv/ntndarrayAttribute.h>
@@ -487,6 +489,13 @@ public:
     }
     return fb;
   }
+
+  std::map<std::string, double> stats() override {
+    return { { "ranges_n", seqs.size() } };
+  }
+
+  std::mutex mx;
+  std::set<Rng> seqs;
 };
 
 /// This class is purely for testing
