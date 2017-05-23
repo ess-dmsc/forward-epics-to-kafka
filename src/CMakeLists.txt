@@ -1,4 +1,4 @@
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ..)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})
 
 message(STATUS "CMAKE_BUILD_TYPE: ${CMAKE_BUILD_TYPE}")
 
@@ -59,7 +59,7 @@ endif()
 
 
 
-set(SOURCES
+set(forwarder_SRC
 MainOpt.cxx
 Main.cxx
 ForwarderInfo.cxx
@@ -88,12 +88,37 @@ ${FMT_SRC}
 schemas/f143/f143.cxx
 ${CMAKE_CURRENT_BINARY_DIR}/git_commit_current.cxx
 )
+
+set(forwarder_INC
+    MainOpt.h
+    Main.h
+    ForwarderInfo.h
+    EpicsClient.h
+    helper.h
+    logger.h
+    configuration.h
+    Kafka.h
+    KafkaW.h
+    Ring.h
+    ConversionWorker.h
+    epics-to-fb.h
+    Config.h
+    fbschemas.h
+    SchemaRegistry.h
+    MakeFlatBufferFromPVStructure.h
+    uri.h
+    blobs.h
+    Converter.h
+    KafkaOutput.h
+    Stream.h
+)
+
 if (WIN32)
 set(SOURCES ${SOURCES} wingetopt.c)
 endif (WIN32)
 
 set(tgt __objects)
-add_library(${tgt} OBJECT ${SOURCES})
+add_library(${tgt} OBJECT ${forwarder_SRC} ${forwarder_INC})
 target_include_directories(${tgt} PRIVATE ${path_include_common})
 add_dependencies(${tgt} flatbuffers_generate xxd_generate git_commit_current)
 target_compile_definitions(${tgt} PRIVATE ${compile_defs_common})
@@ -122,6 +147,7 @@ target_link_libraries(${tgt} ${libraries_common})
 
 
 
-if (have_gtest)
-add_subdirectory(tests)
+find_package(GTest)
+if(${GTEST_FOUND})
+    add_subdirectory(tests)
 endif()

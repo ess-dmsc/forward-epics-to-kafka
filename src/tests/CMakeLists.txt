@@ -1,4 +1,4 @@
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ../../tests)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/tests)
 
 set(tgt "tests")
 set(sources
@@ -11,10 +11,8 @@ $<TARGET_OBJECTS:__objects>
 )
 add_executable(${tgt} ${sources})
 add_dependencies(${tgt} flatbuffers_generate)
-target_include_directories(${tgt} PRIVATE ${path_include_common})
-target_link_libraries(${tgt} ${libraries_common})
-
-add_gtest_to_target(${tgt})
+target_include_directories(${tgt} PRIVATE ${path_include_common} ${GTEST_INCLUDE_DIRS})
+target_link_libraries(${tgt} ${libraries_common} ${GTEST_BOTH_LIBRARIES})
 
 configure_file(test-config-valid.json ../../tests/test-config-valid.json)
 configure_file(msg-add-01.json ../../tests/msg-add-01.json)

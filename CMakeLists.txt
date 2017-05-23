@@ -3,10 +3,6 @@ project(forward-epics-to-kafka)
 
 set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH};${PROJECT_SOURCE_DIR}/cmake")
 
-# Yes, there exists also FindGTest.
-# Yes, we do want to use this one instead:
-find_package(Googletest)
-
 add_subdirectory(src)
 
 option(RUN_DOXYGEN "Run doxygen" TRUE)
