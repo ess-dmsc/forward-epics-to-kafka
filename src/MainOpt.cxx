@@ -2,6 +2,7 @@
 
 #ifdef _MSC_VER
 #include "wingetopt.h"
+#include <iso646.h>
 #elif _AIX
 #include <unistd.h>
 #else

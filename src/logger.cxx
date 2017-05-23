@@ -4,6 +4,7 @@
 #include <cstdarg>
 #include <cstring>
 #ifdef _MSC_VER
+#include <iso646.h>
 #include "wingetopt.h"
 #elif _AIX
 #include <unistd.h>
