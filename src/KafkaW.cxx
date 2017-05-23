@@ -3,6 +3,10 @@
 #include <atomic>
 #include <cerrno>
 
+#ifdef _MSC_VER
+#include <iso646.h>
+#endif
+
 namespace KafkaW {
 
 std::atomic<int> g_kafka_instance_count;
