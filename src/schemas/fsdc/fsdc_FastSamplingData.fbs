@@ -1,0 +1,29 @@
+file_identifier "fsdc";
+
+namespace FSD;
+
+table uint8   { value: [ubyte];  }
+table int8    { value: [byte];   }
+table uint16  { value: [ushort]; }
+table int16   { value: [short];  }
+table uint32  { value: [uint];   }
+table int32   { value: [int];    }
+table uint64  { value: [ulong];  }
+table int64   { value: [long];   }
+table float32 { value: [ float]; }
+table float64 { value: [ double];}
+
+union type {uint8, int8, uint16, int16, uint32, int32, uint64, int64, float32, float64}
+
+table FastSamplingData {
+pv:
+    string;
+timestamp:
+    ulong;
+dimensions:
+    [ulong];
+data:
+    type;
+}
+
+root_type FastSamplingData;

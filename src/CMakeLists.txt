@@ -87,6 +87,7 @@ schemas/f142/f142.cxx
 ${FMT_SRC}
 schemas/f143/f143.cxx
 ${CMAKE_CURRENT_BINARY_DIR}/git_commit_current.cxx
+schemas/fsdc/FSD_Converter.cxx
 )
 
 set(forwarder_INC
@@ -111,6 +112,8 @@ set(forwarder_INC
     Converter.h
     KafkaOutput.h
     Stream.h
+    schemas/fsdc/fsdc_FastSamplingData_generated.h
+    schemas/fsdc/FSD_Converter.h
 )
 
 if (WIN32)
