@@ -442,6 +442,25 @@ public:
       bf.add_fwdix(up.fwdix);
       bf.add_teamid(up.teamid);
       fwdinfo = bf.Finish().Union();
+      {
+        std::unique_lock<std::mutex> lock(mx);
+        auto &rs = seqs;
+        uint64_t key = seq_data;
+        rs.emplace(key, key);
+        while (true) {
+          auto a1 = std::adjacent_find(rs.begin(), rs.end(), is_gapless);
+          if (a1 == rs.end()) {
+            break;
+          } else {
+            auto a2 = a1;
+            ++a2;
+            auto a3 = merge(*a1, *a2);
+            rs.erase(a1);
+            rs.erase(a2);
+            rs.insert(a3);
+          }
+        }
+      }
     }
 
     LogDataBuilder b(*builder);
