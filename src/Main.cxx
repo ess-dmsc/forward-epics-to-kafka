@@ -9,7 +9,12 @@
 #if HAVE_CURL
 #include <curl/curl.h>
 #endif
+#ifdef _MSC_VER
+#include "wingetopt.h"
+#else
 #include <unistd.h>
+#include <getopt.h>
+#endif
 
 namespace BrightnESS {
 namespace ForwardEpicsToKafka {

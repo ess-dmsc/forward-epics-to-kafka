@@ -5,6 +5,7 @@
 #elif _AIX
 #include <unistd.h>
 #else
+#include <unistd.h>
 #include <getopt.h>
 #endif
 
@@ -18,7 +19,6 @@
 #include "blobs.h"
 #include "SchemaRegistry.h"
 #include "git_commit_current.h"
-#include <unistd.h>
 
 namespace BrightnESS {
 namespace ForwardEpicsToKafka {

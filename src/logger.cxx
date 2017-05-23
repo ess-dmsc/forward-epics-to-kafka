@@ -3,7 +3,14 @@
 #include <cstdio>
 #include <cstdarg>
 #include <cstring>
+#ifdef _MSC_VER
+#include "wingetopt.h"
+#elif _AIX
 #include <unistd.h>
+#else
+#include <getopt.h>
+#include <unistd.h>
+#endif
 #include <atomic>
 #include <memory>
 #include <thread>
