@@ -9,7 +9,6 @@
 #include <unistd.h>
 #include <getopt.h>
 #endif
-
 #include <rapidjson/writer.h>
 #include <rapidjson/prettywriter.h>
 #include <rapidjson/stringbuffer.h>
@@ -230,10 +229,10 @@ std::pair<int, std::unique_ptr<MainOpt> > parse_opt(int argc, char **argv) {
       opt.help = true;
       break;
     case 'v':
-      log_level = std::min(9, log_level + 1);
+      log_level = (std::min)(9, log_level + 1);
       break;
     case 'Q':
-      log_level = std::max(0, log_level - 1);
+      log_level = (std::max)(0, log_level - 1);
       break;
     case 0:
       auto lname = long_options[option_index].name;

@@ -118,7 +118,7 @@ Stream::fill_conversion_work(Ring<std::unique_ptr<ConversionWorkPacket> > &q2,
   ulock l1(q1.mx);
   ulock l2(q2.mx);
   uint32_t n2 = q1.size_unsafe();
-  uint32_t n3 = std::min(max, q2.capacity_unsafe() - q2.size_unsafe());
+  uint32_t n3 = (std::min)(max, q2.capacity_unsafe() - q2.size_unsafe());
   uint32_t ncp = conversion_paths.size();
   std::vector<ConversionWorkPacket *> cwp_last(conversion_paths.size());
   // LOG(8, "Stream::fill_conversion_work {}  {}  {}", n1, n2, n3);
