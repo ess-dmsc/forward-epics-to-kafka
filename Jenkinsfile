@@ -1,34 +1,52 @@
+def slackFailMsg (msg_str) {
+    slackSend color: 'danger', message: '@jonasn E2K (Fast sampling): ' + msg_str
+}
+
 node('eee') {
     dir("code") {
         stage("Checkout") {
-            checkout scm
+            try {
+                checkout scm
+            } catch (e) {
+                slackFailMsg "Checkout failed"
+                throw e
+            }
         }
     }
-
     dir("build") {
-        stage("make clean") {
-            sh "rm -rf ../build/*"
-        }
-
-        stage("Update local dependencies") {
-            sh "cd .. && bash code/build-script/update-local-deps.sh"
-        }
-
-        stage("cmake") {
-            sh "bash ../code/build-script/invoke-cmake-from-jenkinsfile.sh"
-        }
-
+        stage("Run CMake") {
+            try {
+                withEnv(["EPICSV4=/opt/epics/modules/"]) {
+                    sh "cmake ../code"
+                }
+            } catch (e) {
+                slackFailMsg "CMake failed"
+                throw e
+            }
+        } 
+        
         stage("Build") {
-            sh "make VERBOSE=1"
+            try {
+                sh "make"
+            } catch (e) {
+                slackFailMsg "Build failed"
+                throw e
+            }
         }
-
-        stage("Unit Tests") {
-            sh "./tests/tests -- --gtest_output=xml"
-            junit 'test_detail.xml'
+        stage("Run unit tests") {
+            try {
+                sh "tests/tests --gtest_output=xml:AllResultsUnitTests.xml"
+            } catch (e) {
+                slackFailMsg "One or more unit tests failed"
+            }
+            junit '*Tests.xml'
         }
-
-        stage("Archive") {
-            archiveArtifacts 'forward-epics-to-kafka'
+    }
+    try {
+        if (currentBuild.previousBuild.result == "FAILURE") {
+            slackSend color: 'good', message: 'E2K (Fast sampling): Back in the green!'
         }
+    } catch (e) {
+        
     }
 }
