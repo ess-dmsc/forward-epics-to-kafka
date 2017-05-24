@@ -355,7 +355,7 @@ int Main::mapping_add(rapidjson::Value &mapping) {
       topic_uri.default_port(uri.port);
       Converter::sptr conv;
       if (cname.size() > 0) {
-        ulock(mutex_converters);
+        auto lock = get_lock_converters();
         auto c1 = converters.find(cname);
         if (c1 != converters.end()) {
           conv = c1->second.lock();
