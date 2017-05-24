@@ -199,6 +199,10 @@ std::unique_lock<std::mutex> Main::get_lock_streams() {
   return std::unique_lock<std::mutex>(streams_mutex);
 }
 
+std::unique_lock<std::mutex> Main::get_lock_converters() {
+  return std::unique_lock<std::mutex>(converters_mutex);
+}
+
 /**
 \brief Main program loop.
 

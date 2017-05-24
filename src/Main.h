@@ -42,6 +42,7 @@ public:
   int channel_stop(std::string const &channel);
   int conversion_workers_clear();
   std::unique_lock<std::mutex> get_lock_streams();
+  std::unique_lock<std::mutex> get_lock_converters();
 
 private:
   int const init_pool_max = 64;
