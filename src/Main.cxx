@@ -265,9 +265,11 @@ void Main::report_stats(int dt) {
   LOG(6, "dt: {:4}  m: {:4}.{:03}  b: {:3}.{:03}.{:03}", dt, m2, m1, b3, b2,
       b1);
   if (stub_curl::use && main_opt.influx_url.size() != 0) {
-    fmt::MemoryWriter m1;
-    m1.write("forward-epics-to-kafka,hostname={}", main_opt.hostname.data());
+    int i1 = 0;
     for (auto &s : kafka_instance_set->stats_all()) {
+      fmt::MemoryWriter m1;
+      m1.write("forward-epics-to-kafka,hostname={},set={}",
+               main_opt.hostname.data(), i1);
       m1.write(" produced={}", s.produced);
       m1.write(",produce_fail={}", s.produce_fail);
       m1.write(",local_queue_full={}", s.local_queue_full);
@@ -277,8 +279,33 @@ void Main::report_stats(int dt) {
       m1.write(",msg_too_large={}", s.msg_too_large);
       m1.write(",produced_bytes={}", double(s.produced_bytes));
       m1.write(",outq={}", s.outq);
+      LOG(3, "forwarder stats: {}", m1.c_str());
+      curl->send(m1, main_opt.influx_url);
+      ++i1;
     }
-    curl->send(m1, main_opt.influx_url);
+    {
+      auto lock = get_lock_converters();
+      LOG(3, "N converters: {}", converters.size());
+      i1 = 0;
+      for (auto &c : converters) {
+        auto stats = c.second.lock()->stats();
+        fmt::MemoryWriter m1;
+        m1.write("forward-epics-to-kafka,hostname={},set={}",
+                 main_opt.hostname.data(), i1);
+        int i2 = 0;
+        for (auto x : stats) {
+          if (i2 > 0) {
+            m1.write(",");
+          } else {
+            m1.write(" ");
+          }
+          m1.write("{}={}", x.first, x.second);
+          ++i2;
+        }
+        curl->send(m1, main_opt.influx_url);
+        ++i1;
+      }
+    }
   }
 }
 
