@@ -1,0 +1,16 @@
+file_identifier "ifdq";
+
+namespace FSD;
+
+table ifcdaq_data {
+pv:
+    string (required);
+timestamp:
+    ulong;
+value:
+    [double] (required);
+time:
+    [double] (required);
+}
+
+root_type ifcdaq_data;

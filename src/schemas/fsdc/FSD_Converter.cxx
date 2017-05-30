@@ -18,7 +18,7 @@ std::uint64_t ExtractTimeStamp(pv::PVStructure::shared_pointer timeStampStructur
     pv::TimeStamp timeStampStruct;
     pvTS.attach(timeStampStructure);
     pvTS.get(timeStampStruct);
-    return (timeStampStruct.getEpicsSecondsPastEpoch() + 631152000) * 1e9 + timeStampStruct.getNanoseconds();;
+    return (timeStampStruct.getEpicsSecondsPastEpoch() + 631152000L) * 1000000000L + timeStampStruct.getNanoseconds();;
 }
 
 template <typename pvScalarArrType, typename fbCreatorFunc>
@@ -138,7 +138,9 @@ FB_uptr FSD_Converter::convert(EpicsPVUpdate const & pvData) {
         ExtractNTScalarArrayData(builder, pvUpdateStruct);
     } else if ("epics:nt/NTNDArray:1.0" == pvStructType) {
         ExtractNTNDArrayData(builder, pvUpdateStruct);
-    } else {
+    } else if ("ess:fsd/ifcdaq:1.0" == pvStructType) {
+      ExtractNTNDArrayData(builder, pvUpdateStruct);
+    }else {
         std::cout << "Unknown pv struct type!" << std::endl;
         //@todo Handle unknown structs
     }
