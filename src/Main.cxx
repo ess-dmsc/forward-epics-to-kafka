@@ -279,13 +279,13 @@ void Main::report_stats(int dt) {
       m1.write(",msg_too_large={}", s.msg_too_large);
       m1.write(",produced_bytes={}", double(s.produced_bytes));
       m1.write(",outq={}", s.outq);
-      LOG(3, "forwarder stats: {}", m1.c_str());
+      LOG(6, "forwarder stats: {}", m1.c_str());
       curl->send(m1, main_opt.influx_url);
       ++i1;
     }
     {
       auto lock = get_lock_converters();
-      LOG(3, "N converters: {}", converters.size());
+      LOG(6, "N converters: {}", converters.size());
       i1 = 0;
       for (auto &c : converters) {
         auto stats = c.second.lock()->stats();
@@ -302,6 +302,7 @@ void Main::report_stats(int dt) {
           m1.write("{}={}", x.first, x.second);
           ++i2;
         }
+        LOG(6, "converter {} stats: {}", i1, m1.c_str());
         curl->send(m1, main_opt.influx_url);
         ++i1;
       }
