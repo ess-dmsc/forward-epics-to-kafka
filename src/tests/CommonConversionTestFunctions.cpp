@@ -12,7 +12,7 @@
 void EPICS_To_FB_TimeComparison(pv::PVTimeStamp const timeStamp, FSD::FastSamplingData const *fsd_data) {
     pv::TimeStamp timeStampStruct;
     timeStamp.get(timeStampStruct);
-    std::uint64_t compTime = (timeStampStruct.getEpicsSecondsPastEpoch() + 631152000) * 1e9 + timeStampStruct.getNanoseconds();
+    std::uint64_t compTime = (timeStampStruct.getEpicsSecondsPastEpoch() + 631152000L) * 1000000000L + timeStampStruct.getNanoseconds();
     EXPECT_EQ(compTime, fsd_data->timestamp());
 }
 
