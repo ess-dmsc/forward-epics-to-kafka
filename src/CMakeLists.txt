@@ -113,6 +113,7 @@ set(forwarder_INC
     KafkaOutput.h
     Stream.h
     schemas/fsdc/fsdc_FastSamplingData_generated.h
+    schemas/fsdc/ifcdaq_data_generated.h
     schemas/fsdc/FSD_Converter.h
 )
 

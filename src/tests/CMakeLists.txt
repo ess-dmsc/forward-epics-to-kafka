@@ -10,14 +10,13 @@ uri.cxx
 CommonConversionTestFunctions.cpp
 FSD_NTNDArrayTest.cpp
 FSD_NTScalarArrayTest.cpp
+FSD_IfcdaqDataTest.cpp
 )
 
 set(test_INC
     tests.h
     ../MainOpt.h
     CommonConversionTestFunctions.h
-    ../schemas/fsdc/fsdc_FastSamplingData_generated.h
-    ../schemas/fsdc/FSD_Converter.h
 )
 
 add_executable(${tgt} ${test_SRC} ${test_INC} $<TARGET_OBJECTS:__objects>)
