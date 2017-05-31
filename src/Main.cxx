@@ -370,6 +370,9 @@ int Main::mapping_add(rapidjson::Value &mapping) {
       if (topic.size() == 0) {
         LOG(3, "mapping topic is not specified");
       }
+      if (cname.size() == 0) {
+        cname = fmt::format("converter_{}", converter_ix++);
+      }
       uri::URI topic_uri(topic);
       auto r1 = main_opt.schema_registry.items().find(schema);
       if (r1 == main_opt.schema_registry.items().end()) {

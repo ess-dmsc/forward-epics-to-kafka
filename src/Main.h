@@ -61,6 +61,7 @@ private:
   friend class ConfigCB;
   friend class tests::Remote_T;
   friend class ConversionScheduler;
+  std::atomic<uint32_t> converter_ix{ 0 };
   std::atomic<int32_t> forwarding_run{ 1 };
   std::atomic<ForwardingStatus> forwarding_status{ ForwardingStatus::NORMAL };
   std::unique_ptr<stub_curl> curl;
