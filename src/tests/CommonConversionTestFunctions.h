@@ -15,7 +15,13 @@
 
 namespace pv = epics::pvData;
 
-void EPICS_To_FB_TimeComparison(pv::PVTimeStamp const timeStamp, FSD::FastSamplingData const *fsd_data);
+template <typename FB_type>
+void EPICS_To_FB_TimeComparison(const pv::PVTimeStamp timeStamp, const FB_type *fsd_data) {
+  pv::TimeStamp timeStampStruct;
+  timeStamp.get(timeStampStruct);
+  std::uint64_t compTime = (timeStampStruct.getEpicsSecondsPastEpoch() + 631152000L) * 1000000000L + timeStampStruct.getNanoseconds();
+  EXPECT_EQ(compTime, fsd_data->timestamp());
+}
 
 size_t GetNrOfElements(FSD::FastSamplingData const *fsd_data);
 

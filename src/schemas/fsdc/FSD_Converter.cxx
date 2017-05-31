@@ -2,6 +2,7 @@
 #include <iostream>
 #include "schemas/fsdc/FSD_Converter.h"
 #include "schemas/fsdc/fsdc_FastSamplingData_generated.h"
+#include "schemas/fsdc/ifcdaq_data_generated.h"
 #include <vector>
 #include <pv/ntscalarArray.h>
 #include <pv/ntndarray.h>
@@ -18,7 +19,9 @@ std::uint64_t ExtractTimeStamp(pv::PVStructure::shared_pointer timeStampStructur
     pv::TimeStamp timeStampStruct;
     pvTS.attach(timeStampStructure);
     pvTS.get(timeStampStruct);
-    return (timeStampStruct.getEpicsSecondsPastEpoch() + 631152000L) * 1000000000L + timeStampStruct.getNanoseconds();;
+  auto step1 = (timeStampStruct.getEpicsSecondsPastEpoch() + 631152000);
+  std::uint64_t tempValue = step1 * 1000000000L + timeStampStruct.getNanoseconds();
+  return tempValue;
 }
 
 template <typename pvScalarArrType, typename fbCreatorFunc>
@@ -139,7 +142,7 @@ FB_uptr FSD_Converter::convert(EpicsPVUpdate const & pvData) {
     } else if ("epics:nt/NTNDArray:1.0" == pvStructType) {
         ExtractNTNDArrayData(builder, pvUpdateStruct);
     } else if ("ess:fsd/ifcdaq:1.0" == pvStructType) {
-      ExtractNTNDArrayData(builder, pvUpdateStruct);
+      ExtractIfcdaqData(builder, pvUpdateStruct, pvData.channel);
     }else {
         std::cout << "Unknown pv struct type!" << std::endl;
         //@todo Handle unknown structs
@@ -194,6 +197,40 @@ bool ExtractNTNDArrayData(flatbuffers::FlatBufferBuilder *builder, epics::pvData
     auto fsd_offset = fsd_builder.Finish();
     builder->Finish(fsd_offset);
     return true;
+}
+
+bool ExtractIfcdaqData(flatbuffers::FlatBufferBuilder *builder, epics::pvData::PVStructure::shared_pointer pvData, const std::string &pvName) {
+  pv::PVDoubleArrayPtr valueArr = pvData->getSubField<pv::PVDoubleArray>("value");
+  std::uint8_t *fbValuePtr;
+  auto valueOffset = builder->CreateUninitializedVector(valueArr->getLength(), sizeof(double), &fbValuePtr);
+  const auto pvValuePtr = valueArr->view().data();
+  std::memcpy(fbValuePtr, pvValuePtr, valueArr->getLength() * sizeof(double));
+  
+  pv::PVDoubleArrayPtr timeArr = pvData->getSubField<pv::PVDoubleArray>("time");
+  std::uint8_t *fbTimePtr;
+  auto timeOffset = builder->CreateUninitializedVector(timeArr->getLength(), sizeof(double), &fbTimePtr);
+  const auto pvTimePtr = timeArr->view().data();
+  std::memcpy(fbTimePtr, pvTimePtr, timeArr->getLength() * sizeof(double));
+  
+  pv::PVTimeStamp timeStamp;
+  timeStamp.attach(pvData->getSubField<pv::PVField>("timeStamp"));
+  
+  auto pvNameOffset = builder->CreateString(pvName);
+  
+  FSD::ifcdaq_dataBuilder fsd_builder(*builder);
+  auto tempTimeStamp = ExtractTimeStamp(pvData->getSubField<pv::PVStructure>("timeStamp"));
+  fsd_builder.add_timestamp(tempTimeStamp);
+  fsd_builder.add_value(valueOffset);
+  fsd_builder.add_time(timeOffset);
+  fsd_builder.add_pv(pvNameOffset);
+  fsd_builder.add_uniqueId(pvData->getSubField<pv::PVInt>("uniqueId")->get());
+  
+  auto fsd_offset = fsd_builder.Finish();
+  builder->Finish(fsd_offset);
+  if (valueArr->getLength() != timeArr->getLength() or valueArr->getLength() == 0) {
+    return false;
+  }
+  return true;
 }
 
 MakeFlatBufferFromPVStructure::ptr Info::create_converter() {

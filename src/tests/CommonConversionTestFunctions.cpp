@@ -9,13 +9,6 @@
 #include "CommonConversionTestFunctions.h"
 #include <gtest/gtest.h>
 
-void EPICS_To_FB_TimeComparison(pv::PVTimeStamp const timeStamp, FSD::FastSamplingData const *fsd_data) {
-    pv::TimeStamp timeStampStruct;
-    timeStamp.get(timeStampStruct);
-    std::uint64_t compTime = (timeStampStruct.getEpicsSecondsPastEpoch() + 631152000L) * 1000000000L + timeStampStruct.getNanoseconds();
-    EXPECT_EQ(compTime, fsd_data->timestamp());
-}
-
 size_t GetNrOfElements(FSD::FastSamplingData const *fsd_data) {
     if (fsd_data->data_type() == FSD::type_int8) {
         return static_cast<const FSD::int8*>(fsd_data->data())->value()->size();

@@ -15,7 +15,8 @@ struct ifcdaq_data FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
     VT_PV = 4,
     VT_TIMESTAMP = 6,
     VT_VALUE = 8,
-    VT_TIME = 10
+    VT_TIME = 10,
+    VT_UNIQUEID = 12
   };
   const flatbuffers::String *pv() const {
     return GetPointer<const flatbuffers::String *>(VT_PV);
@@ -29,6 +30,9 @@ struct ifcdaq_data FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   const flatbuffers::Vector<double> *time() const {
     return GetPointer<const flatbuffers::Vector<double> *>(VT_TIME);
   }
+  int32_t uniqueId() const {
+    return GetField<int32_t>(VT_UNIQUEID, 0);
+  }
   bool Verify(flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
            VerifyFieldRequired<flatbuffers::uoffset_t>(verifier, VT_PV) &&
@@ -38,6 +42,7 @@ struct ifcdaq_data FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
            verifier.Verify(value()) &&
            VerifyFieldRequired<flatbuffers::uoffset_t>(verifier, VT_TIME) &&
            verifier.Verify(time()) &&
+           VerifyField<int32_t>(verifier, VT_UNIQUEID) &&
            verifier.EndTable();
   }
 };
@@ -57,13 +62,16 @@ struct ifcdaq_dataBuilder {
   void add_time(flatbuffers::Offset<flatbuffers::Vector<double>> time) {
     fbb_.AddOffset(ifcdaq_data::VT_TIME, time);
   }
+  void add_uniqueId(int32_t uniqueId) {
+    fbb_.AddElement<int32_t>(ifcdaq_data::VT_UNIQUEID, uniqueId, 0);
+  }
   ifcdaq_dataBuilder(flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
   }
   ifcdaq_dataBuilder &operator=(const ifcdaq_dataBuilder &);
   flatbuffers::Offset<ifcdaq_data> Finish() {
-    const auto end = fbb_.EndTable(start_, 4);
+    const auto end = fbb_.EndTable(start_, 5);
     auto o = flatbuffers::Offset<ifcdaq_data>(end);
     fbb_.Required(o, ifcdaq_data::VT_PV);
     fbb_.Required(o, ifcdaq_data::VT_VALUE);
@@ -77,9 +85,11 @@ inline flatbuffers::Offset<ifcdaq_data> Createifcdaq_data(
     flatbuffers::Offset<flatbuffers::String> pv = 0,
     uint64_t timestamp = 0,
     flatbuffers::Offset<flatbuffers::Vector<double>> value = 0,
-    flatbuffers::Offset<flatbuffers::Vector<double>> time = 0) {
+    flatbuffers::Offset<flatbuffers::Vector<double>> time = 0,
+    int32_t uniqueId = 0) {
   ifcdaq_dataBuilder builder_(_fbb);
   builder_.add_timestamp(timestamp);
+  builder_.add_uniqueId(uniqueId);
   builder_.add_time(time);
   builder_.add_value(value);
   builder_.add_pv(pv);
@@ -91,13 +101,15 @@ inline flatbuffers::Offset<ifcdaq_data> Createifcdaq_dataDirect(
     const char *pv = nullptr,
     uint64_t timestamp = 0,
     const std::vector<double> *value = nullptr,
-    const std::vector<double> *time = nullptr) {
+    const std::vector<double> *time = nullptr,
+    int32_t uniqueId = 0) {
   return FSD::Createifcdaq_data(
       _fbb,
       pv ? _fbb.CreateString(pv) : 0,
       timestamp,
       value ? _fbb.CreateVector<double>(*value) : 0,
-      time ? _fbb.CreateVector<double>(*time) : 0);
+      time ? _fbb.CreateVector<double>(*time) : 0,
+      uniqueId);
 }
 
 inline const FSD::ifcdaq_data *Getifcdaq_data(const void *buf) {

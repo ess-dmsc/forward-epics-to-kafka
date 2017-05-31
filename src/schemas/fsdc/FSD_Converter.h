@@ -19,6 +19,7 @@ std::uint64_t GetNSecTimeStamp(epics::pvData::PVStructure::shared_pointer pvData
 
 bool ExtractNTScalarArrayData(flatbuffers::FlatBufferBuilder *builder, epics::pvData::PVStructure::shared_pointer pvData);
 bool ExtractNTNDArrayData(flatbuffers::FlatBufferBuilder *builder, epics::pvData::PVStructure::shared_pointer pvData);
+bool ExtractIfcdaqData(flatbuffers::FlatBufferBuilder *builder, epics::pvData::PVStructure::shared_pointer pvData, const std::string &pvName);
 
 
 class Info : public SchemaInfo {
