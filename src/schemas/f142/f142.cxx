@@ -421,6 +421,7 @@ template <typename T> inline void minmax(T *mm, T const &x) {
 
 template <typename T> class RangeSet {
 public:
+  ~RangeSet() { LOG(6, "~RangeSet: {}", to_string()); }
   void insert(T k) {
     std::unique_lock<std::mutex> lock(mx);
     // DWLOG(3, "Before message insert");
@@ -467,6 +468,16 @@ public:
   size_t size() {
     std::unique_lock<std::mutex> lock(mx);
     return set.size();
+  }
+
+  std::string to_string() {
+    fmt::MemoryWriter mw;
+    mw.write("[");
+    for (auto &x : set) {
+      mw.write(" [{}, {}], ", x.a, x.b);
+    }
+    mw.write("]\0");
+    return std::string(mw.c_str());
   }
 
   std::set<Range<T> > set;
