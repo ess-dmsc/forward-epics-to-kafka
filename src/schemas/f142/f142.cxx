@@ -486,6 +486,8 @@ public:
 
 class Converter : public MakeFlatBufferFromPVStructure {
 public:
+  ~Converter() override { LOG(3, "~Converter"); }
+
   BrightnESS::FlatBufs::FB_uptr convert(EpicsPVUpdate const &up) override {
     auto &pvstr = up.epics_pvstr;
     auto fb = BrightnESS::FlatBufs::FB_uptr(new BrightnESS::FlatBufs::FB);
