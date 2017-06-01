@@ -372,41 +372,106 @@ Value_t make_Value(flatbuffers::FlatBufferBuilder &builder,
   return { Value::NONE, 0 };
 }
 
+// Represent inclusive range
 template <typename T> class Range {
 public:
   Range(T a, T b) : a(a), b(b) {}
   T a;
   T b;
   bool check_consistent() {
-    if (a > b)
+    if (a > b) {
       throw std::runtime_error("not consistent");
+    }
   }
-  std::string to_s() const { return fmt::format("<Rng {:3} {:3}>", a, b); }
+  std::string to_s() const { return fmt::format("<Range {:3} {:3}>", a, b); }
 };
 
-using Rng = Range<uint64_t>;
-
-constexpr bool operator<(Rng const &a, Rng const &b) {
+template <typename T>
+constexpr bool operator<(Range<T> const &a, Range<T> const &b) {
   return (a.a < b.a or(a.a == b.a and a.b < b.b));
 }
 
-bool is_gapless(Rng const &a, Rng const &b) {
+template <typename T> bool is_gapless(Range<T> const &a, Range<T> const &b) {
   if (not(a < b)) {
     throw std::runtime_error("expect a < b");
   }
-  if (b.a == 0)
+  if (a.b + 1 >= b.a) {
     return true;
-  if (a.b >= b.a - 1)
-    return true;
+  }
   return false;
 }
 
-Rng merge(Rng const &a, Rng const &b) {
+template <typename T> Range<T> merge(Range<T> const &a, Range<T> const &b) {
   if (not(a < b)) {
     throw std::runtime_error("expect a < b");
   }
-  return Rng(a.a, std::max(a.b, b.b));
+  return Range<T>(a.a, std::max(a.b, b.b));
 }
+
+template <typename T> inline void minmax(T *mm, T const &x) {
+  T &min = mm[0];
+  T &max = mm[1];
+  if (min == -1 or x < min) {
+    min = x;
+  }
+  if (max == -1 or x > max) {
+    max = x;
+  }
+}
+
+template <typename T> class RangeSet {
+public:
+  void insert(T k) {
+    std::unique_lock<std::mutex> lock(mx);
+    // DWLOG(3, "Before message insert");
+    // for (auto & x : set) DWLOG(3, "{}", x.to_s());
+    set.emplace(k, k);
+    while (true) {
+      auto a1 = std::adjacent_find(set.begin(), set.end(), is_gapless<T>);
+      if (a1 == set.end()) {
+        break;
+      } else {
+        auto a2 = a1;
+        ++a2;
+        // DWLOG(3, "have adjacent: {} and {}", a1->to_s(), a2->to_s());
+        auto a3 = merge(*a1, *a2);
+        set.erase(a1);
+        set.erase(a2);
+        set.insert(a3);
+      }
+    }
+    // DWLOG(3, "After message insert");
+    // for (auto & x : set) DWLOG(3, "{}", x.to_s());
+  }
+
+  rapidjson::Value to_json_value(rapidjson::Document &doc) {
+    std::unique_lock<std::mutex> lock(mx);
+    auto &a = doc.GetAllocator();
+    rapidjson::Value v;
+    v.SetArray();
+    int i1 = 0;
+    for (auto &rr : set) {
+      rapidjson::Value w;
+      w.SetArray();
+      w.PushBack(rapidjson::Value(rr.a), a);
+      w.PushBack(rapidjson::Value(rr.b), a);
+      v.PushBack(w, a);
+      i1 += 1;
+      if (i1 > 128) {
+        break;
+      }
+    }
+    return v;
+  }
+
+  size_t size() {
+    std::unique_lock<std::mutex> lock(mx);
+    return set.size();
+  }
+
+  std::set<Range<T> > set;
+  std::mutex mx;
+};
 
 class Converter : public MakeFlatBufferFromPVStructure {
 public:
@@ -442,24 +507,8 @@ public:
       bf.add_fwdix(up.fwdix);
       bf.add_teamid(up.teamid);
       fwdinfo = bf.Finish().Union();
-      {
-        std::unique_lock<std::mutex> lock(mx);
-        auto &rs = seqs;
-        uint64_t key = seq_data;
-        rs.emplace(key, key);
-        while (true) {
-          auto a1 = std::adjacent_find(rs.begin(), rs.end(), is_gapless);
-          if (a1 == rs.end()) {
-            break;
-          } else {
-            auto a2 = a1;
-            ++a2;
-            auto a3 = merge(*a1, *a2);
-            rs.erase(a1);
-            rs.erase(a2);
-            rs.insert(a3);
-          }
-        }
+      if (false) {
+        seqs.insert(seq_data);
       }
     }
 
@@ -513,8 +562,7 @@ public:
     return { { "ranges_n", seqs.size() } };
   }
 
-  std::mutex mx;
-  std::set<Rng> seqs;
+  RangeSet<uint64_t> seqs;
 };
 
 /// This class is purely for testing
