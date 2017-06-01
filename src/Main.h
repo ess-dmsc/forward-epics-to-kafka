@@ -41,6 +41,7 @@ public:
   int streams_clear();
   int channel_stop(std::string const &channel);
   int conversion_workers_clear();
+  int converters_clear();
   std::unique_lock<std::mutex> get_lock_streams();
   std::unique_lock<std::mutex> get_lock_converters();
 

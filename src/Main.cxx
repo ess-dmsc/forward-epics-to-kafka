@@ -109,6 +109,7 @@ Main::~Main() {
   LOG(7, "~Main");
   streams_clear();
   conversion_workers_clear();
+  converters_clear();
 }
 
 /**
@@ -192,6 +193,14 @@ int Main::conversion_workers_clear() {
     conversion_workers.clear();
   }
   CLOG(7, 1, "Main::conversion_workers_clear()  end");
+  return 0;
+}
+
+int Main::converters_clear() {
+  if (conversion_workers.size() > 0) {
+    std::unique_lock<std::mutex> lock(converters_mutex);
+    conversion_workers.clear();
+  }
   return 0;
 }
 
