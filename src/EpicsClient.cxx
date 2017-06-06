@@ -324,7 +324,7 @@ FwdMonitorRequester::monitorEvent(::epics::pvData::MonitorPtr const &monitor) {
     // up.epics_pvstr->pvstr = ele->pvStructurePtr;
     up.epics_pvstr = epics::pvData::PVStructure::shared_pointer(
         new ::epics::pvData::PVStructure(ele->pvStructurePtr->getStructure()));
-    up.epics_pvstr->copy(*ele->pvStructurePtr);
+    up.epics_pvstr->copyUnchecked(*ele->pvStructurePtr);
     //::epics::pvData::PVStructure s2(ele->pvStructurePtr->getStructure());
     // s2.copy(*ele->pvStructurePtr);
     // up.monitor = (void*)monitor.get();
