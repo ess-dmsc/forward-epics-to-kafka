@@ -18,6 +18,7 @@
 #ifdef _MSC_VER
 #include <iso646.h>
 #endif
+#include "RangeSet.h"
 
 namespace BrightnESS {
 namespace ForwardEpicsToKafka {
@@ -114,6 +115,7 @@ private:
   std::string channel_name;
   uint64_t seq = 0;
   EpicsClient_impl *epics_client_impl = nullptr;
+  RangeSet<uint64_t> seq_data_received;
 };
 
 struct EpicsClientFactoryInit {
@@ -268,6 +270,8 @@ FwdMonitorRequester::FwdMonitorRequester(EpicsClient_impl *epics_client_impl,
 
 FwdMonitorRequester::~FwdMonitorRequester() {
   CLOG(7, 6, "~FwdMonitorRequester");
+  CLOG(7, 6, "~FwdMonitorRequester  seq_data_received: {}",
+       seq_data_received.to_string());
 }
 
 string FwdMonitorRequester::getRequesterName() { return name; }
@@ -306,6 +310,18 @@ FwdMonitorRequester::monitorEvent(::epics::pvData::MonitorPtr const &monitor) {
     if (!ele) {
       break;
     }
+
+    uint64_t seq_data = 0;
+    if (false) {
+      if (auto x = ele->pvStructurePtr->getSubField<
+              epics::pvData::PVScalarValue<uint64_t> >("seq")) {
+        seq_data = x->get();
+      }
+    }
+    if (false) {
+      seq_data_received.insert(seq_data);
+    }
+
     // CLOG(7, 7, "monitorEvent seq {}", seq);
     static_assert(sizeof(uint64_t) == sizeof(std::chrono::nanoseconds::rep),
                   "Types not compatible");
@@ -331,6 +347,7 @@ FwdMonitorRequester::monitorEvent(::epics::pvData::MonitorPtr const &monitor) {
     // up.ele = (void*)ele_ptr;
     monitor->release(ele);
     up.seq_fwd = seq;
+    up.seq_data = seq_data;
     up.ts_epics_monitor = ts;
     up.fwdix = epics_client_impl->fwdix;
     up.teamid = epics_client_impl->teamid;
