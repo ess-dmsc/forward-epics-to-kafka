@@ -82,10 +82,9 @@ int Stream::emit(std::unique_ptr<FlatBufs::EpicsPVUpdate> up) {
   if (true) {
     for (int i1 = 0; i1 < 256; ++i1) {
       auto x = emit_queue.push(up);
-      if (x == 0)
+      if (x == 0) {
         break;
-      // sleep_ms(1);
-      // if (i1 == 20) {
+      }
       {
         // CLOG(9, 1, "buffer full {} times", i1);
         emit_queue.push_enlarge(up);
