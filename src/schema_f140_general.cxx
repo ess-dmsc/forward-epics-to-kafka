@@ -259,7 +259,7 @@ public:
             pvstr->getSubField<epics::pvData::PVScalarValue<uint64_t> >("ts")) {
       ts_data = x->get();
     }
-    fb->seq = up.seq;
+    fb->seq = up.seq_fwd;
     fb->fwdix = up.fwdix;
     auto builder = fb->builder.get();
     auto n = builder->CreateString("some-name-must-go-here");
@@ -268,7 +268,7 @@ public:
     FlatBufs::f140_general::PVBuilder b(*builder);
     b.add_n(n);
     b.add_v_type(vF.type);
-    auto fi = FlatBufs::f140_general::fwdinfo_t(up.seq, ts_data,
+    auto fi = FlatBufs::f140_general::fwdinfo_t(up.seq_data, ts_data,
                                                 up.ts_epics_monitor, up.fwdix);
     b.add_fwdinfo(&fi);
     FinishPVBuffer(*builder, b.Finish());

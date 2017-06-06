@@ -344,7 +344,7 @@ public:
       ts_data = x->get();
     }
 
-    fb->seq = up.seq;
+    fb->seq = up.seq_fwd;
     fb->fwdix = up.fwdix;
     auto builder = fb->builder.get();
     // this is the field type ID string: up.pvstr->getStructure()->getID()
@@ -359,7 +359,7 @@ public:
       seq_data = x->get();
     }
     bf.add_seq_data(seq_data);
-    bf.add_seq_fwd(up.seq);
+    bf.add_seq_fwd(up.seq_fwd);
     bf.add_ts_data(ts_data);
     bf.add_ts_fwd(up.ts_epics_monitor);
     bf.add_fwdix(up.fwdix);
@@ -390,8 +390,9 @@ public:
     if (log_level <= 0) {
       auto b1 = binary_to_hex((char const *)builder->GetBufferPointer(),
                               builder->GetSize());
-      LOG(7, "seq data/fwd: {} / {}  schema: [{}]\n{:.{}}", seq_data, up.seq,
-          FlatBufs::f141_epics_nt::EpicsPVIdentifier(), b1.data(), b1.size());
+      LOG(7, "seq data/fwd: {} / {}  schema: [{}]\n{:.{}}", seq_data,
+          up.seq_fwd, FlatBufs::f141_epics_nt::EpicsPVIdentifier(), b1.data(),
+          b1.size());
     }
     return fb;
   }

@@ -390,7 +390,7 @@ public:
     if (true) {
       // Was only interesting for forwarder testing
       fwdinfo_1_tBuilder bf(*builder);
-      fb->seq = up.seq;
+      fb->seq = up.seq_fwd;
       fb->fwdix = up.fwdix;
       uint64_t seq_data = 0;
       if (auto x = pvstr->getSubField<epics::pvData::PVScalarValue<uint64_t> >(
@@ -403,7 +403,7 @@ public:
         ts_data = x->get();
       }
       bf.add_seq_data(seq_data);
-      bf.add_seq_fwd(up.seq);
+      bf.add_seq_fwd(up.seq_fwd);
       bf.add_ts_data(ts_data);
       bf.add_ts_fwd(up.ts_epics_monitor);
       bf.add_fwdix(up.fwdix);
@@ -454,8 +454,8 @@ public:
           seq_data = static_cast<fwdinfo_1_t const *>(fi)->seq_data();
         }
       }
-      LOG(9, "seq data/fwd: {} / {}  schema: [{}]\n{:.{}}", seq_data, up.seq,
-          LogDataIdentifier(), b1.data(), b1.size());
+      LOG(9, "seq data/fwd: {} / {}  schema: [{}]\n{:.{}}", seq_data,
+          up.seq_fwd, LogDataIdentifier(), b1.data(), b1.size());
     }
     return fb;
   }

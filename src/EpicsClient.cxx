@@ -326,7 +326,7 @@ FwdMonitorRequester::monitorEvent(::epics::pvData::MonitorPtr const &monitor) {
     up.epics_pvstr->copy(*ele->pvStructurePtr);
     //::epics::pvData::PVStructure s2(ele->pvStructurePtr->getStructure());
     // s2.copy(*ele->pvStructurePtr);
-    up.seq = seq;
+    up.seq_fwd = seq;
     up.ts_epics_monitor = ts;
     up.fwdix = epics_client_impl->fwdix;
     up.teamid = epics_client_impl->teamid;

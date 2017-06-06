@@ -283,7 +283,7 @@ public:
         ts_data = x->get();
       }
       bf.add_seq_data(seq_data);
-      bf.add_seq_fwd(up.seq);
+      bf.add_seq_fwd(up.seq_fwd);
       bf.add_ts_data(ts_data);
       bf.add_ts_fwd(up.ts_epics_monitor);
       bf.add_fwdix(up.fwdix);

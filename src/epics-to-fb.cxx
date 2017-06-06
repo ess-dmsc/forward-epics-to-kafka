@@ -11,7 +11,8 @@ EpicsPVUpdate::EpicsPVUpdate() {}
 EpicsPVUpdate::~EpicsPVUpdate() {}
 
 EpicsPVUpdate::EpicsPVUpdate(EpicsPVUpdate const &x)
-    : epics_pvstr(x.epics_pvstr), channel(x.channel), seq(x.seq),
-      ts_epics_monitor(x.ts_epics_monitor), fwdix(x.fwdix), teamid(x.teamid) {}
+    : epics_pvstr(x.epics_pvstr), channel(x.channel), seq_data(x.seq_data),
+      seq_fwd(x.seq_fwd), ts_epics_monitor(x.ts_epics_monitor), fwdix(x.fwdix),
+      teamid(x.teamid) {}
 }
 }
