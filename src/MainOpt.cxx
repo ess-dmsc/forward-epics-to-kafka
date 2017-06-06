@@ -3,6 +3,7 @@
 #ifdef _MSC_VER
 #include "wingetopt.h"
 #include <iso646.h>
+#include "WinSock2.h"
 #else
 #include <unistd.h>
 #include <getopt.h>
