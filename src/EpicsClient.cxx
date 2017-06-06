@@ -303,8 +303,9 @@ FwdMonitorRequester::monitorEvent(::epics::pvData::MonitorPtr const &monitor) {
   std::vector<std::unique_ptr<FlatBufs::EpicsPVUpdate> > ups;
   while (true) {
     auto ele = monitor->poll();
-    if (!ele)
+    if (!ele) {
       break;
+    }
     // CLOG(7, 7, "monitorEvent seq {}", seq);
     static_assert(sizeof(uint64_t) == sizeof(std::chrono::nanoseconds::rep),
                   "Types not compatible");
@@ -326,15 +327,15 @@ FwdMonitorRequester::monitorEvent(::epics::pvData::MonitorPtr const &monitor) {
     up.epics_pvstr->copy(*ele->pvStructurePtr);
     //::epics::pvData::PVStructure s2(ele->pvStructurePtr->getStructure());
     // s2.copy(*ele->pvStructurePtr);
+    // up.monitor = (void*)monitor.get();
+    // up.ele = (void*)ele_ptr;
+    monitor->release(ele);
     up.seq_fwd = seq;
     up.ts_epics_monitor = ts;
     up.fwdix = epics_client_impl->fwdix;
     up.teamid = epics_client_impl->teamid;
-    // up.monitor = (void*)monitor.get();
-    // up.ele = (void*)ele_ptr;
     ups.push_back(std::move(up_));
     seq += 1;
-    monitor->release(ele);
   }
   for (auto &up : ups) {
     up->epics_pvstr->setImmutable();
