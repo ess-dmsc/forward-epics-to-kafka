@@ -101,5 +101,10 @@ ConversionScheduler::fill(Ring<std::unique_ptr<ConversionWorkPacket> > &queue,
   }
   return nfc;
 }
+
+ConversionScheduler::~ConversionScheduler() {
+  LOG(6, "~ConversionScheduler  seq_data_enqueued {}",
+      seq_data_enqueued.to_string());
+}
 }
 }
