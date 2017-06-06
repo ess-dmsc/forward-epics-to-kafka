@@ -4,8 +4,10 @@
 #include <cstdarg>
 #include <cstring>
 #ifdef _MSC_VER
-#include <iso646.h>
 #include "wingetopt.h"
+#include <iso646.h>
+#include <io.h>
+#define isatty _isatty
 #elif _AIX
 #include <unistd.h>
 #else
