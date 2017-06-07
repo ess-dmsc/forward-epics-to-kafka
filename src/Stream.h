@@ -10,6 +10,7 @@
 #include "ConversionWorker.h"
 #include "Kafka.h"
 #include "Ring.h"
+#include "RangeSet.h"
 
 namespace BrightnESS {
 namespace ForwardEpicsToKafka {
@@ -57,7 +58,7 @@ public:
   int emit(std::unique_ptr<FlatBufs::EpicsPVUpdate> up);
   int32_t
   fill_conversion_work(Ring<std::unique_ptr<ConversionWorkPacket> > &queue,
-                       uint32_t max);
+                       uint32_t max, std::function<void(uint64_t)> on_seq_data);
   int stop();
   void error_in_epics();
   int status();

@@ -110,7 +110,8 @@ int Stream::emit(std::unique_ptr<FlatBufs::EpicsPVUpdate> up) {
 
 int32_t
 Stream::fill_conversion_work(Ring<std::unique_ptr<ConversionWorkPacket> > &q2,
-                             uint32_t max) {
+                             uint32_t max,
+                             std::function<void(uint64_t)> on_seq_data) {
   auto &q1 = emit_queue;
   uint32_t n0 = 0;
   uint32_t n1 = 0;
@@ -136,6 +137,7 @@ Stream::fill_conversion_work(Ring<std::unique_ptr<ConversionWorkPacket> > &q2,
     }
     size_t cpid = 0;
     uint32_t ncp = conversion_paths.size();
+    on_seq_data(e.second->seq_data);
     for (auto &cp : conversion_paths) {
       auto p = std::unique_ptr<ConversionWorkPacket>(new ConversionWorkPacket);
       cwp_last[cpid] = p.get();

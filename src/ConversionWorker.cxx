@@ -87,7 +87,13 @@ ConversionScheduler::fill(Ring<std::unique_ptr<ConversionWorkPacket> > &queue,
   }
   auto sid0 = sid;
   while (nfc < nfm) {
-    auto n1 = main->streams[sid]->fill_conversion_work(queue, nfm - nfc);
+    auto track_seq_data = [&](uint64_t seq_data) {
+      if (false) {
+        seq_data_enqueued.insert(seq_data);
+      }
+    };
+    auto n1 = main->streams[sid]
+                  ->fill_conversion_work(queue, nfm - nfc, track_seq_data);
     if (n1 > 0) {
       CLOG(7, 3, "Give worker {:2}  items: {:3}  stream: {:3}", wid, n1, sid);
     }
