@@ -318,9 +318,6 @@ FwdMonitorRequester::monitorEvent(::epics::pvData::MonitorPtr const &monitor) {
         seq_data = x->get();
       }
     }
-    if (false) {
-      seq_data_received.insert(seq_data);
-    }
 
     // CLOG(7, 7, "monitorEvent seq {}", seq);
     static_assert(sizeof(uint64_t) == sizeof(std::chrono::nanoseconds::rep),
@@ -356,7 +353,15 @@ FwdMonitorRequester::monitorEvent(::epics::pvData::MonitorPtr const &monitor) {
   }
   for (auto &up : ups) {
     up->epics_pvstr->setImmutable();
-    epics_client_impl->emit(std::move(up));
+    auto seq_data = up->seq_data;
+    auto x = epics_client_impl->emit(std::move(up));
+    if (x != 0) {
+      LOG(5, "error can not push update {}", seq_data);
+    } else {
+      if (false) {
+        seq_data_received.insert(seq_data);
+      }
+    }
   }
 }
 
