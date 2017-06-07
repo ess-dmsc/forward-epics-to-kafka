@@ -226,7 +226,7 @@ bool ExtractIfcdaqData(flatbuffers::FlatBufferBuilder *builder, epics::pvData::P
   fsd_builder.add_uniqueId(pvData->getSubField<pv::PVInt>("uniqueId")->get());
   
   auto fsd_offset = fsd_builder.Finish();
-  builder->Finish(fsd_offset);
+  builder->Finish(fsd_offset,FSD::ifcdaq_dataIdentifier());
   if (valueArr->getLength() != timeArr->getLength() or valueArr->getLength() == 0) {
     return false;
   }
