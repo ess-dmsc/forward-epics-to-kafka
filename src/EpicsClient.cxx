@@ -269,8 +269,8 @@ FwdMonitorRequester::FwdMonitorRequester(EpicsClient_impl *epics_client_impl,
 }
 
 FwdMonitorRequester::~FwdMonitorRequester() {
-  CLOG(7, 6, "~FwdMonitorRequester");
-  CLOG(7, 6, "~FwdMonitorRequester  seq_data_received: {}",
+  CLOG(6, 6, "~FwdMonitorRequester");
+  CLOG(6, 6, "~FwdMonitorRequester  seq_data_received: {}",
        seq_data_received.to_string());
 }
 

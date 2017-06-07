@@ -32,7 +32,7 @@ ConversionPath::~ConversionPath() {
 int ConversionPath::emit(std::unique_ptr<FlatBufs::EpicsPVUpdate> up) {
   auto fb = converter->convert(*up);
   if (fb == nullptr) {
-    CLOG(8, 1, "empty converted flat buffer");
+    CLOG(6, 1, "empty converted flat buffer");
     return 1;
   }
   kafka_output->emit(std::move(fb));
@@ -73,9 +73,9 @@ int Stream::converter_add(Kafka::InstanceSet &kset, Converter::sptr conv,
 }
 
 int Stream::emit(std::unique_ptr<FlatBufs::EpicsPVUpdate> up) {
-  CLOG(9, 7, "Stream::emit");
+  // CLOG(9, 7, "Stream::emit");
   if (!up) {
-    CLOG(7, 1, "empty update?");
+    CLOG(6, 1, "empty update?");
     // should never happen, ignore
     return 0;
   }
@@ -127,12 +127,12 @@ Stream::fill_conversion_work(Ring<std::unique_ptr<ConversionWorkPacket> > &q2,
     auto e = q1.pop_unsafe();
     n0 += 1;
     if (e.first != 0) {
-      CLOG(8, 1, "empty? should not happen");
+      CLOG(6, 1, "empty? should not happen");
       break;
     }
     auto &up = e.second;
     if (!up) {
-      LOG(8, "empty epics update");
+      LOG(6, "empty epics update");
       continue;
     }
     size_t cpid = 0;
@@ -151,7 +151,7 @@ Stream::fill_conversion_work(Ring<std::unique_ptr<ConversionWorkPacket> > &q2,
       }
       auto x = q2.push_unsafe(p);
       if (x != 0) {
-        // CLOG(9, 1, "full? should not happen");
+        CLOG(6, 1, "full? should not happen");
         break;
       }
       cpid += 1;
