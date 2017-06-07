@@ -40,8 +40,10 @@ template <typename TP> int Ring<TP>::resize_unsafe(uint32_t n) {
       for (uint32_t i1 = 0; i1 < iW; ++i1) {
         vec[n1] = std::move(vec[i1]);
         ++n1;
-        if (n1 >= vec.size())
+        if (n1 >= vec.size()) {
           n1 = 0;
+          iRmax = vec.size();
+        }
       }
       iW = n1;
       return 0;
@@ -112,7 +114,10 @@ template <typename TP> std::pair<int, TP> Ring<TP>::pop_unsafe() {
 
 template <typename TP> void Ring<TP>::inc_W() {
   ++iW;
-  if (iW >= vec.size()) {
+  if (iW > vec.size()) {
+    throw std::runtime_error("data structure corrupt iW > vec.size()");
+  }
+  if (iW == vec.size()) {
     iRmax = iW;
     iW = 0;
   }
