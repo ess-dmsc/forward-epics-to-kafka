@@ -101,14 +101,19 @@ public:
   }
 
   std::string to_string() {
+    std::unique_lock<std::mutex> lock(mx);
     fmt::MemoryWriter mw;
     mw.write("[");
     int i1 = 0;
     for (auto &x : set) {
-      mw.write(" [{}, {}], ", x.a, x.b);
+      if (i1 > 0) {
+        mw.write(", ");
+      }
+      mw.write("[{}, {}]", x.a, x.b);
       ++i1;
       if (i1 > 100) {
-        mw.write("...");
+        mw.write(" ...");
+        break;
       }
     }
     mw.write("]\0");
