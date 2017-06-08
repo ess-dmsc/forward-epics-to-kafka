@@ -1,26 +1,26 @@
-#include <cstdlib>
+#include <atomic>
+#include <csignal>
 #include <cstdio>
+#include <cstdlib>
+#include <cstring>
+#include <mutex>
+#include <string>
 #include <thread>
 #include <vector>
-#include <string>
-#include <atomic>
-#include <mutex>
-#include <cstring>
-#include <csignal>
 
-#include <fmt/format.h>
-#include "logger.h"
-#include "configuration.h"
-#include "MainOpt.h"
 #include "Main.h"
+#include "MainOpt.h"
 #include "blobs.h"
+#include "configuration.h"
+#include "logger.h"
+#include <fmt/format.h>
 
 namespace BrightnESS {
 namespace ForwardEpicsToKafka {}
 }
 
 static std::mutex g__mutex_main;
-static std::atomic<BrightnESS::ForwardEpicsToKafka::Main *> g__main{ nullptr };
+static std::atomic<BrightnESS::ForwardEpicsToKafka::Main *> g__main{nullptr};
 
 void signal_handler(int signal) {
   std::lock_guard<std::mutex> lock(g__mutex_main);
@@ -53,11 +53,9 @@ int main(int argc, char **argv) {
   }
   try {
     main.forward_epics_to_kafka();
-  }
-  catch (std::runtime_error &e) {
+  } catch (std::runtime_error &e) {
     LOG(0, "CATCH runtime error in main watchdog thread: {}", e.what());
-  }
-  catch (std::exception &e) {
+  } catch (std::exception &e) {
     LOG(0, "CATCH EXCEPTION in main watchdog thread");
   }
   std::signal(SIGINT, SIG_DFL);

@@ -1,21 +1,21 @@
 #include "Main.h"
-#include "helper.h"
-#include "logger.h"
 #include "Config.h"
 #include "Converter.h"
-#include "Stream.h"
 #include "ForwarderInfo.h"
+#include "Stream.h"
+#include "helper.h"
+#include "logger.h"
 #include <sys/types.h>
 #if HAVE_CURL
 #include <curl/curl.h>
 #endif
 #ifdef _MSC_VER
-#include "wingetopt.h"
 #include "process.h"
+#include "wingetopt.h"
 #define getpid _getpid
 #else
-#include <unistd.h>
 #include <getopt.h>
+#include <unistd.h>
 #endif
 
 namespace BrightnESS {
@@ -90,7 +90,7 @@ Main::Main(MainOpt &opt)
     KafkaW::BrokerOpt bopt;
     bopt.conf_strings["group.id"] =
         fmt::format("forwarder-command-listener--pid{}", getpid());
-    config_listener.reset(new Config::Listener{ bopt, main_opt.broker_config });
+    config_listener.reset(new Config::Listener{bopt, main_opt.broker_config});
   }
   if (main_opt.json) {
     auto m1 = main_opt.json->FindMember("streams");
@@ -120,7 +120,7 @@ public:
   ConfigCB(Main &main);
   // This is called from the same thread as the main watchdog below, because the
   // code below calls the config poll which in turn calls this callback.
-  void operator()(std::string const &msg)override;
+  void operator()(std::string const &msg) override;
 
 private:
   Main &main;
@@ -362,9 +362,8 @@ int Main::mapping_add(rapidjson::Value &mapping) {
   }
   std::unique_lock<std::mutex> lock(streams_mutex);
   try {
-    streams.emplace_back(new Stream(finfo, { channel_provider_type, channel }));
-  }
-  catch (std::runtime_error &e) {
+    streams.emplace_back(new Stream(finfo, {channel_provider_type, channel}));
+  } catch (std::runtime_error &e) {
     return -1;
   }
   auto &stream = streams.back();
@@ -431,8 +430,8 @@ int Main::mapping_add(rapidjson::Value &mapping) {
   return 0;
 }
 
-std::atomic<uint64_t> g__total_msgs_to_kafka{ 0 };
-std::atomic<uint64_t> g__total_bytes_to_kafka{ 0 };
+std::atomic<uint64_t> g__total_msgs_to_kafka{0};
+std::atomic<uint64_t> g__total_bytes_to_kafka{0};
 
 void Main::forwarding_exit() { forwarding_run.store(0); }
 }

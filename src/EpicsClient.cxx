@@ -1,10 +1,10 @@
 #include "EpicsClient.h"
 #include <atomic>
-#include <mutex>
 #include <chrono>
-#include <sstream>
-#include <pv/pvData.h>
+#include <mutex>
 #include <pv/pvAccess.h>
+#include <pv/pvData.h>
+#include <sstream>
 // For epics::pvAccess::ClientFactory::start()
 #include <pv/clientFactory.h>
 // EPICS 4 supports access via the channel access protocol as well,
@@ -12,8 +12,9 @@
 #include <pv/caProvider.h>
 //#include "fbhelper.h"
 //#include "fbschemas.h"
-#include "epics-to-fb.h"
+#include "RangeSet.h"
 #include "epics-pvstr.h"
+#include "epics-to-fb.h"
 #include "logger.h"
 #ifdef _MSC_VER
 #include <iso646.h>
@@ -81,9 +82,9 @@ public:
   // From class pvData::Requester
   std::string getRequesterName() override;
   void message(std::string const &message, MessageType messageType) override;
-  void channelCreated(const epics::pvData::Status &status,
-                      epics::pvAccess::Channel::shared_pointer const &channel)
-      override;
+  void channelCreated(
+      const epics::pvData::Status &status,
+      epics::pvAccess::Channel::shared_pointer const &channel) override;
   void channelStateChange(
       epics::pvAccess::Channel::shared_pointer const &channel,
       epics::pvAccess::Channel::ConnectionState connectionState) override;
@@ -125,7 +126,7 @@ struct EpicsClientFactoryInit {
   static std::atomic<int> count;
   static std::mutex mxl;
 };
-std::atomic<int> EpicsClientFactoryInit::count{ 0 };
+std::atomic<int> EpicsClientFactoryInit::count{0};
 std::mutex EpicsClientFactoryInit::mxl;
 std::unique_ptr<EpicsClientFactoryInit> EpicsClientFactoryInit::factory_init() {
   return std::unique_ptr<EpicsClientFactoryInit>(new EpicsClientFactoryInit);
@@ -229,9 +230,8 @@ void ChannelRequester::channelCreated(epics::pvData::Status const &status,
   }
 }
 
-void
-ChannelRequester::channelStateChange(Channel::shared_pointer const &channel,
-                                     Channel::ConnectionState cstate) {
+void ChannelRequester::channelStateChange(
+    Channel::shared_pointer const &channel, Channel::ConnectionState cstate) {
   CLOG(7, 7, "channel state change: {}", channel_state_name(cstate));
   if (!channel) {
     CLOG(2, 2, "no channel, even though we should have.  state: {}",
@@ -262,7 +262,7 @@ ChannelRequester::channelStateChange(Channel::shared_pointer const &channel,
 FwdMonitorRequester::FwdMonitorRequester(EpicsClient_impl *epics_client_impl,
                                          std::string channel_name)
     : channel_name(channel_name), epics_client_impl(epics_client_impl) {
-  static std::atomic<uint32_t> __id{ 0 };
+  static std::atomic<uint32_t> __id{0};
   auto id = __id++;
   name = fmt::format("FwdMonitorRequester-{}", id);
   CLOG(7, 6, "FwdMonitorRequester {}", name);
@@ -301,10 +301,10 @@ void FwdMonitorRequester::monitorConnect(
   }
 }
 
-void
-FwdMonitorRequester::monitorEvent(::epics::pvData::MonitorPtr const &monitor) {
+void FwdMonitorRequester::monitorEvent(
+    ::epics::pvData::MonitorPtr const &monitor) {
   // CLOG(7, 7, "FwdMonitorRequester::monitorEvent");
-  std::vector<std::unique_ptr<FlatBufs::EpicsPVUpdate> > ups;
+  std::vector<std::unique_ptr<FlatBufs::EpicsPVUpdate>> ups;
   while (true) {
     auto ele = monitor->poll();
     if (!ele) {
@@ -313,8 +313,9 @@ FwdMonitorRequester::monitorEvent(::epics::pvData::MonitorPtr const &monitor) {
 
     uint64_t seq_data = 0;
     if (false) {
-      if (auto x = ele->pvStructurePtr->getSubField<
-              epics::pvData::PVScalarValue<uint64_t> >("seq")) {
+      if (auto x = ele->pvStructurePtr
+                       ->getSubField<epics::pvData::PVScalarValue<uint64_t>>(
+                           "seq")) {
         seq_data = x->get();
       }
     }
@@ -323,7 +324,8 @@ FwdMonitorRequester::monitorEvent(::epics::pvData::MonitorPtr const &monitor) {
     static_assert(sizeof(uint64_t) == sizeof(std::chrono::nanoseconds::rep),
                   "Types not compatible");
     uint64_t ts = std::chrono::duration_cast<std::chrono::nanoseconds>(
-        std::chrono::system_clock::now().time_since_epoch()).count();
+                      std::chrono::system_clock::now().time_since_epoch())
+                      .count();
 
     // Seems like MonitorElement always returns a Structure type ?
     // The inheritance diagram shows that scalars derive from Field, not from
@@ -443,7 +445,7 @@ EpicsClient_impl::~EpicsClient_impl() { CLOG(7, 7, "~EpicsClient_impl"); }
 
 int EpicsClient_impl::emit(std::unique_ptr<FlatBufs::EpicsPVUpdate> up) {
 #if TEST_PROVOKE_ERROR == 1
-  static std::atomic<int> c1{ 0 };
+  static std::atomic<int> c1{0};
   if (c1 > 10) {
     epics_client->error_in_epics();
   }

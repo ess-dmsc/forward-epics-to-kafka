@@ -1,7 +1,7 @@
 #include "epics-to-fb.h"
 #include "epics-pvstr.h"
-#include <pv/pvData.h>
 #include <pv/pvAccess.h>
+#include <pv/pvData.h>
 
 namespace BrightnESS {
 namespace FlatBufs {

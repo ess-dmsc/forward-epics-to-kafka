@@ -1,16 +1,16 @@
 #pragma once
 
-#include <memory>
-#include <atomic>
-#include <array>
-#include <vector>
-#include <string>
-#include "uri.h"
-#include "SchemaRegistry.h"
 #include "ConversionWorker.h"
 #include "Kafka.h"
-#include "Ring.h"
 #include "RangeSet.h"
+#include "Ring.h"
+#include "SchemaRegistry.h"
+#include "uri.h"
+#include <array>
+#include <atomic>
+#include <memory>
+#include <string>
+#include <vector>
 
 namespace BrightnESS {
 namespace ForwardEpicsToKafka {
@@ -38,7 +38,7 @@ public:
   ConversionPath(std::shared_ptr<Converter>, std::unique_ptr<KafkaOutput>);
   ~ConversionPath();
   int emit(std::unique_ptr<FlatBufs::EpicsPVUpdate> up);
-  std::atomic<uint32_t> transit{ 0 };
+  std::atomic<uint32_t> transit{0};
 
 private:
   std::shared_ptr<Converter> converter;
@@ -57,7 +57,7 @@ public:
                     uri::URI uri_kafka_output);
   int emit(std::unique_ptr<FlatBufs::EpicsPVUpdate> up);
   int32_t
-  fill_conversion_work(Ring<std::unique_ptr<ConversionWorkPacket> > &queue,
+  fill_conversion_work(Ring<std::unique_ptr<ConversionWorkPacket>> &queue,
                        uint32_t max, std::function<void(uint64_t)> on_seq_data);
   int stop();
   void error_in_epics();
@@ -71,10 +71,10 @@ private:
   // std::vector<std::shared_ptr<Converter>> converters;
   std::shared_ptr<ForwarderInfo> finfo;
   ChannelInfo channel_info_;
-  std::vector<std::unique_ptr<ConversionPath> > conversion_paths;
+  std::vector<std::unique_ptr<ConversionPath>> conversion_paths;
   std::unique_ptr<EpicsClient::EpicsClient> epics_client;
-  Ring<std::unique_ptr<FlatBufs::EpicsPVUpdate> > emit_queue;
-  std::atomic<int> status_{ 0 };
+  Ring<std::unique_ptr<FlatBufs::EpicsPVUpdate>> emit_queue;
+  std::atomic<int> status_{0};
   RangeSet<uint64_t> seq_data_emitted;
 };
 }

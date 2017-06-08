@@ -1,12 +1,12 @@
 #pragma once
+#include "ConversionWorker.h"
+#include "ForwarderInfo.h"
+#include "MainOpt.h"
+#include <algorithm>
+#include <atomic>
 #include <list>
 #include <map>
-#include <algorithm>
 #include <mutex>
-#include <atomic>
-#include "MainOpt.h"
-#include "ForwarderInfo.h"
-#include "ConversionWorker.h"
 
 namespace BrightnESS {
 namespace ForwardEpicsToKafka {
@@ -53,18 +53,18 @@ private:
   std::shared_ptr<Kafka::InstanceSet> kafka_instance_set;
   std::unique_ptr<Config::Listener> config_listener;
   std::mutex converters_mutex;
-  std::map<std::string, std::weak_ptr<Converter> > converters;
+  std::map<std::string, std::weak_ptr<Converter>> converters;
   std::mutex streams_mutex;
-  std::vector<std::unique_ptr<Stream> > streams;
+  std::vector<std::unique_ptr<Stream>> streams;
   std::mutex conversion_workers_mx;
-  std::vector<std::unique_ptr<ConversionWorker> > conversion_workers;
+  std::vector<std::unique_ptr<ConversionWorker>> conversion_workers;
   ConversionScheduler conversion_scheduler;
   friend class ConfigCB;
   friend class tests::Remote_T;
   friend class ConversionScheduler;
-  std::atomic<uint32_t> converter_ix{ 0 };
-  std::atomic<int32_t> forwarding_run{ 1 };
-  std::atomic<ForwardingStatus> forwarding_status{ ForwardingStatus::NORMAL };
+  std::atomic<uint32_t> converter_ix{0};
+  std::atomic<int32_t> forwarding_run{1};
+  std::atomic<ForwardingStatus> forwarding_status{ForwardingStatus::NORMAL};
   std::unique_ptr<stub_curl> curl;
 };
 

@@ -1,9 +1,9 @@
 #pragma once
 
+#include "KafkaW.h"
+#include <flatbuffers/flatbuffers.h>
 #include <memory>
 #include <utility>
-#include <flatbuffers/flatbuffers.h>
-#include "KafkaW.h"
 
 namespace BrightnESS {
 namespace FlatBufs {

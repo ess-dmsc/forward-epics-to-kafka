@@ -1,11 +1,11 @@
 #include "Stream.h"
 #include "Converter.h"
-#include "KafkaOutput.h"
-#include "logger.h"
 #include "EpicsClient.h"
-#include "epics-to-fb.h"
+#include "KafkaOutput.h"
 #include "epics-pvstr.h"
+#include "epics-to-fb.h"
 #include "helper.h"
+#include "logger.h"
 
 namespace BrightnESS {
 namespace ForwardEpicsToKafka {
@@ -50,8 +50,7 @@ Stream::Stream(std::shared_ptr<ForwarderInfo> finfo, ChannelInfo channel_info)
     auto x = new EpicsClient::EpicsClient(
         this, finfo, channel_info.provider_type, channel_info.channel_name);
     epics_client.reset(x);
-  }
-  catch (std::runtime_error &e) {
+  } catch (std::runtime_error &e) {
     throw std::runtime_error("can not construct Stream");
   }
 }
@@ -67,7 +66,7 @@ int Stream::converter_add(Kafka::InstanceSet &kset, Converter::sptr conv,
                           uri::URI uri_kafka_output) {
   auto pt = kset.producer_topic(uri_kafka_output);
   std::unique_ptr<ConversionPath> cp(new ConversionPath(
-      { std::move(conv) },
+      {std::move(conv)},
       std::unique_ptr<KafkaOutput>(new KafkaOutput(std::move(pt)))));
   conversion_paths.push_back(std::move(cp));
   return 0;
@@ -115,7 +114,7 @@ int Stream::emit(std::unique_ptr<FlatBufs::EpicsPVUpdate> up) {
 }
 
 int32_t
-Stream::fill_conversion_work(Ring<std::unique_ptr<ConversionWorkPacket> > &q2,
+Stream::fill_conversion_work(Ring<std::unique_ptr<ConversionWorkPacket>> &q2,
                              uint32_t max,
                              std::function<void(uint64_t)> on_seq_data) {
   auto &q1 = emit_queue;

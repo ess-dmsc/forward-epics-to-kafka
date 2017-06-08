@@ -1,9 +1,9 @@
 #pragma once
 
-#include <memory>
-#include <string>
 #include "fbschemas.h"
+#include <memory>
 #include <pv/pvData.h>
+#include <string>
 
 namespace BrightnESS {
 namespace FlatBufs {

@@ -1,51 +1,51 @@
-#include <array>
-#include <vector>
-#include <string>
 #include "../helper.h"
-#include <rapidjson/stringbuffer.h>
-#include <rapidjson/prettywriter.h>
+#include <array>
 #include <gtest/gtest.h>
+#include <rapidjson/prettywriter.h>
+#include <rapidjson/stringbuffer.h>
+#include <string>
+#include <vector>
 
 TEST(helper, split_01) {
   using std::vector;
   using std::string;
   auto v = split("", "");
-  ASSERT_TRUE(v == vector<string>({ "" }));
+  ASSERT_TRUE(v == vector<string>({""}));
 }
 
 TEST(helper, split_02) {
   using std::vector;
   using std::string;
   auto v = split("abc", "");
-  ASSERT_TRUE(v == vector<string>({ "abc" }));
+  ASSERT_TRUE(v == vector<string>({"abc"}));
 }
 
 TEST(helper, split_03) {
   using std::vector;
   using std::string;
   auto v = split("a/b", "/");
-  ASSERT_TRUE(v == vector<string>({ "a", "b" }));
+  ASSERT_TRUE(v == vector<string>({"a", "b"}));
 }
 
 TEST(helper, split_04) {
   using std::vector;
   using std::string;
   auto v = split("/a/b", "/");
-  ASSERT_TRUE(v == vector<string>({ "a", "b" }));
+  ASSERT_TRUE(v == vector<string>({"a", "b"}));
 }
 
 TEST(helper, split_05) {
   using std::vector;
   using std::string;
   auto v = split("ac/dc/", "/");
-  ASSERT_TRUE(v == vector<string>({ "ac", "dc" }));
+  ASSERT_TRUE(v == vector<string>({"ac", "dc"}));
 }
 
 TEST(helper, split_06) {
   using std::vector;
   using std::string;
   auto v = split("/ac/dc/", "/");
-  ASSERT_TRUE(v == vector<string>({ "ac", "dc" }));
+  ASSERT_TRUE(v == vector<string>({"ac", "dc"}));
 }
 
 TEST(helper, split_07) {
@@ -53,7 +53,7 @@ TEST(helper, split_07) {
   using std::string;
   auto v = split("/some/longer/thing/for/testing", "/");
   ASSERT_TRUE(v ==
-              vector<string>({ "some", "longer", "thing", "for", "testing" }));
+              vector<string>({"some", "longer", "thing", "for", "testing"}));
 }
 
 TEST(Sleep, sleep_ms) {

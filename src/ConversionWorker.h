@@ -1,11 +1,11 @@
 #pragma once
-#include "epics-to-fb.h"
+#include "RangeSet.h"
 #include "Ring.h"
 #include "Stream.h"
-#include "RangeSet.h"
-#include <thread>
+#include "epics-to-fb.h"
 #include <atomic>
 #include <mutex>
+#include <thread>
 
 namespace BrightnESS {
 namespace ForwardEpicsToKafka {
@@ -30,8 +30,8 @@ public:
   int run();
 
 private:
-  Ring<std::unique_ptr<ConversionWorkPacket> > queue;
-  std::atomic<uint32_t> do_run{ 0 };
+  Ring<std::unique_ptr<ConversionWorkPacket>> queue;
+  std::atomic<uint32_t> do_run{0};
   static std::atomic<uint32_t> s_id;
   uint32_t id;
   std::thread thr;
@@ -43,7 +43,7 @@ class ConversionScheduler {
 public:
   ConversionScheduler(Main *main);
   ~ConversionScheduler();
-  int fill(Ring<std::unique_ptr<ConversionWorkPacket> > &queue, uint32_t nfm,
+  int fill(Ring<std::unique_ptr<ConversionWorkPacket>> &queue, uint32_t nfm,
            uint32_t wid);
 
 private:

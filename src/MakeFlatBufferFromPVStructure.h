@@ -1,8 +1,8 @@
 #pragma once
-#include <memory>
-#include <map>
-#include <string>
 #include "fbschemas.h"
+#include <map>
+#include <memory>
+#include <string>
 
 namespace BrightnESS {
 namespace FlatBufs {

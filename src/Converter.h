@@ -1,11 +1,11 @@
 #pragma once
 
-#include <map>
-#include <string>
-#include "fbschemas.h"
+#include "MainOpt.h"
 #include "MakeFlatBufferFromPVStructure.h"
 #include "SchemaRegistry.h"
-#include "MainOpt.h"
+#include "fbschemas.h"
+#include <map>
+#include <string>
 
 namespace BrightnESS {
 namespace ForwardEpicsToKafka {

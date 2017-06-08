@@ -1,10 +1,10 @@
 #pragma once
+#include <algorithm>
+#include <fmt/format.h>
 #include <memory>
 #include <mutex>
 #include <rapidjson/document.h>
-#include <fmt/format.h>
 #include <set>
-#include <algorithm>
 
 // Represent inclusive range
 template <typename T> class Range {
@@ -22,7 +22,7 @@ public:
 
 template <typename T>
 constexpr bool operator<(Range<T> const &a, Range<T> const &b) {
-  return (a.a < b.a or(a.a == b.a and a.b < b.b));
+  return (a.a < b.a or (a.a == b.a and a.b < b.b));
 }
 
 template <typename T> bool is_gapless(Range<T> const &a, Range<T> const &b) {
@@ -123,6 +123,6 @@ public:
     return std::string(mw.c_str());
   }
 
-  std::set<Range<T> > set;
+  std::set<Range<T>> set;
   std::mutex mx;
 };

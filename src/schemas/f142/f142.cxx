@@ -1,18 +1,18 @@
+#include "../../RangeSet.h"
 #include "../../SchemaRegistry.h"
 #include "../../epics-pvstr.h"
 #include "../../epics-to-fb.h"
 #include "../../helper.h"
 #include "../../logger.h"
-#include "../../RangeSet.h"
 #include "schemas/f142_logdata_generated.h"
 #include <atomic>
 #include <mutex>
-#include <set>
 #include <pv/nt.h>
 #include <pv/ntndarray.h>
 #include <pv/ntndarrayAttribute.h>
 #include <pv/ntutils.h>
 #include <pv/pvEnumerated.h>
+#include <set>
 
 namespace BrightnESS {
 namespace FlatBufs {
@@ -173,7 +173,7 @@ public:
     T1 pv_builder(*builder);
     T0 val = field->get();
     pv_builder.add_value(val);
-    return { BuilderType_to_Enum_Value<T1>::v(), pv_builder.Finish().Union() };
+    return {BuilderType_to_Enum_Value<T1>::v(), pv_builder.Finish().Union()};
   }
 };
 
@@ -210,8 +210,9 @@ public:
                                       type>::type>::type>::type>::type>::type>::
               type>::type>::type;
 
-  using T3 = typename std::conditional<
-      std::is_same<T0, epics::pvData::boolean>::value, signed char, T0>::type;
+  using T3 =
+      typename std::conditional<std::is_same<T0, epics::pvData::boolean>::value,
+                                signed char, T0>::type;
 
   static Value_t convert(flatbuffers::FlatBufferBuilder *builder,
                          epics::pvData::PVScalarArray *field_, uint8_t opts) {
@@ -220,7 +221,7 @@ public:
     auto svec = field->view();
     auto nlen = svec.size();
 
-    flatbuffers::Offset<flatbuffers::Vector<T3> > val;
+    flatbuffers::Offset<flatbuffers::Vector<T3>> val;
     if (opts == 1) {
       T0 *p1 = nullptr;
       val =
@@ -232,7 +233,7 @@ public:
 
     T1 pv_builder(*builder);
     pv_builder.add_value(val);
-    return { BuilderType_to_Enum_Value<T1>::v(), pv_builder.Finish().Union() };
+    return {BuilderType_to_Enum_Value<T1>::v(), pv_builder.Finish().Union()};
   }
 };
 
@@ -271,7 +272,7 @@ Value_t make_Value_scalar(flatbuffers::FlatBufferBuilder &builder,
     LOG(5, "ERROR pvString not implemented yet");
     break;
   }
-  return { Value::NONE, 0 };
+  return {Value::NONE, 0};
 }
 
 Value_t make_Value_array(flatbuffers::FlatBufferBuilder &builder,
@@ -308,7 +309,7 @@ Value_t make_Value_array(flatbuffers::FlatBufferBuilder &builder,
     LOG(5, "ERROR pvString not implemented yet");
     break;
   }
-  return { Value::NONE, 0 };
+  return {Value::NONE, 0};
 }
 
 template <typename T> class release_deleter {
@@ -325,11 +326,11 @@ Value_t make_Value(flatbuffers::FlatBufferBuilder &builder,
                    epics::pvData::PVStructurePtr const &field_full,
                    uint8_t opts) {
   if (!field_full) {
-    return { Value::NONE, 0 };
+    return {Value::NONE, 0};
   }
   auto field = field_full->getSubField("value");
   if (!field) {
-    return { Value::NONE, 0 };
+    return {Value::NONE, 0};
   }
   // Check the type of 'value'
   // Optionally, compare with name of the PV?
@@ -370,7 +371,7 @@ Value_t make_Value(flatbuffers::FlatBufferBuilder &builder,
   case T::unionArray:
     break;
   }
-  return { Value::NONE, 0 };
+  return {Value::NONE, 0};
 }
 
 class Converter : public MakeFlatBufferFromPVStructure {
@@ -393,12 +394,12 @@ public:
       fb->seq = up.seq_fwd;
       fb->fwdix = up.fwdix;
       uint64_t seq_data = 0;
-      if (auto x = pvstr->getSubField<epics::pvData::PVScalarValue<uint64_t> >(
+      if (auto x = pvstr->getSubField<epics::pvData::PVScalarValue<uint64_t>>(
               "seq")) {
         seq_data = x->get();
       }
       uint64_t ts_data = 0;
-      if (auto x = pvstr->getSubField<epics::pvData::PVScalarValue<uint64_t> >(
+      if (auto x = pvstr->getSubField<epics::pvData::PVScalarValue<uint64_t>>(
               "ts")) {
         ts_data = x->get();
       }
@@ -421,13 +422,15 @@ public:
 
     if (auto pvTimeStamp =
             pvstr->getSubField<epics::pvData::PVStructure>("timeStamp")) {
-      uint64_t ts =
-          (uint64_t)
-          pvTimeStamp->getSubField<epics::pvData::PVScalarValue<int64_t> >(
-                           "secondsPastEpoch")->get();
+      uint64_t ts = (uint64_t)pvTimeStamp
+                        ->getSubField<epics::pvData::PVScalarValue<int64_t>>(
+                            "secondsPastEpoch")
+                        ->get();
       ts *= 1000000000;
-      ts += pvTimeStamp->getSubField<epics::pvData::PVScalarValue<int32_t> >(
-                             "nanoseconds")->get();
+      ts += pvTimeStamp
+                ->getSubField<epics::pvData::PVScalarValue<int32_t>>(
+                    "nanoseconds")
+                ->get();
       b.add_timestamp(ts);
     } else {
       LOG(5, "timeStamp on PV not available");
@@ -461,7 +464,7 @@ public:
   }
 
   std::map<std::string, double> stats() override {
-    return { { "ranges_n", seqs.size() } };
+    return {{"ranges_n", seqs.size()}};
   }
 
   RangeSet<uint64_t> seqs;
@@ -514,8 +517,8 @@ public:
     }
   }
 
-  std::atomic<uint32_t> had_int32{ 0 };
-  std::atomic<uint32_t> had_double{ 0 };
+  std::atomic<uint32_t> had_int32{0};
+  std::atomic<uint32_t> had_double{0};
 };
 
 class Info : public SchemaInfo {
@@ -539,8 +542,8 @@ MakeFlatBufferFromPVStructure::ptr InfoNamedConverter::create_converter() {
 FlatBufs::SchemaRegistry::Registrar<Info> g_registrar_info("f142",
                                                            Info::ptr(new Info));
 FlatBufs::SchemaRegistry::Registrar<Info>
-g_registrar_info_test_named_converter("f142-test-named-converter",
-                                      Info::ptr(new InfoNamedConverter));
+    g_registrar_info_test_named_converter("f142-test-named-converter",
+                                          Info::ptr(new InfoNamedConverter));
 } // namespace f142
 } // namespace FlatBufs
 } // namespace BrightnESS

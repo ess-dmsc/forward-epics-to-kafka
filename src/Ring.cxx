@@ -1,7 +1,7 @@
 #include "Ring.h"
-#include "logger.h"
-#include "epics-to-fb.h"
 #include "ConversionWorker.h"
+#include "epics-to-fb.h"
+#include "logger.h"
 
 namespace BrightnESS {
 namespace ForwardEpicsToKafka {
@@ -101,15 +101,15 @@ template <typename TP> std::pair<int, TP> Ring<TP>::pop_unsafe() {
   if (iR < iW) {
     auto &v = vec[iR];
     inc_R();
-    return { 0, std::move(v) };
+    return {0, std::move(v)};
   } else if (iR > iW) {
     auto &v = vec[iR];
     inc_R();
     // currently, we never invalidate already written items
-    return { 0, std::move(v) };
+    return {0, std::move(v)};
   }
   // empty
-  return { 1, nullptr };
+  return {1, nullptr};
 }
 
 template <typename TP> void Ring<TP>::inc_W() {
@@ -186,11 +186,19 @@ template <typename TP> std::vector<char> Ring<TP>::to_vec() {
 template <typename TP> std::vector<char> Ring<TP>::to_vec_unsafe() {
   std::vector<char> ret;
   uint32_t i1 = 0;
-  static char const *col1[] = { "",              "\x1b[1;31m",
-                                "\x1b[1;32m",    "\x1b[1;35m",
-                                "\x1b[40;97m",   "\x1b[40;1;31m",
-                                "\x1b[40;1;32m", "\x1b[40;1;35m", };
-  static char const *col2[] = { "", "\x1b[0;49m", };
+  static char const *col1[] = {
+      "",
+      "\x1b[1;31m",
+      "\x1b[1;32m",
+      "\x1b[1;35m",
+      "\x1b[40;97m",
+      "\x1b[40;1;31m",
+      "\x1b[40;1;32m",
+      "\x1b[40;1;35m",
+  };
+  static char const *col2[] = {
+      "", "\x1b[0;49m",
+  };
   for (auto &e : vec) {
     int n1 = 0;
     int n2 = 1;
@@ -237,7 +245,7 @@ template <typename TP> typename Ring<TP>::ulock Ring<TP>::lock() {
   return ulock(mx);
 }
 
-template class Ring<std::unique_ptr<FlatBufs::EpicsPVUpdate> >;
-template class Ring<std::unique_ptr<ConversionWorkPacket> >;
+template class Ring<std::unique_ptr<FlatBufs::EpicsPVUpdate>>;
+template class Ring<std::unique_ptr<ConversionWorkPacket>>;
 }
 }

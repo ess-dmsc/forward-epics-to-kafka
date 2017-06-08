@@ -1,6 +1,6 @@
-#include <gtest/gtest.h>
-#include "../logger.h"
 #include "../MainOpt.h"
+#include "../logger.h"
+#include <gtest/gtest.h>
 
 using namespace BrightnESS::ForwardEpicsToKafka;
 

@@ -49,12 +49,12 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <errno.h>
-#include <stdlib.h>
-#include <string.h>
 #include "wingetopt.h"
+#include <errno.h>
 #include <stdarg.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <windows.h>
 
 #define REPLACE_GETOPT /* use this getopt as the system getopt(3) */
@@ -191,9 +191,9 @@ static int parse_long_options(char *const *nargv, const char *options,
   int i, ambiguous, match;
 
 #define IDENTICAL_INTERPRETATION(_x, _y)                                       \
-  (long_options[(_x)].has_arg ==                                               \
-   long_options[(_y)].has_arg &&long_options[(_x)].flag ==                     \
-   long_options[(_y)].flag &&long_options[(_x)].val == long_options[(_y)].val)
+  (long_options[(_x)].has_arg == long_options[(_y)].has_arg &&                 \
+   long_options[(_x)].flag == long_options[(_y)].flag &&                       \
+   long_options[(_x)].val == long_options[(_y)].val)
 
   current_argv = place;
   match = -1;

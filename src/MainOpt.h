@@ -1,10 +1,10 @@
 #pragma once
-#include <vector>
-#include <string>
-#include <rapidjson/document.h>
-#include "uri.h"
 #include "KafkaW.h"
 #include "SchemaRegistry.h"
+#include "uri.h"
+#include <rapidjson/document.h>
+#include <string>
+#include <vector>
 
 class MainOpt_T;
 
@@ -18,7 +18,7 @@ struct MainOpt {
   MainOpt();
   void set_broker(string broker);
   std::string brokers_as_comma_list() const;
-  uri::URI broker_config{ "//localhost:9092/forward_epics_to_kafka_commands" };
+  uri::URI broker_config{"//localhost:9092/forward_epics_to_kafka_commands"};
   vector<uri::URI> brokers;
   string kafka_gelf = "";
   string graylog_logger_address = "";
@@ -41,6 +41,6 @@ struct MainOpt {
   friend class ::MainOpt_T;
 };
 
-std::pair<int, std::unique_ptr<MainOpt> > parse_opt(int argc, char **argv);
+std::pair<int, std::unique_ptr<MainOpt>> parse_opt(int argc, char **argv);
 }
 }
