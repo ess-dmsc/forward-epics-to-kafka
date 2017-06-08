@@ -95,8 +95,9 @@ int Stream::emit(std::unique_ptr<FlatBufs::EpicsPVUpdate> up) {
     }
     if (up) {
       // here we are, saying goodbye to a good buffer
+      // LOG(4, "loosing buffer {}", up->seq_data);
       up.reset();
-      // LOG(4, "loosing buffer");
+      return 1;
     }
     // auto s1 = emit_queue.to_vec();
     // LOG(9, "Queue {}\n{}", channel_info.channel_name, s1.data());
