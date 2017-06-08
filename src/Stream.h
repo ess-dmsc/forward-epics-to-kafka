@@ -75,6 +75,7 @@ private:
   std::unique_ptr<EpicsClient::EpicsClient> epics_client;
   Ring<std::unique_ptr<FlatBufs::EpicsPVUpdate> > emit_queue;
   std::atomic<int> status_{ 0 };
+  RangeSet<uint64_t> seq_data_emitted;
 };
 }
 }

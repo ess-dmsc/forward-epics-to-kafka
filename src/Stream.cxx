@@ -60,6 +60,7 @@ Stream::~Stream() {
   CLOG(7, 2, "~Stream");
   stop();
   CLOG(7, 2, "~Stop DONE");
+  LOG(6, "seq_data_emitted: {}", seq_data_emitted.to_string());
 }
 
 int Stream::converter_add(Kafka::InstanceSet &kset, Converter::sptr conv,
@@ -79,6 +80,7 @@ int Stream::emit(std::unique_ptr<FlatBufs::EpicsPVUpdate> up) {
     // should never happen, ignore
     return 0;
   }
+  auto seq_data = up->seq_data;
   if (true) {
     for (int i1 = 0; i1 < 256; ++i1) {
       auto x = emit_queue.push(up);
@@ -104,6 +106,9 @@ int Stream::emit(std::unique_ptr<FlatBufs::EpicsPVUpdate> up) {
     for (auto &cp : conversion_paths) {
       cp->emit(std::move(up));
     }
+  }
+  if (false) {
+    seq_data_emitted.insert(seq_data);
   }
   return 0;
 }
