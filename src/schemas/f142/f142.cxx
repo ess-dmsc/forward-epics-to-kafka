@@ -409,9 +409,9 @@ public:
       bf.add_fwdix(up.fwdix);
       bf.add_teamid(up.teamid);
       fwdinfo = bf.Finish().Union();
-      if (false) {
-        seqs.insert(seq_data);
-      }
+#ifdef TRACK_SEQ_DATA
+      seqs.insert(seq_data);
+#endif
     }
 
     LogDataBuilder b(*builder);
