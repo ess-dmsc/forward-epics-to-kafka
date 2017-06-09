@@ -1,4 +1,4 @@
-{
+R"***({
 	"$schema": "http://json-schema.org/schema#",
 	"id": "ess.schema.forward-epics-to-kafka.config-global",
 	"definitions": {
@@ -81,4 +81,4 @@
 		"converters": {"type":"object"}
 	},
 	"additionalProperties": false
-}
+})***"

@@ -4,7 +4,7 @@
 namespace BrightnESS {
 namespace ForwardEpicsToKafka {
 namespace blobs {
-extern std::vector<char> schema_config_global_json;
+extern char *schema_config_global_json;
 }
 }
 }

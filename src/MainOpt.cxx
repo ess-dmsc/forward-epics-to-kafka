@@ -67,8 +67,8 @@ int MainOpt::parse_json_file(string config_file) {
   using namespace rapidjson;
   Document schema_;
   try {
-    auto &s = blobs::schema_config_global_json;
-    schema_.Parse(s.data(), s.size());
+    schema_.Parse(blobs::schema_config_global_json,
+                  strlen(blobs::schema_config_global_json));
   }
   catch (...) {
     LOG(3, "schema is not valid!");
