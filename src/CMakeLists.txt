@@ -36,11 +36,11 @@ ${PROJECT_BINARY_DIR}/src
 )
 
 set(libraries_common
-libepicsbase
-libpvData
-libpvAccess
-libNormativeTypes
-librdkafka
+${path_library_epics_ca}
+${path_library_epics_pvData}
+${path_library_epics_pvAccess}
+${path_library_epics_NT}
+${RDKAFKA_LIBRARIES}
 ${CURL_LIBRARIES}
 ${PCREX_LIBRARIES}
 pthread
@@ -55,8 +55,6 @@ endif()
 if (CURL_FOUND)
 	list(APPEND compile_defs_common "HAVE_CURL=1")
 endif()
-
-
 
 
 set(SOURCES
