@@ -42,7 +42,7 @@ foreach (f0 ${flatbuffers_schemata2})
 		COMMAND ${FLATBUFFERS_FLATC_EXECUTABLE} --cpp --gen-mutable --gen-name-strings --scoped-enums "${path_include_streaming_data_types}/schemas/${fbs}"
 		DEPENDS "${path_include_streaming_data_types}/schemas/${fbs}"
 		WORKING_DIRECTORY "${head_out_dir}"
-		COMMENT "Process ${fbs} using ${flatc}"
+		COMMENT "Process ${fbs} using ${FLATBUFFERS_FLATC_EXECUTABLE}"
 	)
 	list(APPEND flatbuffers_generated_headers "${head_out_dir}/${fbh}")
 endforeach()
