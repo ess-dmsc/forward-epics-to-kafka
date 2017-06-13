@@ -47,8 +47,11 @@ ${path_library_epics_NT}
 ${RDKAFKA_LIBRARIES}
 ${CURL_LIBRARIES}
 ${PCREX_LIBRARIES}
-pthread
 )
+
+if(UNIX)
+    list(APPEND libraries_common pthread)
+endif(UNIX)
 
 set(compile_defs_common ${PCREX_COMPILER_DEFINITIONS})
 
