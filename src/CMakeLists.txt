@@ -111,6 +111,10 @@ add_dependencies(${tgt} flatbuffers_generate git_commit_current)
 target_compile_definitions(${tgt} PRIVATE ${compile_defs_common})
 target_include_directories(${tgt} PRIVATE ${path_include_common})
 
+if (WIN32)
+    target_link_libraries(${tgt} Ws2_32.lib)
+endif(WIN32)
+
 if (${GRAYLOGLOGGER_FOUND} AND ${USE_GRAYLOG_LOGGER})
     message(STATUS "Using graylog_logger")
     target_compile_definitions(${tgt} PRIVATE HAVE_GRAYLOG_LOGGER=1)
