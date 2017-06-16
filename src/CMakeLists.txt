@@ -100,17 +100,31 @@ endif (WIN32)
 set(tgt __objects)
 add_library(${tgt} OBJECT ${SOURCES})
 target_include_directories(${tgt} PRIVATE ${path_include_common})
-add_dependencies(${tgt} flatbuffers_generate xxd_generate git_commit_current)
+
+if (WIN32)
+    # Skip xxd_generate and git_commit_current
+    add_dependencies(${tgt} flatbuffers_generate)
+    set_target_properties(xxd_generate PROPERTIES EXCLUDE_FROM_ALL TRUE)
+    set_target_properties(git_commit_current PROPERTIES EXCLUDE_FROM_ALL TRUE)
+else()
+    add_dependencies(${tgt} flatbuffers_generate xxd_generate git_commit_current)
+endif(WIN32)
+
 target_compile_definitions(${tgt} PRIVATE ${compile_defs_common})
-
-
 
 set(tgt forward-epics-to-kafka)
 add_executable(${tgt}
 forward-epics-to-kafka.cxx
 $<TARGET_OBJECTS:__objects>
 )
-add_dependencies(${tgt} flatbuffers_generate git_commit_current)
+
+if (WIN32)
+    # Skip git_commit_current
+    add_dependencies(${tgt} flatbuffers_generate)
+else()
+    add_dependencies(${tgt} flatbuffers_generate git_commit_current)
+endif(WIN32)
+
 target_compile_definitions(${tgt} PRIVATE ${compile_defs_common})
 target_include_directories(${tgt} PRIVATE ${path_include_common})
 

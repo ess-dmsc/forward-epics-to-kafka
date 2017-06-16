@@ -19,11 +19,12 @@ endif()
 message(STATUS "path_include_streaming_data_types ${path_include_streaming_data_types}")
 
 if (NOT StreamingDataTypes_FIND_COMPONENTS STREQUAL "")
+    if (UNIX)
 add_custom_target(check_streaming_data_types ALL
 COMMAND bash -c '\(cd ${path_include_streaming_data_types} && git merge-base --is-ancestor ${StreamingDataTypes_FIND_COMPONENTS} HEAD \) || \( echo && echo ERROR\ Your\ streaming-data-types\ repository\ is\ too\ old\ we\ require\ at\ least\ ${StreamingDataTypes_FIND_COMPONENTS} && echo && exit 1 \) '
 )
+    endif(UNIX)
 endif()
-
 
 
 set(flatbuffers_generated_headers "")
