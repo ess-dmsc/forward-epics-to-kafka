@@ -233,7 +233,7 @@ void Main::forward_epics_to_kafka() {
   while (forwarding_run.load() == 1) {
     auto do_stats = false;
     auto t1 = CLK::now();
-    if (t1 - t_lf_last > MS(1000)) {
+    if (t1 - t_lf_last > MS(2000)) {
       if (config_listener) {
         config_listener->poll(config_cb);
       }
@@ -263,6 +263,7 @@ void Main::forward_epics_to_kafka() {
 }
 
 void Main::report_stats(int dt) {
+  fmt::MemoryWriter influxbuf;
   auto m1 = g__total_msgs_to_kafka.load();
   auto m2 = m1 / 1000;
   m1 = m1 % 1000;
@@ -276,7 +277,7 @@ void Main::report_stats(int dt) {
   if (stub_curl::use && main_opt.influx_url.size() != 0) {
     int i1 = 0;
     for (auto &s : kafka_instance_set->stats_all()) {
-      fmt::MemoryWriter m1;
+      auto &m1 = influxbuf;
       m1.write("forward-epics-to-kafka,hostname={},set={}",
                main_opt.hostname.data(), i1);
       m1.write(" produced={}", s.produced);
@@ -288,8 +289,7 @@ void Main::report_stats(int dt) {
       m1.write(",msg_too_large={}", s.msg_too_large);
       m1.write(",produced_bytes={}", double(s.produced_bytes));
       m1.write(",outq={}", s.outq);
-      LOG(6, "forwarder stats: {}", m1.c_str());
-      curl->send(m1, main_opt.influx_url);
+      m1.write("\n");
       ++i1;
     }
     {
@@ -298,7 +298,7 @@ void Main::report_stats(int dt) {
       i1 = 0;
       for (auto &c : converters) {
         auto stats = c.second.lock()->stats();
-        fmt::MemoryWriter m1;
+        auto &m1 = influxbuf;
         m1.write("forward-epics-to-kafka,hostname={},set={}",
                  main_opt.hostname.data(), i1);
         int i2 = 0;
@@ -311,12 +311,13 @@ void Main::report_stats(int dt) {
           m1.write("{}={}", x.first, x.second);
           ++i2;
         }
-        LOG(6, "converter {} stats: {}", i1, m1.c_str());
-        curl->send(m1, main_opt.influx_url);
+        m1.write("\n");
         ++i1;
       }
     }
   }
+  LOG(6, "influxbuf: {}", influxbuf.c_str());
+  curl->send(influxbuf, main_opt.influx_url);
 }
 
 void Main::check_stream_status() {
