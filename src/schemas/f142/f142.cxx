@@ -376,6 +376,12 @@ Value_t make_Value(flatbuffers::FlatBufferBuilder &builder,
 
 class Converter : public MakeFlatBufferFromPVStructure {
 public:
+  Converter() {
+#ifdef TRACK_SEQ_DATA
+    LOG(3, "Converter() with TRACK_SEQ_DATA");
+#endif
+  }
+
   ~Converter() override { LOG(3, "~Converter"); }
 
   BrightnESS::FlatBufs::FB_uptr convert(EpicsPVUpdate const &up) override {
