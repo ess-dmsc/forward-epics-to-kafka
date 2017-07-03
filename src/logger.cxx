@@ -8,8 +8,6 @@
 #include <iso646.h>
 #include <io.h>
 #define isatty _isatty
-#elif _AIX
-#include <unistd.h>
 #else
 #include <getopt.h>
 #include <unistd.h>
