@@ -4,7 +4,7 @@ namespace ForwardEpicsToKafka {
 namespace blobs {
 
 // Use raw string literal to load the config schema file
-char *schema_config_global_json{
+char const *schema_config_global_json{
 #include "schema-config-global.json"
 };
 }
