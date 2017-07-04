@@ -13,12 +13,19 @@ namespace f143 {
 #define DO_FLOG 1
 #if DO_FLOG
 using fmt::print;
+#ifdef _MSC_VER
+#define FLOG(level, fmt, ...)                                                  \
+  if (level < 60) {                                                            \
+    print("{:{}s}" fmt "\n", "", 2 * (level), __VA_ARGS__);                    \
+  }
+#else
 #define FLOG(level, fmt, args...)                                              \
   if (level < 60) {                                                            \
     print("{:{}s}" fmt "\n", "", 2 * (level), ##args);                         \
   }
+#endif
 #else
-#define FLOG(level, fmt, args...)
+#define FLOG(level, fmt, ...)
 #endif
 
 namespace fbg {

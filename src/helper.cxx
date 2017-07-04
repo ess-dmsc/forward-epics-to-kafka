@@ -1,6 +1,11 @@
 #include "helper.h"
 #include <fstream>
+#ifdef _MSC_VER
+#include "wingetopt.h"
+#else
 #include <unistd.h>
+#include <getopt.h>
+#endif
 #include <array>
 #include <vector>
 #include <string>

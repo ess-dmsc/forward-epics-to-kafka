@@ -27,7 +27,7 @@ template <typename TP> int Ring<TP>::resize(uint32_t n) {
 }
 
 template <typename TP> int Ring<TP>::resize_unsafe(uint32_t n) {
-  n = std::min(n, cap_max);
+  n = (std::min)(n, cap_max);
   if (n > capacity_unsafe()) {
     // CLOG(7, 1, "resize {}", n);
     if (iW >= iR) {

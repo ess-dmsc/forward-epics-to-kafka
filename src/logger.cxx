@@ -3,7 +3,15 @@
 #include <cstdio>
 #include <cstdarg>
 #include <cstring>
+#ifdef _MSC_VER
+#include "wingetopt.h"
+#include <iso646.h>
+#include <io.h>
+#define isatty _isatty
+#else
+#include <getopt.h>
 #include <unistd.h>
+#endif
 #include <atomic>
 #include <memory>
 #include <thread>

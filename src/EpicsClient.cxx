@@ -15,6 +15,9 @@
 #include "epics-to-fb.h"
 #include "epics-pvstr.h"
 #include "logger.h"
+#ifdef _MSC_VER
+#include <iso646.h>
+#endif
 
 namespace BrightnESS {
 namespace ForwardEpicsToKafka {

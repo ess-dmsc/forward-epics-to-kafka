@@ -2,12 +2,12 @@
 
 #ifdef _MSC_VER
 #include "wingetopt.h"
-#elif _AIX
-#include <unistd.h>
+#include <iso646.h>
+#include "WinSock2.h"
 #else
+#include <unistd.h>
 #include <getopt.h>
 #endif
-
 #include <rapidjson/writer.h>
 #include <rapidjson/prettywriter.h>
 #include <rapidjson/stringbuffer.h>
@@ -18,7 +18,6 @@
 #include "blobs.h"
 #include "SchemaRegistry.h"
 #include "git_commit_current.h"
-#include <unistd.h>
 
 namespace BrightnESS {
 namespace ForwardEpicsToKafka {
@@ -68,8 +67,8 @@ int MainOpt::parse_json_file(string config_file) {
   using namespace rapidjson;
   Document schema_;
   try {
-    auto &s = blobs::schema_config_global_json;
-    schema_.Parse(s.data(), s.size());
+    schema_.Parse(blobs::schema_config_global_json,
+                  strlen(blobs::schema_config_global_json));
   }
   catch (...) {
     LOG(3, "schema is not valid!");
@@ -229,10 +228,10 @@ std::pair<int, std::unique_ptr<MainOpt> > parse_opt(int argc, char **argv) {
       opt.help = true;
       break;
     case 'v':
-      log_level = std::min(9, log_level + 1);
+      log_level = (std::min)(9, log_level + 1);
       break;
     case 'Q':
-      log_level = std::max(0, log_level - 1);
+      log_level = (std::max)(0, log_level - 1);
       break;
     case 0:
       auto lname = long_options[option_index].name;
