@@ -2,6 +2,9 @@
 #include <memory>
 #include <mutex>
 #include <rapidjson/document.h>
+#include <fmt/format.h>
+#include <set>
+#include <algorithm>
 
 // Represent inclusive range
 template <typename T> class Range {
