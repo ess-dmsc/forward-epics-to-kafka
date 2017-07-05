@@ -1,9 +1,9 @@
 #pragma once
 #include <memory>
-#include <utility>
-#include <string>
-#include <vector>
 #include <rapidjson/document.h>
+#include <string>
+#include <utility>
+#include <vector>
 
 // note: this implementation does not disable this overload for array types
 template <typename T, typename... TX>

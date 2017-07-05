@@ -1,11 +1,11 @@
 #include "Stream.h"
 #include "Converter.h"
-#include "KafkaOutput.h"
-#include "logger.h"
 #include "EpicsClient.h"
-#include "epics-to-fb.h"
+#include "KafkaOutput.h"
 #include "epics-pvstr.h"
+#include "epics-to-fb.h"
 #include "helper.h"
+#include "logger.h"
 
 namespace BrightnESS {
 namespace ForwardEpicsToKafka {
@@ -32,7 +32,7 @@ ConversionPath::~ConversionPath() {
 int ConversionPath::emit(std::unique_ptr<FlatBufs::EpicsPVUpdate> up) {
   auto fb = converter->convert(*up);
   if (fb == nullptr) {
-    CLOG(8, 1, "empty converted flat buffer");
+    CLOG(6, 1, "empty converted flat buffer");
     return 1;
   }
   kafka_output->emit(std::move(fb));
@@ -50,8 +50,7 @@ Stream::Stream(std::shared_ptr<ForwarderInfo> finfo, ChannelInfo channel_info)
     auto x = new EpicsClient::EpicsClient(
         this, finfo, channel_info.provider_type, channel_info.channel_name);
     epics_client.reset(x);
-  }
-  catch (std::runtime_error &e) {
+  } catch (std::runtime_error &e) {
     throw std::runtime_error("can not construct Stream");
   }
 }
@@ -60,32 +59,33 @@ Stream::~Stream() {
   CLOG(7, 2, "~Stream");
   stop();
   CLOG(7, 2, "~Stop DONE");
+  LOG(6, "seq_data_emitted: {}", seq_data_emitted.to_string());
 }
 
 int Stream::converter_add(Kafka::InstanceSet &kset, Converter::sptr conv,
                           uri::URI uri_kafka_output) {
   auto pt = kset.producer_topic(uri_kafka_output);
   std::unique_ptr<ConversionPath> cp(new ConversionPath(
-      { std::move(conv) },
+      {std::move(conv)},
       std::unique_ptr<KafkaOutput>(new KafkaOutput(std::move(pt)))));
   conversion_paths.push_back(std::move(cp));
   return 0;
 }
 
 int Stream::emit(std::unique_ptr<FlatBufs::EpicsPVUpdate> up) {
-  CLOG(9, 7, "Stream::emit");
+  // CLOG(9, 7, "Stream::emit");
   if (!up) {
-    CLOG(7, 1, "empty update?");
+    CLOG(6, 1, "empty update?");
     // should never happen, ignore
     return 0;
   }
+  auto seq_data = up->seq_data;
   if (true) {
     for (int i1 = 0; i1 < 256; ++i1) {
       auto x = emit_queue.push(up);
-      if (x == 0)
+      if (x == 0) {
         break;
-      // sleep_ms(1);
-      // if (i1 == 20) {
+      }
       {
         // CLOG(9, 1, "buffer full {} times", i1);
         emit_queue.push_enlarge(up);
@@ -94,8 +94,9 @@ int Stream::emit(std::unique_ptr<FlatBufs::EpicsPVUpdate> up) {
     }
     if (up) {
       // here we are, saying goodbye to a good buffer
+      // LOG(4, "loosing buffer {}", up->seq_data);
       up.reset();
-      // LOG(4, "loosing buffer");
+      return 1;
     }
     // auto s1 = emit_queue.to_vec();
     // LOG(9, "Queue {}\n{}", channel_info.channel_name, s1.data());
@@ -106,12 +107,16 @@ int Stream::emit(std::unique_ptr<FlatBufs::EpicsPVUpdate> up) {
       cp->emit(std::move(up));
     }
   }
+  if (false) {
+    seq_data_emitted.insert(seq_data);
+  }
   return 0;
 }
 
 int32_t
-Stream::fill_conversion_work(Ring<std::unique_ptr<ConversionWorkPacket> > &q2,
-                             uint32_t max) {
+Stream::fill_conversion_work(Ring<std::unique_ptr<ConversionWorkPacket>> &q2,
+                             uint32_t max,
+                             std::function<void(uint64_t)> on_seq_data) {
   auto &q1 = emit_queue;
   uint32_t n0 = 0;
   uint32_t n1 = 0;
@@ -127,16 +132,17 @@ Stream::fill_conversion_work(Ring<std::unique_ptr<ConversionWorkPacket> > &q2,
     auto e = q1.pop_unsafe();
     n0 += 1;
     if (e.first != 0) {
-      CLOG(8, 1, "empty? should not happen");
+      CLOG(6, 1, "empty? should not happen");
       break;
     }
     auto &up = e.second;
     if (!up) {
-      LOG(8, "empty epics update");
+      LOG(6, "empty epics update");
       continue;
     }
     size_t cpid = 0;
     uint32_t ncp = conversion_paths.size();
+    on_seq_data(e.second->seq_data);
     for (auto &cp : conversion_paths) {
       auto p = std::unique_ptr<ConversionWorkPacket>(new ConversionWorkPacket);
       cwp_last[cpid] = p.get();
@@ -150,7 +156,7 @@ Stream::fill_conversion_work(Ring<std::unique_ptr<ConversionWorkPacket> > &q2,
       }
       auto x = q2.push_unsafe(p);
       if (x != 0) {
-        // CLOG(9, 1, "full? should not happen");
+        CLOG(6, 1, "full? should not happen");
         break;
       }
       cpid += 1;

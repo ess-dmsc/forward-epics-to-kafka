@@ -1,12 +1,12 @@
 #pragma once
 
-#include <memory>
+#include "KafkaW.h"
+#include "uri.h"
 #include <atomic>
 #include <chrono>
-#include <vector>
+#include <memory>
 #include <string>
-#include "uri.h"
-#include "KafkaW.h"
+#include <vector>
 
 namespace BrightnESS {
 namespace ForwardEpicsToKafka {

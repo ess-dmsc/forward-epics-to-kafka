@@ -1,23 +1,23 @@
-#include <gtest/gtest.h>
-#include <string>
-#include <array>
-#include <vector>
-#include <deque>
-#include <memory>
-#include <thread>
-#include <chrono>
-#include <atomic>
-#include <condition_variable>
-#include "tests.h"
+#include "Config.h"
+#include "Main.h"
+#include "MainOpt.h"
 #include "helper.h"
 #include "logger.h"
-#include "MainOpt.h"
-#include "Main.h"
-#include "Config.h"
 #include "schemas/f142_logdata_generated.h"
+#include "tests.h"
+#include <array>
+#include <atomic>
+#include <chrono>
+#include <condition_variable>
+#include <deque>
+#include <gtest/gtest.h>
+#include <memory>
 #include <rapidjson/document.h>
 #include <rapidjson/stringbuffer.h>
 #include <rapidjson/writer.h>
+#include <string>
+#include <thread>
+#include <vector>
 
 namespace BrightnESS {
 namespace ForwardEpicsToKafka {
@@ -37,7 +37,7 @@ class Consumer {
 public:
   Consumer(KafkaW::BrokerOpt bopt, string topic);
   void run();
-  std::atomic<int> do_run{ 1 };
+  std::atomic<int> do_run{1};
   KafkaW::BrokerOpt bopt;
   string topic;
   int msgs_good = 0;
@@ -55,14 +55,14 @@ Consumer::Consumer(KafkaW::BrokerOpt bopt, string topic)
 
 void Consumer::run() {
   KafkaW::Consumer consumer(bopt);
-  consumer.on_rebalance_assign = [this](
-      rd_kafka_topic_partition_list_t *plist) {
-    {
-      unique_lock<mutex> lock(mx);
-      catched_up = 1;
-    }
-    cv.notify_all();
-  };
+  consumer.on_rebalance_assign =
+      [this](rd_kafka_topic_partition_list_t *plist) {
+        {
+          unique_lock<mutex> lock(mx);
+          catched_up = 1;
+        }
+        cv.notify_all();
+      };
   consumer.add_topic(topic);
   while (do_run) {
     auto x = consumer.poll();
@@ -104,9 +104,9 @@ void Consumer::process_msg_impl(LogData const *fb) {}
 
 class ConsumerVerifier {
 public:
-  virtual int create(deque<uptr<Consumer> > &consumers,
+  virtual int create(deque<uptr<Consumer>> &consumers,
                      rapidjson::Value &d0) = 0;
-  virtual int verify(deque<uptr<Consumer> > &consumers) = 0;
+  virtual int verify(deque<uptr<Consumer>> &consumers) = 0;
 };
 
 class Remote_T : public testing::Test {
@@ -152,11 +152,9 @@ void Remote_T::simple_f142() {
   thread thr_forwarder([&main] {
     try {
       main.forward_epics_to_kafka();
-    }
-    catch (std::runtime_error &e) {
+    } catch (std::runtime_error &e) {
       LOG(0, "CATCH runtime error in main watchdog thread: {}", e.what());
-    }
-    catch (std::exception &e) {
+    } catch (std::exception &e) {
       LOG(0, "CATCH EXCEPTION in main watchdog thread");
     }
   });
@@ -186,9 +184,8 @@ void Remote_T::simple_f142() {
   LOG(4, "All done, test exit");
 }
 
-void
-Remote_T::simple_f142_via_config_message(string cmd_msg_fname,
-                                         ConsumerVerifier &consumer_verifier) {
+void Remote_T::simple_f142_via_config_message(
+    string cmd_msg_fname, ConsumerVerifier &consumer_verifier) {
   LOG(3, "This test should complete within about 30 seconds.");
   // Make a sample configuration with two streams
   auto msg = gulp(cmd_msg_fname);
@@ -196,7 +193,7 @@ Remote_T::simple_f142_via_config_message(string cmd_msg_fname,
   d0.Parse(msg.data(), msg.size());
   ASSERT_FALSE(d0.HasParseError());
 
-  deque<uptr<Consumer> > consumers;
+  deque<uptr<Consumer>> consumers;
   vector<thread> consumer_threads;
 
   consumer_verifier.create(consumers, d0);
@@ -219,11 +216,9 @@ Remote_T::simple_f142_via_config_message(string cmd_msg_fname,
   thread thr_forwarder([&main] {
     try {
       main->forward_epics_to_kafka();
-    }
-    catch (std::runtime_error &e) {
+    } catch (std::runtime_error &e) {
       LOG(0, "CATCH runtime error in main watchdog thread: {}", e.what());
-    }
-    catch (std::exception &e) {
+    } catch (std::exception &e) {
       LOG(0, "CATCH EXCEPTION in main watchdog thread");
     }
     LOG(7, "thr_forwarder done");
@@ -308,7 +303,7 @@ TEST_F(Remote_T, simple_f142) { Remote_T::simple_f142(); }
 
 TEST_F(Remote_T, simple_f142_via_config_message) {
   struct A : public ConsumerVerifier {
-    int create(deque<uptr<Consumer> > &consumers, rapidjson::Value &d0) {
+    int create(deque<uptr<Consumer>> &consumers, rapidjson::Value &d0) {
       int cid = 0;
       auto m = d0.FindMember("streams");
       if (m != d0.MemberEnd()) {
@@ -322,8 +317,8 @@ TEST_F(Remote_T, simple_f142_via_config_message) {
             bopt.address = Tests::main_opt->brokers_as_comma_list();
             auto channel = get_string(&s, "channel");
             auto mconv = s.FindMember("converter");
-            auto push_conv = [&cid, &consumers, &bopt, &channel](
-                rapidjson::Value &s) {
+            auto push_conv = [&cid, &consumers, &bopt,
+                              &channel](rapidjson::Value &s) {
               auto topic = get_string(&s, "topic");
               uri::URI topic_uri(topic);
               topic_uri.default_host(Tests::main_opt->brokers.at(0).host);
@@ -351,7 +346,7 @@ TEST_F(Remote_T, simple_f142_via_config_message) {
       }
       return 0;
     }
-    int verify(deque<uptr<Consumer> > &consumers) {
+    int verify(deque<uptr<Consumer>> &consumers) {
       int ret = 0;
       for (auto &c : consumers) {
         LOG(6, "Consumer received {} messages", c->msgs_good);
@@ -369,7 +364,7 @@ TEST_F(Remote_T, simple_f142_via_config_message) {
 
 TEST_F(Remote_T, named_converter) {
   struct Cons : public Consumer {
-    std::array<uint32_t, 2> had{ { 0, 0 } };
+    std::array<uint32_t, 2> had{{0, 0}};
     Cons(KafkaW::BrokerOpt bopt, string topic) : Consumer(bopt, topic) {}
     void process_msg_impl(LogData const *fb) {
       if (fb->value_type() == Value::ArrayUInt) {
@@ -380,7 +375,7 @@ TEST_F(Remote_T, named_converter) {
     }
   };
   struct A : public ConsumerVerifier {
-    int create(deque<uptr<Consumer> > &consumers, rapidjson::Value &d0) {
+    int create(deque<uptr<Consumer>> &consumers, rapidjson::Value &d0) {
       int cid = 0;
       auto m = d0.FindMember("streams");
       if (m != d0.MemberEnd()) {
@@ -394,8 +389,8 @@ TEST_F(Remote_T, named_converter) {
             bopt.address = Tests::main_opt->brokers_as_comma_list();
             auto channel = get_string(&s, "channel");
             auto mconv = s.FindMember("converter");
-            auto push_conv = [&cid, &consumers, &bopt, &channel](
-                rapidjson::Value &s) {
+            auto push_conv = [&cid, &consumers, &bopt,
+                              &channel](rapidjson::Value &s) {
               auto topic = get_string(&s, "topic");
               uri::URI topic_uri(topic);
               topic_uri.default_host(Tests::main_opt->brokers.at(0).host);
@@ -423,7 +418,7 @@ TEST_F(Remote_T, named_converter) {
       }
       return 0;
     }
-    int verify(deque<uptr<Consumer> > &consumers) {
+    int verify(deque<uptr<Consumer>> &consumers) {
       int ret = 0;
       for (auto &c_ : consumers) {
         auto &c = *(Cons *)c_.get();
@@ -450,7 +445,7 @@ TEST_F(Remote_T, different_brokers) {
   // Disabled because we have to use different brokers
   return;
   struct A : public ConsumerVerifier {
-    int create(deque<uptr<Consumer> > &consumers, rapidjson::Value &d0) {
+    int create(deque<uptr<Consumer>> &consumers, rapidjson::Value &d0) {
       int cid = 0;
       auto m = d0.FindMember("streams");
       if (m != d0.MemberEnd()) {
@@ -464,8 +459,8 @@ TEST_F(Remote_T, different_brokers) {
             bopt.address = Tests::main_opt->brokers_as_comma_list();
             auto channel = get_string(&s, "channel");
             auto mconv = s.FindMember("converter");
-            auto push_conv = [&cid, &consumers, &bopt, &channel](
-                rapidjson::Value &s) {
+            auto push_conv = [&cid, &consumers, &bopt,
+                              &channel](rapidjson::Value &s) {
               auto topic = get_string(&s, "topic");
               uri::URI topic_uri(topic);
               topic_uri.default_host(Tests::main_opt->brokers.at(0).host);
@@ -493,7 +488,7 @@ TEST_F(Remote_T, different_brokers) {
       }
       return 0;
     }
-    int verify(deque<uptr<Consumer> > &consumers) {
+    int verify(deque<uptr<Consumer>> &consumers) {
       int ret = 0;
       for (auto &c_ : consumers) {
         auto &c = *c_.get();

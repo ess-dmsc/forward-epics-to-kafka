@@ -1,23 +1,24 @@
 #include "MainOpt.h"
 
 #ifdef _MSC_VER
+#include "WinSock2.h"
 #include "wingetopt.h"
 #include <iso646.h>
-#include "WinSock2.h"
 #else
-#include <unistd.h>
 #include <getopt.h>
+#include <unistd.h>
 #endif
-#include <rapidjson/writer.h>
-#include <rapidjson/prettywriter.h>
-#include <rapidjson/stringbuffer.h>
-#include <rapidjson/filereadstream.h>
-#include <rapidjson/schema.h>
+#include "SchemaRegistry.h"
+#include "blobs.h"
+#include "git_commit_current.h"
 #include "helper.h"
 #include "logger.h"
-#include "blobs.h"
-#include "SchemaRegistry.h"
-#include "git_commit_current.h"
+#include <rapidjson/filereadstream.h>
+#include <rapidjson/prettywriter.h>
+#include <rapidjson/schema.h>
+#include <rapidjson/stringbuffer.h>
+#include <rapidjson/writer.h>
+#include <unistd.h>
 
 namespace BrightnESS {
 namespace ForwardEpicsToKafka {
@@ -69,8 +70,7 @@ int MainOpt::parse_json_file(string config_file) {
   try {
     schema_.Parse(blobs::schema_config_global_json,
                   strlen(blobs::schema_config_global_json));
-  }
-  catch (...) {
+  } catch (...) {
     LOG(3, "schema is not valid!");
     return -2;
   }
@@ -130,7 +130,7 @@ int MainOpt::parse_json_file(string config_file) {
   {
     auto &v = d.FindMember("broker-config")->value;
     if (v.IsString()) {
-      broker_config = { v.GetString() };
+      broker_config = {v.GetString()};
     }
   }
   {
@@ -186,23 +186,23 @@ int MainOpt::parse_json_file(string config_file) {
   return 0;
 }
 
-std::pair<int, std::unique_ptr<MainOpt> > parse_opt(int argc, char **argv) {
-  std::pair<int, std::unique_ptr<MainOpt> > ret{ 0, std::unique_ptr<MainOpt>(
-                                                        new MainOpt) };
+std::pair<int, std::unique_ptr<MainOpt>> parse_opt(int argc, char **argv) {
+  std::pair<int, std::unique_ptr<MainOpt>> ret{
+      0, std::unique_ptr<MainOpt>(new MainOpt)};
   auto &opt = *ret.second;
   static struct option long_options[] = {
-    { "help", no_argument, 0, 'h' },
-    { "broker-config", required_argument, 0, 0 },
-    { "broker", required_argument, 0, 0 },
-    { "kafka-gelf", required_argument, 0, 0 },
-    { "graylog-logger-address", required_argument, 0, 0 },
-    { "influx-url", required_argument, 0, 0 },
-    { "config-file", required_argument, 0, 0 },
-    { "log-file", required_argument, 0, 0 },
-    { "forwarder-ix", required_argument, 0, 0 },
-    { "write-per-message", required_argument, 0, 0 },
-    { "teamid", required_argument, 0, 0 },
-    { 0, 0, 0, 0 },
+      {"help", no_argument, 0, 'h'},
+      {"broker-config", required_argument, 0, 0},
+      {"broker", required_argument, 0, 0},
+      {"kafka-gelf", required_argument, 0, 0},
+      {"graylog-logger-address", required_argument, 0, 0},
+      {"influx-url", required_argument, 0, 0},
+      {"config-file", required_argument, 0, 0},
+      {"log-file", required_argument, 0, 0},
+      {"forwarder-ix", required_argument, 0, 0},
+      {"write-per-message", required_argument, 0, 0},
+      {"teamid", required_argument, 0, 0},
+      {0, 0, 0, 0},
   };
   int option_index = 0;
   bool getopt_error = false;

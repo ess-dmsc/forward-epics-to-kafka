@@ -1,6 +1,6 @@
 #include "tests.h"
-#include <gtest/gtest.h>
 #include "../MainOpt.h"
+#include <gtest/gtest.h>
 
 namespace BrightnESS {
 namespace ForwardEpicsToKafka {

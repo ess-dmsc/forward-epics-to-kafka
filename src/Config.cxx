@@ -1,8 +1,8 @@
 #include "Config.h"
 #include "logger.h"
+#include <condition_variable>
 #include <memory>
 #include <mutex>
-#include <condition_variable>
 
 namespace BrightnESS {
 namespace ForwardEpicsToKafka {
@@ -21,14 +21,14 @@ Listener::Listener(KafkaW::BrokerOpt bopt, uri::URI uri) {
   impl.reset(new Listener_impl);
   impl->consumer.reset(new KafkaW::Consumer(bopt));
   auto &consumer = *impl->consumer;
-  consumer.on_rebalance_assign = [this](
-      rd_kafka_topic_partition_list_t *plist) {
-    {
-      std::unique_lock<std::mutex> lock(impl->mx);
-      impl->connected = 1;
-    }
-    impl->cv.notify_all();
-  };
+  consumer.on_rebalance_assign =
+      [this](rd_kafka_topic_partition_list_t *plist) {
+        {
+          std::unique_lock<std::mutex> lock(impl->mx);
+          impl->connected = 1;
+        }
+        impl->cv.notify_all();
+      };
   consumer.on_rebalance_assign = {};
   consumer.on_rebalance_start = {};
   consumer.add_topic(uri.topic);
@@ -38,7 +38,7 @@ Listener::~Listener() {}
 
 void Listener::poll(Callback &cb) {
   if (auto m = impl->consumer->poll().is_Msg()) {
-    cb({(char *)m->data(), m->size() });
+    cb({(char *)m->data(), m->size()});
   }
 }
 

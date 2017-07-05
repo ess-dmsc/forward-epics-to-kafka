@@ -3,16 +3,18 @@
 #ifdef _MSC_VER
 #include "wingetopt.h"
 #else
-#include <unistd.h>
 #include <getopt.h>
+#include <unistd.h>
 #endif
+#include "logger.h"
 #include <array>
-#include <vector>
+#include <chrono>
+#include <fstream>
+#include <rapidjson/document.h>
 #include <string>
 #include <thread>
-#include <chrono>
-#include "logger.h"
-#include <rapidjson/document.h>
+#include <unistd.h>
+#include <vector>
 
 std::vector<char> gulp(std::string fname) {
   std::vector<char> ret;
@@ -34,7 +36,7 @@ std::vector<char> binary_to_hex(char const *data, int len) {
   for (int i1 = 0; i1 < len; ++i1) {
     auto c = (uint8_t)data[i1];
     for (auto &v :
-         std::array<uint8_t, 2>{ {(uint8_t)(c >> 4), (uint8_t)(c & 0x0f) } }) {
+         std::array<uint8_t, 2>{{(uint8_t)(c >> 4), (uint8_t)(c & 0x0f)}}) {
       if (v < 10)
         v += 48;
       else
@@ -54,7 +56,7 @@ std::vector<std::string> split(std::string const &input, std::string token) {
   using std::string;
   vector<string> ret;
   if (token.size() == 0)
-    return { input };
+    return {input};
   string::size_type i1 = 0;
   while (true) {
     auto i2 = input.find(token, i1);

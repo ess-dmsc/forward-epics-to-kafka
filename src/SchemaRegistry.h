@@ -1,9 +1,9 @@
 #pragma once
-#include <memory>
-#include <map>
-#include <string>
 #include "MakeFlatBufferFromPVStructure.h"
 #include "logger.h"
+#include <map>
+#include <memory>
+#include <string>
 
 namespace BrightnESS {
 namespace FlatBufs {

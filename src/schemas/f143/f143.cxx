@@ -1,7 +1,7 @@
-#include "../../logger.h"
 #include "../../SchemaRegistry.h"
-#include "../../epics-to-fb.h"
 #include "../../epics-pvstr.h"
+#include "../../epics-to-fb.h"
+#include "../../logger.h"
 #include "schemas/f143_structure_generated.h"
 
 namespace BrightnESS {
@@ -61,7 +61,7 @@ inline static V_t field_PVStructure(flatbuffers::FlatBufferBuilder &builder,
 
   // With the collected offsets, create object members
   // Collect raw vector of offsets to store later in flat buffer
-  vector<flatbuffers::Offset<ObjM> > f2;
+  vector<flatbuffers::Offset<ObjM>> f2;
   uint32_t i1 = 0;
   for (auto &x : fs) {
     FLOG(level, "off: {:5d}  {}", x.off.o, names[i1]);
@@ -77,7 +77,7 @@ inline static V_t field_PVStructure(flatbuffers::FlatBufferBuilder &builder,
 
   ObjBuilder bo(builder);
   bo.add_value(v1);
-  return { Value::Obj, bo.Finish().Union() };
+  return {Value::Obj, bo.Finish().Union()};
 }
 
 inline static V_t field_PVStructure_array(
@@ -86,7 +86,7 @@ inline static V_t field_PVStructure_array(
     int level) {
   auto view = field->view();
   FLOG(level, "structureArray  [size(): {}]", view.size());
-  vector<flatbuffers::Offset<Obj> > v1;
+  vector<flatbuffers::Offset<Obj>> v1;
   for (auto &x : view) {
     FLOG(level, "entry");
     auto sub = Field(builder, x.get(), 1 + level);
@@ -101,7 +101,7 @@ inline static V_t field_PVStructure_array(
   auto v2 = builder.CreateVector(v1);
   ArrayObjBuilder b(builder);
   b.add_value(v2);
-  return { Value::ArrayObj, b.Finish().Union() };
+  return {Value::ArrayObj, b.Finish().Union()};
 }
 
 inline static V_t field_PVScalar(flatbuffers::FlatBufferBuilder &builder,
@@ -117,7 +117,7 @@ inline static V_t field_PVScalar(flatbuffers::FlatBufferBuilder &builder,
     b.add_value(p1->get());                                                    \
     auto off = b.Finish().Union();                                             \
     FLOG(level, "off: {}  v: {}", off.o, p1->get());                           \
-    return { Value::VT, off };                                                 \
+    return {Value::VT, off};                                                   \
   }
   M(int8_t, ByteBuilder, pvByte, Byte);
   M(int16_t, ShortBuilder, pvShort, Short);
@@ -137,7 +137,7 @@ inline static V_t field_PVScalar(flatbuffers::FlatBufferBuilder &builder,
     auto s1 = builder.CreateString(p1->get());
     StringBuilder b(builder);
     b.add_value(s1);
-    return { Value::String, b.Finish().Union() };
+    return {Value::String, b.Finish().Union()};
   }
   if (stype == epics::pvData::ScalarType::pvBoolean) {
     FLOG(level, "WARNING boolean handled as byte");
@@ -147,9 +147,9 @@ inline static V_t field_PVScalar(flatbuffers::FlatBufferBuilder &builder,
     b.add_value(p1->get());
     auto off = b.Finish().Union();
     FLOG(level, "off: {}", off.o);
-    return { Value::Byte, off };
+    return {Value::Byte, off};
   }
-  return { Value::NONE, 0 };
+  return {Value::NONE, 0};
 }
 
 inline static V_t
@@ -168,7 +168,7 @@ field_PVScalar_array(flatbuffers::FlatBufferBuilder &builder,
     memcpy(a1, view.data(), sizeof(TC) * view.size());                         \
     TB b(builder);                                                             \
     b.add_value(v1);                                                           \
-    return { Value::TF, b.Finish().Union() };                                  \
+    return {Value::TF, b.Finish().Union()};                                    \
   }
   M(int8_t, ArrayByteBuilder, ArrayByte, pvByte);
   M(int16_t, ArrayShortBuilder, ArrayShort, pvShort);
@@ -187,22 +187,22 @@ field_PVScalar_array(flatbuffers::FlatBufferBuilder &builder,
         reinterpret_cast<epics::pvData::PVValueArray<std::string> const *>(
             field);
     FLOG(level, "WARNING serializing string arrays is disabled...");
-    return { Value::NONE, 0 };
+    return {Value::NONE, 0};
     auto view = p1->view();
-    vector<flatbuffers::Offset<flatbuffers::String> > v1;
+    vector<flatbuffers::Offset<flatbuffers::String>> v1;
     for (auto &s0 : view) {
       v1.push_back(builder.CreateString(s0));
     }
     auto v2 = builder.CreateVector(v1);
     ArrayStringBuilder b(builder);
     b.add_value(v2);
-    return { Value::ArrayString, b.Finish().Union() };
+    return {Value::ArrayString, b.Finish().Union()};
   }
   if (stype == epics::pvData::ScalarType::pvBoolean) {
     FLOG(level, "WARNING array of booleans are not handled so far");
-    return { Value::NONE, 0 };
+    return {Value::NONE, 0};
   }
-  return { Value::NONE, 0 };
+  return {Value::NONE, 0};
 }
 
 inline static V_t field_PVUnion(flatbuffers::FlatBufferBuilder &builder,
@@ -214,7 +214,7 @@ inline static V_t field_PVUnion(flatbuffers::FlatBufferBuilder &builder,
     return Field(builder, f3.get(), 1 + level);
   }
   // The union does not contain anything:
-  return { Value::NONE, 0 };
+  return {Value::NONE, 0};
 }
 
 V_t Field(flatbuffers::FlatBufferBuilder &builder,
@@ -247,11 +247,11 @@ V_t Field(flatbuffers::FlatBufferBuilder &builder,
         level + 1);
   } else if (etype == epics::pvData::Type::unionArray) {
     FLOG(level, "union array not yet supported");
-    return { Value::NONE, 0 };
+    return {Value::NONE, 0};
   }
 
   FLOG(level, "ERROR unknown type");
-  return { Value::NONE, 0 };
+  return {Value::NONE, 0};
 }
 
 V_t Field(flatbuffers::FlatBufferBuilder &builder,
@@ -273,17 +273,17 @@ public:
       // Was only interesting for forwarder testing
       fwdinfo_1_tBuilder bf(*builder);
       uint64_t seq_data = 0;
-      if (auto x = pvstr->getSubField<epics::pvData::PVScalarValue<uint64_t> >(
+      if (auto x = pvstr->getSubField<epics::pvData::PVScalarValue<uint64_t>>(
               "seq")) {
         seq_data = x->get();
       }
       uint64_t ts_data = 0;
-      if (auto x = pvstr->getSubField<epics::pvData::PVScalarValue<uint64_t> >(
+      if (auto x = pvstr->getSubField<epics::pvData::PVScalarValue<uint64_t>>(
               "ts")) {
         ts_data = x->get();
       }
       bf.add_seq_data(seq_data);
-      bf.add_seq_fwd(up.seq);
+      bf.add_seq_fwd(up.seq_fwd);
       bf.add_ts_data(ts_data);
       bf.add_ts_fwd(up.ts_epics_monitor);
       bf.add_fwdix(up.fwdix);
@@ -299,13 +299,15 @@ public:
     b.add_value(vF.off);
     if (auto pvTimeStamp =
             pvstr->getSubField<epics::pvData::PVStructure>("timeStamp")) {
-      uint64_t ts =
-          (uint64_t)
-          pvTimeStamp->getSubField<epics::pvData::PVScalarValue<int64_t> >(
-                           "secondsPastEpoch")->get();
+      uint64_t ts = (uint64_t)pvTimeStamp
+                        ->getSubField<epics::pvData::PVScalarValue<int64_t>>(
+                            "secondsPastEpoch")
+                        ->get();
       ts *= 1000000000;
-      ts += pvTimeStamp->getSubField<epics::pvData::PVScalarValue<int32_t> >(
-                             "nanoseconds")->get();
+      ts += pvTimeStamp
+                ->getSubField<epics::pvData::PVScalarValue<int32_t>>(
+                    "nanoseconds")
+                ->get();
       b.add_timestamp(ts);
     }
     b.add_fwdinfo_type(forwarder_internal::fwdinfo_1_t);

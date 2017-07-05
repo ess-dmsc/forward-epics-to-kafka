@@ -1,6 +1,6 @@
 #include "fbschemas.h"
-#include <flatbuffers/reflection.h>
 #include "logger.h"
+#include <flatbuffers/reflection.h>
 
 namespace BrightnESS {
 namespace FlatBufs {
@@ -42,10 +42,10 @@ Called when actually writing to Kafka.
 FBmsg FB::message() {
   if (!builder) {
     CLOG(8, 1, "builder no longer available");
-    return { nullptr, 0 };
+    return {nullptr, 0};
   }
-  auto ret = decltype(FB::message()) { builder->GetBufferPointer(),
-                                       builder->GetSize() };
+  auto ret =
+      decltype(FB::message()){builder->GetBufferPointer(), builder->GetSize()};
   return ret;
 }
 

@@ -3,8 +3,8 @@
 #ifndef use_pcre2
 #define use_pcre2 0
 #endif
-#include <string>
 #include <array>
+#include <string>
 #if use_pcre2
 #define PCRE2_CODE_UNIT_WIDTH 8
 #include <pcre2.h>

@@ -53,5 +53,7 @@ BrightnESS::FlatBufs::FB_uptr
 Converter::convert(FlatBufs::EpicsPVUpdate const &up) {
   return conv->convert(up);
 }
+
+std::map<std::string, double> Converter::stats() { return conv->stats(); }
 }
 }

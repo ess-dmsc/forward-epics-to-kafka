@@ -33,7 +33,7 @@ string MD::substr(int i) {
     return string();
   string::size_type n(ov[1] - ov[0]);
   if (n > 0)
-    return {(char *)subject + ov[0], n };
+    return {(char *)subject + ov[0], n};
   return string();
 }
 #else
@@ -48,7 +48,7 @@ string MD::substr(int i) {
     return string();
   string::size_type n(ov[1] - ov[0]);
   if (n > 0)
-    return { subject + ov[0], n };
+    return {subject + ov[0], n};
   return string();
 }
 #endif

@@ -1,12 +1,12 @@
 #pragma once
-#include <memory>
-#include <atomic>
-#include <mutex>
-#include <array>
-#include <vector>
-#include <string>
 #include "epics-to-fb.h"
 #include "logger.h"
+#include <array>
+#include <atomic>
+#include <memory>
+#include <mutex>
+#include <string>
+#include <vector>
 
 namespace BrightnESS {
 namespace ForwardEpicsToKafka {

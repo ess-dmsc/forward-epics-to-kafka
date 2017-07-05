@@ -6,21 +6,21 @@ Manage the running Kafka producer instances.
 Simple load balance over the available producers.
 */
 
-#include <memory>
 #include <atomic>
+#include <map>
+#include <memory>
 #include <mutex>
+#include <string>
 #include <thread>
 #include <vector>
-#include <map>
-#include <string>
 
 #include "tools.h"
 #include "uri.h"
 
-#include <librdkafka/rdkafka.h>
+#include "KafkaW.h"
 #include "fbhelper.h"
 #include "fbschemas.h"
-#include "KafkaW.h"
+#include <librdkafka/rdkafka.h>
 
 namespace BrightnESS {
 namespace ForwardEpicsToKafka {
@@ -41,7 +41,7 @@ private:
   InstanceSet(KafkaW::BrokerOpt opt);
   KafkaW::BrokerOpt opt;
   std::mutex mx_producers_by_host;
-  std::map<std::string, std::shared_ptr<KafkaW::Producer> > producers_by_host;
+  std::map<std::string, std::shared_ptr<KafkaW::Producer>> producers_by_host;
 };
 }
 }

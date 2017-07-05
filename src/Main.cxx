@@ -1,21 +1,21 @@
 #include "Main.h"
-#include "helper.h"
-#include "logger.h"
 #include "Config.h"
 #include "Converter.h"
-#include "Stream.h"
 #include "ForwarderInfo.h"
+#include "Stream.h"
+#include "helper.h"
+#include "logger.h"
 #include <sys/types.h>
 #if HAVE_CURL
 #include <curl/curl.h>
 #endif
 #ifdef _MSC_VER
-#include "wingetopt.h"
 #include "process.h"
+#include "wingetopt.h"
 #define getpid _getpid
 #else
-#include <unistd.h>
 #include <getopt.h>
+#include <unistd.h>
 #endif
 
 namespace BrightnESS {
@@ -90,7 +90,7 @@ Main::Main(MainOpt &opt)
     KafkaW::BrokerOpt bopt;
     bopt.conf_strings["group.id"] =
         fmt::format("forwarder-command-listener--pid{}", getpid());
-    config_listener.reset(new Config::Listener{ bopt, main_opt.broker_config });
+    config_listener.reset(new Config::Listener{bopt, main_opt.broker_config});
   }
   if (main_opt.json) {
     auto m1 = main_opt.json->FindMember("streams");
@@ -109,6 +109,7 @@ Main::~Main() {
   LOG(7, "~Main");
   streams_clear();
   conversion_workers_clear();
+  converters_clear();
 }
 
 /**
@@ -119,7 +120,7 @@ public:
   ConfigCB(Main &main);
   // This is called from the same thread as the main watchdog below, because the
   // code below calls the config poll which in turn calls this callback.
-  void operator()(std::string const &msg)override;
+  void operator()(std::string const &msg) override;
 
 private:
   Main &main;
@@ -195,8 +196,20 @@ int Main::conversion_workers_clear() {
   return 0;
 }
 
+int Main::converters_clear() {
+  if (conversion_workers.size() > 0) {
+    std::unique_lock<std::mutex> lock(converters_mutex);
+    conversion_workers.clear();
+  }
+  return 0;
+}
+
 std::unique_lock<std::mutex> Main::get_lock_streams() {
   return std::unique_lock<std::mutex>(streams_mutex);
+}
+
+std::unique_lock<std::mutex> Main::get_lock_converters() {
+  return std::unique_lock<std::mutex>(converters_mutex);
 }
 
 /**
@@ -220,7 +233,7 @@ void Main::forward_epics_to_kafka() {
   while (forwarding_run.load() == 1) {
     auto do_stats = false;
     auto t1 = CLK::now();
-    if (t1 - t_lf_last > MS(1000)) {
+    if (t1 - t_lf_last > MS(2000)) {
       if (config_listener) {
         config_listener->poll(config_cb);
       }
@@ -250,6 +263,7 @@ void Main::forward_epics_to_kafka() {
 }
 
 void Main::report_stats(int dt) {
+  fmt::MemoryWriter influxbuf;
   auto m1 = g__total_msgs_to_kafka.load();
   auto m2 = m1 / 1000;
   m1 = m1 % 1000;
@@ -261,9 +275,11 @@ void Main::report_stats(int dt) {
   LOG(6, "dt: {:4}  m: {:4}.{:03}  b: {:3}.{:03}.{:03}", dt, m2, m1, b3, b2,
       b1);
   if (stub_curl::use && main_opt.influx_url.size() != 0) {
-    fmt::MemoryWriter m1;
-    m1.write("forward-epics-to-kafka,hostname={}", main_opt.hostname.data());
+    int i1 = 0;
     for (auto &s : kafka_instance_set->stats_all()) {
+      auto &m1 = influxbuf;
+      m1.write("forward-epics-to-kafka,hostname={},set={}",
+               main_opt.hostname.data(), i1);
       m1.write(" produced={}", s.produced);
       m1.write(",produce_fail={}", s.produce_fail);
       m1.write(",local_queue_full={}", s.local_queue_full);
@@ -273,9 +289,35 @@ void Main::report_stats(int dt) {
       m1.write(",msg_too_large={}", s.msg_too_large);
       m1.write(",produced_bytes={}", double(s.produced_bytes));
       m1.write(",outq={}", s.outq);
+      m1.write("\n");
+      ++i1;
     }
-    curl->send(m1, main_opt.influx_url);
+    {
+      auto lock = get_lock_converters();
+      LOG(6, "N converters: {}", converters.size());
+      i1 = 0;
+      for (auto &c : converters) {
+        auto stats = c.second.lock()->stats();
+        auto &m1 = influxbuf;
+        m1.write("forward-epics-to-kafka,hostname={},set={}",
+                 main_opt.hostname.data(), i1);
+        int i2 = 0;
+        for (auto x : stats) {
+          if (i2 > 0) {
+            m1.write(",");
+          } else {
+            m1.write(" ");
+          }
+          m1.write("{}={}", x.first, x.second);
+          ++i2;
+        }
+        m1.write("\n");
+        ++i1;
+      }
+    }
   }
+  LOG(6, "influxbuf: {}", influxbuf.c_str());
+  curl->send(influxbuf, main_opt.influx_url);
 }
 
 void Main::check_stream_status() {
@@ -321,9 +363,8 @@ int Main::mapping_add(rapidjson::Value &mapping) {
   }
   std::unique_lock<std::mutex> lock(streams_mutex);
   try {
-    streams.emplace_back(new Stream(finfo, { channel_provider_type, channel }));
-  }
-  catch (std::runtime_error &e) {
+    streams.emplace_back(new Stream(finfo, {channel_provider_type, channel}));
+  } catch (std::runtime_error &e) {
     return -1;
   }
   auto &stream = streams.back();
@@ -338,6 +379,9 @@ int Main::mapping_add(rapidjson::Value &mapping) {
       if (topic.size() == 0) {
         LOG(3, "mapping topic is not specified");
       }
+      if (cname.size() == 0) {
+        cname = fmt::format("converter_{}", converter_ix++);
+      }
       uri::URI topic_uri(topic);
       auto r1 = main_opt.schema_registry.items().find(schema);
       if (r1 == main_opt.schema_registry.items().end()) {
@@ -351,7 +395,7 @@ int Main::mapping_add(rapidjson::Value &mapping) {
       topic_uri.default_port(uri.port);
       Converter::sptr conv;
       if (cname.size() > 0) {
-        ulock(mutex_converters);
+        auto lock = get_lock_converters();
         auto c1 = converters.find(cname);
         if (c1 != converters.end()) {
           conv = c1->second.lock();
@@ -387,8 +431,8 @@ int Main::mapping_add(rapidjson::Value &mapping) {
   return 0;
 }
 
-std::atomic<uint64_t> g__total_msgs_to_kafka{ 0 };
-std::atomic<uint64_t> g__total_bytes_to_kafka{ 0 };
+std::atomic<uint64_t> g__total_msgs_to_kafka{0};
+std::atomic<uint64_t> g__total_bytes_to_kafka{0};
 
 void Main::forwarding_exit() { forwarding_run.store(0); }
 }

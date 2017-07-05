@@ -1,8 +1,8 @@
 #include "ConversionWorker.h"
-#include "logger.h"
-#include <thread>
-#include <chrono>
 #include "Main.h"
+#include "logger.h"
+#include <chrono>
+#include <thread>
 
 namespace BrightnESS {
 namespace ForwardEpicsToKafka {
@@ -69,13 +69,13 @@ int ConversionWorker::run() {
   return 0;
 }
 
-std::atomic<uint32_t> ConversionWorker::s_id{ 0 };
+std::atomic<uint32_t> ConversionWorker::s_id{0};
 
 ConversionScheduler::ConversionScheduler(Main *main) : main(main) {}
 
-int
-ConversionScheduler::fill(Ring<std::unique_ptr<ConversionWorkPacket> > &queue,
-                          uint32_t const nfm, uint32_t wid) {
+int ConversionScheduler::fill(
+    Ring<std::unique_ptr<ConversionWorkPacket>> &queue, uint32_t const nfm,
+    uint32_t wid) {
   std::unique_lock<std::mutex> lock(mx);
   if (main->streams.size() == 0) {
     return 0;
@@ -87,7 +87,13 @@ ConversionScheduler::fill(Ring<std::unique_ptr<ConversionWorkPacket> > &queue,
   }
   auto sid0 = sid;
   while (nfc < nfm) {
-    auto n1 = main->streams[sid]->fill_conversion_work(queue, nfm - nfc);
+    auto track_seq_data = [&](uint64_t seq_data) {
+      if (false) {
+        seq_data_enqueued.insert(seq_data);
+      }
+    };
+    auto n1 = main->streams[sid]->fill_conversion_work(queue, nfm - nfc,
+                                                       track_seq_data);
     if (n1 > 0) {
       CLOG(7, 3, "Give worker {:2}  items: {:3}  stream: {:3}", wid, n1, sid);
     }
@@ -100,6 +106,11 @@ ConversionScheduler::fill(Ring<std::unique_ptr<ConversionWorkPacket> > &queue,
       break;
   }
   return nfc;
+}
+
+ConversionScheduler::~ConversionScheduler() {
+  LOG(6, "~ConversionScheduler  seq_data_enqueued {}",
+      seq_data_enqueued.to_string());
 }
 }
 }

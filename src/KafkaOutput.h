@@ -1,7 +1,7 @@
 #pragma once
-#include <memory>
-#include "fbschemas.h"
 #include "KafkaW.h"
+#include "fbschemas.h"
+#include <memory>
 
 namespace BrightnESS {
 namespace ForwardEpicsToKafka {

@@ -1,8 +1,8 @@
-#include "logger.h"
 #include "SchemaRegistry.h"
-#include "schemas/f140_general_generated.h"
-#include "epics-to-fb.h"
 #include "epics-pvstr.h"
+#include "epics-to-fb.h"
+#include "logger.h"
+#include "schemas/f140_general_generated.h"
 
 namespace BrightnESS {
 namespace FlatBufs {
@@ -57,7 +57,7 @@ inline static F_t field_PVStructure(flatbuffers::FlatBufferBuilder &builder,
 
   // With the collected offsets, create object members
   // Collect raw vector of offsets to store later in flat buffer
-  vector<flatbuffers::Offset<ObjM> > f2;
+  vector<flatbuffers::Offset<ObjM>> f2;
   for (auto &x : fs) {
     ObjMBuilder b1(builder);
     b1.add_v_type(x.type);
@@ -68,7 +68,7 @@ inline static F_t field_PVStructure(flatbuffers::FlatBufferBuilder &builder,
 
   ObjBuilder bo(builder);
   bo.add_ms(v1);
-  return { F::Obj, bo.Finish().Union() };
+  return {F::Obj, bo.Finish().Union()};
 }
 
 inline static F_t field_PVStructure_array(
@@ -77,7 +77,7 @@ inline static F_t field_PVStructure_array(
     int level) {
   auto view = field->view();
   FLOG(level, "structureArray  [size(): {}]", view.size());
-  vector<flatbuffers::Offset<Obj> > v1;
+  vector<flatbuffers::Offset<Obj>> v1;
   for (auto &x : view) {
     FLOG(level, "entry");
     auto sub = Field(builder, x.get(), 1 + level);
@@ -89,7 +89,7 @@ inline static F_t field_PVStructure_array(
   auto v2 = builder.CreateVector(v1);
   Obj_aBuilder b(builder);
   b.add_v(v2);
-  return { F::Obj_a, b.Finish().Union() };
+  return {F::Obj_a, b.Finish().Union()};
 }
 
 inline static F_t field_PVScalar(flatbuffers::FlatBufferBuilder &builder,
@@ -105,7 +105,7 @@ inline static F_t field_PVScalar(flatbuffers::FlatBufferBuilder &builder,
     b.add_v(p1->get());                                                        \
     auto off = b.Finish().Union();                                             \
     FLOG(level, "off: {}  v: {}", off.o, p1->get());                           \
-    return { F::E, off };                                                      \
+    return {F::E, off};                                                        \
   }
   M(int8_t, pvByteBuilder, pvByte);
   M(int16_t, pvShortBuilder, pvShort);
@@ -125,7 +125,7 @@ inline static F_t field_PVScalar(flatbuffers::FlatBufferBuilder &builder,
     auto s1 = builder.CreateString(p1->get());
     pvStringBuilder b(builder);
     b.add_v(s1);
-    return { F::pvString, b.Finish().Union() };
+    return {F::pvString, b.Finish().Union()};
   }
   if (stype == epics::pvData::ScalarType::pvBoolean) {
     FLOG(level, "WARNING boolean handled as byte");
@@ -135,9 +135,9 @@ inline static F_t field_PVScalar(flatbuffers::FlatBufferBuilder &builder,
     b.add_v(p1->get());
     auto off = b.Finish().Union();
     FLOG(level, "off: {}", off.o);
-    return { F::pvByte, off };
+    return {F::pvByte, off};
   }
-  return { F::NONE, 0 };
+  return {F::NONE, 0};
 }
 
 inline static F_t
@@ -156,7 +156,7 @@ field_PVScalar_array(flatbuffers::FlatBufferBuilder &builder,
     auto v1 = builder.CreateVector(view.data(), view.size());                  \
     TB b(builder);                                                             \
     b.add_v(v1);                                                               \
-    return { F::TF, b.Finish().Union() };                                      \
+    return {F::TF, b.Finish().Union()};                                        \
   }
   M(int8_t, pvByte_aBuilder, pvByte_a, pvByte);
   M(int16_t, pvShort_aBuilder, pvShort_a, pvShort);
@@ -175,22 +175,22 @@ field_PVScalar_array(flatbuffers::FlatBufferBuilder &builder,
         reinterpret_cast<epics::pvData::PVValueArray<std::string> const *>(
             field);
     FLOG(level, "WARNING serializing string arrays is disabled...");
-    return { F::NONE, 0 };
+    return {F::NONE, 0};
     auto view = p1->view();
-    vector<flatbuffers::Offset<flatbuffers::String> > v1;
+    vector<flatbuffers::Offset<flatbuffers::String>> v1;
     for (auto &s0 : view) {
       v1.push_back(builder.CreateString(s0));
     }
     auto v2 = builder.CreateVector(v1);
     pvString_aBuilder b(builder);
     b.add_v(v2);
-    return { F::pvString_a, b.Finish().Union() };
+    return {F::pvString_a, b.Finish().Union()};
   }
   if (stype == epics::pvData::ScalarType::pvBoolean) {
     FLOG(level, "WARNING array of booleans are not handled so far");
-    return { F::NONE, 0 };
+    return {F::NONE, 0};
   }
-  return { F::NONE, 0 };
+  return {F::NONE, 0};
 }
 
 inline static F_t field_PVUnion(flatbuffers::FlatBufferBuilder &builder,
@@ -202,7 +202,7 @@ inline static F_t field_PVUnion(flatbuffers::FlatBufferBuilder &builder,
     return Field(builder, f3.get(), 1 + level);
   }
   // The union does not contain anything:
-  return { F::NONE, 0 };
+  return {F::NONE, 0};
 }
 
 F_t Field(flatbuffers::FlatBufferBuilder &builder,
@@ -235,11 +235,11 @@ F_t Field(flatbuffers::FlatBufferBuilder &builder,
         level + 1);
   } else if (etype == epics::pvData::Type::unionArray) {
     FLOG(level, "union array not yet supported");
-    return { F::NONE, 0 };
+    return {F::NONE, 0};
   }
 
   FLOG(level, "ERROR unknown type");
-  return { F::NONE, 0 };
+  return {F::NONE, 0};
 }
 
 F_t Field(flatbuffers::FlatBufferBuilder &builder,
@@ -256,10 +256,10 @@ public:
     auto fb = BrightnESS::FlatBufs::FB_uptr(new BrightnESS::FlatBufs::FB);
     uint64_t ts_data = 0;
     if (auto x =
-            pvstr->getSubField<epics::pvData::PVScalarValue<uint64_t> >("ts")) {
+            pvstr->getSubField<epics::pvData::PVScalarValue<uint64_t>>("ts")) {
       ts_data = x->get();
     }
-    fb->seq = up.seq;
+    fb->seq = up.seq_fwd;
     fb->fwdix = up.fwdix;
     auto builder = fb->builder.get();
     auto n = builder->CreateString("some-name-must-go-here");
@@ -268,7 +268,7 @@ public:
     FlatBufs::f140_general::PVBuilder b(*builder);
     b.add_n(n);
     b.add_v_type(vF.type);
-    auto fi = FlatBufs::f140_general::fwdinfo_t(up.seq, ts_data,
+    auto fi = FlatBufs::f140_general::fwdinfo_t(up.seq_data, ts_data,
                                                 up.ts_epics_monitor, up.fwdix);
     b.add_fwdinfo(&fi);
     FinishPVBuffer(*builder, b.Finish());

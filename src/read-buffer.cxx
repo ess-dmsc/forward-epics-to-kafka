@@ -1,10 +1,10 @@
-#include <cstdlib>
-#include <cstdio>
-#include <vector>
-#include "helper.h"
-#include "logger.h"
 #include "fbhelper.h"
 #include "fbschemas.h"
+#include "helper.h"
+#include "logger.h"
+#include <cstdio>
+#include <cstdlib>
+#include <vector>
 
 using namespace BrightnESS::ForwardEpicsToKafka::Epics;
 
@@ -33,10 +33,10 @@ template <typename T0> void print_array(EpicsPV const *b1) {
   auto pv = static_cast<T0 const *>(b1->pv());
   auto a1 = pv->value();
   char const N1 = 20;
-  static char fmt[N1] = { 0 };
+  static char fmt[N1] = {0};
   if (fmt[0] == 0) {
-    using T1 = typename std::remove_pointer<
-        decltype(std::declval<T0>().value())>::type::return_type;
+    using T1 = typename std::remove_pointer<decltype(
+        std::declval<T0>().value())>::type::return_type;
     snprintf(fmt, N1, "a[%%3d] = %s\n", type_fmt<T1>());
   }
   for (size_t i1 = 0; i1 < a1->Length(); ++i1) {

@@ -1,12 +1,12 @@
 #pragma once
 
-#include <memory>
-#include <atomic>
-#include <array>
-#include <vector>
-#include <string>
-#include "Stream.h"
 #include "ForwarderInfo.h"
+#include "Stream.h"
+#include <array>
+#include <atomic>
+#include <memory>
+#include <string>
+#include <vector>
 
 namespace BrightnESS {
 namespace ForwardEpicsToKafka {

@@ -1,12 +1,12 @@
 #include "Kafka.h"
-#include "logger.h"
 #include "local_config.h"
+#include "logger.h"
 
-#include <map>
 #include <algorithm>
-#include <functional>
-#include <mutex>
 #include <atomic>
+#include <functional>
+#include <map>
+#include <mutex>
 
 namespace BrightnESS {
 namespace ForwardEpicsToKafka {

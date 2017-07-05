@@ -1,9 +1,11 @@
 #pragma once
 
-#include "fbschemas.h"
+#include "MainOpt.h"
 #include "MakeFlatBufferFromPVStructure.h"
 #include "SchemaRegistry.h"
-#include "MainOpt.h"
+#include "fbschemas.h"
+#include <map>
+#include <string>
 
 namespace BrightnESS {
 namespace ForwardEpicsToKafka {
@@ -15,6 +17,7 @@ public:
   static sptr create(FlatBufs::SchemaRegistry const &schema_registry,
                      std::string schema, MainOpt const &main_opt);
   BrightnESS::FlatBufs::FB_uptr convert(FlatBufs::EpicsPVUpdate const &up);
+  std::map<std::string, double> stats();
 
 private:
   std::string schema;

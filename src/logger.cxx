@@ -1,12 +1,14 @@
 #include "logger.h"
-#include <cstdlib>
-#include <cstdio>
+#include "KafkaW.h"
+#include <atomic>
 #include <cstdarg>
+#include <cstdio>
+#include <cstdlib>
 #include <cstring>
 #ifdef _MSC_VER
 #include "wingetopt.h"
-#include <iso646.h>
 #include <io.h>
+#include <iso646.h>
 #define isatty _isatty
 #else
 #include <getopt.h>
@@ -14,15 +16,15 @@
 #endif
 #include <atomic>
 #include <memory>
-#include <thread>
-#include <string>
-#include "KafkaW.h"
 #include <rapidjson/document.h>
 #include <rapidjson/stringbuffer.h>
 #include <rapidjson/writer.h>
+#include <string>
+#include <thread>
+#include <unistd.h>
 #ifdef HAVE_GRAYLOG_LOGGER
-#include <graylog_logger/Log.hpp>
 #include <graylog_logger/GraylogInterface.hpp>
+#include <graylog_logger/Log.hpp>
 #endif
 
 int log_level = 3;
@@ -47,8 +49,8 @@ public:
   void fwd_graylog_logger_enable(std::string address);
 
 private:
-  std::atomic<bool> do_run_kafka{ false };
-  std::atomic<bool> do_use_graylog_logger{ false };
+  std::atomic<bool> do_run_kafka{false};
+  std::atomic<bool> do_use_graylog_logger{false};
   std::shared_ptr<KafkaW::Producer> producer;
   std::unique_ptr<KafkaW::Producer::Topic> topic;
   std::thread thread_poll;
@@ -126,10 +128,16 @@ void Logger::dwlog_inner(int level, int color, char const *file, int line,
     // only use color for stdout
     std::string lmsg;
     if (is_tty && color > 0 && color < 8) {
-      static char const *cols[]{ "",               "\x1b[107;1;31m",
-                                 "\x1b[100;1;33m", "\x1b[107;1;35m",
-                                 "\x1b[107;1;36m", "\x1b[107;1;34m",
-                                 "\x1b[107;1;32m", "\x1b[107;1;30m", };
+      static char const *cols[]{
+          "",
+          "\x1b[107;1;31m",
+          "\x1b[100;1;33m",
+          "\x1b[107;1;35m",
+          "\x1b[107;1;36m",
+          "\x1b[107;1;34m",
+          "\x1b[107;1;32m",
+          "\x1b[107;1;30m",
+      };
       lmsg = fmt::format("{}:{} [{}]:  {}{}\x1b[0m\n", f1, line, level,
                          cols[color], s1);
     } else {
