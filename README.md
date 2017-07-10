@@ -134,7 +134,7 @@ factors.  For systematic tests are to be done.
 ### Update Frequency
 
 Note that EPICS is not made for very high frequency updates as it will happily
-loose updates.
+lose updates.
 
 That being said, a process variable updated at 10 kHz containing 2048 doubles,
 with 3 EPICS to flatbuffer converters attached and therefore producing 460MB/s
