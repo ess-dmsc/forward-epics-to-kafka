@@ -18,7 +18,6 @@
 #include <rapidjson/schema.h>
 #include <rapidjson/stringbuffer.h>
 #include <rapidjson/writer.h>
-#include <unistd.h>
 
 namespace BrightnESS {
 namespace ForwardEpicsToKafka {

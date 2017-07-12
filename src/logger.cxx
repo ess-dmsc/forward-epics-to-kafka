@@ -21,7 +21,6 @@
 #include <rapidjson/writer.h>
 #include <string>
 #include <thread>
-#include <unistd.h>
 #ifdef HAVE_GRAYLOG_LOGGER
 #include <graylog_logger/GraylogInterface.hpp>
 #include <graylog_logger/Log.hpp>

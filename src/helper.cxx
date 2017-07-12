@@ -13,7 +13,6 @@
 #include <rapidjson/document.h>
 #include <string>
 #include <thread>
-#include <unistd.h>
 #include <vector>
 
 std::vector<char> gulp(std::string fname) {
