@@ -7,10 +7,19 @@ node('eee') {
         stage("Checkout") {
             try {
                 checkout scm
+                sh "cd .. && bash code/build-script/update-local-deps.sh"
             } catch (e) {
                 slackFailMsg "Checkout failed"
                 throw e
             }
+        }
+    }
+    stage("Update dependencies") {
+        try {
+            sh "bash code/build-script/update-local-deps.sh"
+        } catch (e) {
+            slackFailMsg "Dependencies failed"
+            throw e
         }
     }
     dir("build") {
@@ -23,8 +32,8 @@ node('eee') {
                 slackFailMsg "CMake failed"
                 throw e
             }
-        } 
-        
+        }
+
         stage("Build") {
             try {
                 sh "make"
@@ -47,6 +56,6 @@ node('eee') {
             slackSend color: 'good', message: 'E2K (Fast sampling): Back in the green!'
         }
     } catch (e) {
-        
+
     }
 }
