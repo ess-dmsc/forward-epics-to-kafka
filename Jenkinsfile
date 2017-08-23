@@ -49,8 +49,8 @@ node('docker && eee') {
         --tty \
         --env http_proxy=${env.http_proxy} \
         --env https_proxy=${env.https_proxy} \
-        --mount=type=bind,src=${epics_dir},dest=${epics_dir},readonly \
-        --mount=type=bind,src=${epics_env},dest=${epics_env},readonly"
+        --mount=type=bind,src=${epics_dir},dst=${epics_dir},readonly \
+        --mount=type=bind,src=${epics_env},dst=${epics_env},readonly"
 
     try {
         container = centos.run(run_args)
