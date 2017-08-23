@@ -1,4 +1,4 @@
-# Forward EPICS to Kafka
+# Forward EPICS to Kafka (with Conan)
 
 - Forward EPICS process variables to Kafka topics
 - Converts EPICS data into FlatBuffers according to the configured schema
@@ -21,35 +21,41 @@ These libraries are expected in the ESS dev default locations or set via
 environment variables (see `src/CMakeLists.txt`):
 
 - EPICSv4
-- librdkafka
-- flatbuffers (headers and `flatc` executable)
-- RapidJSON (header only)
-- fmt (`fmt/format.h` and `fmt/format.cc`) <https://github.com/fmtlib/fmt>
 - `streaming-data-types`, easiest if cloned parallel to this repository.
   <https://github.com/ess-dmsc/streaming-data-types>
-- `graylog_logger` <https://github.com/ess-dmsc/graylog-logger>
 - pcre2 (e.g. `yum install pcre2 pcre2-devel` or `brew install pcre2`).
   pcre is supported equally well.
 
 Tooling
+- conan
 - cmake (minimum tested is 2.8.11)
 - C++ compiler with c++11 support
 - Doxygen if you would like to `make docs`
 
-Others (optional)
-- Google Test  (git clone `https://github.com/google/googletest.git` in
-  parallel to this repository, or give the repository location in
-  `GOOGLETEST_REPOSITORY_DIR` or in `CMAKE_INCLUDE_PATH` and specify
-  `cmake -DREQUIRE_GTEST=1`)
+
+### Conan repositories
+
+The following remote repositories are required to be configured:
+
+- https://api.bintray.com/conan/ess-dmsc/conan
+- https://api.bintray.com/conan/conan-community/conan
+
+You can add them by running
+```
+conan remote add <local-name> <remote-url>
+```
+where `<local-name>` must be substituted by a locally unique name. Configured
+remotes can be listed with `conan remote list`.
 
 
 ### Build
 
 Assuming you have `make` and all dependencies in standard locations:
 ```
-cmake <path-to-source>
+conan install <path-to-source>/conan --build=missing
+cmake <path-to-source> [-DREQUIRE_GTEST=TRUE]
 make
-make docs
+make docs  # optional
 ```
 
 #### Dependencies in custom locations
