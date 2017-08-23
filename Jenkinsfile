@@ -52,7 +52,7 @@ node('docker && eee') {
         --env EPICS_MODULES_PATH=/opt/epics/modules \
         --env EPICS_ENV_PATH=/opt/epics/modules/environment/2.0.0/3.15.4/bin/centos7-x86_64 \
         --env EPICS_BASES_PATH=/opt/epics/bases \
-        --mount=type=bind,src=${epics_dir},dst=${epics_dir},readonly
+        --mount=type=bind,src=${epics_dir},dst=${epics_dir},readonly"
 
     try {
         container = centos.run(run_args)
