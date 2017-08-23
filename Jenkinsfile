@@ -1,5 +1,8 @@
 def project = "forward-epics-to-kafka"
 
+def epics_dir = "/opt/epics"
+def epics_env = "/etc/profile.d/ess_epics_env.sh"
+
 def checkout_script = """
     git clone https://github.com/ess-dmsc/${project}.git \
         --branch ${env.BRANCH_NAME}
@@ -9,6 +12,7 @@ def checkout_script = """
 def configure_script = """
     mkdir build
     cd build
+    source ${epics_env}
     conan install ../${project}/conan \
         --build=missing
     cmake3 ../${project} -DREQUIRE_GTEST=ON
@@ -45,7 +49,8 @@ node('docker && eee') {
         --tty \
         --env http_proxy=${env.http_proxy} \
         --env https_proxy=${env.https_proxy} \
-        --mount=type=bind,source=/opt/epics,destination=/opt/epics,readonly"
+        --mount=type=bind,src=${epics_dir},dest=${epics_dir},readonly \
+        --mount=type=bind,src=${epics_env},dest=${epics_env},readonly"
 
     try {
         container = centos.run(run_args)
