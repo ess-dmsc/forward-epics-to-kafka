@@ -3,15 +3,15 @@ def project = "forward-epics-to-kafka"
 def checkout_script = """
     git clone https://github.com/ess-dmsc/${project}.git \
         --branch ${env.BRANCH_NAME}
+    git clone -b master https://github.com/ess-dmsc/streaming-data-types.git
 """
 
 def configure_script = """
     mkdir build
     cd build
     conan install ../${project}/conan \
-        -o build_everything=True \
         --build=missing
-    cmake3 ../${project} -DBUILD_EVERYTHING=ON
+    cmake3 ../${project} -DREQUIRE_GTEST=ON
 """
 
 def build_script = "make --directory=./build"
@@ -54,14 +54,10 @@ node('docker && eee') {
             sh "docker exec ${container_name} sh -c \"${checkout_script}\""
         }
 
-        stage('Checkout') {
-            sh "docker exec ${container_name} sh -c \"ls /opt/epics\""
+        stage('Configure') {
+            sh "docker exec ${container_name} sh -c \"${configure_script}\""
         }
-
-        // stage('Configure') {
-        //     sh "docker exec ${container_name} sh -c \"${configure_script}\""
-        // }
-        //
+        
         // stage('Build') {
         //     sh "docker exec ${container_name} sh -c \"${build_script}\""
         // }
