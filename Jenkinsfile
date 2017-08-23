@@ -1,8 +1,5 @@
 def project = "forward-epics-to-kafka"
 
-def epics_dir = "/opt/epics"
-def epics_env = "/etc/profile.d/ess_epics_env.sh"
-
 def checkout_script = """
     git clone https://github.com/ess-dmsc/${project}.git \
         --branch ${env.BRANCH_NAME}
@@ -12,7 +9,6 @@ def checkout_script = """
 def configure_script = """
     mkdir build
     cd build
-    source ${epics_env}
     conan install ../${project}/conan \
         --build=missing
     cmake3 ../${project} -DREQUIRE_GTEST=ON
@@ -44,13 +40,19 @@ def fedora = docker.image('essdmscdm/fedora-build-node:0.1.3')
 def container_name = "${project}-${env.BRANCH_NAME}-${env.BUILD_NUMBER}"
 
 node('docker && eee') {
+    def epics_dir = "/opt/epics"
     def run_args = "\
         --name ${container_name} \
         --tty \
         --env http_proxy=${env.http_proxy} \
         --env https_proxy=${env.https_proxy} \
-        --mount=type=bind,src=${epics_dir},dst=${epics_dir},readonly \
-        --mount=type=bind,src=${epics_env},dst=${epics_env},readonly"
+        --env EPICS_BASE=/opt/epics/bases/base-3.15.4 \
+        --env EPICS_HOST_ARCH=centos7-x86_64 \
+        --env EPICS_DB_INCLUDE_PATH=/opt/epics/bases/base-3.15.4/dbd \
+        --env EPICS_MODULES_PATH=/opt/epics/modules \
+        --env EPICS_ENV_PATH=/opt/epics/modules/environment/2.0.0/3.15.4/bin/centos7-x86_64 \
+        --env EPICS_BASES_PATH=/opt/epics/bases \
+        --mount=type=bind,src=${epics_dir},dst=${epics_dir},readonly
 
     try {
         container = centos.run(run_args)
