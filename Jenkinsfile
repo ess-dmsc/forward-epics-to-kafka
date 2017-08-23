@@ -34,8 +34,8 @@ def formatting_script = """
         -exec clangformatdiff.sh {} +
 """
 
-def centos = docker.image('essdmscdm/centos-build-node:0.2.5')
-def fedora = docker.image('essdmscdm/fedora-build-node:0.1.2')
+def centos = docker.image('essdmscdm/centos-build-node:0.2.6')
+def fedora = docker.image('essdmscdm/fedora-build-node:0.1.3')
 
 def container_name = "${project}-${env.BRANCH_NAME}-${env.BUILD_NUMBER}"
 
@@ -57,7 +57,7 @@ node('docker && eee') {
         stage('Configure') {
             sh "docker exec ${container_name} sh -c \"${configure_script}\""
         }
-        
+
         // stage('Build') {
         //     sh "docker exec ${container_name} sh -c \"${build_script}\""
         // }
