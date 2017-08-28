@@ -1,5 +1,5 @@
 def project = "forward-epics-to-kafka"
-def centos = docker.image('essdmscdm/centos-build-node:0.2.6')
+def centos = docker.image('essdmscdm/centos-build-node:0.3.0')
 // def fedora = docker.image('essdmscdm/fedora-build-node:0.1.3')
 def container_name = "${project}-${env.BRANCH_NAME}-${env.BUILD_NUMBER}"
 
@@ -12,6 +12,7 @@ node('docker && eee') {
         --tty \
         --env http_proxy=${env.http_proxy} \
         --env https_proxy=${env.https_proxy} \
+        --env BASE=3.15.4 \
         --env EPICS_BASE=/opt/epics/bases/base-3.15.4 \
         --env EPICS_HOST_ARCH=centos7-x86_64 \
         --env EPICS_DB_INCLUDE_PATH=/opt/epics/bases/base-3.15.4/dbd \
