@@ -7,19 +7,14 @@ def conan_remote = "ess-dmsc-local"
 
 node('docker && eee') {
     def epics_dir = "/opt/epics"
+    def epics_profile_file = "/etc/profiles.d/ess_epics_env.sh"
     def run_args = "\
         --name ${container_name} \
         --tty \
         --env http_proxy=${env.http_proxy} \
         --env https_proxy=${env.https_proxy} \
-        --env BASE=3.15.4 \
-        --env EPICS_BASE=/opt/epics/bases/base-3.15.4 \
-        --env EPICS_HOST_ARCH=centos7-x86_64 \
-        --env EPICS_DB_INCLUDE_PATH=/opt/epics/bases/base-3.15.4/dbd \
-        --env EPICS_MODULES_PATH=/opt/epics/modules \
-        --env EPICS_ENV_PATH=/opt/epics/modules/environment/2.0.0/3.15.4/bin/centos7-x86_64 \
-        --env EPICS_BASES_PATH=/opt/epics/bases \
-        --mount=type=bind,src=${epics_dir},dst=${epics_dir},readonly"
+        --mount=type=bind,src=${epics_dir},dst=${epics_dir},readonly \
+        --mount=type=bind,src=${epics_profile_file},dst=${epics_profile_file},readonly"
 
     try {
         container = centos.run(run_args)
