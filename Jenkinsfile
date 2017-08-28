@@ -7,7 +7,7 @@ def conan_remote = "ess-dmsc-local"
 
 node('docker && eee') {
     def epics_dir = "/opt/epics"
-    def epics_profile_file = "/etc/profiles.d/ess_epics_env.sh"
+    def epics_profile_file = "/etc/profile.d/ess_epics_env.sh"
     def run_args = "\
         --name ${container_name} \
         --tty \
@@ -47,6 +47,7 @@ node('docker && eee') {
                 cd build
                 conan install ../${project}/conan \
                     --build=missing
+                source ${epics_profile_file}
                 cmake3 ../${project} -DREQUIRE_GTEST=ON
             """
             sh "docker exec ${container_name} sh -c \"${configure_script}\""
