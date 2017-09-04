@@ -9,6 +9,7 @@ find_package(RdKafka REQUIRED)
 find_package(FlatBuffers REQUIRED)
 # find_package(StreamingDataTypes COMPONENTS ce9a4745431e54bc45b0c927857a866fa77b84ec)
 find_package(PCREX REQUIRED)
+find_package(PCRE2 REQUIRED)
 find_package(CURL)
 find_package(GraylogLogger)
 find_package(StaticData COMPONENTS "schema-config-global.json")
@@ -30,6 +31,7 @@ ${FLATBUFFERS_INCLUDE_DIR}
 ${RAPIDJSON_INCLUDE_DIR}
 ${CURL_INCLUDE_DIRS}
 ${PCREX_INCLUDE_DIRS}
+${PCRE2_INCLUDE_DIR}
 ${EPICSV4_INCLUDE_DIRS}
 ${PROJECT_SOURCE_DIR}/src
 ${PROJECT_BINARY_DIR}/src
@@ -43,6 +45,7 @@ libNormativeTypes
 librdkafka
 ${CURL_LIBRARIES}
 ${PCREX_LIBRARIES}
+${PCRE2_LIBRARY}
 pthread
 )
 
