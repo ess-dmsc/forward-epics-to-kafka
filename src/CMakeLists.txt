@@ -7,7 +7,7 @@ find_package(Fmt REQUIRED)
 find_package(Rapidjson REQUIRED)
 find_package(RdKafka REQUIRED)
 find_package(FlatBuffers REQUIRED)
-find_package(StreamingDataTypes COMPONENTS ce9a4745431e54bc45b0c927857a866fa77b84ec)
+# find_package(StreamingDataTypes COMPONENTS ce9a4745431e54bc45b0c927857a866fa77b84ec)
 find_package(PCREX REQUIRED)
 find_package(CURL)
 find_package(GraylogLogger)
@@ -124,7 +124,7 @@ endif (WIN32)
 set(tgt __objects)
 add_library(${tgt} OBJECT ${forwarder_SRC} ${forwarder_INC})
 target_include_directories(${tgt} PRIVATE ${path_include_common})
-add_dependencies(${tgt} flatbuffers_generate xxd_generate git_commit_current)
+add_dependencies(${tgt} xxd_generate git_commit_current)
 target_compile_definitions(${tgt} PRIVATE ${compile_defs_common})
 
 
@@ -134,7 +134,7 @@ add_executable(${tgt}
 forward-epics-to-kafka.cxx
 $<TARGET_OBJECTS:__objects>
 )
-add_dependencies(${tgt} flatbuffers_generate git_commit_current)
+add_dependencies(${tgt} git_commit_current)
 target_compile_definitions(${tgt} PRIVATE ${compile_defs_common})
 target_include_directories(${tgt} PRIVATE ${path_include_common})
 

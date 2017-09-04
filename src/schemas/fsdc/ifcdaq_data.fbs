@@ -3,11 +3,11 @@ file_identifier "ifdq";
 namespace FSD;
 
 table ifcdaq_data {
-pv: string (required);
-timestamp: ulong;
-value: [double] (required);
-time: [double] (required);
-uniqueId: int;
+    pv: string (required);
+    timestamp: ulong;
+    value: [double] (required);
+    time: [double] (required);
+    uniqueId: int;
 }
 
 root_type ifcdaq_data;

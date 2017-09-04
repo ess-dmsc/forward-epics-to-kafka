@@ -20,7 +20,6 @@ set(test_INC
 )
 
 add_executable(${tgt} ${test_SRC} ${test_INC} $<TARGET_OBJECTS:__objects>)
-add_dependencies(${tgt} flatbuffers_generate)
 target_include_directories(${tgt} PRIVATE ${path_include_common} ${GTEST_INCLUDE_DIRS})
 target_link_libraries(${tgt} ${libraries_common} ${GTEST_BOTH_LIBRARIES})
 
