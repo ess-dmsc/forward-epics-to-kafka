@@ -39,14 +39,20 @@ node('docker && eee') {
             sh "docker exec ${container_name} sh -c \"${setup_script}\""
         }
 
-        stage('Configure') {
-            def configure_script = """
+        stage('Conan dependencies') {
+            def deps_script = """
                 export http_proxy=''
                 export https_proxy=''
                 mkdir build
                 cd build
-                conan install ../${project}/conan \
-                    --build=missing
+                conan install ../${project}/conan --build=missing
+            """
+            sh "docker exec ${container_name} sh -c \"${deps_script}\""
+        }
+
+        stage('Configure') {
+            def configure_script = """
+                cd build
                 source ${epics_profile_file}
                 cmake3 ../${project} -DREQUIRE_GTEST=ON
             """
