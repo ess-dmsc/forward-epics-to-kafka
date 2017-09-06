@@ -28,7 +28,7 @@ node('docker && eee') {
             sh "docker exec ${container_name} sh -c \"${checkout_script}\""
         }
 
-        stage('Dependencies') {
+        stage('Get Dependencies') {
             def dependencies_script = """
                 export http_proxy=''
                 export https_proxy=''
@@ -56,7 +56,7 @@ node('docker && eee') {
             sh "docker exec ${container_name} sh -c \"${build_script}\""
         }
 
-        stage('Tests') {
+        stage('Test') {
             def test_output = "TestResults.xml"
             def test_script = """
                 cd build
