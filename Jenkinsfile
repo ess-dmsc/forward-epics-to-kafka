@@ -58,42 +58,17 @@ node('docker && eee') {
             sh "docker exec ${container_name} sh -c \"${build_script}\""
         }
 
-        // stage('Tests') {
-        //     def test_output = "AllResultsUnitTests.xml"
-        //     def test_script = """
-        //         ./build/unit_tests/unit_tests --gtest_output=xml:${test_output}
-        //     """
-        //     sh "docker exec ${container_name} sh -c \"${test_script}\""
-        //     sh "rm -f ${test_output}" // Remove file outside container.
-        //     sh "docker cp ${container_name}:/home/jenkins/${test_output} ."
-        //     junit "${test_output}"
-        // }
-        //
-        // stage('Cppcheck') {
-        //     def cppcheck_script = "make --directory=./build cppcheck"
-        //     sh "docker exec ${container_name} sh -c \"${cppcheck_script}\""
-        // }
-        //
-        // sh "docker cp ${container_name}:/home/jenkins/${project} ./srcs"
+        stage('Tests') {
+            def test_output = "TestResults.xml"
+            def test_script = """
+                ./build/tests/tests --gtest_output=xml:${test_output}
+            """
+            sh "docker exec ${container_name} sh -c \"${test_script}\""
+            sh "rm -f ${test_output}" // Remove file outside container.
+            sh "docker cp ${container_name}:/home/jenkins/${test_output} ."
+            junit "${test_output}"
+        }
     } finally {
         container.stop()
     }
-
-    // try {
-    //     container = fedora.run(run_args)
-    //
-    //     sh "docker cp ./srcs ${container_name}:/home/jenkins/${project}"
-    //     sh "rm -rf srcs"
-    //
-    //     stage('Formatting') {
-    //         def formatting_script = """
-    //             cd ${project}
-    //             find . \\( -name '*.cpp' -or -name '*.h' -or -name '*.hpp' \\) \
-    //                 -exec clangformatdiff.sh {} +
-    //         """
-    //         sh "docker exec ${container_name} sh -c \"${formatting_script}\""
-    //     }
-    // } finally {
-    //     container.stop()
-    // }
 }
