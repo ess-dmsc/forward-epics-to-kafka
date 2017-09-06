@@ -28,26 +28,18 @@ node('docker && eee') {
             sh "docker exec ${container_name} sh -c \"${checkout_script}\""
         }
 
-        stage('Conan setup') {
-            def setup_script = """
+        stage('Dependencies') {
+            def dependencies_script = """
                 export http_proxy=''
                 export https_proxy=''
                 conan remote add \
                     --insert 0 \
                     ${conan_remote} ${local_conan_server}
-            """
-            sh "docker exec ${container_name} sh -c \"${setup_script}\""
-        }
-
-        stage('Conan dependencies') {
-            def deps_script = """
-                export http_proxy=''
-                export https_proxy=''
                 mkdir build
                 cd build
                 conan install ../${project}/conan --build=missing
             """
-            sh "docker exec ${container_name} sh -c \"${deps_script}\""
+            sh "docker exec ${container_name} sh -c \"${dependencies_script}\""
         }
 
         stage('Configure') {
