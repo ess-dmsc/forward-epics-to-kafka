@@ -66,7 +66,7 @@ node('docker && eee') {
             """
             sh "docker exec ${container_name} sh -c \"${test_script}\""
             sh "rm -f ${test_output}" // Remove file outside container.
-            sh "docker cp ${container_name}:/home/jenkins/${test_output} ."
+            sh "docker cp ${container_name}:/home/jenkins/build/${test_output} ."
             junit "${test_output}"
         }
     } finally {
