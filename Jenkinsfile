@@ -61,7 +61,8 @@ node('docker && eee') {
         stage('Tests') {
             def test_output = "TestResults.xml"
             def test_script = """
-                ./build/tests/tests -- --gtest_output=xml:${test_output}
+                cd build
+                ./tests/tests -- --gtest_output=xml:${test_output}
             """
             sh "docker exec ${container_name} sh -c \"${test_script}\""
             sh "rm -f ${test_output}" // Remove file outside container.
