@@ -1,6 +1,6 @@
 def project = "forward-epics-to-kafka"
+
 def centos = docker.image('essdmscdm/centos-build-node:0.3.0')
-// def fedora = docker.image('essdmscdm/fedora-build-node:0.1.3')
 def container_name = "${project}-${env.BRANCH_NAME}-${env.BUILD_NUMBER}"
 
 def conan_remote = "ess-dmsc-local"
