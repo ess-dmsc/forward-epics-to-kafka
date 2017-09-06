@@ -1,11 +1,8 @@
 def project = "forward-epics-to-kafka"
-
 def centos = docker.image('essdmscdm/centos-build-node:0.3.0')
-def container_name = "${project}-${env.BRANCH_NAME}-${env.BUILD_NUMBER}"
-
-def conan_remote = "ess-dmsc-local"
 
 node('docker && eee') {
+    def container_name = "${project}-${env.BRANCH_NAME}-${env.BUILD_NUMBER}"
     def epics_dir = "/opt/epics"
     def epics_profile_file = "/etc/profile.d/ess_epics_env.sh"
     def run_args = "\
@@ -29,6 +26,7 @@ node('docker && eee') {
         }
 
         stage('Get Dependencies') {
+            def conan_remote = "ess-dmsc-local"
             def dependencies_script = """
                 export http_proxy=''
                 export https_proxy=''
@@ -63,6 +61,8 @@ node('docker && eee') {
                 ./tests/tests -- --gtest_output=xml:${test_output}
             """
             sh "docker exec ${container_name} sh -c \"${test_script}\""
+
+            // Copy and publish test results.
             sh "rm -f ${test_output}" // Remove file outside container.
             sh "docker cp ${container_name}:/home/jenkins/build/${test_output} ."
             junit "${test_output}"
