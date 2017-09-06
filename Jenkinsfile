@@ -30,9 +30,7 @@ node('docker && eee') {
             def dependencies_script = """
                 export http_proxy=''
                 export https_proxy=''
-                conan remote add \
-                    --insert 0 \
-                    ${conan_remote} ${local_conan_server}
+                conan remote add --insert 0 ${conan_remote}
                 mkdir build
                 cd build
                 conan install ../${project}/conan --build=missing
