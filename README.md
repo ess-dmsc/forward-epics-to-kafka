@@ -1,4 +1,4 @@
-# Forward EPICS to Kafka (with Conan)
+# Forward EPICS to Kafka
 
 - Forward EPICS process variables to Kafka topics
 - Converts EPICS data into FlatBuffers according to the configured schema
