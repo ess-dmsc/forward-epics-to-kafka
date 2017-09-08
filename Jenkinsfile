@@ -62,14 +62,17 @@ node('docker && eee') {
             """
             sh "docker exec ${container_name} sh -c \"${test_script}\""
 
+            // Remove file outside container.
+            sh "rm -f ${test_output}"
             // Copy and publish test results.
-            sh "rm -f ${test_output}" // Remove file outside container.
             sh "docker cp ${container_name}:/home/jenkins/build/${test_output} ."
+
             junit "${test_output}"
         }
 
         stage('Archive') {
-            sh "rm -f forward-epics-to-kafka" // Remove file outside container.
+            // Remove file outside container.
+            sh "rm -f forward-epics-to-kafka"
             // Copy archive from container.
             sh "docker cp ${container_name}:/home/jenkins/build/forward-epics-to-kafka ."
 
