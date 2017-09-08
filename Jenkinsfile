@@ -67,6 +67,14 @@ node('docker && eee') {
             sh "docker cp ${container_name}:/home/jenkins/build/${test_output} ."
             junit "${test_output}"
         }
+
+        stage('Archive') {
+            sh "rm -f forward-epics-to-kafka" // Remove file outside container.
+            // Copy archive from container.
+            sh "docker cp ${container_name}:/home/jenkins/build/forward-epics-to-kafka ."
+
+            archiveArtifacts 'forward-epics-to-kafka'
+        }
     } finally {
         container.stop()
     }
