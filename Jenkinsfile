@@ -1,5 +1,5 @@
 def project = "forward-epics-to-kafka"
-def centos = docker.image('essdmscdm/centos-build-node:0.3.0')
+def centos = docker.image('essdmscdm/centos-build-node:0.5.0')
 
 node('docker && eee') {
     def container_name = "${project}-${env.BRANCH_NAME}-${env.BUILD_NUMBER}"
