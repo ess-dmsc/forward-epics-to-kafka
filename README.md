@@ -50,13 +50,23 @@ remotes can be listed with `conan remote list`.
 
 ### Build
 
-Assuming you have `make` and all dependencies in standard locations:
+Assuming you have `make`:
 ```
 conan install <path-to-source>/conan --build=missing
 cmake <path-to-source> [-DREQUIRE_GTEST=TRUE]
 make
 make docs  # optional
 ```
+
+
+#### Running on macOS
+
+When using Conan on macOS, due to the way paths to dependencies are handled,
+the _activate_run.sh_ file must be sourced before running the application. The
+_deactivate_run.sh_ can be sourced to undo the changes afterwards. This has not
+been tested yet, and it is possible that EPICS libraries cannot be found.
+Please report any issues you encounter when running this setup.
+
 
 #### Dependencies in custom locations
 
