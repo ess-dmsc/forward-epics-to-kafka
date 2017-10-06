@@ -1,9 +1,9 @@
 def project = "forward-epics-to-kafka"
-def centos = docker.image('essdmscdm/centos-build-node:0.5.0')
+def centos = docker.image('essdmscdm/centos-build-node:0.7.6')
 
 node('docker && eee')
     cleanWs()
-    
+
     def container_name = "${project}-${env.BRANCH_NAME}-${env.BUILD_NUMBER}"
     def epics_dir = "/opt/epics"
     def epics_profile_file = "/etc/profile.d/ess_epics_env.sh"
