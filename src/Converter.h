@@ -18,6 +18,7 @@ public:
                      std::string schema, MainOpt const &main_opt);
   BrightnESS::FlatBufs::FB_uptr convert(FlatBufs::EpicsPVUpdate const &up);
   std::map<std::string, double> stats();
+  std::string schema_name();
 
 private:
   std::string schema;
