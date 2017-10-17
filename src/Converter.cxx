@@ -8,6 +8,7 @@ Converter::sptr
 Converter::create(FlatBufs::SchemaRegistry const &schema_registry,
                   std::string schema, MainOpt const &main_opt) {
   auto ret = Converter::sptr(new Converter);
+  ret->schema = schema;
   auto r1 = schema_registry.items().find(schema);
   if (r1 == schema_registry.items().end()) {
     LOG(3, "can not handle (yet?) schema id {}", schema);
@@ -55,5 +56,10 @@ Converter::convert(FlatBufs::EpicsPVUpdate const &up) {
 }
 
 std::map<std::string, double> Converter::stats() { return conv->stats(); }
+
+std::string Converter::schema_name() {
+  return schema;
+}
+
 }
 }

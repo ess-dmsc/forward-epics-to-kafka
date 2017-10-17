@@ -730,6 +730,8 @@ int ProducerTopic::produce(unique_ptr<Producer::Msg> &msg) {
 
 void ProducerTopic::do_copy() { _do_copy = true; }
 
+std::string ProducerTopic::topic() const { return _name; }
+
 ProducerMsg::~ProducerMsg() {}
 
 void ProducerMsg::delivery_ok() {}

@@ -28,6 +28,7 @@ R"***({
 			"__DISABLED_pattern": "^ *([-.a-zA-Z0-9]+(:[0-9]+){0,1})( *, *[-.a-zA-Z0-9]+(:[0-9]+){0,1})* *$"
 		},
 		"broker-config": {"type":"string"},
+		"status-uri": {"type":"string"},
 		"conversion-threads": {"type":"integer"},
 		"conversion-worker-queue-size": {"type":"integer"},
 		"streams": {

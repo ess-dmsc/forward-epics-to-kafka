@@ -15,8 +15,7 @@ public:
   KafkaOutput(KafkaW::Producer::Topic &&pt);
   /// Hands off the message to Kafka
   int emit(std::unique_ptr<BrightnESS::FlatBufs::FB> fb);
-
-private:
+  std::string topic_name();
   KafkaW::Producer::Topic pt;
 };
 }

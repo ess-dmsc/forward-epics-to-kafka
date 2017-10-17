@@ -191,6 +191,7 @@ public:
   std::shared_ptr<Producer> producer;
   rd_kafka_topic_t *rkt = nullptr;
   void do_copy();
+  std::string topic() const;
 
 private:
   std::string _name;

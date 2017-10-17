@@ -19,6 +19,7 @@ struct MainOpt {
   void set_broker(string broker);
   std::string brokers_as_comma_list() const;
   uri::URI broker_config{"//localhost:9092/forward_epics_to_kafka_commands"};
+  uri::URI status_uri;
   vector<uri::URI> brokers;
   string kafka_gelf = "";
   string graylog_logger_address = "";

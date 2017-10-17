@@ -17,6 +17,9 @@
 #include <getopt.h>
 #include <unistd.h>
 #endif
+#include <rapidjson/document.h>
+#include <rapidjson/writer.h>
+#include <rapidjson/prettywriter.h>
 
 namespace BrightnESS {
 namespace ForwardEpicsToKafka {
@@ -103,6 +106,12 @@ Main::Main(MainOpt &opt)
     }
   }
   curl = make_unique<stub_curl>();
+  if (not main_opt.status_uri.host.empty()) {
+    KafkaW::BrokerOpt bopt;
+    bopt.address = main_opt.status_uri.host_port;
+    status_producer = std::make_shared<KafkaW::Producer>(bopt);
+    status_producer_topic = make_unique<KafkaW::ProducerTopic>(status_producer, main_opt.status_uri.topic);
+  }
 }
 
 Main::~Main() {
@@ -223,6 +232,7 @@ void Main::forward_epics_to_kafka() {
   using MS = std::chrono::milliseconds;
   auto Dt = MS(main_opt.main_poll_interval);
   auto t_lf_last = CLK::now();
+  auto t_status_last = CLK::now();
   ConfigCB config_cb(*this);
   {
     std::unique_lock<std::mutex> lock(conversion_workers_mx);
@@ -245,6 +255,12 @@ void Main::forward_epics_to_kafka() {
 
     auto t2 = CLK::now();
     auto dt = std::chrono::duration_cast<MS>(t2 - t1);
+    if (t2 - t_status_last > MS(3000)) {
+      if (status_producer_topic) {
+        report_status();
+      }
+      t_status_last = t2;
+    }
     if (do_stats) {
       kafka_instance_set->log_stats();
       report_stats(dt.count());
@@ -260,6 +276,25 @@ void Main::forward_epics_to_kafka() {
   streams_clear();
   LOG(6, "ForwardingStatus::STOPPED");
   forwarding_status.store(ForwardingStatus::STOPPED);
+}
+
+void Main::report_status() {
+  using rapidjson::Document;
+  using rapidjson::Value;
+  Document jd;
+  auto & a = jd.GetAllocator();
+  jd.SetObject();
+  Value j_streams;
+  j_streams.SetArray();
+  for (auto & stream : streams) {
+    j_streams.PushBack(Value().CopyFrom(stream->status_json(), a), a);
+  }
+  jd.AddMember("streams", Value(j_streams, a), a);
+  rapidjson::StringBuffer buf;
+  rapidjson::PrettyWriter<rapidjson::StringBuffer> wr(buf);
+  jd.Accept(wr);
+  LOG(3, "status: {:.{}}", buf.GetString(), buf.GetSize());
+  status_producer_topic->produce((KafkaW::uchar *)buf.GetString(), buf.GetSize());
 }
 
 void Main::report_stats(int dt) {

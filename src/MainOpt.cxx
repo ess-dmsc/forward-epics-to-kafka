@@ -182,6 +182,15 @@ int MainOpt::parse_json_file(string config_file) {
       }
     }
   }
+  {
+    auto &v = d.FindMember("status-uri")->value;
+    if (v.IsString()) {
+      uri::URI u1;
+      u1.init(v.GetString());
+      u1.default_port(9092);
+      status_uri = u1;
+    }
+  }
   return 0;
 }
 
@@ -201,6 +210,7 @@ std::pair<int, std::unique_ptr<MainOpt>> parse_opt(int argc, char **argv) {
       {"forwarder-ix", required_argument, 0, 0},
       {"write-per-message", required_argument, 0, 0},
       {"teamid", required_argument, 0, 0},
+      {"status-uri", required_argument, 0, 0},
       {0, 0, 0, 0},
   };
   int option_index = 0;
@@ -273,6 +283,12 @@ std::pair<int, std::unique_ptr<MainOpt>> parse_opt(int argc, char **argv) {
       }
       if (std::string("teamid") == lname) {
         opt.teamid = strtoul(optarg, nullptr, 0);
+      }
+      if (std::string("status-uri") == lname) {
+        uri::URI u1;
+        u1.init(optarg);
+        u1.default_port(9092);
+        opt.status_uri = u1;
       }
     }
   }
