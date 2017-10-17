@@ -315,9 +315,8 @@ void Main::report_stats(int dt) {
         ++i1;
       }
     }
+    curl->send(influxbuf, main_opt.influx_url);
   }
-  LOG(6, "influxbuf: {}", influxbuf.c_str());
-  curl->send(influxbuf, main_opt.influx_url);
 }
 
 void Main::check_stream_status() {
