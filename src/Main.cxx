@@ -105,12 +105,12 @@ Main::Main(MainOpt &opt)
       }
     }
   }
-  curl = make_unique<stub_curl>();
+  curl = ::make_unique<stub_curl>();
   if (not main_opt.status_uri.host.empty()) {
     KafkaW::BrokerOpt bopt;
     bopt.address = main_opt.status_uri.host_port;
     status_producer = std::make_shared<KafkaW::Producer>(bopt);
-    status_producer_topic = make_unique<KafkaW::ProducerTopic>(status_producer, main_opt.status_uri.topic);
+    status_producer_topic = ::make_unique<KafkaW::ProducerTopic>(status_producer, main_opt.status_uri.topic);
   }
 }
 
