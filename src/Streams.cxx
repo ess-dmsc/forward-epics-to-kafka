@@ -3,7 +3,7 @@
 using namespace BrightnESS::ForwardEpicsToKafka::Streams;
 
 /**
- * Gets the amount of streams in the streams vector.
+ * Gets the number of streams in the streams vector.
  *
  * @return The size of the stream vector.
  */
@@ -12,9 +12,9 @@ int Streams::size() {
 }
 
 /**
- * Stops specified channel and erases all data in the stream.
+ * Stops specified channel and removes the stream.
  *
- * @param channel The channel name to stop.
+ * @param channel The name of the channel to stop.
  */
 void Streams::channel_stop(std::string const &channel) {
   std::unique_lock<std::mutex> lock(streams_mutex);
@@ -24,7 +24,7 @@ void Streams::channel_stop(std::string const &channel) {
 }
 
 /**
- * Clears all data from streams.
+ * Clears all the streams.
  */
 void Streams::streams_clear() {
   CLOG(7, 1, "Main::streams_clear()  begin");
@@ -41,7 +41,7 @@ void Streams::streams_clear() {
 };
 
 /**
- * Stops any streams which have a status of < 0.
+ * Check the status of the streams and stop any that are in error.
  */
 void Streams::check_stream_status() {
   streams.erase(std::remove_if(streams.begin(), streams.end(), [&](std::unique_ptr<Stream>& s){
@@ -54,18 +54,18 @@ void Streams::check_stream_status() {
 }
 
 /**
- * Add stream.
+ * Add a stream.
  *
- * @param s The pointer to the stream to add.
+ * @param s the stream to add.
  */
 void Streams::add(BrightnESS::ForwardEpicsToKafka::Stream* s){
   streams.emplace_back(s);
 }
 
 /**
- * Get last stream.
+ * Get the last stream in the vector.
  *
- * @return A pointer to the last stream in the vector.
+ * @return The last stream in the vector.
  */
 std::unique_ptr<BrightnESS::ForwardEpicsToKafka::Stream>& Streams::back() {
   return streams.back();
