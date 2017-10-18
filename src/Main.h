@@ -2,6 +2,7 @@
 #include "ConversionWorker.h"
 #include "ForwarderInfo.h"
 #include "MainOpt.h"
+#include "Streams.h"
 #include <algorithm>
 #include <atomic>
 #include <list>
@@ -56,7 +57,6 @@ private:
   std::mutex converters_mutex;
   std::map<std::string, std::weak_ptr<Converter>> converters;
   std::mutex streams_mutex;
-  std::vector<std::unique_ptr<Stream>> streams;
   std::mutex conversion_workers_mx;
   std::vector<std::unique_ptr<ConversionWorker>> conversion_workers;
   ConversionScheduler conversion_scheduler;
@@ -69,6 +69,7 @@ private:
   std::unique_ptr<stub_curl> curl;
   std::shared_ptr<KafkaW::Producer> status_producer;
   std::unique_ptr<KafkaW::ProducerTopic> status_producer_topic;
+  Streams::Streams streams;
 };
 
 extern std::atomic<uint64_t> g__total_msgs_to_kafka;

@@ -116,7 +116,7 @@ Main::Main(MainOpt &opt)
 
 Main::~Main() {
   LOG(7, "~Main");
-  streams_clear();
+  streams.streams_clear();
   conversion_workers_clear();
   converters_clear();
 }
@@ -169,27 +169,15 @@ void ConfigCB::operator()(std::string const &msg) {
   if (cmd == "stop_channel") {
     auto channel = get_string(&j0, "channel");
     if (channel.size() > 0) {
-      main.channel_stop(channel);
+      main.streams.channel_stop(channel);
     }
+  }
+  if (cmd == "stop_all") {
+    main.streams.streams_clear();
   }
   if (cmd == "exit") {
     main.forwarding_exit();
   }
-}
-
-int Main::streams_clear() {
-  CLOG(7, 1, "Main::streams_clear()  begin");
-  std::unique_lock<std::mutex> lock(streams_mutex);
-  if (streams.size() > 0) {
-    for (auto &x : streams) {
-      x->stop();
-    }
-    // Wait for Epics to cool down
-    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-    streams.clear();
-  }
-  CLOG(7, 1, "Main::streams_clear()  end");
-  return 0;
 }
 
 int Main::conversion_workers_clear() {
@@ -247,7 +235,7 @@ void Main::forward_epics_to_kafka() {
       if (config_listener) {
         config_listener->poll(config_cb);
       }
-      check_stream_status();
+      streams.check_stream_status();
       t_lf_last = t1;
       do_stats = true;
     }
@@ -273,7 +261,7 @@ void Main::forward_epics_to_kafka() {
   }
   LOG(6, "Main::forward_epics_to_kafka   shutting down");
   conversion_workers_clear();
-  streams_clear();
+  streams.streams_clear();
   LOG(6, "ForwardingStatus::STOPPED");
   forwarding_status.store(ForwardingStatus::STOPPED);
 }
@@ -286,7 +274,7 @@ void Main::report_status() {
   jd.SetObject();
   Value j_streams;
   j_streams.SetArray();
-  for (auto & stream : streams) {
+  for (auto & stream : streams.get_streams()) {
     j_streams.PushBack(Value().CopyFrom(stream->status_json(), a), a);
   }
   jd.AddMember("streams", Value(j_streams, a), a);
@@ -354,35 +342,6 @@ void Main::report_stats(int dt) {
   }
 }
 
-void Main::check_stream_status() {
-  std::unique_lock<std::mutex> lock(streams_mutex);
-  auto it = streams.begin();
-  while (it != streams.end()) {
-    auto &s = *it;
-    if (s->status() < 0) {
-      s->stop();
-      it = streams.erase(it);
-    } else {
-      ++it;
-    }
-  }
-}
-
-int Main::channel_stop(std::string const &channel) {
-  std::unique_lock<std::mutex> lock(streams_mutex);
-  auto it = streams.begin();
-  while (true) {
-    if (it == streams.end())
-      break;
-    auto &s = *it;
-    if (s->channel_info().channel_name == channel) {
-      it = streams.erase(it);
-    } else {
-      ++it;
-    }
-  }
-  return 0;
-}
 
 int Main::mapping_add(rapidjson::Value &mapping) {
   using std::string;
@@ -397,7 +356,7 @@ int Main::mapping_add(rapidjson::Value &mapping) {
   }
   std::unique_lock<std::mutex> lock(streams_mutex);
   try {
-    streams.emplace_back(new Stream(finfo, {channel_provider_type, channel}));
+    streams.add(new Stream(finfo, {channel_provider_type, channel}));
   } catch (std::runtime_error &e) {
     return -1;
   }
