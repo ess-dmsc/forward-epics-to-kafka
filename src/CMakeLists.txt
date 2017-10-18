@@ -46,7 +46,7 @@ ${path_library_epics_pvAccess}
 ${path_library_epics_NT}
 ${RDKAFKA_LIBRARIES}
 ${CURL_LIBRARIES}
-${PCREX_LIBRARIES}
+${PCREX_LIBRARIEfS}
 )
 
 if(UNIX)
@@ -86,6 +86,7 @@ blobs.cxx
 Converter.cxx
 KafkaOutput.cxx
 Stream.cxx
+Streams.cxx
 schema_f140_general.cxx
 schema_f141_epics_nt.cxx
 schemas/f142/f142.cxx
