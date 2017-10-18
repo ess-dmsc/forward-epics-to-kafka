@@ -46,7 +46,7 @@ ${path_library_epics_pvAccess}
 ${path_library_epics_NT}
 ${RDKAFKA_LIBRARIES}
 ${CURL_LIBRARIES}
-${PCREX_LIBRARIEfS}
+${PCREX_LIBRARIES}
 )
 
 if(UNIX)
