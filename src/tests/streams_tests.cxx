@@ -3,7 +3,7 @@
 
 using namespace testing;
 
-TEST(testStreams, testStreamsAreEmptyOnInitialisation) {
+TEST(StreamsTest, testStreamsAreEmptyOnInitialisation) {
   BrightnESS::ForwardEpicsToKafka::Streams::Streams s;
   ASSERT_EQ(s.size(), 0);
 }
