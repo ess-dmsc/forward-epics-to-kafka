@@ -13,8 +13,7 @@ set(sources
 add_executable(${tgt} ${sources})
 add_dependencies(${tgt} flatbuffers_generate)
 target_include_directories(${tgt} PRIVATE ${path_include_common})
-target_link_libraries(${tgt} ${libraries_common}  ${GTEST_BOTH_LIBRARIES}
-        ${GMOCK_LIB})
+target_link_libraries(${tgt} ${libraries_common})
 add_gtest_to_target(${tgt})
 
 configure_file(test-config-valid.json ../../tests/test-config-valid.json)
