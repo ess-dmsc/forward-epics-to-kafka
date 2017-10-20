@@ -66,6 +66,15 @@ Stream::Stream(std::shared_ptr<ForwarderInfo> finfo, ChannelInfo channel_info)
   }
 }
 
+/**
+ * This constructor should only be used for testing.
+ *
+ * @param channel_info The channel info.
+ */
+Stream::Stream(ChannelInfo channel_info) : channel_info_(channel_info) {
+
+}
+
 Stream::~Stream() {
   CLOG(7, 2, "~Stream");
   stop();
@@ -184,7 +193,9 @@ Stream::fill_conversion_work(Ring<std::unique_ptr<ConversionWorkPacket>> &q2,
 }
 
 int Stream::stop() {
-  epics_client->stop();
+  if (epics_client != nullptr) {
+    epics_client->stop();
+  }
   return 0;
 }
 

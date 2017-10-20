@@ -69,6 +69,8 @@ public:
   rapidjson::Document status_json();
   using mutex = std::mutex;
   using ulock = std::unique_lock<mutex>;
+protected:
+  Stream(ChannelInfo channel_info);
 
 private:
   /// Each Epics update is converted by each Converter in the list

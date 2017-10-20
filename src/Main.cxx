@@ -356,11 +356,12 @@ int Main::mapping_add(rapidjson::Value &mapping) {
   }
   std::unique_lock<std::mutex> lock(streams_mutex);
   try {
-    streams.add(new Stream(finfo, {channel_provider_type, channel}));
+    ChannelInfo ci{channel_provider_type, channel};
+    streams.add(std::make_shared<Stream>(finfo, ci));
   } catch (std::runtime_error &e) {
     return -1;
   }
-  auto &stream = streams.back();
+  auto stream = streams.back();
   {
     auto push_conv = [this, &stream](rapidjson::Value &c) {
       string schema = get_string(&c, "schema");
