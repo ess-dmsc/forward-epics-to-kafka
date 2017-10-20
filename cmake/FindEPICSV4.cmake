@@ -31,6 +31,8 @@ set(epics_arch "$ENV{EPICS_HOST_ARCH}")
 
 if (DEFINED epicsv4_dir)
 	message(STATUS "EPICSv4 path manually set to ${epicsv4_dir}.")
+elseif (DEFINED ENV{EPICS_V4_DIR})
+	set(epicsv4_dir "$ENV{EPICS_V4_DIR}")
 elseif (DEFINED ENV{EPICS_MODULES_PATH})
 	# NOTE
 	# It is NOT a fatal error is we do not find it here.
@@ -69,7 +71,7 @@ ${epicsbase_dir}/lib/${epics_arch}
 # Of course, you can also just point the standard CMAKE_*_PATH variables to
 # your custom EPICS installation.  This is what we do to test different
 # EPICS versions quickly.
-
+message("${epicsv4_dir}")
 find_path(path_include_epics_pvData NAMES pv/pvData.h HINTS
 ${epicsv4_dir}/pvDataCPP/include
 ${epicsv4_dir}/pvDataCPP/${epics_pvData_version}/${epics_base_version}/include
