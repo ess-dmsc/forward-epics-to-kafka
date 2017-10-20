@@ -9,9 +9,9 @@
 #include <array>
 #include <atomic>
 #include <memory>
+#include <rapidjson/document.h>
 #include <string>
 #include <vector>
-#include <rapidjson/document.h>
 
 namespace BrightnESS {
 namespace ForwardEpicsToKafka {
@@ -71,7 +71,7 @@ public:
   using ulock = std::unique_lock<mutex>;
 
 protected:
-  explicit Stream(ChannelInfo channel_info){};
+  explicit Stream(ChannelInfo channel_info) : channel_info_(channel_info){};
 
 private:
   /// Each Epics update is converted by each Converter in the list
