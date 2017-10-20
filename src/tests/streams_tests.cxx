@@ -121,10 +121,9 @@ TEST(StreamsTest, check_stream_status_with_multiple_streams_with_negative_status
 
 TEST(StreamsTest, channel_stop_removes_single_channel_with_matched_channel_name) {
   Streams streams;
-
   auto s = createMockStream("hello", "world");
   streams.add(s);
-  streams.channel_stop("hello");
+  streams.channel_stop("world");
   ASSERT_EQ(nullptr, streams.back().get());
   ASSERT_EQ(0, streams.size());
 }
@@ -137,13 +136,13 @@ TEST(StreamsTest, channel_stop_removes_all_channels_with_matched_channel_name) {
 
   streams.add(s);
   streams.add(s2);
-  streams.channel_stop("hello");
+  streams.channel_stop("world");
   ASSERT_EQ(nullptr, streams.back().get());
   ASSERT_EQ(0, streams.size());
 }
 
 
-TEST(StreamsTest, channel_stop_no_channels_with_no_matched_channel_name) {
+TEST(StreamsTest, channel_stop_removes_no_channels_with_no_matched_channel_name) {
   Streams streams;
   auto s = createMockStream("hello", "world");
   auto s2 = createMockStream("world", "world");
@@ -154,3 +153,13 @@ TEST(StreamsTest, channel_stop_no_channels_with_no_matched_channel_name) {
   ASSERT_EQ(2, streams.size());
 }
 
+TEST(StreamsTest, channel_stop_removes_no_channels_with_no__given_channel_name) {
+  Streams streams;
+  auto s = createMockStream("hello", "world");
+  auto s2 = createMockStream("world", "world");
+  streams.add(s);
+  streams.add(s2);
+  streams.channel_stop("");
+  ASSERT_EQ(s2.get(), streams.back().get());
+  ASSERT_EQ(2, streams.size());
+}
