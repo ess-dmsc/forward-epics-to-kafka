@@ -46,10 +46,11 @@ static uint16_t _fmt(std::unique_ptr<FlatBufs::EpicsPVUpdate> &x) {
 rapidjson::Document ConversionPath::status_json() const {
   using namespace rapidjson;
   Document jd;
-  auto & a = jd.GetAllocator();
+  auto &a = jd.GetAllocator();
   jd.SetObject();
   jd.AddMember("schema", Value(converter->schema_name().data(), a), a);
-  jd.AddMember("broker", Value(kafka_output->pt.producer->opt.address.data(), a), a);
+  jd.AddMember("broker",
+               Value(kafka_output->pt.producer->opt.address.data(), a), a);
   jd.AddMember("topic", Value(kafka_output->topic_name().data(), a), a);
   return jd;
 }
@@ -196,19 +197,18 @@ int Stream::status() { return status_; }
 
 ChannelInfo const &Stream::channel_info() { return channel_info_; }
 
-size_t Stream::emit_queue_size() {
-  return emit_queue.size();
-}
+size_t Stream::emit_queue_size() { return emit_queue.size(); }
 
 rapidjson::Document Stream::status_json() {
   using namespace rapidjson;
   Document jd;
-  auto & a = jd.GetAllocator();
+  auto &a = jd.GetAllocator();
   jd.SetObject();
-  auto cthis = (Stream*)this;
-  auto & ci = cthis->channel_info();
+  auto cthis = (Stream *)this;
+  auto &ci = cthis->channel_info();
   jd.AddMember("channel_name", Value(ci.channel_name.data(), a), a);
-  jd.AddMember("emit_queue_size", Value().SetUint64(cthis->emit_queue_size()), a);
+  jd.AddMember("emit_queue_size", Value().SetUint64(cthis->emit_queue_size()),
+               a);
   {
     std::unique_lock<std::mutex> lock(seq_data_emitted.mx);
     auto it = seq_data_emitted.set.rbegin();
@@ -218,12 +218,11 @@ rapidjson::Document Stream::status_json() {
   }
   Value cps;
   cps.SetArray();
-  for (auto & cp : conversion_paths) {
+  for (auto &cp : conversion_paths) {
     cps.PushBack(Value().CopyFrom(cp->status_json(), a), a);
   }
   jd.AddMember("converters", cps, a);
   return jd;
 }
-
 }
 }

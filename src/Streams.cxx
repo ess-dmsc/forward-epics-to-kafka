@@ -8,9 +8,7 @@ using namespace BrightnESS::ForwardEpicsToKafka;
  *
  * @return The size of the stream vector.
  */
-int Streams::size() {
-  return static_cast<int>(streams.size());
-}
+int Streams::size() { return static_cast<int>(streams.size()); }
 
 /**
  * Stops specified channel and removes the stream.
@@ -19,9 +17,12 @@ int Streams::size() {
  */
 void Streams::channel_stop(std::string const &channel) {
   std::unique_lock<std::mutex> lock(streams_mutex);
-  streams.erase(std::remove_if(streams.begin(), streams.end(), [&](std::shared_ptr<Stream> s){
-    return (s->channel_info().channel_name == channel);
-  }), streams.end());
+  streams.erase(std::remove_if(streams.begin(), streams.end(),
+                               [&](std::shared_ptr<Stream> s) {
+                                 return (s->channel_info().channel_name ==
+                                         channel);
+                               }),
+                streams.end());
 }
 
 /**
@@ -45,16 +46,18 @@ void Streams::streams_clear() {
  * Check the status of the streams and stop any that are in error.
  */
 void Streams::check_stream_status() {
-  if (streams.empty()){
+  if (streams.empty()) {
     return;
   }
-  streams.erase(std::remove_if(streams.begin(), streams.end(), [&](std::shared_ptr<Stream> s){
-    if (s->status() < 0) {
-      s->stop();
-      return true;
-    }
-    return false;
-  }), streams.end());
+  streams.erase(std::remove_if(streams.begin(), streams.end(),
+                               [&](std::shared_ptr<Stream> s) {
+                                 if (s->status() < 0) {
+                                   s->stop();
+                                   return true;
+                                 }
+                                 return false;
+                               }),
+                streams.end());
 }
 
 /**
@@ -62,9 +65,7 @@ void Streams::check_stream_status() {
  *
  * @param s the stream to add.
  */
-void Streams::add(std::shared_ptr<Stream> s){
-  streams.push_back(s);
-}
+void Streams::add(std::shared_ptr<Stream> s) { streams.push_back(s); }
 
 /**
  * Get the last stream in the vector.
@@ -75,6 +76,7 @@ std::shared_ptr<BrightnESS::ForwardEpicsToKafka::Stream> Streams::back() {
   return streams.empty() ? nullptr : streams.back();
 }
 
-const std::vector<std::shared_ptr<BrightnESS::ForwardEpicsToKafka::Stream>>& Streams::get_streams() {
+const std::vector<std::shared_ptr<BrightnESS::ForwardEpicsToKafka::Stream>> &
+Streams::get_streams() {
   return streams;
 }
