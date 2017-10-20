@@ -5,7 +5,7 @@ set(sources
 tests.cxx
 MainOpt.cxx
 remote.cxx
-helper.cxx
+helper_tests.cxx
 uri.cxx
 $<TARGET_OBJECTS:__objects>
 )
