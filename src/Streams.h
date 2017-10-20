@@ -1,5 +1,10 @@
 #ifndef FORWARD_EPICS_TO_KAFKA_STREAMS_H
 #define FORWARD_EPICS_TO_KAFKA_STREAMS_H
+#include <memory>
+#include <string>
+#include <mutex>
+#include <vector>
+#include "Stream.h"
 
 namespace BrightnESS {
 namespace ForwardEpicsToKafka {

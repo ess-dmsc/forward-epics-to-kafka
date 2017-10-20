@@ -71,7 +71,7 @@ public:
   using ulock = std::unique_lock<mutex>;
 
 protected:
-  explicit Stream(ChannelInfo channel_info) : channel_info_(channel_info){};
+  explicit Stream(ChannelInfo channel_info);
 
 private:
   /// Each Epics update is converted by each Converter in the list
