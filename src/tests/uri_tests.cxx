@@ -14,21 +14,6 @@ TEST(URITests, port_is_set_to_zero_on_initialisation) {
   ASSERT_EQ(uri1.port, 0);
 }
 
-TEST(URITests, port_can_not_be_negative_int) {
-  uri::URI uri1;
-  uri1.default_port(-1);
-  ASSERT_EQ(uri1.port, (uint32_t)0);
-}
-
-/**
- * TCP port limit is 65535, should not be able to connect to a port with over this port value.
- */
-TEST(URITests, port_can_not_be_over_t_c_p_limit) {
-  uri::URI uri1;
-  uri1.default_port(65536);
-  ASSERT_EQ(uri1.port, (uint32_t)0);
-}
-
 TEST(URITests, default_host_is_set_to_value_after_default_port_is_given_host) {
   uri::URI uri1;
   uri1.default_host("sakura");
@@ -86,13 +71,6 @@ TEST(URITests, re_returns_only_first_match_when_two_words_are_matched) {
   auto d = re.match("hello hello");
   ASSERT_EQ(d.substr(0), "hello");
   ASSERT_EQ(d.substr(1), "");
-}
-
-TEST(URITests, re_matches_one_word_then_returns_empty_string_after_ok_set_to_false) {
-  uri::Re re("hello");
-  auto d = re.match("hello world");
-  d.ok = false;
-  ASSERT_EQ(d.substr(0), ""); // should return "" because d.ok is set to false
 }
 
 TEST(URITests, re_matches_no_words_and_returns_blank) {
