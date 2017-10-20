@@ -66,15 +66,6 @@ Stream::Stream(std::shared_ptr<ForwarderInfo> finfo, ChannelInfo channel_info)
   }
 }
 
-/**
- * This constructor should only be used for testing.
- *
- * @param channel_info The channel info.
- */
-Stream::Stream(ChannelInfo channel_info) : channel_info_(channel_info) {
-
-}
-
 Stream::~Stream() {
   CLOG(7, 2, "~Stream");
   stop();
