@@ -6,7 +6,7 @@ tests.cxx
 MainOpt.cxx
 remote.cxx
 helper.cxx
-uri.cxx
+uri_tests.cxx
 $<TARGET_OBJECTS:__objects>
 )
 add_executable(${tgt} ${sources})
