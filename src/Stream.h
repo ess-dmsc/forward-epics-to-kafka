@@ -71,6 +71,8 @@ public:
   using ulock = std::unique_lock<mutex>;
 
 protected:
+  // This constructor is to enable unit-testing.
+  // Not to be used outside of testing.
   explicit Stream(ChannelInfo channel_info);
 
 private:
