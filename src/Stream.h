@@ -9,9 +9,9 @@
 #include <array>
 #include <atomic>
 #include <memory>
+#include <rapidjson/document.h>
 #include <string>
 #include <vector>
-#include <rapidjson/document.h>
 
 namespace BrightnESS {
 namespace ForwardEpicsToKafka {
@@ -69,6 +69,11 @@ public:
   rapidjson::Document status_json();
   using mutex = std::mutex;
   using ulock = std::unique_lock<mutex>;
+
+protected:
+  // This constructor is to enable unit-testing.
+  // Not to be used outside of testing.
+  explicit Stream(ChannelInfo channel_info);
 
 private:
   /// Each Epics update is converted by each Converter in the list
