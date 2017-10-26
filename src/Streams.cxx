@@ -8,7 +8,7 @@ using namespace BrightnESS::ForwardEpicsToKafka;
  *
  * @return The size of the stream vector.
  */
-int Streams::size() { return static_cast<int>(streams.size()); }
+size_t Streams::size() { return streams.size(); }
 
 /**
  * Stops specified channel and removes the stream.
