@@ -2,18 +2,18 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ../../tests)
 
 set(tgt "tests")
 set(sources
-tests.cxx
-MainOpt.cxx
-remote.cxx
-helper.cxx
-uri.cxx
-$<TARGET_OBJECTS:__objects>
+        tests.cxx
+        MainOpt.cxx
+        remote.cxx
+        helper.cxx
+        uri.cxx
+        streams_tests.cxx
+        $<TARGET_OBJECTS:__objects>
 )
 add_executable(${tgt} ${sources})
 add_dependencies(${tgt} flatbuffers_generate)
 target_include_directories(${tgt} PRIVATE ${path_include_common})
 target_link_libraries(${tgt} ${libraries_common})
-
 add_gtest_to_target(${tgt})
 
 configure_file(test-config-valid.json ../../tests/test-config-valid.json)
