@@ -1,5 +1,5 @@
 def project = "forward-epics-to-kafka"
-def centos = docker.image('essdmscdm/centos-build-node:0.7.6')
+def centos = docker.image('essdmscdm/centos-build-node:0.8.0')
 
 node('docker && eee') {
     cleanWs()
