@@ -281,7 +281,7 @@ void Main::report_status() {
   rapidjson::StringBuffer buf;
   rapidjson::PrettyWriter<rapidjson::StringBuffer> wr(buf);
   jd.Accept(wr);
-  LOG(3, "status: {:.{}}", buf.GetString(), buf.GetSize());
+  LOG(8, "status: {:.{}}", buf.GetString(), buf.GetSize());
   status_producer_topic->produce((KafkaW::uchar *)buf.GetString(), buf.GetSize());
 }
 
