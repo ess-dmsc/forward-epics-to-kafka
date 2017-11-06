@@ -36,8 +36,6 @@ node('docker && eee') {
         stage('Get Dependencies') {
             def conan_remote = "ess-dmsc-local"
             def dependencies_script = """
-                export http_proxy=''
-                export https_proxy=''
                 mkdir build
                 cd build
                 conan remote add \
