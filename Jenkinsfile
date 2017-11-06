@@ -1,6 +1,12 @@
 def project = "forward-epics-to-kafka"
 def centos = docker.image('essdmscdm/centos-build-node:0.8.0')
 
+def failure_function(exception_obj, failureMessage) {
+    def toEmails = [[$class: 'DevelopersRecipientProvider']]
+    emailext body: '${DEFAULT_CONTENT}\n\"' + failureMessage + '\"\n\nCheck console output at $BUILD_URL to view the results.', recipientProviders: toEmails, subject: '${DEFAULT_SUBJECT}'
+    throw exception_obj
+}
+
 node('docker && eee') {
     cleanWs()
 
@@ -80,6 +86,8 @@ node('docker && eee') {
 
             archiveArtifacts 'forward-epics-to-kafka'
         }
+    } catch (e) {
+        failure_function(e, 'Failed to build.')
     } finally {
         container.stop()
     }
