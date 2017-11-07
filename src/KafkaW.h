@@ -44,15 +44,25 @@ public:
   std::map<std::string, std::string> conf_strings;
 };
 
-class Msg {
+class AbstractMsg {
+public:
+  virtual uchar *data()=0;
+  virtual uint32_t size()=0;
+  void *kmsg = nullptr;
+  virtual char const *topic_name()=0;
+  virtual int32_t offset()=0;
+  virtual int32_t partition()=0;
+};
+
+class Msg : public AbstractMsg {
 public:
   ~Msg();
-  uchar *data();
-  uint32_t size();
+  uchar *data() override;
+  uint32_t size() override;
   void *kmsg;
-  char const *topic_name();
-  int32_t offset();
-  int32_t partition();
+  char const *topic_name() override;
+  int32_t offset() override;
+  int32_t partition() override;
 };
 
 class PollStatus {
@@ -61,7 +71,7 @@ public:
   static PollStatus Err();
   static PollStatus EOP();
   static PollStatus Empty();
-  static PollStatus make_Msg(std::unique_ptr<Msg> x);
+  static PollStatus make_Msg(std::unique_ptr<AbstractMsg> x);
   PollStatus(PollStatus &&);
   PollStatus &operator=(PollStatus &&);
   ~PollStatus();
@@ -71,7 +81,7 @@ public:
   bool is_Err();
   bool is_EOP();
   bool is_Empty();
-  std::unique_ptr<Msg> is_Msg();
+  virtual std::unique_ptr<AbstractMsg> is_Msg();
 
 private:
   int state = -1;
@@ -80,21 +90,29 @@ private:
 
 class Inspect;
 
-class Consumer {
+class BaseConsumer{
 public:
-  Consumer(BrokerOpt opt);
-  Consumer(Consumer &&) = delete;
-  Consumer(Consumer const &) = delete;
+  virtual ~BaseConsumer() {}
+  virtual void init()=0;
+  virtual void add_topic(std::string topic)=0;
+  virtual PollStatus poll()=0;
+  std::function<void(rd_kafka_topic_partition_list_t *plist)> on_rebalance_assign;
+  std::function<void(rd_kafka_topic_partition_list_t *plist)> on_rebalance_start;
+  std::string topic;
+};
+
+class Consumer : public BaseConsumer {
+public:
+  explicit Consumer(BrokerOpt opt);
+  Consumer(Consumer &&) = default;
+  Consumer(Consumer const &) = default;
   ~Consumer();
-  void init();
-  void add_topic(std::string topic);
+  void init() override;
+  void add_topic(std::string topic) override;
   void dump_current_subscription();
-  PollStatus poll();
-  std::function<void(rd_kafka_topic_partition_list_t *plist)>
-      on_rebalance_assign;
-  std::function<void(rd_kafka_topic_partition_list_t *plist)>
-      on_rebalance_start;
+  PollStatus poll() override;
   rd_kafka_t *rk = nullptr;
+  std::string topic;
 
 private:
   BrokerOpt opt;

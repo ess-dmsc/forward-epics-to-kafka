@@ -93,7 +93,13 @@ Main::Main(MainOpt &opt)
     KafkaW::BrokerOpt bopt;
     bopt.conf_strings["group.id"] =
         fmt::format("forwarder-command-listener--pid{}", getpid());
-    config_listener.reset(new Config::Listener{bopt, main_opt.broker_config});
+
+    bopt.address = main_opt.broker_config.host_port;
+    bopt.poll_timeout_ms = 0;
+
+    auto consumer_ptr = make_unique<KafkaW::Consumer>(bopt);
+    consumer_ptr->topic = main_opt.broker_config.host;
+    config_listener =  make_unique<Config::Listener>(std::move(consumer_ptr));
   }
   if (main_opt.json) {
     auto m1 = main_opt.json->FindMember("streams");

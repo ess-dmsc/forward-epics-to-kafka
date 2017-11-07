@@ -3,23 +3,15 @@
 #include <condition_variable>
 #include <memory>
 #include <mutex>
+#include <iostream>
 
 namespace BrightnESS {
 namespace ForwardEpicsToKafka {
 namespace Config {
 
-struct Listener_impl {
-  std::unique_ptr<KafkaW::Consumer> consumer;
-  std::mutex mx;
-  std::condition_variable cv;
-  int connected = 0;
-};
-
-Listener::Listener(KafkaW::BrokerOpt bopt, uri::URI uri) {
-  bopt.address = uri.host_port;
-  bopt.poll_timeout_ms = 0;
+Listener::Listener(std::unique_ptr<KafkaW::BaseConsumer> baseConsumer) {
   impl.reset(new Listener_impl);
-  impl->consumer.reset(new KafkaW::Consumer(bopt));
+  impl->consumer.swap(baseConsumer);
   auto &consumer = *impl->consumer;
   consumer.on_rebalance_assign =
       [this](rd_kafka_topic_partition_list_t *plist) {
@@ -29,9 +21,6 @@ Listener::Listener(KafkaW::BrokerOpt bopt, uri::URI uri) {
         }
         impl->cv.notify_all();
       };
-  consumer.on_rebalance_assign = {};
-  consumer.on_rebalance_start = {};
-  consumer.add_topic(uri.topic);
 }
 
 Listener::~Listener() {}

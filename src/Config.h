@@ -2,11 +2,13 @@
 
 #include "KafkaW.h"
 #include "uri.h"
+#include "helper.h"
 #include <atomic>
 #include <chrono>
 #include <memory>
 #include <string>
 #include <vector>
+#include <condition_variable>
 
 namespace BrightnESS {
 namespace ForwardEpicsToKafka {
@@ -23,11 +25,16 @@ public:
   virtual void operator()(string const &msg) = 0;
 };
 
-struct Listener_impl;
+struct Listener_impl{
+  std::unique_ptr<KafkaW::BaseConsumer> consumer;
+  std::mutex mx;
+  std::condition_variable cv;
+  int connected = 0;
+};
 
 class Listener {
 public:
-  Listener(KafkaW::BrokerOpt bopt, uri::URI uri);
+  Listener(std::unique_ptr<KafkaW::BaseConsumer> baseConsumer);
   Listener(Listener const &) = delete;
   ~Listener();
   void poll(Callback &cb);
