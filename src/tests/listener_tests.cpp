@@ -67,35 +67,8 @@ public:
     std::unique_ptr<FakeMsg> m2(new FakeMsg);
     m2->kmsg = (void *) "hello";
     return FakePollStatus::make_Msg(std::move(m2));
-//    auto msg = make_unique<KafkaW::Msg>();
-//    return status.make_Msg(msg);
   }
 };
-
-//
-//TEST(kafkaw_consumer_tests, test_something) {
-//  MockConsumer mc;
-//  EXPECT_CALL(mc, poll()).Times(AtLeast(1));
-//  mc.poll();
-//}
-//
-//TEST(kafkaw_consumer_tests, test_something_else) {
-//  MockConsumer mc;
-//  EXPECT_CALL(mc, poll()).Times(AtLeast(1));
-//  mc.init();
-//}
-
-//TEST(kafkaw_consumer_tests, test_config_polling) {
-//
-////  EXPECT_CALL(mc, poll()).Times(AtLeast(1));
-////  std::unique_ptr<KafkaW::BaseConsumer> ptr = make_unique<MockConsumer>(mc);
-//  auto ptr = std::make_shared<MockConsumer>();
-//  EXPECT_CALL(*ptr, poll());
-//  BrightnESS::ForwardEpicsToKafka::Config::Listener listener1(ptr);
-//  auto cb = cb_fake();
-//  listener1.poll(cb);
-//  std::cout << cb.get_message() << std::endl;
-//}
 
 TEST(kafkaw_consumer_tests, test_config_polling_returns_msg) {
   std::string expected = "test";
@@ -105,3 +78,4 @@ TEST(kafkaw_consumer_tests, test_config_polling_returns_msg) {
   listener1.poll(cb);
   ASSERT_EQ(std::string(cb.get_message()), expected);
 }
+

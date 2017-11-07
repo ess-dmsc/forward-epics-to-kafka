@@ -90,16 +90,7 @@ Main::Main(MainOpt &opt)
     use_config = false;
   }
   if (use_config) {
-    KafkaW::BrokerOpt bopt;
-    bopt.conf_strings["group.id"] =
-        fmt::format("forwarder-command-listener--pid{}", getpid());
-
-    bopt.address = main_opt.broker_config.host_port;
-    bopt.poll_timeout_ms = 0;
-
-    auto consumer_ptr = make_unique<KafkaW::Consumer>(bopt);
-    consumer_ptr->topic = main_opt.broker_config.host;
-    config_listener =  make_unique<Config::Listener>(std::move(consumer_ptr));
+    SetUpListener();
   }
   if (main_opt.json) {
     auto m1 = main_opt.json->FindMember("streams");
@@ -118,6 +109,18 @@ Main::Main(MainOpt &opt)
     status_producer = std::make_shared<KafkaW::Producer>(bopt);
     status_producer_topic = ::make_unique<KafkaW::ProducerTopic>(status_producer, main_opt.status_uri.topic);
   }
+}
+void Main::SetUpListener() {
+  KafkaW::BrokerOpt bopt;
+  bopt.conf_strings["group.id"] =
+        fmt::format("forwarder-command-listener--pid{}", getpid());
+
+  bopt.address = main_opt.broker_config.host_port;
+  bopt.poll_timeout_ms = 0;
+
+  auto consumer_ptr = make_unique<KafkaW::Consumer>(bopt);
+  consumer_ptr->topic = main_opt.broker_config.host;
+  config_listener =  make_unique<Config::Listener>(move(consumer_ptr));
 }
 
 Main::~Main() {

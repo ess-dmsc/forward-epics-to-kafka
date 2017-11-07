@@ -66,6 +66,7 @@ private:
   std::shared_ptr<KafkaW::Producer> status_producer;
   std::unique_ptr<KafkaW::ProducerTopic> status_producer_topic;
   Streams streams;
+  void SetUpListener();
 };
 
 extern std::atomic<uint64_t> g__total_msgs_to_kafka;
