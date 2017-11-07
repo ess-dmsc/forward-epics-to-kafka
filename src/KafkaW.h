@@ -104,8 +104,8 @@ public:
 class Consumer : public BaseConsumer {
 public:
   explicit Consumer(BrokerOpt opt);
-  Consumer(Consumer &&) = default;
-  Consumer(Consumer const &) = default;
+  Consumer(Consumer &&) = delete;
+  Consumer(Consumer const &) = delete;
   ~Consumer();
   void init() override;
   void add_topic(std::string topic) override;
