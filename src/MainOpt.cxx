@@ -28,7 +28,7 @@ using std::vector;
 MainOpt::MainOpt() {
   hostname.resize(128);
   gethostname(hostname.data(), hostname.size());
-  if (hostname.back() != 0) {
+  if (hostname.back()) {
     // likely an error
     hostname.back() = 0;
   }
@@ -59,7 +59,7 @@ std::string MainOpt::brokers_as_comma_list() const {
 }
 
 int MainOpt::parse_json_file(string config_file) {
-  if (config_file == "") {
+  if (config_file.empty()) {
     LOG(3, "given config filename is empty");
     return -1;
   }
@@ -87,24 +87,16 @@ int MainOpt::parse_json_file(string config_file) {
     LOG(3, "can not open the requested config-file");
     return -4;
   }
-  fseek(f1, 0, SEEK_END);
-  int N1 = ftell(f1);
-  fseek(f1, 0, SEEK_SET);
-  std::vector<char> buf1;
-  buf1.resize(N1);
-  FileReadStream is(f1, buf1.data(), N1);
-  json = std::make_shared<Document>();
-  auto &d = *json;
-  d.ParseStream(is);
-  fclose(f1);
-  f1 = 0;
+  rapidjson::Document* d = parseDocument(f1);
 
-  if (d.HasParseError()) {
+  if (d->HasParseError()) {
     LOG(3, "configuration is not well formed");
     return -5;
   }
+
   SchemaValidator vali(schema);
-  if (!d.Accept(vali)) {
+
+  if (!d->Accept(vali)) {
     StringBuffer sb1, sb2;
     vali.GetInvalidSchemaPointer().StringifyUriFragment(sb1);
     vali.GetInvalidDocumentPointer().StringifyUriFragment(sb2);
@@ -119,62 +111,66 @@ int MainOpt::parse_json_file(string config_file) {
     return -6;
   }
   vali.Reset();
+  findBroker(*d);
+  findBrokerConfig(*d);
+  findConversionThreads(*d);
+  findConversionWorkerQueueSize(*d);
+  findMainPollInterval(*d);
+  findBrokersConfig(*d);
+  findStatusUri(*d);
 
-  {
-    auto &v = d.FindMember("broker")->value;
-    if (v.IsString()) {
-      set_broker(v.GetString());
+  return 0;
+}
+
+rapidjson::Document* MainOpt::parseDocument(FILE *f1) {
+  fseek(f1, 0, SEEK_END);
+  int N1 = ftell(f1);
+  fseek(f1, 0, SEEK_SET);
+  vector<char> buf1;
+  buf1.resize(N1);
+  rapidjson::FileReadStream is(f1, buf1.data(), N1);
+  json = std::make_shared<rapidjson::Document>();
+  auto &d = *json;
+  d.ParseStream(is);
+  fclose(f1);
+  f1 = nullptr;
+  return &d;
+}
+
+void MainOpt::findStatusUri(rapidjson::Document &d) {
+  auto &v = d.FindMember("status-uri")->value;
+  if (v.IsString()) {
+      uri::URI u1;
+      u1.init(v.GetString());
+      u1.default_port(9092);
+      status_uri = u1;
     }
-  }
-  {
-    auto &v = d.FindMember("broker-config")->value;
-    if (v.IsString()) {
-      broker_config = {v.GetString()};
-    }
-  }
-  {
-    auto &v = d.FindMember("conversion-threads")->value;
-    if (v.IsInt()) {
-      conversion_threads = v.GetInt();
-    }
-  }
-  {
-    auto &v = d.FindMember("conversion-worker-queue-size")->value;
-    if (v.IsInt()) {
-      conversion_worker_queue_size = v.GetInt();
-    }
-  }
-  {
-    auto &v = d.FindMember("main-poll-interval")->value;
-    if (v.IsInt()) {
-      main_poll_interval = v.GetInt();
-    }
-  }
-  {
-    auto m1 = d.FindMember("kafka");
-    if (m1 != d.MemberEnd()) {
-      auto &v = m1->value;
-      if (v.IsObject()) {
-        auto m2 = v.FindMember("broker");
-        if (m2 != d.MemberEnd()) {
-          auto &v2 = m2->value;
-          if (v2.IsObject()) {
-            for (auto &x : v2.GetObject()) {
-              auto const &n = x.name.GetString();
-              if (strncmp("___", n, 3) == 0) {
-                // ignore
+}
+
+void MainOpt::findBrokersConfig(rapidjson::Document &d) {
+  auto m1 = d.FindMember("kafka");
+  if (m1 != d.MemberEnd()) {
+    auto &v = m1->value;
+    if (v.IsObject()) {
+      auto m2 = v.FindMember("broker");
+      if (m2 != d.MemberEnd()) {
+        auto &v2 = m2->value;
+        if (v2.IsObject()) {
+          for (auto &x : v2.GetObject()) {
+            auto const &n = x.name.GetString();
+            if (strncmp("___", n, 3) == 0) {
+              // ignore
+            } else {
+              if (x.value.IsString()) {
+                auto const &v = x.value.GetString();
+                LOG(6, "kafka broker config {}: {}", n, v);
+                broker_opt.conf_strings[n] = v;
+              } else if (x.value.IsInt()) {
+                auto const &v = x.value.GetInt();
+                LOG(6, "kafka broker config {}: {}", n, v);
+                broker_opt.conf_ints[n] = v;
               } else {
-                if (x.value.IsString()) {
-                  auto const &v = x.value.GetString();
-                  LOG(6, "kafka broker config {}: {}", n, v);
-                  broker_opt.conf_strings[n] = v;
-                } else if (x.value.IsInt()) {
-                  auto const &v = x.value.GetInt();
-                  LOG(6, "kafka broker config {}: {}", n, v);
-                  broker_opt.conf_ints[n] = v;
-                } else {
-                  LOG(3, "ERROR can not understand option: {}", n);
-                }
+                LOG(3, "ERROR can not understand option: {}", n);
               }
             }
           }
@@ -182,16 +178,41 @@ int MainOpt::parse_json_file(string config_file) {
       }
     }
   }
-  {
-    auto &v = d.FindMember("status-uri")->value;
-    if (v.IsString()) {
-      uri::URI u1;
-      u1.init(v.GetString());
-      u1.default_port(9092);
-      status_uri = u1;
+}
+
+void MainOpt::findMainPollInterval(rapidjson::Document &d) {
+  auto &v = d.FindMember("main-poll-interval")->value;
+  if (v.IsInt()) {
+      main_poll_interval = v.GetInt();
     }
-  }
-  return 0;
+}
+
+void MainOpt::findConversionWorkerQueueSize(rapidjson::Document &d) {
+  auto &v = d.FindMember("conversion-worker-queue-size")->value;
+  if (v.IsInt()) {
+      conversion_worker_queue_size = v.GetInt();
+    }
+}
+
+void MainOpt::findConversionThreads(rapidjson::Document &d) {
+  auto &v = d.FindMember("conversion-threads")->value;
+  if (v.IsInt()) {
+      conversion_threads = v.GetInt();
+    }
+}
+
+void MainOpt::findBrokerConfig(rapidjson::Document &d) {
+  auto &v = d.FindMember("broker-config")->value;
+  if (v.IsString()) {
+      broker_config = {v.GetString()};
+    }
+}
+
+void MainOpt::findBroker(rapidjson::Document &d) {
+  auto &v = d.FindMember("broker")->value;
+  if (v.IsString()) {
+      set_broker(v.GetString());
+    }
 }
 
 std::pair<int, std::unique_ptr<MainOpt>> parse_opt(int argc, char **argv) {
@@ -337,17 +358,16 @@ std::pair<int, std::unique_ptr<MainOpt>> parse_opt(int argc, char **argv) {
         opt.brokers_as_comma_list());
     ret.first = 1;
   }
-
   return ret;
 }
 
 void MainOpt::init_logger() {
-  if (kafka_gelf != "") {
+  if (!kafka_gelf.empty()) {
     uri::URI uri(kafka_gelf);
     log_kafka_gelf_start(uri.host, uri.topic);
     LOG(3, "Enabled kafka_gelf: //{}/{}", uri.host, uri.topic);
   }
-  if (graylog_logger_address != "") {
+  if (!graylog_logger_address.empty()) {
     fwd_graylog_logger_enable(graylog_logger_address);
   }
 }

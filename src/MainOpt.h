@@ -40,6 +40,14 @@ struct MainOpt {
   KafkaW::BrokerOpt broker_opt;
   void init_logger();
   friend class ::MainOpt_T;
+  void findBroker(rapidjson::Document &d);
+  void findBrokerConfig(rapidjson::Document &d);
+  void findConversionThreads(rapidjson::Document &d);
+  void findConversionWorkerQueueSize(rapidjson::Document &d);
+  void findMainPollInterval(rapidjson::Document &d);
+  void findBrokersConfig(rapidjson::Document &d);
+  void findStatusUri(rapidjson::Document &d);
+  rapidjson::Document* parseDocument(FILE *f1);
 };
 
 std::pair<int, std::unique_ptr<MainOpt>> parse_opt(int argc, char **argv);
