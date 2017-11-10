@@ -18,8 +18,8 @@
 #include <unistd.h>
 #endif
 #include <rapidjson/document.h>
-#include <rapidjson/writer.h>
 #include <rapidjson/prettywriter.h>
+#include <rapidjson/writer.h>
 
 namespace BrightnESS {
 namespace ForwardEpicsToKafka {
@@ -110,7 +110,8 @@ Main::Main(MainOpt &opt)
     KafkaW::BrokerOpt bopt;
     bopt.address = main_opt.status_uri.host_port;
     status_producer = std::make_shared<KafkaW::Producer>(bopt);
-    status_producer_topic = ::make_unique<KafkaW::ProducerTopic>(status_producer, main_opt.status_uri.topic);
+    status_producer_topic = ::make_unique<KafkaW::ProducerTopic>(
+        status_producer, main_opt.status_uri.topic);
   }
 }
 
@@ -270,11 +271,11 @@ void Main::report_status() {
   using rapidjson::Document;
   using rapidjson::Value;
   Document jd;
-  auto & a = jd.GetAllocator();
+  auto &a = jd.GetAllocator();
   jd.SetObject();
   Value j_streams;
   j_streams.SetArray();
-  for (auto & stream : streams.get_streams()) {
+  for (auto &stream : streams.get_streams()) {
     j_streams.PushBack(Value().CopyFrom(stream->status_json(), a), a);
   }
   jd.AddMember("streams", Value(j_streams, a), a);
@@ -282,7 +283,8 @@ void Main::report_status() {
   rapidjson::PrettyWriter<rapidjson::StringBuffer> wr(buf);
   jd.Accept(wr);
   LOG(8, "status: {:.{}}", buf.GetString(), buf.GetSize());
-  status_producer_topic->produce((KafkaW::uchar *)buf.GetString(), buf.GetSize());
+  status_producer_topic->produce((KafkaW::uchar *)buf.GetString(),
+                                 buf.GetSize());
 }
 
 void Main::report_stats(int dt) {
@@ -341,7 +343,6 @@ void Main::report_stats(int dt) {
     curl->send(influxbuf, main_opt.influx_url);
   }
 }
-
 
 int Main::mapping_add(rapidjson::Value &mapping) {
   using std::string;
