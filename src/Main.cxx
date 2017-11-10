@@ -391,6 +391,7 @@ int Main::mapping_add(rapidjson::Value &mapping) {
       if (uri.port != 0) {
         topic_uri.port = uri.port;
       }
+      topic_uri.parse(topic);
       Converter::sptr conv;
       if (cname.size() > 0) {
         auto lock = get_lock_converters();
