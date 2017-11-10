@@ -93,7 +93,25 @@ static vector<string> hostport(string s) {
   return {string(), string(), s};
 }
 
+static string trim(string s) {
+  string::size_type a = 0;
+  while (s.find(" ", a) == a) {
+    ++a;
+  }
+  s = s.substr(a);
+  if (s.empty()) {
+    return s;
+  }
+  a = s.size() - 1;
+  while (s[a] == ' ') {
+    --a;
+  }
+  s = s.substr(0, a + 1);
+  return s;
+}
+
 void URI::parse(string uri) {
+  uri = trim(uri);
   auto proto = protocol(uri);
   if (not proto[0].empty()) {
     scheme = proto[0];
