@@ -1,6 +1,9 @@
 #include "uri.h"
 #include "logger.h"
 #include <iostream>
+#ifdef _MSC_VER
+#include <iso646.h>
+#endif
 
 namespace uri {
 
