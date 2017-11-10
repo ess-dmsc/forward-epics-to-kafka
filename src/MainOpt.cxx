@@ -50,8 +50,9 @@ std::string MainOpt::brokers_as_comma_list() const {
   std::string s1;
   int i1 = 0;
   for (auto &x : brokers) {
-    if (i1)
+    if (i1) {
       s1 += ",";
+    }
     s1 += x.host_port;
     ++i1;
   }
