@@ -41,7 +41,7 @@ void MainOpt::set_broker(string broker) {
   for (auto &x : a) {
     uri::URI u1;
     u1.require_host_slashes = false;
-    u1.init(x);
+    u1.parse(x);
     brokers.push_back(u1);
   }
 }
@@ -50,8 +50,9 @@ std::string MainOpt::brokers_as_comma_list() const {
   std::string s1;
   int i1 = 0;
   for (auto &x : brokers) {
-    if (i1)
+    if (i1) {
       s1 += ",";
+    }
     s1 += x.host_port;
     ++i1;
   }
@@ -186,8 +187,8 @@ int MainOpt::parse_json_file(string config_file) {
     auto &v = d.FindMember("status-uri")->value;
     if (v.IsString()) {
       uri::URI u1;
-      u1.init(v.GetString());
-      u1.default_port(9092);
+      u1.port = 9092;
+      u1.parse(v.GetString());
       status_uri = u1;
     }
   }
@@ -259,8 +260,8 @@ std::pair<int, std::unique_ptr<MainOpt>> parse_opt(int argc, char **argv) {
       }
       if (std::string("broker-config") == lname) {
         uri::URI u1;
-        u1.init(optarg);
-        u1.default_port(9092);
+        u1.port = 9092;
+        u1.parse(optarg);
         opt.broker_config = u1;
       }
       if (std::string("broker") == lname) {
@@ -286,8 +287,8 @@ std::pair<int, std::unique_ptr<MainOpt>> parse_opt(int argc, char **argv) {
       }
       if (std::string("status-uri") == lname) {
         uri::URI u1;
-        u1.init(optarg);
-        u1.default_port(9092);
+        u1.port = 9092;
+        u1.parse(optarg);
         opt.status_uri = u1;
       }
     }

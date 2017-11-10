@@ -24,7 +24,7 @@ TEST(URI, host_port) {
 TEST(URI, host_port_noslashes) {
   URI u1;
   u1.require_host_slashes = false;
-  u1.init("myhost:345");
+  u1.parse("myhost:345");
   ASSERT_EQ(u1.scheme, "");
   ASSERT_EQ(u1.host, "myhost");
   ASSERT_EQ(u1.port, (uint32_t)345);
@@ -36,16 +36,18 @@ TEST(URI, ip_port) {
   ASSERT_EQ(u1.port, (uint32_t)345);
 }
 TEST(URI, scheme_host_port) {
-  URI u1("http://my.host:345");
-  u1.default_port(123);
+  URI u1;
+  u1.port = 123;
+  u1.parse("http://my.host:345");
   ASSERT_EQ(u1.scheme, "http");
   ASSERT_EQ(u1.host, "my.host");
   ASSERT_EQ(u1.host_port, "my.host:345");
   ASSERT_EQ(u1.port, (uint32_t)345);
 }
 TEST(URI, scheme_host_port_default) {
-  URI u1("http://my.host");
-  u1.default_port(123);
+  URI u1;
+  u1.port = 123;
+  u1.parse("http://my.host");
   ASSERT_EQ(u1.scheme, "http");
   ASSERT_EQ(u1.host, "my.host");
   ASSERT_EQ(u1.host_port, "my.host:123");
@@ -121,11 +123,16 @@ TEST(URI, reltopic) {
   ASSERT_EQ(u1.topic, "topic-name.test");
 }
 TEST(URI, host_default_topic) {
-  URI u1("//my.host");
-  u1.default_path("/some-path");
+  URI u1("/some-path");
+  u1.parse("//my.host");
   ASSERT_EQ(u1.scheme, "");
   ASSERT_EQ(u1.host, "my.host");
   ASSERT_EQ(u1.port, (uint32_t)0);
   ASSERT_EQ(u1.path, "/some-path");
   ASSERT_EQ(u1.topic, "some-path");
+}
+TEST(URI, trim) {
+  URI u1("  //some:123     ");
+  ASSERT_EQ(u1.host, "some");
+  ASSERT_EQ(u1.port, 123);
 }
