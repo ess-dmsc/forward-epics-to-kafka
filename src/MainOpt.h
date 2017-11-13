@@ -2,6 +2,7 @@
 #include "KafkaW.h"
 #include "SchemaRegistry.h"
 #include "uri.h"
+#include <getopt.h>
 #include <rapidjson/document.h>
 #include <string>
 #include <vector>
@@ -40,15 +41,60 @@ struct MainOpt {
   KafkaW::BrokerOpt broker_opt;
   void init_logger();
   friend class ::MainOpt_T;
-  void findBroker(rapidjson::Document &d);
-  void findBrokerConfig(rapidjson::Document &d);
-  void findConversionThreads(rapidjson::Document &d);
-  void findConversionWorkerQueueSize(rapidjson::Document &d);
-  void findMainPollInterval(rapidjson::Document &d);
-  void findBrokersConfig(rapidjson::Document &d);
-  void findStatusUri(rapidjson::Document &d);
-  rapidjson::Document* parseDocument(FILE *f1);
+  void find_broker(rapidjson::Document &document);
+  void find_broker_config(rapidjson::Document &document);
+  void find_conversion_threads(rapidjson::Document &document);
+  void find_conversion_worker_queue_size(rapidjson::Document &document);
+  void find_main_poll_interval(rapidjson::Document &document);
+  void find_brokers_config(rapidjson::Document &document);
+  void find_status_uri(rapidjson::Document &document);
+  rapidjson::Document *parse_document(FILE *f1);
 };
+
+static struct option LONG_OPTIONS[] = {
+    {"help", no_argument, nullptr, 'h'},
+    {"broker-config", required_argument, nullptr, 0},
+    {"broker", required_argument, nullptr, 0},
+    {"kafka-gelf", required_argument, nullptr, 0},
+    {"graylog-logger-address", required_argument, nullptr, 0},
+    {"influx-url", required_argument, nullptr, 0},
+    {"config-file", required_argument, nullptr, 0},
+    {"log-file", required_argument, nullptr, 0},
+    {"forwarder-ix", required_argument, nullptr, 0},
+    {"write-per-message", required_argument, nullptr, 0},
+    {"teamid", required_argument, nullptr, 0},
+    {"status-uri", required_argument, nullptr, 0},
+    {nullptr, 0, nullptr, 0},
+};
+
+static string MAN_PAGE =
+    ("Forwards EPICS process variables to Kafka topics.\n"
+     "\n"
+     "forward-epics-to-kafka\n"
+     "  --help, -h\n"
+     "\n"
+     "  --config-file                     filename\n"
+     "      Configuration file in JSON format.\n"
+     "      To overwrite the options in config-file, specify them later on "
+     "the command line.\n"
+     "\n"
+     "  --broker-config                   //host[:port]/topic\n"
+     "      Kafka brokers to connect with for configuration updates.\n"
+     "\n"
+     "  --broker                          host:port,host:port,...\n"
+     "      Kafka brokers to connect with for configuration updates\n"
+     "      Default: {}\n"
+     "\n"
+     "  --kafka-gelf                      kafka://host[:port]/topic\n"
+     "\n"
+     "  --graylog-logger-address          host:port\n"
+     "      Log to Graylog via graylog_logger library.\n"
+     "\n"
+     "  -v\n"
+     "      Decrease log_level by one step.  Default log_level is 3.\n"
+     "  -Q\n"
+     "      Increase log_level by one step.\n"
+     "\n");
 
 std::pair<int, std::unique_ptr<MainOpt>> parse_opt(int argc, char **argv);
 }

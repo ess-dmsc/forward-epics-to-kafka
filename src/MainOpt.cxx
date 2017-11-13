@@ -18,6 +18,7 @@
 #include <rapidjson/schema.h>
 #include <rapidjson/stringbuffer.h>
 #include <rapidjson/writer.h>
+#include <iostream>
 
 namespace BrightnESS {
 namespace ForwardEpicsToKafka {
@@ -87,16 +88,16 @@ int MainOpt::parse_json_file(string config_file) {
     LOG(3, "can not open the requested config-file");
     return -4;
   }
-  rapidjson::Document* d = parseDocument(f1);
+  rapidjson::Document *document = parse_document(f1);
 
-  if (d->HasParseError()) {
+  if (document->HasParseError()) {
     LOG(3, "configuration is not well formed");
     return -5;
   }
 
   SchemaValidator vali(schema);
 
-  if (!d->Accept(vali)) {
+  if (!document->Accept(vali)) {
     StringBuffer sb1, sb2;
     vali.GetInvalidSchemaPointer().StringifyUriFragment(sb1);
     vali.GetInvalidDocumentPointer().StringifyUriFragment(sb2);
@@ -111,18 +112,18 @@ int MainOpt::parse_json_file(string config_file) {
     return -6;
   }
   vali.Reset();
-  findBroker(*d);
-  findBrokerConfig(*d);
-  findConversionThreads(*d);
-  findConversionWorkerQueueSize(*d);
-  findMainPollInterval(*d);
-  findBrokersConfig(*d);
-  findStatusUri(*d);
+  find_broker(*document);
+  find_broker_config(*document);
+  find_conversion_threads(*document);
+  find_conversion_worker_queue_size(*document);
+  find_main_poll_interval(*document);
+  find_brokers_config(*document);
+  find_status_uri(*document);
 
   return 0;
 }
 
-rapidjson::Document* MainOpt::parseDocument(FILE *f1) {
+rapidjson::Document *MainOpt::parse_document(FILE *f1) {
   fseek(f1, 0, SEEK_END);
   int N1 = ftell(f1);
   fseek(f1, 0, SEEK_SET);
@@ -137,40 +138,38 @@ rapidjson::Document* MainOpt::parseDocument(FILE *f1) {
   return &d;
 }
 
-void MainOpt::findStatusUri(rapidjson::Document &d) {
-  auto &v = d.FindMember("status-uri")->value;
-  if (v.IsString()) {
-      uri::URI u1;
-      u1.init(v.GetString());
-      u1.default_port(9092);
-      status_uri = u1;
-    }
+void MainOpt::find_status_uri(rapidjson::Document &document) {
+  auto &value = document.FindMember("status-uri")->value;
+  if (value.IsString()) {
+    uri::URI u1;
+    u1.init(value.GetString());
+    u1.default_port(9092);
+    status_uri = u1;
+  }
 }
 
-void MainOpt::findBrokersConfig(rapidjson::Document &d) {
-  auto m1 = d.FindMember("kafka");
-  if (m1 != d.MemberEnd()) {
-    auto &v = m1->value;
-    if (v.IsObject()) {
-      auto m2 = v.FindMember("broker");
-      if (m2 != d.MemberEnd()) {
-        auto &v2 = m2->value;
-        if (v2.IsObject()) {
-          for (auto &x : v2.GetObject()) {
-            auto const &n = x.name.GetString();
-            if (strncmp("___", n, 3) == 0) {
-              // ignore
-            } else {
-              if (x.value.IsString()) {
-                auto const &v = x.value.GetString();
-                LOG(6, "kafka broker config {}: {}", n, v);
-                broker_opt.conf_strings[n] = v;
-              } else if (x.value.IsInt()) {
-                auto const &v = x.value.GetInt();
-                LOG(6, "kafka broker config {}: {}", n, v);
-                broker_opt.conf_ints[n] = v;
+void MainOpt::find_brokers_config(rapidjson::Document &document) {
+  auto kafka = document.FindMember("kafka");
+  if (kafka != document.MemberEnd()) {
+    auto &brokers = kafka->value;
+    if (brokers.IsObject()) {
+      auto broker = brokers.FindMember("broker");
+      if (broker != document.MemberEnd()) {
+        auto &broker_properties = broker->value;
+        if (broker_properties.IsObject()) {
+          for (auto &broker_property : broker_properties.GetObject()) {
+            auto const &name = broker_property.name.GetString();
+            if (strncmp("___", name, 3)) {
+              if (broker_property.value.IsString()) {
+                auto const &value = broker_property.value.GetString();
+                LOG(6, "kafka broker config {}: {}", name, value);
+                broker_opt.conf_strings[name] = value;
+              } else if (broker_property.value.IsInt()) {
+                auto const &value = broker_property.value.GetInt();
+                LOG(6, "kafka broker config {}: {}", name, value);
+                broker_opt.conf_ints[name] = value;
               } else {
-                LOG(3, "ERROR can not understand option: {}", n);
+                LOG(3, "ERROR can not understand option: {}", name);
               }
             }
           }
@@ -180,78 +179,53 @@ void MainOpt::findBrokersConfig(rapidjson::Document &d) {
   }
 }
 
-void MainOpt::findMainPollInterval(rapidjson::Document &d) {
-  auto &v = d.FindMember("main-poll-interval")->value;
-  if (v.IsInt()) {
-      main_poll_interval = v.GetInt();
-    }
+void MainOpt::find_main_poll_interval(rapidjson::Document &document) {
+  auto &value = document.FindMember("main-poll-interval")->value;
+  if (value.IsInt()) {
+    main_poll_interval = value.GetInt();
+  }
 }
 
-void MainOpt::findConversionWorkerQueueSize(rapidjson::Document &d) {
-  auto &v = d.FindMember("conversion-worker-queue-size")->value;
-  if (v.IsInt()) {
-      conversion_worker_queue_size = v.GetInt();
-    }
+void MainOpt::find_conversion_worker_queue_size(rapidjson::Document &document) {
+  auto &value = document.FindMember("conversion-worker-queue-size")->value;
+  if (value.IsInt()) {
+    conversion_worker_queue_size = value.GetInt();
+  }
 }
 
-void MainOpt::findConversionThreads(rapidjson::Document &d) {
-  auto &v = d.FindMember("conversion-threads")->value;
-  if (v.IsInt()) {
-      conversion_threads = v.GetInt();
-    }
+void MainOpt::find_conversion_threads(rapidjson::Document &document) {
+  auto &value = document.FindMember("conversion-threads")->value;
+  if (value.IsInt()) {
+    conversion_threads = value.GetInt();
+  }
 }
 
-void MainOpt::findBrokerConfig(rapidjson::Document &d) {
-  auto &v = d.FindMember("broker-config")->value;
-  if (v.IsString()) {
-      broker_config = {v.GetString()};
-    }
+void MainOpt::find_broker_config(rapidjson::Document &document) {
+  auto &value = document.FindMember("broker-config")->value;
+  if (value.IsString()) {
+    broker_config = {value.GetString()};
+  }
 }
 
-void MainOpt::findBroker(rapidjson::Document &d) {
-  auto &v = d.FindMember("broker")->value;
-  if (v.IsString()) {
-      set_broker(v.GetString());
-    }
+void MainOpt::find_broker(rapidjson::Document &document) {
+  auto &value = document.FindMember("broker")->value;
+  if (value.IsString()) {
+    set_broker(value.GetString());
+  }
 }
 
 std::pair<int, std::unique_ptr<MainOpt>> parse_opt(int argc, char **argv) {
   std::pair<int, std::unique_ptr<MainOpt>> ret{
       0, std::unique_ptr<MainOpt>(new MainOpt)};
   auto &opt = *ret.second;
-  static struct option long_options[] = {
-      {"help", no_argument, 0, 'h'},
-      {"broker-config", required_argument, 0, 0},
-      {"broker", required_argument, 0, 0},
-      {"kafka-gelf", required_argument, 0, 0},
-      {"graylog-logger-address", required_argument, 0, 0},
-      {"influx-url", required_argument, 0, 0},
-      {"config-file", required_argument, 0, 0},
-      {"log-file", required_argument, 0, 0},
-      {"forwarder-ix", required_argument, 0, 0},
-      {"write-per-message", required_argument, 0, 0},
-      {"teamid", required_argument, 0, 0},
-      {"status-uri", required_argument, 0, 0},
-      {0, 0, 0, 0},
-  };
   int option_index = 0;
   bool getopt_error = false;
   while (true) {
-    int c = getopt_long(argc, argv, "hvQ", long_options, &option_index);
-    // LOG(2, "c getopt {}", c);
+    int c = getopt_long(argc, argv, "hvQ", LONG_OPTIONS, &option_index);
     if (c == -1)
       break;
     if (c == '?') {
-      // LOG(2, "option argument missing");
       getopt_error = true;
-    }
-    if (false) {
-      if (c == 0) {
-        printf("at long  option %d [%1c] %s\n", option_index, c,
-               long_options[option_index].name);
-      } else {
-        printf("at short option %d [%1c]\n", option_index, c);
-      }
     }
     switch (c) {
     case 'h':
@@ -263,15 +237,15 @@ std::pair<int, std::unique_ptr<MainOpt>> parse_opt(int argc, char **argv) {
     case 'Q':
       log_level = (std::max)(0, log_level - 1);
       break;
-    case 0:
-      auto lname = long_options[option_index].name;
+    default:
+      auto lname = LONG_OPTIONS[option_index].name;
       // long option without short equivalent:
       if (std::string("help") == lname) {
         opt.help = true;
       }
       if (std::string("config-file") == lname) {
         if (opt.parse_json_file(optarg) != 0) {
-          opt.help = 1;
+          opt.help = true;
           ret.first = 1;
         }
       }
@@ -297,10 +271,10 @@ std::pair<int, std::unique_ptr<MainOpt>> parse_opt(int argc, char **argv) {
         opt.influx_url = optarg;
       }
       if (std::string("forwarder-ix") == lname) {
-        opt.forwarder_ix = strtol(optarg, nullptr, 10);
+        opt.forwarder_ix = std::stoi(optarg);
       }
       if (std::string("write-per-message") == lname) {
-        opt.write_per_message = strtol(optarg, nullptr, 10);
+        opt.write_per_message = std::stoi(optarg);
       }
       if (std::string("teamid") == lname) {
         opt.teamid = strtoul(optarg, nullptr, 0);
@@ -327,35 +301,7 @@ std::pair<int, std::unique_ptr<MainOpt>> parse_opt(int argc, char **argv) {
     fmt::print("forward-epics-to-kafka-0.1.0 {:.7} (ESS, BrightnESS)\n"
                "  Contact: dominik.werder@psi.ch\n\n",
                GIT_COMMIT);
-    fmt::print(
-        "Forwards EPICS process variables to Kafka topics.\n"
-        "\n"
-        "forward-epics-to-kafka\n"
-        "  --help, -h\n"
-        "\n"
-        "  --config-file                     filename\n"
-        "      Configuration file in JSON format.\n"
-        "      To overwrite the options in config-file, specify them later on "
-        "the command line.\n"
-        "\n"
-        "  --broker-config                   //host[:port]/topic\n"
-        "      Kafka brokers to connect with for configuration updates.\n"
-        "\n"
-        "  --broker                          host:port,host:port,...\n"
-        "      Kafka brokers to connect with for configuration updates\n"
-        "      Default: {}\n"
-        "\n"
-        "  --kafka-gelf                      kafka://host[:port]/topic\n"
-        "\n"
-        "  --graylog-logger-address          host:port\n"
-        "      Log to Graylog via graylog_logger library.\n"
-        "\n"
-        "  -v\n"
-        "      Decrease log_level by one step.  Default log_level is 3.\n"
-        "  -Q\n"
-        "      Increase log_level by one step.\n"
-        "\n",
-        opt.brokers_as_comma_list());
+    fmt::print(MAN_PAGE, opt.brokers_as_comma_list());
     ret.first = 1;
   }
   return ret;
