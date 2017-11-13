@@ -13,12 +13,12 @@
 #include "git_commit_current.h"
 #include "helper.h"
 #include "logger.h"
+#include <iostream>
 #include <rapidjson/filereadstream.h>
 #include <rapidjson/prettywriter.h>
 #include <rapidjson/schema.h>
 #include <rapidjson/stringbuffer.h>
 #include <rapidjson/writer.h>
-#include <iostream>
 
 namespace BrightnESS {
 namespace ForwardEpicsToKafka {
