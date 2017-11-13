@@ -144,7 +144,7 @@ void MainOpt::find_status_uri(rapidjson::Document &document) {
   if (value.IsString()) {
     uri::URI u1;
     u1.port = 9092;
-    u1.parse(v.GetString());
+    u1.parse(value.GetString());
     status_uri = u1;
   }
 }
