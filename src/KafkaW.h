@@ -46,12 +46,12 @@ public:
 
 class AbstractMsg {
 public:
-  virtual uchar *data()=0;
-  virtual uint32_t size()=0;
+  virtual uchar *data() = 0;
+  virtual uint32_t size() = 0;
   void *kmsg = nullptr;
-  virtual char const *topic_name()=0;
-  virtual int32_t offset()=0;
-  virtual int32_t partition()=0;
+  virtual char const *topic_name() = 0;
+  virtual int32_t offset() = 0;
+  virtual int32_t partition() = 0;
 };
 
 class Msg : public AbstractMsg {
@@ -90,14 +90,16 @@ private:
 
 class Inspect;
 
-class BaseConsumer{
+class BaseConsumer {
 public:
   virtual ~BaseConsumer() {}
-  virtual void init()=0;
-  virtual void add_topic(std::string topic)=0;
-  virtual PollStatus poll()=0;
-  std::function<void(rd_kafka_topic_partition_list_t *plist)> on_rebalance_assign;
-  std::function<void(rd_kafka_topic_partition_list_t *plist)> on_rebalance_start;
+  virtual void init() = 0;
+  virtual void add_topic(std::string topic) = 0;
+  virtual PollStatus poll() = 0;
+  std::function<void(rd_kafka_topic_partition_list_t *plist)>
+      on_rebalance_assign;
+  std::function<void(rd_kafka_topic_partition_list_t *plist)>
+      on_rebalance_start;
   std::string topic;
 };
 

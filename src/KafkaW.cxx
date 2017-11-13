@@ -629,11 +629,6 @@ ProducerTopic::ProducerTopic(std::shared_ptr<Producer> producer,
   rd_kafka_topic_conf_t *topic_conf = rd_kafka_topic_conf_new();
   opt.apply(topic_conf);
 
-  // rd_kafka_msg_partitioner_random, rd_kafka_msg_partitioner_consistent,
-  // rd_kafka_msg_partitioner_consistent_random
-  // rd_kafka_topic_conf_set_partitioner_cb(topic_conf,
-  // rd_kafka_msg_partitioner_random);
-
   rkt = rd_kafka_topic_new(producer->rd_kafka_ptr(), _name.c_str(), topic_conf);
   if (rkt == nullptr) {
     // Seems like Kafka uses the system error code?

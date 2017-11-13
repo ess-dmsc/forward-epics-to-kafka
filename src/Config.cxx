@@ -3,7 +3,6 @@
 #include <condition_variable>
 #include <memory>
 #include <mutex>
-#include <iostream>
 
 namespace BrightnESS {
 namespace ForwardEpicsToKafka {
