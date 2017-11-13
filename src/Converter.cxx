@@ -57,9 +57,6 @@ Converter::convert(FlatBufs::EpicsPVUpdate const &up) {
 
 std::map<std::string, double> Converter::stats() { return conv->stats(); }
 
-std::string Converter::schema_name() {
-  return schema;
-}
-
+std::string Converter::schema_name() { return schema; }
 }
 }

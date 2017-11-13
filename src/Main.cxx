@@ -291,7 +291,7 @@ void Main::report_status() {
   rapidjson::StringBuffer buf;
   rapidjson::PrettyWriter<rapidjson::StringBuffer> wr(buf);
   jd.Accept(wr);
-  LOG(3, "status: {:.{}}", buf.GetString(), buf.GetSize());
+  LOG(8, "status: {:.{}}", buf.GetString(), buf.GetSize());
   status_producer_topic->produce((KafkaW::uchar *)buf.GetString(),
                                  buf.GetSize());
 }
@@ -386,7 +386,6 @@ int Main::mapping_add(rapidjson::Value &mapping) {
       if (cname.size() == 0) {
         cname = fmt::format("converter_{}", converter_ix++);
       }
-      uri::URI topic_uri(topic);
       auto r1 = main_opt.schema_registry.items().find(schema);
       if (r1 == main_opt.schema_registry.items().end()) {
         LOG(3, "can not handle (yet?) schema id {}", schema);
@@ -395,8 +394,14 @@ int Main::mapping_add(rapidjson::Value &mapping) {
       if (main_opt.brokers.size() > 0) {
         uri = main_opt.brokers.at(0);
       }
-      topic_uri.default_host(uri.host);
-      topic_uri.default_port(uri.port);
+      uri::URI topic_uri;
+      if (not uri.host.empty()) {
+        topic_uri.host = uri.host;
+      }
+      if (uri.port != 0) {
+        topic_uri.port = uri.port;
+      }
+      topic_uri.parse(topic);
       Converter::sptr conv;
       if (cname.size() > 0) {
         auto lock = get_lock_converters();
