@@ -1,5 +1,5 @@
-#include "Stream.h"
 #include "Streams.h"
+#include "Stream.h"
 
 using namespace BrightnESS::ForwardEpicsToKafka;
 
