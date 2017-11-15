@@ -61,7 +61,6 @@ node('docker && eee') {
         }
 
         stage('Test') {
-            sh "pip install --user cpp-coveralls"
             def test_output = "TestResults.xml"
             def test_script = """
                 cd build
@@ -78,6 +77,7 @@ node('docker && eee') {
         }
 
         stage('Check Coverage') {
+            sh "pip install --user cpp-coveralls"
             sh "coveralls -t 'xtf16Nv5y5SdMjUtFQpuBLaYpizESdGRU' -e src/tests/"
         }
 
