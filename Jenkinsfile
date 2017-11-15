@@ -78,7 +78,7 @@ node('docker && eee') {
         }
 
         stage('Check Coverage') {
-            coveralls -t 'xtf16Nv5y5SdMjUtFQpuBLaYpizESdGRU' -e src/tests/
+            sh "coveralls -t 'xtf16Nv5y5SdMjUtFQpuBLaYpizESdGRU' -e src/tests/"
         }
 
         stage('Archive') {
