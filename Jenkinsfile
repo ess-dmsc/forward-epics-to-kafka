@@ -34,6 +34,7 @@ node('docker && eee') {
         }
 
         stage('Get Dependencies') {
+            pip install cpp-coveralls
             def conan_remote = "ess-dmsc-local"
             def dependencies_script = """
                 mkdir build
@@ -50,7 +51,7 @@ node('docker && eee') {
             def configure_script = """
                 cd build
                 source ${epics_profile_file}
-                cmake3 ../${project} -DREQUIRE_GTEST=ON
+                cmake3 ../${project} -DREQUIRE_GTEST=ON -DTEST_COVERAGE=ON
             """
             sh "docker exec ${container_name} sh -c \"${configure_script}\""
         }
@@ -74,6 +75,10 @@ node('docker && eee') {
             sh "docker cp ${container_name}:/home/jenkins/build/${test_output} ."
 
             junit "${test_output}"
+        }
+
+        stage('Check Coverage') {
+            coveralls -t 'xtf16Nv5y5SdMjUtFQpuBLaYpizESdGRU' -e src/tests/
         }
 
         stage('Archive') {
