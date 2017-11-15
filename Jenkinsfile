@@ -34,7 +34,7 @@ node('docker && eee') {
         }
 
         stage('Get Dependencies') {
-            pip install cpp-coveralls
+            sh "pip install cpp-coveralls"
             def conan_remote = "ess-dmsc-local"
             def dependencies_script = """
                 mkdir build
