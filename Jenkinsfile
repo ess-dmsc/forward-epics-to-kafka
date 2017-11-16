@@ -25,7 +25,7 @@ node('docker && eee') {
         container = centos.run(run_args)
 
         stage('Check Coverage') {
-            sh "/usr/bin/pip install cpp-coveralls && ls /usr/bin/ && /usr/local/bin/cpp-coveralls -t 'xtf16Nv5y5SdMjUtFQpuBLaYpizESdGRU' -e src/tests/"
+            sh "/usr/bin/pip install cpp-coveralls && ls /usr/local/bin/ && /usr/local/bin/cpp-coveralls -t 'xtf16Nv5y5SdMjUtFQpuBLaYpizESdGRU' -e src/tests/"
         }
 
         stage('Archive') {
