@@ -77,7 +77,7 @@ node('docker && eee') {
         }
 
         stage('Check Coverage') {
-            sh "/usr/bin/pip install --target=./coveralls cpp-coveralls && ./coveralls -t 'xtf16Nv5y5SdMjUtFQpuBLaYpizESdGRU' -e src/tests/"
+            sh "/usr/bin/pip install --target=./coveralls cpp-coveralls && ./coveralls/coveralls -t 'xtf16Nv5y5SdMjUtFQpuBLaYpizESdGRU' -e src/tests/"
         }
 
         stage('Archive') {
