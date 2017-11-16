@@ -32,7 +32,6 @@ node('docker && eee') {
             """
             sh "docker exec ${container_name} sh -c \"${checkout_script}\""
         }
-
         stage('Get Dependencies') {
             def conan_remote = "ess-dmsc-local"
             def dependencies_script = """
@@ -77,7 +76,7 @@ node('docker && eee') {
         }
 
         stage('Check Coverage') {
-            sh "/usr/bin/pip install --target=./coveralls cpp-coveralls && ls ./coveralls/ && ./coveralls/coveralls -t 'xtf16Nv5y5SdMjUtFQpuBLaYpizESdGRU' -e src/tests/"
+            sh "/usr/bin/pip install cpp-coveralls /usr/bin/coveralls -t 'xtf16Nv5y5SdMjUtFQpuBLaYpizESdGRU' -e src/tests/"
         }
 
         stage('Archive') {
