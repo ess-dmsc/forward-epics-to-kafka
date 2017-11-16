@@ -77,7 +77,7 @@ node('docker && eee') {
         }
 
         stage('Check Coverage') {
-            sh "/usr/bin/python pip install cpp-coveralls && coveralls -t 'xtf16Nv5y5SdMjUtFQpuBLaYpizESdGRU' -e src/tests/"
+            sh "/usr/bin/pip install cpp-coveralls && coveralls -t 'xtf16Nv5y5SdMjUtFQpuBLaYpizESdGRU' -e src/tests/"
         }
 
         stage('Archive') {
