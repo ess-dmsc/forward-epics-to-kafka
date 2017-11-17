@@ -22,7 +22,6 @@ if (TEST_COVERAGE)
     set(CMAKE_CXX_OUTPUT_EXTENSION_REPLACE 1)
 endif()
 
-
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -fPIC -g")
 
 if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS "4.9.3")
@@ -149,5 +148,3 @@ target_link_libraries(${tgt} ${libraries_common})
 if (have_gtest)
 add_subdirectory(tests)
 endif()
-
-
