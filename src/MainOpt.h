@@ -7,8 +7,6 @@
 #include <string>
 #include <vector>
 
-class MainOpt_T;
-
 namespace BrightnESS {
 namespace ForwardEpicsToKafka {
 
@@ -40,15 +38,15 @@ struct MainOpt {
   int parse_json_file(string config_file);
   KafkaW::BrokerOpt broker_opt;
   void init_logger();
-  friend class ::MainOpt_T;
-  void find_broker(rapidjson::Document &document);
-  void find_broker_config(rapidjson::Document &document);
-  void find_conversion_threads(rapidjson::Document &document);
-  void find_conversion_worker_queue_size(rapidjson::Document &document);
-  void find_main_poll_interval(rapidjson::Document &document);
+  std::string find_broker(rapidjson::Document &document);
+  uri::URI find_broker_config(rapidjson::Document &document);
+  int find_conversion_threads(rapidjson::Document &document);
+  int find_conversion_worker_queue_size(rapidjson::Document &document);
+  int find_main_poll_interval(rapidjson::Document &document);
   void find_brokers_config(rapidjson::Document &document);
-  void find_status_uri(rapidjson::Document &document);
-  rapidjson::Document *parse_document(FILE *f1);
+  uri::URI find_status_uri(rapidjson::Document &document);
+  rapidjson::Document *parse_document(const char* filename);
+  int find_int(rapidjson::Document &document, const char *key) const;
 };
 
 static struct option LONG_OPTIONS[] = {
@@ -96,6 +94,7 @@ static string MAN_PAGE =
      "      Increase log_level by one step.\n"
      "\n");
 
+void parse_long_argument(const char *lname, std::pair<int, std::unique_ptr<MainOpt>> &ret, MainOpt &opt);
 std::pair<int, std::unique_ptr<MainOpt>> parse_opt(int argc, char **argv);
 }
 }
