@@ -8,7 +8,6 @@ find_package(Rapidjson REQUIRED)
 find_package(RdKafka REQUIRED)
 find_package(FlatBuffers REQUIRED)
 find_package(StreamingDataTypes COMPONENTS ce9a4745431e54bc45b0c927857a866fa77b84ec)
-find_package(PCREX REQUIRED)
 find_package(CURL)
 find_package(GraylogLogger)
 find_package(StaticData COMPONENTS "schema-config-global.json")
@@ -33,7 +32,6 @@ ${RDKAFKA_INCLUDE_DIR}
 ${FLATBUFFERS_INCLUDE_DIR}
 ${RAPIDJSON_INCLUDE_DIR}
 ${CURL_INCLUDE_DIRS}
-${PCREX_INCLUDE_DIRS}
 ${EPICSV4_INCLUDE_DIRS}
 ${PROJECT_SOURCE_DIR}/src
 ${PROJECT_BINARY_DIR}/src
@@ -46,18 +44,13 @@ ${path_library_epics_pvAccess}
 ${path_library_epics_NT}
 ${RDKAFKA_LIBRARIES}
 ${CURL_LIBRARIES}
-${PCREX_LIBRARIES}
 )
 
-if(UNIX)
-    list(APPEND libraries_common pthread)
-endif(UNIX)
-
-set(compile_defs_common ${PCREX_COMPILER_DEFINITIONS})
-
-if (PCREX_MAJOR EQUAL 2)
-	list(APPEND compile_defs_common "use_pcre2=1")
+if (UNIX)
+  list(APPEND libraries_common pthread)
 endif()
+
+set(compile_defs_common "")
 
 if (CURL_FOUND)
 	list(APPEND compile_defs_common "HAVE_CURL=1")

@@ -18,8 +18,8 @@
 #include <unistd.h>
 #endif
 #include <rapidjson/document.h>
-#include <rapidjson/writer.h>
 #include <rapidjson/prettywriter.h>
+#include <rapidjson/writer.h>
 
 namespace BrightnESS {
 namespace ForwardEpicsToKafka {
@@ -110,7 +110,8 @@ Main::Main(MainOpt &opt)
     KafkaW::BrokerOpt bopt;
     bopt.address = main_opt.status_uri.host_port;
     status_producer = std::make_shared<KafkaW::Producer>(bopt);
-    status_producer_topic = ::make_unique<KafkaW::ProducerTopic>(status_producer, main_opt.status_uri.topic);
+    status_producer_topic = ::make_unique<KafkaW::ProducerTopic>(
+        status_producer, main_opt.status_uri.topic);
   }
 }
 
@@ -270,19 +271,20 @@ void Main::report_status() {
   using rapidjson::Document;
   using rapidjson::Value;
   Document jd;
-  auto & a = jd.GetAllocator();
+  auto &a = jd.GetAllocator();
   jd.SetObject();
   Value j_streams;
   j_streams.SetArray();
-  for (auto & stream : streams.get_streams()) {
+  for (auto &stream : streams.get_streams()) {
     j_streams.PushBack(Value().CopyFrom(stream->status_json(), a), a);
   }
   jd.AddMember("streams", Value(j_streams, a), a);
   rapidjson::StringBuffer buf;
   rapidjson::PrettyWriter<rapidjson::StringBuffer> wr(buf);
   jd.Accept(wr);
-  LOG(3, "status: {:.{}}", buf.GetString(), buf.GetSize());
-  status_producer_topic->produce((KafkaW::uchar *)buf.GetString(), buf.GetSize());
+  LOG(8, "status: {:.{}}", buf.GetString(), buf.GetSize());
+  status_producer_topic->produce((KafkaW::uchar *)buf.GetString(),
+                                 buf.GetSize());
 }
 
 void Main::report_stats(int dt) {
@@ -342,7 +344,6 @@ void Main::report_stats(int dt) {
   }
 }
 
-
 int Main::mapping_add(rapidjson::Value &mapping) {
   using std::string;
   string channel = get_string(&mapping, "channel");
@@ -376,7 +377,6 @@ int Main::mapping_add(rapidjson::Value &mapping) {
       if (cname.size() == 0) {
         cname = fmt::format("converter_{}", converter_ix++);
       }
-      uri::URI topic_uri(topic);
       auto r1 = main_opt.schema_registry.items().find(schema);
       if (r1 == main_opt.schema_registry.items().end()) {
         LOG(3, "can not handle (yet?) schema id {}", schema);
@@ -385,8 +385,14 @@ int Main::mapping_add(rapidjson::Value &mapping) {
       if (main_opt.brokers.size() > 0) {
         uri = main_opt.brokers.at(0);
       }
-      topic_uri.default_host(uri.host);
-      topic_uri.default_port(uri.port);
+      uri::URI topic_uri;
+      if (not uri.host.empty()) {
+        topic_uri.host = uri.host;
+      }
+      if (uri.port != 0) {
+        topic_uri.port = uri.port;
+      }
+      topic_uri.parse(topic);
       Converter::sptr conv;
       if (cname.size() > 0) {
         auto lock = get_lock_converters();

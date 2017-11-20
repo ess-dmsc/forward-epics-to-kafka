@@ -3,21 +3,9 @@
 
 using namespace testing;
 
-TEST(URITests, default_port_is_set_to_value_after_default_port_is_given_an_int) {
-  uri::URI uri1;
-  uri1.default_port(3000);
-  ASSERT_EQ(uri1.port, (uint32_t)3000);
-}
-
 TEST(URITests, port_is_set_to_zero_on_initialisation) {
   uri::URI uri1;
   ASSERT_EQ(uri1.port, 0);
-}
-
-TEST(URITests, default_host_is_set_to_value_after_default_port_is_given_host) {
-  uri::URI uri1;
-  uri1.default_host("sakura");
-  ASSERT_EQ(uri1.host, "sakura");
 }
 
 TEST(URITests, default_host_is_set_to_nothing_on_initialisation) {
@@ -26,65 +14,24 @@ TEST(URITests, default_host_is_set_to_nothing_on_initialisation) {
 }
 
 TEST(URITests, init_with_host_port_and_path) {
-  uri::URI uri1;
-  uri1.init("http://shizune:9000/isis_test_clusters/");
+  uri::URI uri1("http://shizune:9000/isis_test_clusters/");
   ASSERT_EQ(uri1.port, 9000);
   ASSERT_EQ(uri1.host, "shizune");
   ASSERT_EQ(uri1.path, "/isis_test_clusters/");
 }
 
 TEST(URITests, init_with_host_and_path) {
-  uri::URI uri1;
-  uri1.init("http://shizune/isis_test_clusters/");
+  uri::URI uri1("http://shizune/isis_test_clusters/");
   ASSERT_EQ(uri1.host, "shizune");
   ASSERT_EQ(uri1.path, "/isis_test_clusters/");
   ASSERT_EQ(uri1.port, (uint32_t)0);
 }
 
 TEST(URITests, init_with_just_host) {
-  uri::URI uri1;
-  uri1.init("http://shizune");
+  uri::URI uri1("http://shizune");
   ASSERT_EQ(uri1.host, "shizune");
   ASSERT_EQ(uri1.path, "");
   ASSERT_EQ(uri1.port, (uint32_t)0);
-}
-
-TEST(URITests, re_matches_regular_expression_and_returns_md_with_correct_substring) {
-  uri::Re re("hello");
-  auto d = re.match("hello world");
-  ASSERT_EQ(d.substr(0), "hello");
-}
-
-TEST(URITests, re_matches_nothing_when_no_reg_ex_is_given) { // should it throw an exception?
-  uri::Re re("");
-  auto d = re.match("");
-  ASSERT_EQ(d.substr(0), "");
-}
-
-TEST(URITests, re_throws_exception_if_invalid_reg_ex_is_used) {
-  ASSERT_THROW(uri::Re re("["), std::runtime_error);
-}
-
-
-TEST(URITests, re_returns_only_first_match_when_two_words_are_matched) {
-  uri::Re re("hello");
-  auto d = re.match("hello hello");
-  ASSERT_EQ(d.substr(0), "hello");
-  ASSERT_EQ(d.substr(1), "");
-}
-
-TEST(URITests, re_matches_no_words_and_returns_blank) {
-  uri::Re re("hello");
-  auto d = re.match("asdfghj");
-  ASSERT_FALSE(d.ok);
-}
-
-
-TEST(URITests, re_matches_no_words_and_returns_blank_string_after_ok_set_to_false) {
-  uri::Re re("hello");
-  auto d = re.match("asdfghj");
-  d.ok = false;
-  ASSERT_EQ(d.substr(0), "");
 }
 
 
@@ -112,7 +59,7 @@ TEST(URITests, uri_parses_port) {
 TEST(URITests, uri_parses_port_with_no_slashes_before_or_after_host_name) {
   uri::URI u1;
   u1.require_host_slashes = false;
-  u1.init("myhost:345");
+  u1.parse("myhost:345");
   ASSERT_EQ(u1.scheme, "");
   ASSERT_EQ(u1.host, "myhost");
   ASSERT_EQ(u1.port, (uint32_t)345);
@@ -124,9 +71,11 @@ TEST(URITests, uri_parses_port_with_no_slashes_before_or_after_ip) {
   ASSERT_EQ(u1.host, "127.0.0.1");
   ASSERT_EQ(u1.port, (uint32_t)345);
 }
+
 TEST(URITests, uri_parses_host_and_port_with_domain_seperator) {
-  uri::URI u1("http://my.host:345");
-  u1.default_port(123);
+  uri::URI u1;
+  u1.port = 123;
+  u1.parse("http://my.host:345");
   ASSERT_EQ(u1.scheme, "http");
   ASSERT_EQ(u1.host, "my.host");
   ASSERT_EQ(u1.host_port, "my.host:345");
@@ -134,8 +83,9 @@ TEST(URITests, uri_parses_host_and_port_with_domain_seperator) {
 }
 
 TEST(URITests, uri_parses_host_with_domain_seperator) {
-  uri::URI u1("http://my.host");
-  u1.default_port(123);
+  uri::URI u1;
+  u1.port = 123;
+  u1.parse("http://my.host");
   ASSERT_EQ(u1.scheme, "http");
   ASSERT_EQ(u1.host, "my.host");
   ASSERT_EQ(u1.host_port, "my.host:123");
@@ -221,11 +171,18 @@ TEST(URITests, uri_parses_relative_path_to_topic) {
 }
 
 TEST(URITests, uri_parses_host_with_domain_seperator_then_adds_path) {
-  uri::URI u1("//my.host");
-  u1.default_path("/some-path");
+
+  uri::URI u1("/some-path");
+  u1.parse("//my.host");
   ASSERT_EQ(u1.scheme, "");
   ASSERT_EQ(u1.host, "my.host");
   ASSERT_EQ(u1.port, (uint32_t)0);
   ASSERT_EQ(u1.path, "/some-path");
   ASSERT_EQ(u1.topic, "some-path");
+}
+
+TEST(URI, trim) {
+  uri::URI u1("  //some:123     ");
+  ASSERT_EQ(u1.host, "some");
+  ASSERT_EQ(u1.port, 123);
 }

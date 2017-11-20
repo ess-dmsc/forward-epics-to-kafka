@@ -426,7 +426,8 @@ int EpicsClient_impl::monitoring_start() {
   // Leaving it empty seems to be the full channel, including name.  That's
   // good.
   // Can also specify subfields, e.g. "value, timeStamp"  or also "field(value)"
-  string request = "";
+  // We need to be more explicit here for compatibility with channel access.
+  string request = "field(value,timeStamp,alarm)";
   PVStructure::shared_pointer pvreq =
       epics::pvData::CreateRequest::create()->createRequest(request);
   if (monitor) {
