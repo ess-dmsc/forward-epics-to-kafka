@@ -78,7 +78,7 @@ node('docker && eee') {
         stage('Check Coverage') {
             def coverage_script = """
                 pip install --user cpp-coveralls
-                coveralls -t 'xtf16Nv5y5SdMjUtFQpuBLaYpizESdGRU' -e build/src/tests/
+                python -c "import re; import sys; from cpp_coveralls import run; sys.argv[0] = re.sub(r'(-script\.pyw|\.exe)?$', '', sys.argv[0]); sys.argv.extend(["-t","'xtf16Nv5y5SdMjUtFQpuBLaYpizESdGRU'","-e","build/src/tests/"]); sys.exit(run());"
                 """
             sh "docker exec ${container_name} sh -c \"${coverage_script}\""
         }
