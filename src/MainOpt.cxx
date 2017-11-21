@@ -84,7 +84,12 @@ int MainOpt::parse_json_file(string config_file) {
   // Parse the JSON configuration and extract parameters.
   // Currently, these parameters take precedence over what is given on the
   // command line.
- rapidjson::Document *document = parse_document(config_file.c_str());
+  FILE *f1 = fopen(config_file.c_str(), "rb");
+  if (not f1) {
+    LOG(3, "can not open the requested config-file");
+    return -4;
+  }
+  rapidjson::Document *document = parse_document(f1);
 
   if (document->HasParseError()) {
     LOG(3, "configuration is not well formed");
@@ -119,8 +124,7 @@ int MainOpt::parse_json_file(string config_file) {
   return 0;
 }
 
-rapidjson::Document *MainOpt::parse_document(const char* filename) {
-    auto f1 = fopen(filename, "rb");
+rapidjson::Document *MainOpt::parse_document(FILE *f1) {
     fseek(f1, 0, SEEK_END);
     int N1 = ftell(f1);
     fseek(f1, 0, SEEK_SET);
