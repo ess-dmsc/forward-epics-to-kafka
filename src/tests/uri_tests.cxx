@@ -1,7 +1,5 @@
-#include <gmock/gmock-actions.h>
+#include <gtest/gtest.h>
 #include "../uri.h"
-
-using namespace testing;
 
 TEST(URITests, port_is_set_to_zero_on_initialisation) {
   uri::URI uri1;
@@ -181,7 +179,7 @@ TEST(URITests, uri_parses_host_with_domain_seperator_then_adds_path) {
   ASSERT_EQ(u1.topic, "some-path");
 }
 
-TEST(URI, trim) {
+TEST(URITests, trim) {
   uri::URI u1("  //some:123     ");
   ASSERT_EQ(u1.host, "some");
   ASSERT_EQ(u1.port, 123);
