@@ -84,7 +84,7 @@ int MainOpt::parse_json_file(string config_file) {
   // Parse the JSON configuration and extract parameters.
   // Currently, these parameters take precedence over what is given on the
   // command line.
-  rapidjson::Document *document = parse_document(config_file.c_str());
+ rapidjson::Document *document = parse_document(config_file.c_str());
 
   if (document->HasParseError()) {
     LOG(3, "configuration is not well formed");
@@ -145,6 +145,7 @@ uri::URI MainOpt::find_status_uri(rapidjson::Document &document) {
       return u1;
     }
   }
+  LOG(3, "ERROR could not find status URI in config json")
 }
 
 void MainOpt::find_brokers_config(rapidjson::Document &document) {
@@ -185,6 +186,7 @@ int MainOpt::find_int(rapidjson::Document &document, const char *key) const {
       return itr->value.GetInt();
     }
   }
+  LOG(3, "ERROR could not find {} in json", key)
   return 0;
 }
 
@@ -207,6 +209,7 @@ uri::URI MainOpt::find_broker_config(rapidjson::Document &document) {
       return {std::string(itr->value.GetString())};
     }
   }
+  LOG(3, "ERROR could not find broker config in json")
 }
 
 std::string MainOpt::find_broker(rapidjson::Document &document) {
@@ -216,6 +219,7 @@ std::string MainOpt::find_broker(rapidjson::Document &document) {
       return std::string(itr->value.GetString());
     }
   }
+  LOG(3, "ERROR could not find broker in json")
   return "";
 }
 
@@ -298,10 +302,10 @@ void parse_long_argument(const char *lname, std::pair<int, std::unique_ptr<MainO
         opt.influx_url = optarg;
       }
   if (string("forwarder-ix") == lname) {
-        opt.forwarder_ix = std::__cxx11::stoi(optarg);
+        opt.forwarder_ix = std::stoi(optarg);
       }
   if (string("write-per-message") == lname) {
-        opt.write_per_message = std::__cxx11::stoi(optarg);
+        opt.write_per_message = std::stoi(optarg);
       }
   if (string("teamid") == lname) {
         opt.teamid = strtoul(optarg, nullptr, 0);

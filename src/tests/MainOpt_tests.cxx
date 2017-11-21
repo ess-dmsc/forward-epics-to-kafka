@@ -8,22 +8,22 @@ class MainOpt_T : public testing::Test {
 public:
 };
 
-//TEST_F(MainOpt_T, parse_config_file) {
-//  MainOpt opt;
-//
-//  ASSERT_EQ(opt.parse_json_file("tests/test-config-valid.json"), 0);
-//  ASSERT_TRUE(opt.brokers.size() == 2);
-//  ASSERT_EQ(opt.brokers.at(0).host_port, "localhost:9092");
-//  ASSERT_EQ(opt.brokers.at(1).host_port, "127.0.0.1:9092");
-//
-//  // next test is expected to fail
-//  auto ll = log_level;
-//  log_level = 0;
-//  ASSERT_LT(opt.parse_json_file("tests/test-config-invalid.json"), 0);
-//  log_level = ll;
-//}
+TEST(MainOpt_T, parse_config_file) {
+  MainOpt opt;
 
-TEST_F(MainOpt_T, test_find_broker_returns_correct_broker) {
+  ASSERT_EQ(opt.parse_json_file("tests/test-config-valid.json"), 0);
+  ASSERT_TRUE(opt.brokers.size() == 2);
+  ASSERT_EQ(opt.brokers.at(0).host_port, "localhost:9092");
+  ASSERT_EQ(opt.brokers.at(1).host_port, "127.0.0.1:9092");
+
+  // next test is expected to fail
+  auto ll = log_level;
+  log_level = 0;
+  ASSERT_LT(opt.parse_json_file("tests/test-config-invalid.json"), 0);
+  log_level = ll;
+}
+
+TEST(MainOpt_T, test_find_broker_returns_correct_broker) {
   MainOpt opt;
 
   const char* json = "{ \"broker\" : \"localhost:9002\" }";
@@ -33,7 +33,7 @@ TEST_F(MainOpt_T, test_find_broker_returns_correct_broker) {
   ASSERT_EQ(opt.find_broker(document), "localhost:9002");
 }
 
-TEST_F(MainOpt_T, test_find_broker_with_no_broker_returns_empty_string){
+TEST(MainOpt_T, test_find_broker_with_no_broker_returns_empty_string){
   MainOpt opt;
 
   const char* json = "{}";
@@ -44,7 +44,7 @@ TEST_F(MainOpt_T, test_find_broker_with_no_broker_returns_empty_string){
 }
 
 
-TEST_F(MainOpt_T, test_find_conversion_threads_returns_correct_number) {
+TEST(MainOpt_T, test_find_conversion_threads_returns_correct_number) {
   MainOpt opt;
 
   const char* json = "{ \"conversion-threads\" : 4 }";
@@ -54,7 +54,7 @@ TEST_F(MainOpt_T, test_find_conversion_threads_returns_correct_number) {
   ASSERT_EQ(opt.find_conversion_threads(document), 4);
 }
 
-TEST_F(MainOpt_T, test_find_conversion_threads_returns_zero_if_no_property_found) {
+TEST(MainOpt_T, test_find_conversion_threads_returns_zero_if_no_property_found) {
   MainOpt opt;
 
   const char* json = "{ \"broker\" : \"localhost:9003\" }";
@@ -64,7 +64,7 @@ TEST_F(MainOpt_T, test_find_conversion_threads_returns_zero_if_no_property_found
   ASSERT_EQ(opt.find_conversion_threads(document), 0);
 }
 
-TEST_F(MainOpt_T, test_find_broker_returns_correct_broker_after_other_properties_found) {
+TEST(MainOpt_T, test_find_broker_returns_correct_broker_after_other_properties_found) {
   MainOpt opt;
 
   const char* json = "{ \"broker\" : \"localhost:9002\", \"conversion-threads\" : 4 }";
@@ -72,4 +72,84 @@ TEST_F(MainOpt_T, test_find_broker_returns_correct_broker_after_other_properties
   document.Parse(json);
   ASSERT_EQ(opt.find_conversion_threads(document), 4);
   ASSERT_EQ(opt.find_broker(document), "localhost:9002");
+}
+
+TEST(MainOpt_T, test_find_brokers_config_finds_string_property) {
+  MainOpt opt;
+  const char* json = "{\n"
+      "  \"kafka\": {\n"
+      "    \"broker\": {\n"
+      "      \"hello\" : \"world\"\n"
+      "    }\n"
+      "  }\n"
+      "}";
+  rapidjson::Document document;
+  document.Parse(json);
+  opt.find_brokers_config(document);
+  ASSERT_EQ(opt.broker_opt.conf_strings["hello"], "world");
+}
+
+TEST(MainOpt_T, test_find_brokers_config_finds_int_property) {
+  MainOpt opt;
+  const char* json = "{\n"
+      "  \"kafka\": {\n"
+      "    \"broker\": {\n"
+      "      \"hello\" : 50\n"
+      "    }\n"
+      "  }\n"
+      "}";
+  rapidjson::Document document;
+  document.Parse(json);
+  opt.find_brokers_config(document);
+  ASSERT_EQ(opt.broker_opt.conf_ints["hello"], 50);
+}
+
+TEST(MainOpt_T, test_find_brokers_config_does_nothing_with_object_property) {
+  MainOpt opt;
+  const char* json = "{\n"
+      "  \"kafka\": {\n"
+      "    \"broker\": {\n"
+      "      \"hello\" : {}\n"
+      "    }\n"
+      "  }\n"
+      "}";
+  rapidjson::Document document;
+  document.Parse(json);
+  opt.find_brokers_config(document);
+
+  ASSERT_TRUE(opt.broker_opt.conf_strings.find("hello") == opt.broker_opt.conf_strings.end());
+  ASSERT_TRUE(opt.broker_opt.conf_ints.find("hello") == opt.broker_opt.conf_ints.end());
+}
+
+TEST(MainOpt_T, test_find_main_poll_interval_returns_correct_value) {
+  MainOpt opt;
+  const char* json = "{"
+      "\"main-poll-interval\":3"
+      "}";
+  rapidjson::Document document;
+  document.Parse(json);
+
+ASSERT_EQ(opt.find_main_poll_interval(document), 3);
+}
+
+TEST(MainOpt_T, test_find_conversion_threads_returns_correct_value) {
+  MainOpt opt;
+  const char* json = "{"
+      "\"conversion-threads\":3"
+      "}";
+  rapidjson::Document document;
+  document.Parse(json);
+
+  ASSERT_EQ(opt.find_conversion_threads(document), 3);
+}
+
+TEST(MainOpt_T, test_find_conversion_worker_queue_size_returns_correct_value) {
+  MainOpt opt;
+  const char* json = "{"
+      "\"conversion-worker-queue-size\":3"
+      "}";
+  rapidjson::Document document;
+  document.Parse(json);
+
+  ASSERT_EQ(opt.find_conversion_worker_queue_size(document), 3);
 }
