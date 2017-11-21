@@ -41,7 +41,7 @@ struct MainOpt {
   std::string find_broker(rapidjson::Document &document);
   uri::URI find_broker_config(rapidjson::Document &document);
   int find_conversion_threads(rapidjson::Document &document);
-  int find_conversion_worker_queue_size(rapidjson::Document &document);
+  uint32_t find_conversion_worker_queue_size(rapidjson::Document &document);
   int find_main_poll_interval(rapidjson::Document &document);
   void find_brokers_config(rapidjson::Document &document);
   uri::URI find_status_uri(rapidjson::Document &document);

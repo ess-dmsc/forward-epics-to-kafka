@@ -86,11 +86,6 @@ int MainOpt::parse_json_file(string config_file) {
   // Parse the JSON configuration and extract parameters.
   // Currently, these parameters take precedence over what is given on the
   // command line.
-//  FILE *f1 = fopen(config_file.c_str(), "rb");
-//  if (not f1) {
-//    LOG(3, "can not open the requested config-file");
-//    return -4;
-//  }
   rapidjson::Document document = parse_document(config_file);
 
   if (document.HasParseError()) {
@@ -118,7 +113,7 @@ int MainOpt::parse_json_file(string config_file) {
   set_broker(find_broker(document));
   broker_config = find_broker_config(document);
   conversion_threads = find_conversion_threads(document);
-  conversion_worker_queue_size = static_cast<uint32_t>(find_conversion_worker_queue_size(document));
+  conversion_worker_queue_size = find_conversion_worker_queue_size(document);
   main_poll_interval = find_main_poll_interval(document);
   find_brokers_config(document);
   status_uri = find_status_uri(document);
@@ -193,8 +188,8 @@ int MainOpt::find_main_poll_interval(rapidjson::Document &document) {
   return find_int(document, "main-poll-interval");
 }
 
-int MainOpt::find_conversion_worker_queue_size(rapidjson::Document &document) {
-  return find_int(document, "conversion-worker-queue-size");
+uint32_t MainOpt::find_conversion_worker_queue_size(rapidjson::Document &document) {
+  return static_cast<uint32_t>(find_int(document, "conversion-worker-queue-size"));
 }
 
 int MainOpt::find_conversion_threads(rapidjson::Document &document) {
@@ -209,6 +204,7 @@ uri::URI MainOpt::find_broker_config(rapidjson::Document &document) {
     }
   }
   LOG(3, "ERROR could not find broker config in json")
+  return uri::URI();
 }
 
 std::string MainOpt::find_broker(rapidjson::Document &document) {
