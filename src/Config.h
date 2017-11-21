@@ -29,14 +29,14 @@ struct Listener_impl{
   std::unique_ptr<KafkaW::BaseConsumer> consumer;
   std::mutex mx;
   std::condition_variable cv;
-  int connected = 0;
+  bool connected;
 };
 
 class Listener {
 public:
   Listener(std::unique_ptr<KafkaW::BaseConsumer> baseConsumer);
   Listener(Listener const &) = delete;
-  ~Listener();
+  ~Listener() = default;
   void poll(Callback &cb);
   void wait_for_connected(std::chrono::milliseconds timeout);
 

@@ -21,8 +21,8 @@ class FakeMsg : public KafkaW::AbstractMsg {
   unsigned char some_data[4] = {'t', 'e', 's', 't'};
 
 public:
-  FakeMsg(std::string msg) : KafkaW::AbstractMsg() {
-    kmsg = static_cast<void *>(&msg);
+  FakeMsg(std::string message) : KafkaW::AbstractMsg() {
+    kmsg = static_cast<void *>(&message);
   }
 
   FakeMsg() = default;
@@ -42,8 +42,8 @@ public:
 class FakePollStatus : public KafkaW::PollStatus {
 public:
   std::unique_ptr<KafkaW::AbstractMsg> is_Msg() override {
-    FakeMsg mesg("test");
-    return make_unique<FakeMsg>(mesg);
+    FakeMsg message("test");
+    return make_unique<FakeMsg>(message);
   };
 
 private:
@@ -61,18 +61,18 @@ public:
   MockConsumer &operator=(const MockConsumer) = delete;
 
   KafkaW::PollStatus poll() override {
-    std::unique_ptr<FakeMsg> m2(new FakeMsg);
-    m2->kmsg = (void *)"hello";
-    return FakePollStatus::make_Msg(std::move(m2));
+    std::unique_ptr<FakeMsg> fake_message(new FakeMsg);
+    fake_message->kmsg = (void *)"hello";
+    return FakePollStatus::make_Msg(std::move(fake_message));
   }
 };
 
 TEST(kafkaw_consumer_tests, test_config_polling_returns_msg) {
   std::string expected = "test";
   auto consumer_ptr = make_unique<MockConsumer>();
-  BrightnESS::ForwardEpicsToKafka::Config::Listener listener1(
+  BrightnESS::ForwardEpicsToKafka::Config::Listener listener(
       std::move(consumer_ptr));
   auto cb = cb_fake();
-  listener1.poll(cb);
+  listener.poll(cb);
   ASSERT_EQ(std::string(cb.get_message()), expected);
 }
