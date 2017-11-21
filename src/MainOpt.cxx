@@ -19,6 +19,8 @@
 #include <rapidjson/schema.h>
 #include <rapidjson/stringbuffer.h>
 #include <rapidjson/writer.h>
+#include <rapidjson/istreamwrapper.h>
+#include <fstream>
 
 namespace BrightnESS {
 namespace ForwardEpicsToKafka {
@@ -84,21 +86,21 @@ int MainOpt::parse_json_file(string config_file) {
   // Parse the JSON configuration and extract parameters.
   // Currently, these parameters take precedence over what is given on the
   // command line.
-  FILE *f1 = fopen(config_file.c_str(), "rb");
-  if (not f1) {
-    LOG(3, "can not open the requested config-file");
-    return -4;
-  }
-  rapidjson::Document *document = parse_document(f1);
+//  FILE *f1 = fopen(config_file.c_str(), "rb");
+//  if (not f1) {
+//    LOG(3, "can not open the requested config-file");
+//    return -4;
+//  }
+  rapidjson::Document document = parse_document(config_file);
 
-  if (document->HasParseError()) {
+  if (document.HasParseError()) {
     LOG(3, "configuration is not well formed");
     return -5;
   }
 
   SchemaValidator vali(schema);
 
-  if (!document->Accept(vali)) {
+  if (!document.Accept(vali)) {
     StringBuffer sb1, sb2;
     vali.GetInvalidSchemaPointer().StringifyUriFragment(sb1);
     vali.GetInvalidDocumentPointer().StringifyUriFragment(sb2);
@@ -113,30 +115,23 @@ int MainOpt::parse_json_file(string config_file) {
     return -6;
   }
   vali.Reset();
-  set_broker(find_broker(*document));
-  broker_config = find_broker_config(*document);
-  conversion_threads = find_conversion_threads(*document);
-  conversion_worker_queue_size = find_conversion_worker_queue_size(*document);
-  main_poll_interval = find_main_poll_interval(*document);
-  find_brokers_config(*document);
-  status_uri = find_status_uri(*document);
+  set_broker(find_broker(document));
+  broker_config = find_broker_config(document);
+  conversion_threads = find_conversion_threads(document);
+  conversion_worker_queue_size = static_cast<uint32_t>(find_conversion_worker_queue_size(document));
+  main_poll_interval = find_main_poll_interval(document);
+  find_brokers_config(document);
+  status_uri = find_status_uri(document);
 
   return 0;
 }
 
-rapidjson::Document *MainOpt::parse_document(FILE *f1) {
-    fseek(f1, 0, SEEK_END);
-    int N1 = ftell(f1);
-    fseek(f1, 0, SEEK_SET);
-    vector<char> buf1;
-    buf1.resize(N1);
-    rapidjson::FileReadStream is(f1, buf1.data(), N1);
-    json = std::make_shared<rapidjson::Document>();
-    auto &d = *json;
-    d.ParseStream(is);
-    fclose(f1);
-    f1 = nullptr;
-    return &d;
+rapidjson::Document MainOpt::parse_document(const std::string filepath) {
+  std::ifstream ifs(filepath);
+  rapidjson::IStreamWrapper isw(ifs);
+  rapidjson::Document d;
+  d.ParseStream(isw);
+  return d;
 }
 
 uri::URI MainOpt::find_status_uri(rapidjson::Document &document) {
