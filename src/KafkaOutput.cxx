@@ -30,9 +30,6 @@ int KafkaOutput::emit(std::unique_ptr<BrightnESS::FlatBufs::FB> fb) {
   return x;
 }
 
-std::string KafkaOutput::topic_name() {
-  return pt.topic();
-}
-
+std::string KafkaOutput::topic_name() { return pt.topic(); }
 }
 }

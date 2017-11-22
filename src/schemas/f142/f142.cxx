@@ -46,6 +46,11 @@ typedef struct {
   flatbuffers::Offset<void> off;
 } Value_t;
 
+struct Statistics {
+  uint64_t err_timestamp_not_available = 0;
+  uint64_t err_not_implemented_yet = 0;
+};
+
 namespace PVStructureToFlatBufferN {
 
 struct Enum_Value_Base {};
@@ -240,7 +245,7 @@ public:
 } // end namespace PVStructureToFlatBufferN
 
 Value_t make_Value_scalar(flatbuffers::FlatBufferBuilder &builder,
-                          epics::pvData::PVScalar *field) {
+                          epics::pvData::PVScalar *field, Statistics &statistics) {
   using S = epics::pvData::ScalarType;
   using namespace epics::pvData;
   using namespace PVStructureToFlatBufferN;
@@ -268,15 +273,14 @@ Value_t make_Value_scalar(flatbuffers::FlatBufferBuilder &builder,
   case S::pvDouble:
     return Make_Scalar<double>::convert(&builder, field);
   case S::pvString:
-    // Sorry, not implemented yet
-    LOG(5, "ERROR pvString not implemented yet");
+    ++statistics.err_not_implemented_yet;
     break;
   }
   return {Value::NONE, 0};
 }
 
 Value_t make_Value_array(flatbuffers::FlatBufferBuilder &builder,
-                         epics::pvData::PVScalarArray *field, uint8_t opts) {
+                         epics::pvData::PVScalarArray *field, uint8_t opts, Statistics &statistics) {
   using S = epics::pvData::ScalarType;
   using namespace epics::pvData;
   using namespace PVStructureToFlatBufferN;
@@ -305,8 +309,7 @@ Value_t make_Value_array(flatbuffers::FlatBufferBuilder &builder,
   case S::pvDouble:
     return Make_ScalarArray<double>::convert(&builder, field, opts);
   case S::pvString:
-    // Sorry, not implemented yet
-    LOG(5, "ERROR pvString not implemented yet");
+    ++statistics.err_not_implemented_yet;
     break;
   }
   return {Value::NONE, 0};
@@ -324,7 +327,7 @@ public:
 
 Value_t make_Value(flatbuffers::FlatBufferBuilder &builder,
                    epics::pvData::PVStructurePtr const &field_full,
-                   uint8_t opts) {
+                   uint8_t opts, Statistics &statistics) {
   if (!field_full) {
     return {Value::NONE, 0};
   }
@@ -341,11 +344,11 @@ Value_t make_Value(flatbuffers::FlatBufferBuilder &builder,
   switch (t1) {
   case T::scalar:
     return make_Value_scalar(
-        builder, static_cast<epics::pvData::PVScalar *>(field.get()));
+        builder, static_cast<epics::pvData::PVScalar *>(field.get()), statistics);
   case T::scalarArray:
     return make_Value_array(
         builder, static_cast<epics::pvData::PVScalarArray *>(field.get()),
-        opts);
+        opts, statistics);
   case T::structure: {
     // supported so far:
     // NTEnum:  we currently send the index value.  full enum identifier is
@@ -359,7 +362,7 @@ Value_t make_Value(flatbuffers::FlatBufferBuilder &builder,
       auto findex =
           ((epics::pvData::PVStructure *)(field.get()))->getSubField("index");
       return make_Value_scalar(
-          builder, static_cast<epics::pvData::PVScalar *>(findex.get()));
+          builder, static_cast<epics::pvData::PVScalar *>(findex.get()), statistics);
       break;
     }
     break;
@@ -391,7 +394,7 @@ public:
     auto builder = fb->builder.get();
     // this is the field type ID string: up.pvstr->getStructure()->getID()
     auto n = builder->CreateString(up.channel);
-    auto vF = make_Value(*builder, pvstr, 1);
+    auto vF = make_Value(*builder, pvstr, 1, statistics);
 
     flatbuffers::Offset<void> fwdinfo = 0;
     if (true) {
@@ -439,7 +442,7 @@ public:
                 ->get();
       b.add_timestamp(ts);
     } else {
-      LOG(5, "timeStamp on PV not available");
+      ++statistics.err_timestamp_not_available;
     }
 
     b.add_fwdinfo_type(forwarder_internal::fwdinfo_1_t);
@@ -474,6 +477,7 @@ public:
   }
 
   RangeSet<uint64_t> seqs;
+  Statistics statistics;
 };
 
 /// This class is purely for testing

@@ -321,8 +321,8 @@ TEST_F(Remote_T, simple_f142_via_config_message) {
                               &channel](rapidjson::Value &s) {
               auto topic = get_string(&s, "topic");
               uri::URI topic_uri(topic);
-              topic_uri.default_host(Tests::main_opt->brokers.at(0).host);
-              topic_uri.default_port(Tests::main_opt->brokers.at(0).port);
+              topic_uri.host = Tests::main_opt->brokers.at(0).host;
+              topic_uri.port = Tests::main_opt->brokers.at(0).port;
               LOG(7, "broker: {}  topic: {}  channel: {}", topic_uri.host_port,
                   topic_uri.topic, channel);
               bopt.address = topic_uri.host_port;
@@ -393,8 +393,8 @@ TEST_F(Remote_T, named_converter) {
                               &channel](rapidjson::Value &s) {
               auto topic = get_string(&s, "topic");
               uri::URI topic_uri(topic);
-              topic_uri.default_host(Tests::main_opt->brokers.at(0).host);
-              topic_uri.default_port(Tests::main_opt->brokers.at(0).port);
+              topic_uri.host = Tests::main_opt->brokers.at(0).host;
+              topic_uri.port = Tests::main_opt->brokers.at(0).port;
               LOG(7, "broker: {}  topic: {}  channel: {}", topic_uri.host_port,
                   topic_uri.topic, channel);
               bopt.address = topic_uri.host_port;
@@ -463,8 +463,8 @@ TEST_F(Remote_T, different_brokers) {
                               &channel](rapidjson::Value &s) {
               auto topic = get_string(&s, "topic");
               uri::URI topic_uri(topic);
-              topic_uri.default_host(Tests::main_opt->brokers.at(0).host);
-              topic_uri.default_port(Tests::main_opt->brokers.at(0).port);
+              topic_uri.host = Tests::main_opt->brokers.at(0).host;
+              topic_uri.port = Tests::main_opt->brokers.at(0).port;
               LOG(7, "broker: {}  topic: {}  channel: {}", topic_uri.host_port,
                   topic_uri.topic, channel);
               bopt.address = topic_uri.host_port;
