@@ -54,8 +54,10 @@ std::vector<std::string> split(std::string const &input, std::string token) {
   using std::vector;
   using std::string;
   vector<string> ret;
-  if (token.size() == 0)
+  if (token.empty()) {
+    if (input.empty()) {return {};}
     return {input};
+  }
   string::size_type i1 = 0;
   while (true) {
     auto i2 = input.find(token, i1);
