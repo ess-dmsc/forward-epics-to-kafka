@@ -13,6 +13,14 @@ find_package(GraylogLogger)
 find_package(StaticData COMPONENTS "schema-config-global.json")
 find_package(GitCommitExtract)
 
+set(TEST_COVERAGE FALSE CACHE BOOL "Check test coverage with Coveralls")
+if (TEST_COVERAGE)
+    set(GCC_COVERAGE_COMPILE_FLAGS "-fprofile-arcs -ftest-coverage")
+    set(GCC_COVERAGE_LINK_FLAGS    "-lgcov")
+    set(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} ${GCC_COVERAGE_COMPILE_FLAGS}")
+    set(CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} ${GCC_COVERAGE_LINK_FLAGS}")
+    set(CMAKE_CXX_OUTPUT_EXTENSION_REPLACE 1)
+endif()
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -fPIC -g")
 
@@ -136,8 +144,6 @@ elseif(NOT GRAYLOGLOGGER_FOUND AND USE_GRAYLOG_LOGGER)
 endif()
 
 target_link_libraries(${tgt} ${libraries_common})
-
-
 
 if (have_gtest)
 add_subdirectory(tests)

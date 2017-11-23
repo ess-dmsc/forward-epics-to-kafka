@@ -32,7 +32,6 @@ node('docker && eee') {
             """
             sh "docker exec ${container_name} sh -c \"${checkout_script}\""
         }
-
         stage('Get Dependencies') {
             def conan_remote = "ess-dmsc-local"
             def dependencies_script = """
@@ -50,7 +49,7 @@ node('docker && eee') {
             def configure_script = """
                 cd build
                 source ${epics_profile_file}
-                cmake3 ../${project} -DREQUIRE_GTEST=ON
+                cmake3 ../${project} -DREQUIRE_GTEST=ON -DTEST_COVERAGE=ON
             """
             sh "docker exec ${container_name} sh -c \"${configure_script}\""
         }
@@ -74,6 +73,14 @@ node('docker && eee') {
             sh "docker cp ${container_name}:/home/jenkins/build/${test_output} ."
 
             junit "${test_output}"
+        }
+
+        stage('Check Coverage') {
+            def coverage_script = """
+                pip install --user cpp-coveralls
+                python -c "import re; import sys; from cpp_coveralls import run; sys.argv[0] = re.sub(r'(-script\.pyw|\.exe)?$', '', sys.argv[0]); sys.argv.extend(["-t","'xtf16Nv5y5SdMjUtFQpuBLaYpizESdGRU'","-e","build/src/tests/"]); sys.exit(run());"
+                """
+            sh "docker exec ${container_name} sh -c \"${coverage_script}\""
         }
 
         stage('Archive') {
