@@ -84,10 +84,12 @@ int MainOpt::parse_json_file(string config_file) {
   SchemaDocument schema(schema_);
 
   // Parse the JSON configuration and extract parameters.
-  // Currently, these parameters take precedence over what is given on the
+  // Currently, these parameters tke precedence over what is given on the
   // command line.
-  rapidjson::Document document = parse_document(config_file);
-
+  auto document = parse_document(config_file);
+  if (document.IsNull()) {
+    return -4;
+  }
   if (document.HasParseError()) {
     LOG(3, "configuration is not well formed");
     return -5;
@@ -116,28 +118,29 @@ int MainOpt::parse_json_file(string config_file) {
   conversion_worker_queue_size = find_conversion_worker_queue_size(document);
   main_poll_interval = find_main_poll_interval(document);
   find_brokers_config(document);
-  status_uri = find_status_uri(document);
-
+  find_status_uri(document);
   return 0;
 }
 
 rapidjson::Document MainOpt::parse_document(const std::string filepath) {
   std::ifstream ifs(filepath);
+  if (!ifs.is_open()){
+    LOG(3, "Could not open JSON file")
+    return nullptr;
+  }
   rapidjson::IStreamWrapper isw(ifs);
   rapidjson::Document d;
   d.ParseStream(isw);
   return d;
 }
 
-uri::URI MainOpt::find_status_uri(rapidjson::Document &document) {
+void MainOpt::find_status_uri(rapidjson::Document &document) {
   auto itr = document.FindMember("status-uri");
-  if (itr != document.MemberEnd()) {
-    if (itr->value.IsString()) {
-      uri::URI u1;
-      u1.port = 9092;
-      u1.parse(itr->value.GetString());
-      return u1;
-    }
+  if (itr != document.MemberEnd() && itr->value.IsString()) {
+    uri::URI u1;
+    u1.port = 9092;
+    u1.parse(itr->value.GetString());
+    status_uri = u1;
   }
   LOG(3, "ERROR could not find status URI in config json")
 }
