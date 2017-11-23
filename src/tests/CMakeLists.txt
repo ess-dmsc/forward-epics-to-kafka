@@ -6,7 +6,7 @@ set(sources
         MainOpt.cxx
         remote.cxx
         helper_tests.cxx
-        uri.cxx
+        uri_tests.cxx
         streams_tests.cxx
         $<TARGET_OBJECTS:__objects>
 )
