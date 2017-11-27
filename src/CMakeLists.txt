@@ -24,7 +24,6 @@ if (COV)
     set(CMAKE_CXX_OUTPUT_EXTENSION_REPLACE 1)
     message(STATUS "Coverage Enabled")
     include(../cmake/CodeCoverage.cmake)
-
 endif()
 
 if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS "4.9.3")
@@ -153,7 +152,7 @@ add_subdirectory(tests)
 endif()
 
 if (COV)
-    set(COVERAGE_EXCLUDES 'src/tests/*' 'ansible/*' 'build-script/*' 'cmake/*' 'conan/*' )
+    set(COVERAGE_EXCLUDES 'src/tests/*' 'ansible/*' 'build-script/*' 'cmake/*' 'conan/*')
     SETUP_TARGET_FOR_COVERAGE_COBERTURA(NAME ${tgt}_cobertura EXECUTABLE tests)
-    message(STATUS ${Coverage_NAME})
+    MESSAGE(STATUS "Cobertura Enabled")
 endif()

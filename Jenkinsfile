@@ -50,7 +50,7 @@ node('docker && eee') {
             def configure_script = """
                 cd build
                 source ${epics_profile_file}
-                cmake3 ../${project} -DREQUIRE_GTEST=ON -DCOV=1
+                cmake3 ../${project} -DREQUIRE_GTEST=ON -DCOV=true
             """
             sh "docker exec ${container_name} sh -c \"${configure_script}\""
         }
@@ -74,6 +74,11 @@ node('docker && eee') {
             sh "docker cp ${container_name}:/home/jenkins/build/${test_output} ."
 
             junit "${test_output}"
+        }
+
+        stage('Check Coverage') {
+            def coverage_script = "make --directory=./build VERBOSE=1 ${project}_cobertura"
+            sh  "docker exec ${container_name} sh -c  \"${coverage_script}\""
         }
 
         stage('Archive') {
