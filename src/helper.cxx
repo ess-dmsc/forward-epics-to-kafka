@@ -55,7 +55,9 @@ std::vector<std::string> split(std::string const &input, std::string token) {
   using std::string;
   vector<string> ret;
   if (token.empty()) {
-    if (input.empty()) {return {};}
+    if (input.empty()) {
+      return {};
+    }
     return {input};
   }
   string::size_type i1 = 0;

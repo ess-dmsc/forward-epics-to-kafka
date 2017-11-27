@@ -1,5 +1,5 @@
-#include <gtest/gtest.h>
 #include "../uri.h"
+#include <gtest/gtest.h>
 
 TEST(URITests, port_is_set_to_zero_on_initialisation) {
   uri::URI uri1;
@@ -31,7 +31,6 @@ TEST(URITests, init_with_just_host) {
   ASSERT_EQ(uri1.path, "");
   ASSERT_EQ(uri1.port, (uint32_t)0);
 }
-
 
 TEST(URITests, uri_sets_host_from_host_string) {
   uri::URI u1("//myhost");
@@ -90,7 +89,8 @@ TEST(URITests, uri_parses_host_with_domain_seperator) {
   ASSERT_EQ(u1.port, (uint32_t)123);
 }
 
-TEST(URITests, uri_parses_host_and_port_with_domain_seperator_followed_by_blank_path) {
+TEST(URITests,
+     uri_parses_host_and_port_with_domain_seperator_followed_by_blank_path) {
   uri::URI u1("kafka://my-host.com:8080/");
   ASSERT_EQ(u1.scheme, "kafka");
   ASSERT_EQ(u1.host, "my-host.com");
@@ -98,7 +98,9 @@ TEST(URITests, uri_parses_host_and_port_with_domain_seperator_followed_by_blank_
   ASSERT_EQ(u1.path, "/");
 }
 
-TEST(URITests, uri_parses_host_and_port_with_domain_seperator_followed_by_directory_path) {
+TEST(
+    URITests,
+    uri_parses_host_and_port_with_domain_seperator_followed_by_directory_path) {
   uri::URI u1("kafka://my-host.com:8080/som_e");
   ASSERT_EQ(u1.scheme, "kafka");
   ASSERT_EQ(u1.host, "my-host.com");
@@ -107,7 +109,9 @@ TEST(URITests, uri_parses_host_and_port_with_domain_seperator_followed_by_direct
   ASSERT_EQ(u1.topic, "som_e");
 }
 
-TEST(URITests, uri_parses_host_and_port_with_domain_seperator_followed_by_multiple_directory_paths) {
+TEST(
+    URITests,
+    uri_parses_host_and_port_with_domain_seperator_followed_by_multiple_directory_paths) {
   uri::URI u1("kafka://my_host.com:8080/some/longer");
   ASSERT_EQ(u1.scheme, "kafka");
   ASSERT_EQ(u1.host, "my_host.com");

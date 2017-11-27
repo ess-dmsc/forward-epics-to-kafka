@@ -1,11 +1,11 @@
 #include "../helper.h"
 #include <array>
+#include <fstream>
 #include <gtest/gtest.h>
 #include <rapidjson/prettywriter.h>
 #include <rapidjson/stringbuffer.h>
 #include <string>
 #include <vector>
-#include <fstream>
 
 TEST(HelperTests, split_with_normal_token) {
   std::vector<std::string> expected = {"hello", " world!"};
@@ -167,8 +167,8 @@ TEST(HelperTests,
 
 TEST(HelperTests, split_adds_multiple_words_before_and_after_characters) {
   auto v = split("/some/longer/thing/for/testing", "/");
-  ASSERT_EQ(v,
-              std::vector<std::string>({"some", "longer", "thing", "for", "testing"}));
+  ASSERT_EQ(v, std::vector<std::string>(
+                   {"some", "longer", "thing", "for", "testing"}));
 }
 
 TEST(Sleep, sleep_ms) {

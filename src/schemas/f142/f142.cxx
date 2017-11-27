@@ -245,7 +245,8 @@ public:
 } // end namespace PVStructureToFlatBufferN
 
 Value_t make_Value_scalar(flatbuffers::FlatBufferBuilder &builder,
-                          epics::pvData::PVScalar *field, Statistics &statistics) {
+                          epics::pvData::PVScalar *field,
+                          Statistics &statistics) {
   using S = epics::pvData::ScalarType;
   using namespace epics::pvData;
   using namespace PVStructureToFlatBufferN;
@@ -280,7 +281,8 @@ Value_t make_Value_scalar(flatbuffers::FlatBufferBuilder &builder,
 }
 
 Value_t make_Value_array(flatbuffers::FlatBufferBuilder &builder,
-                         epics::pvData::PVScalarArray *field, uint8_t opts, Statistics &statistics) {
+                         epics::pvData::PVScalarArray *field, uint8_t opts,
+                         Statistics &statistics) {
   using S = epics::pvData::ScalarType;
   using namespace epics::pvData;
   using namespace PVStructureToFlatBufferN;
@@ -344,11 +346,12 @@ Value_t make_Value(flatbuffers::FlatBufferBuilder &builder,
   switch (t1) {
   case T::scalar:
     return make_Value_scalar(
-        builder, static_cast<epics::pvData::PVScalar *>(field.get()), statistics);
+        builder, static_cast<epics::pvData::PVScalar *>(field.get()),
+        statistics);
   case T::scalarArray:
     return make_Value_array(
-        builder, static_cast<epics::pvData::PVScalarArray *>(field.get()),
-        opts, statistics);
+        builder, static_cast<epics::pvData::PVScalarArray *>(field.get()), opts,
+        statistics);
   case T::structure: {
     // supported so far:
     // NTEnum:  we currently send the index value.  full enum identifier is
@@ -362,7 +365,8 @@ Value_t make_Value(flatbuffers::FlatBufferBuilder &builder,
       auto findex =
           ((epics::pvData::PVStructure *)(field.get()))->getSubField("index");
       return make_Value_scalar(
-          builder, static_cast<epics::pvData::PVScalar *>(findex.get()), statistics);
+          builder, static_cast<epics::pvData::PVScalar *>(findex.get()),
+          statistics);
       break;
     }
     break;
