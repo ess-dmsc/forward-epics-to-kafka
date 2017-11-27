@@ -152,7 +152,7 @@ add_subdirectory(tests)
 endif()
 
 if (COV)
-    set(COVERAGE_EXCLUDES 'src/tests/*' 'ansible/*' 'build-script/*' 'cmake/*' 'conan/*')
+    set(COVERAGE_EXCLUDES 'ansible/*' 'build-script/*' 'cmake/*' 'conan/*')
     SETUP_TARGET_FOR_COVERAGE_COBERTURA(NAME ${tgt}_cobertura EXECUTABLE tests)
     MESSAGE(STATUS "Cobertura Enabled")
 endif()
