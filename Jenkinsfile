@@ -79,6 +79,7 @@ node('docker && eee') {
         stage('Check Coverage') {
             def coverage_script = "make --directory=./build VERBOSE=1 ${project}_cobertura"
             sh  "docker exec ${container_name} sh -c  \"${coverage_script}\""
+            sh "docker cp ${container_name}:/home/jenkins/build/${project}_cobertura.xml ."
         }
 
         stage('Archive') {
