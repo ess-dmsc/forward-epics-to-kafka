@@ -45,7 +45,7 @@ struct MainOpt {
   int find_main_poll_interval(rapidjson::Document &document);
   void find_brokers_config(rapidjson::Document &document);
   void find_status_uri(rapidjson::Document &document);
-  rapidjson::Document parse_document(const std::string filepath);
+  rapidjson::Document parse_document(const std::string &filepath);
   int find_int(rapidjson::Document &document, const char *key) const;
 };
 

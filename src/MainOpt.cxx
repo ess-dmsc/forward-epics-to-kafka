@@ -122,7 +122,7 @@ int MainOpt::parse_json_file(string config_file) {
   return 0;
 }
 
-rapidjson::Document MainOpt::parse_document(const std::string filepath) {
+rapidjson::Document MainOpt::parse_document(const std::string &filepath) {
   std::ifstream ifs(filepath);
   if (!ifs.is_open()){
     LOG(3, "Could not open JSON file")
