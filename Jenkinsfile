@@ -73,15 +73,15 @@ node('docker && eee') {
             // Copy and publish test results.
             sh "docker cp ${container_name}:/home/jenkins/build/${test_output} ."
             junit "${test_output}"
-            sh "docker cp ${container_name}:/home/jenkins/build/${project}_cobertura.xml ."
-            cobertura autoUpdateHealth: false, autoUpdateStability: false, coberturaReportFile: 'forward-epics-to-kafka_cobertura.xml', conditionalCoverageTargets: '70, 0, 0', failUnhealthy: false, failUnstable: false, lineCoverageTargets: '80, 0, 0', maxNumberOfBuilds: 0, methodCoverageTargets: '80, 0, 0', onlyStable: false, sourceEncoding: 'ASCII', zoomCoverageChart: false
+            sh "docker cp ${container_name}:/home/jenkins/build/tests/tests_cobertura.xml ."
+            cobertura autoUpdateHealth: false, autoUpdateStability: false, coberturaReportFile: 'tests_cobertura.xml', conditionalCoverageTargets: '70, 0, 0', failUnhealthy: false, failUnstable: false, lineCoverageTargets: '80, 0, 0', maxNumberOfBuilds: 0, methodCoverageTargets: '80, 0, 0', onlyStable: false, sourceEncoding: 'ASCII', zoomCoverageChart: false
         }
-        
+
         stage('Archive') {
             // Remove file outside container.
             sh "rm -f forward-epics-to-kafka"
             // Copy archive from container.
-            sh "docker cp ${container_name}:/home/jenkins/build/forward-epics-to-kafka ."
+            sh "docker cp ${container_name}:/home/jenkins/build/${project} ."
 
             archiveArtifacts 'forward-epics-to-kafka'
         }
