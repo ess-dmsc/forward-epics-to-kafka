@@ -74,7 +74,7 @@ node('docker && eee') {
             sh "docker cp ${container_name}:/home/jenkins/build/${test_output} ."
             junit "${test_output}"
             sh "docker cp ${container_name}:/home/jenkins/build/${project}_cobertura.xml ."
-            cobertura autoUpdateHealth: false, autoUpdateStability: false, coberturaReportFile: '${project}_cobertura.xml', conditionalCoverageTargets: '70, 0, 0', failUnhealthy: false, failUnstable: false, lineCoverageTargets: '80, 0, 0', maxNumberOfBuilds: 0, methodCoverageTargets: '80, 0, 0', onlyStable: false, sourceEncoding: 'ASCII', zoomCoverageChart: false
+            cobertura autoUpdateHealth: false, autoUpdateStability: false, coberturaReportFile: '/home/jenkins/build/${project}_cobertura.xml', conditionalCoverageTargets: '70, 0, 0', failUnhealthy: false, failUnstable: false, lineCoverageTargets: '80, 0, 0', maxNumberOfBuilds: 0, methodCoverageTargets: '80, 0, 0', onlyStable: false, sourceEncoding: 'ASCII', zoomCoverageChart: false
         }
 
         stage('Archive') {
