@@ -82,7 +82,7 @@ node('docker && eee') {
             sh "rm -f forward-epics-to-kafka"
             // Copy archive from container.
             sh "docker exec ${container_name} sh -c \"ls -l /home/jenkins/build/tests/\" "
-            sh "docker cp ${container_name}:/home/jenkins/build/forward-epics-to-kafka ."
+            sh "docker cp ${container_name}:/home/jenkins/build/tests/tests ."
 
             archiveArtifacts 'forward-epics-to-kafka'
         }
