@@ -61,20 +61,20 @@ node('docker && eee') {
         }
 
         stage('Test') {
-            def build_script = "make --directory=./build/tests VERBOSE=1 ${project}_cobertura"
+            def build_script = "make --directory=./build VERBOSE=1 ${project}_cobertura"
             def test_output = "TestResults.xml"
             def test_script = """
-                cd build/tests/
-                ./tests -- --gtest_output=xml:${test_output}
+                cd build/
+                ./tests/tests -- --gtest_output=xml:${test_output}
             """
             sh "docker exec ${container_name} sh -c \"${test_script}\""
 
             // Remove file outside container.
             sh "rm -f ${test_output}"
             // Copy and publish test results.
-            sh "docker cp ${container_name}:/home/jenkins/build/tests/${test_output} ."
+            sh "docker cp ${container_name}:/home/jenkins/build/${test_output} ."
             junit "${test_output}"
-            sh "docker cp ${container_name}:/home/jenkins/build/tests/${project}_cobertura.xml ."
+            sh "docker cp ${container_name}:/home/jenkins/build/${project}_cobertura.xml ."
             cobertura autoUpdateHealth: false, autoUpdateStability: false, coberturaReportFile: 'forward-epics-to-kafka_cobertura.xml', conditionalCoverageTargets: '70, 0, 0', failUnhealthy: false, failUnstable: false, lineCoverageTargets: '80, 0, 0', maxNumberOfBuilds: 0, methodCoverageTargets: '80, 0, 0', onlyStable: false, sourceEncoding: 'ASCII', zoomCoverageChart: false
         }
 
