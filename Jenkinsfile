@@ -56,7 +56,7 @@ node('docker && eee') {
         }
 
         stage('Build') {
-            def build_script = "make --directory=./build VERBOSE=1 all"
+            def build_script = "make --directory=./build VERBOSE=1"
             sh "docker exec ${container_name} sh -c \"${build_script}\""
         }
 
