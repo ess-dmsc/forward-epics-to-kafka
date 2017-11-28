@@ -65,7 +65,7 @@ node('docker && eee') {
             def test_output = "TestResults.xml"
             def test_script = """
                 cd build/tests/
-                ./tests/tests -- --gtest_output=xml:${test_output}
+                ./tests -- --gtest_output=xml:${test_output}
             """
             sh "docker exec ${container_name} sh -c \"${test_script}\""
 
