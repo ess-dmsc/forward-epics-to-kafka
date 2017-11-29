@@ -50,7 +50,7 @@ node('docker && eee') {
             def configure_script = """
                 cd build
                 source ${epics_profile_file}
-                cmake3 ../${project} -DREQUIRE_GTEST=ON -DCOV=true
+                cmake3 ../${project} -DREQUIRE_GTEST=ON
             """
             sh "docker exec ${container_name} sh -c \"${configure_script}\""
         }
@@ -63,10 +63,11 @@ node('docker && eee') {
         stage('Test') {
             def configure_script = """
                         make clean
-                        cd build
+                        cd build/
                         source ${epics_profile_file}
                         cmake3 ../${project} -DREQUIRE_GTEST=ON -DCOV=true -DCMAKE_BUILD_TYPE=DEBUG
                     """
+            sh "docker exec ${container_name} sh -c \"${configure_script}\""
             def build_script = "make --directory=./build VERBOSE=1 ${project}_cobertura"
             def test_output = "TestResults.xml"
             def test_script = """
