@@ -62,6 +62,7 @@ node('docker && eee') {
 
         stage('Test') {
             def configure_script = """
+                        make clean
                         cd build
                         source ${epics_profile_file}
                         cmake3 ../${project} -DREQUIRE_GTEST=ON -DCOV=true -DCMAKE_BUILD_TYPE=DEBUG
