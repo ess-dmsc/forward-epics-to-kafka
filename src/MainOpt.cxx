@@ -142,7 +142,6 @@ void MainOpt::find_status_uri(rapidjson::Document &document) {
     u1.parse(itr->value.GetString());
     status_uri = u1;
   }
-  LOG(3, "ERROR could not find status URI in config json")
 }
 
 void MainOpt::find_brokers_config(rapidjson::Document &document) {
@@ -183,7 +182,6 @@ int MainOpt::find_int(rapidjson::Document &document, const char *key) const {
       return itr->value.GetInt();
     }
   }
-  LOG(3, "ERROR could not find {} in json", key)
   return 0;
 }
 
@@ -206,7 +204,6 @@ uri::URI MainOpt::find_broker_config(rapidjson::Document &document) {
       return {std::string(itr->value.GetString())};
     }
   }
-  LOG(3, "ERROR could not find broker config in json")
   return uri::URI();
 }
 
@@ -217,7 +214,6 @@ std::string MainOpt::find_broker(rapidjson::Document &document) {
       return std::string(itr->value.GetString());
     }
   }
-  LOG(3, "ERROR could not find broker in json")
   return "";
 }
 
