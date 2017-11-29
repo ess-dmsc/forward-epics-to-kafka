@@ -26,7 +26,7 @@ TEST(MainOpt_T, parse_config_file) {
 TEST(MainOpt_T, test_find_broker_returns_correct_broker) {
   MainOpt opt;
 
-  const char* json = "{ \"broker\" : \"localhost:9002\" }";
+  const char* json = R"({ "broker" : "localhost:9002" })";
   rapidjson::Document document;
   document.Parse(json);
 
@@ -36,7 +36,7 @@ TEST(MainOpt_T, test_find_broker_returns_correct_broker) {
 TEST(MainOpt_T, test_find_broker_with_no_broker_returns_empty_string){
   MainOpt opt;
 
-  const char* json = "{}";
+  const char* json = R"({})";
   rapidjson::Document document;
   document.Parse(json);
 
@@ -47,7 +47,7 @@ TEST(MainOpt_T, test_find_broker_with_no_broker_returns_empty_string){
 TEST(MainOpt_T, test_find_conversion_threads_returns_correct_number) {
   MainOpt opt;
 
-  const char* json = "{ \"conversion-threads\" : 4 }";
+  const char* json = R"({ "conversion-threads" : 4 })";
   rapidjson::Document document;
   document.Parse(json);
 
@@ -57,7 +57,7 @@ TEST(MainOpt_T, test_find_conversion_threads_returns_correct_number) {
 TEST(MainOpt_T, test_find_conversion_threads_returns_zero_if_no_property_found) {
   MainOpt opt;
 
-  const char* json = "{ \"broker\" : \"localhost:9003\" }";
+  const char* json = R"({ "broker" : "localhost:9003" })";
   rapidjson::Document document;
   document.Parse(json);
 
@@ -67,7 +67,7 @@ TEST(MainOpt_T, test_find_conversion_threads_returns_zero_if_no_property_found) 
 TEST(MainOpt_T, test_find_broker_returns_correct_broker_after_other_properties_found) {
   MainOpt opt;
 
-  const char* json = "{ \"broker\" : \"localhost:9002\", \"conversion-threads\" : 4 }";
+  const char* json = R"({ "broker" : "localhost:9002", "conversion-threads" : 4 })";
   rapidjson::Document document;
   document.Parse(json);
   ASSERT_EQ(opt.find_conversion_threads(document), 4);
@@ -76,13 +76,13 @@ TEST(MainOpt_T, test_find_broker_returns_correct_broker_after_other_properties_f
 
 TEST(MainOpt_T, test_find_brokers_config_finds_string_property) {
   MainOpt opt;
-  const char* json = "{\n"
-      "  \"kafka\": {\n"
-      "    \"broker\": {\n"
-      "      \"hello\" : \"world\"\n"
-      "    }\n"
-      "  }\n"
-      "}";
+  const char* json = R"({
+        "kafka": {
+          "broker": {
+            "hello" : "world"
+          }
+        }
+      })";
   rapidjson::Document document;
   document.Parse(json);
   opt.find_brokers_config(document);
@@ -91,13 +91,13 @@ TEST(MainOpt_T, test_find_brokers_config_finds_string_property) {
 
 TEST(MainOpt_T, test_find_brokers_config_finds_int_property) {
   MainOpt opt;
-  const char* json = "{\n"
-      "  \"kafka\": {\n"
-      "    \"broker\": {\n"
-      "      \"hello\" : 50\n"
-      "    }\n"
-      "  }\n"
-      "}";
+  const char* json = R"({
+        "kafka": {
+          "broker": {
+            "hello" : 50
+          }
+        }
+      })";
   rapidjson::Document document;
   document.Parse(json);
   opt.find_brokers_config(document);
@@ -106,13 +106,13 @@ TEST(MainOpt_T, test_find_brokers_config_finds_int_property) {
 
 TEST(MainOpt_T, test_find_brokers_config_does_nothing_with_object_property) {
   MainOpt opt;
-  const char* json = "{\n"
-      "  \"kafka\": {\n"
-      "    \"broker\": {\n"
-      "      \"hello\" : {}\n"
-      "    }\n"
-      "  }\n"
-      "}";
+  const char* json = R"({
+        "kafka": {
+          "broker": {
+            "hello" : {}
+          }
+        }
+      })";
   rapidjson::Document document;
   document.Parse(json);
   opt.find_brokers_config(document);
@@ -123,9 +123,9 @@ TEST(MainOpt_T, test_find_brokers_config_does_nothing_with_object_property) {
 
 TEST(MainOpt_T, test_find_main_poll_interval_returns_correct_value) {
   MainOpt opt;
-  const char* json = "{"
-      "\"main-poll-interval\":3"
-      "}";
+  const char* json = R"({
+      "main-poll-interval" : 3
+      })";
   rapidjson::Document document;
   document.Parse(json);
 
@@ -134,9 +134,9 @@ ASSERT_EQ(opt.find_main_poll_interval(document), 3);
 
 TEST(MainOpt_T, test_find_conversion_threads_returns_correct_value) {
   MainOpt opt;
-  const char* json = "{"
-      "\"conversion-threads\":3"
-      "}";
+  const char* json = R"({
+      "conversion-threads":3
+      })";
   rapidjson::Document document;
   document.Parse(json);
 
@@ -145,9 +145,9 @@ TEST(MainOpt_T, test_find_conversion_threads_returns_correct_value) {
 
 TEST(MainOpt_T, test_find_conversion_worker_queue_size_returns_correct_value) {
   MainOpt opt;
-  const char* json = "{"
-      "\"conversion-worker-queue-size\":3"
-      "}";
+  const char* json = R"({
+      "conversion-worker-queue-size" : 3
+      })";
   rapidjson::Document document;
   document.Parse(json);
 

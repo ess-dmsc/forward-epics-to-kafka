@@ -31,7 +31,7 @@ using std::vector;
 MainOpt::MainOpt() {
   hostname.resize(128);
   gethostname(hostname.data(), hostname.size());
-  if (hostname.back()) {
+  if (hostname.back() != 0) {
     // likely an error
     hostname.back() = 0;
   }
@@ -84,7 +84,7 @@ int MainOpt::parse_json_file(string config_file) {
   SchemaDocument schema(schema_);
 
   // Parse the JSON configuration and extract parameters.
-  // Currently, these parameters tke precedence over what is given on the
+  // Currently, these parameters take precedence over what is given on the
   // command line.
   auto document = parse_document(config_file);
   if (document.IsNull()) {
