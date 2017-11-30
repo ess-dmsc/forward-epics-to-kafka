@@ -39,14 +39,14 @@ struct MainOpt {
   KafkaW::BrokerOpt broker_opt;
   void init_logger();
   std::string find_broker(rapidjson::Document &document);
-  uri::URI find_broker_config(rapidjson::Document &document);
-  int find_conversion_threads(rapidjson::Document &document);
-  uint32_t find_conversion_worker_queue_size(rapidjson::Document &document);
-  int find_main_poll_interval(rapidjson::Document &document);
+  void find_broker_config(rapidjson::Document &document, std::string &property);
+  void find_conversion_threads(rapidjson::Document &document, int &property);
+  void find_conversion_worker_queue_size(rapidjson::Document &document, uint32_t &property);
+  void find_main_poll_interval(rapidjson::Document &document, int &property);
   void find_brokers_config(rapidjson::Document &document);
   void find_status_uri(rapidjson::Document &document);
   rapidjson::Document parse_document(const std::string &filepath);
-  int find_int(rapidjson::Document &document, const char *key) const;
+  void find_int(rapidjson::Document &document, const char *key, int &property) const;
 };
 
 static struct option LONG_OPTIONS[] = {

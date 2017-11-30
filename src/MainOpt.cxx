@@ -113,23 +113,15 @@ int MainOpt::parse_json_file(string config_file) {
   }
   vali.Reset();
 
-  auto f_broker = find_broker(document);
-  if (!f_broker.empty()) set_broker(f_broker);
 
-  auto f_broker_config = find_broker_config(document);
-  if (!f_broker_config.host.empty()) broker_config = f_broker_config;
-
-  auto f_conversion_threads = find_conversion_threads(document);
-  if (f_conversion_threads) conversion_threads = f_conversion_threads;
-
-  auto f_conversion_worker_queue_size = find_conversion_worker_queue_size(document);
-  if(f_conversion_worker_queue_size) conversion_worker_queue_size = f_conversion_worker_queue_size;
-
-  auto f_main_poll_interval = find_main_poll_interval(document);
-  if(f_main_poll_interval) main_poll_interval = f_main_poll_interval;
+  find_broker_config(document, &broker_config);
+  find_conversion_threads(document, &conversion_threads);
+  find_conversion_worker_queue_size(document, conversion_worker_queue_size);
+  find_main_poll_interval(document, main_poll_interval);
 
   find_brokers_config(document);
   find_status_uri(document);
+  set_broker(find_broker(document));
   return 0;
 }
 
@@ -186,46 +178,42 @@ void MainOpt::find_brokers_config(rapidjson::Document &document) {
   }
 }
 
-int MainOpt::find_int(rapidjson::Document &document, const char *key) const {
+void MainOpt::find_int(rapidjson::Document &document, const char *key, int &property) const {
   auto itr = document.FindMember(key);
   if (itr != document.MemberEnd()) {
     if (itr->value.IsInt()) {
-      return itr->value.GetInt();
+      property = itr->value.GetInt();
     }
   }
-  return 0;
 }
 
-int MainOpt::find_main_poll_interval(rapidjson::Document &document) {
-  return find_int(document, "main-poll-interval");
+void MainOpt::find_main_poll_interval(rapidjson::Document &document, int &property) {
+  find_int(document, "main-poll-interval", property);
 }
 
-uint32_t MainOpt::find_conversion_worker_queue_size(rapidjson::Document &document) {
-  return static_cast<uint32_t>(find_int(document, "conversion-worker-queue-size"));
+void MainOpt::find_conversion_worker_queue_size(rapidjson::Document &document, uint32_t &property) {
+  static_cast<uint32_t>(find_int(document, "conversion-worker-queue-size", property));
+}
+ void MainOpt::find_conversion_threads(rapidjson::Document &document, int &property) {
+  find_int(document, "conversion-threads", property);
 }
 
-int MainOpt::find_conversion_threads(rapidjson::Document &document) {
-  return find_int(document, "conversion-threads");
-}
-
-uri::URI MainOpt::find_broker_config(rapidjson::Document &document) {
+void MainOpt::find_broker_config(rapidjson::Document &document, std::string &property) {
   auto itr = document.FindMember("broker-config");
   if (itr != document.MemberEnd()) {
     if (itr->value.IsString()) {
-      return {std::string(itr->value.GetString())};
+      property = {std::string(itr->value.GetString())};
     }
   }
-  return uri::URI("");
 }
 
 std::string MainOpt::find_broker(rapidjson::Document &document) {
   auto itr = document.FindMember("broker");
   if (itr != document.MemberEnd()){
     if (itr->value.IsString()) {
-      return std::string(itr->value.GetString());
+      return(itr->value.GetString());
     }
   }
-  return "";
 }
 
 std::pair<int, std::unique_ptr<MainOpt>> parse_opt(int argc, char **argv) {
