@@ -33,14 +33,14 @@ TEST(MainOpt_T, test_find_broker_returns_correct_broker) {
   ASSERT_EQ(opt.find_broker(document), "localhost:9002");
 }
 
-TEST(MainOpt_T, test_find_broker_with_no_broker_returns_empty_string){
+TEST(MainOpt_T, test_find_broker_with_no_broker_returns_default_string){
   MainOpt opt;
 
   const char* json = R"({})";
   rapidjson::Document document;
   document.Parse(json);
 
-  ASSERT_EQ(opt.find_broker(document), "");
+  ASSERT_EQ(opt.find_broker(document), "localhost:9002");
 }
 
 
@@ -50,18 +50,18 @@ TEST(MainOpt_T, test_find_conversion_threads_returns_correct_number) {
   const char* json = R"({ "conversion-threads" : 4 })";
   rapidjson::Document document;
   document.Parse(json);
-
-  ASSERT_EQ(opt.find_conversion_threads(document), 4);
+  opt.find_conversion_threads(document, opt.conversion_threads);
+  ASSERT_EQ(opt.conversion_threads, 4);
 }
 
-TEST(MainOpt_T, test_find_conversion_threads_returns_zero_if_no_property_found) {
+TEST(MainOpt_T, test_find_conversion_threads_returns_default_if_no_property_found) {
   MainOpt opt;
 
   const char* json = R"({ "broker" : "localhost:9003" })";
   rapidjson::Document document;
   document.Parse(json);
-
-  ASSERT_EQ(opt.find_conversion_threads(document), 0);
+  opt.find_conversion_threads(document, opt.conversion_threads);
+  ASSERT_EQ(opt.conversion_threads, 1);
 }
 
 TEST(MainOpt_T, test_find_broker_returns_correct_broker_after_other_properties_found) {
@@ -70,7 +70,8 @@ TEST(MainOpt_T, test_find_broker_returns_correct_broker_after_other_properties_f
   const char* json = R"({ "broker" : "localhost:9002", "conversion-threads" : 4 })";
   rapidjson::Document document;
   document.Parse(json);
-  ASSERT_EQ(opt.find_conversion_threads(document), 4);
+  opt.find_conversion_threads(document, opt.conversion_threads);
+  ASSERT_EQ(opt.conversion_threads, 4);
   ASSERT_EQ(opt.find_broker(document), "localhost:9002");
 }
 
@@ -128,8 +129,8 @@ TEST(MainOpt_T, test_find_main_poll_interval_returns_correct_value) {
       })";
   rapidjson::Document document;
   document.Parse(json);
-
-ASSERT_EQ(opt.find_main_poll_interval(document), 3);
+  opt.find_main_poll_interval(document, opt.main_poll_interval);
+  ASSERT_EQ(opt.main_poll_interval, 3);
 }
 
 TEST(MainOpt_T, test_find_conversion_threads_returns_correct_value) {
@@ -139,8 +140,8 @@ TEST(MainOpt_T, test_find_conversion_threads_returns_correct_value) {
       })";
   rapidjson::Document document;
   document.Parse(json);
-
-  ASSERT_EQ(opt.find_conversion_threads(document), 3);
+  opt.find_conversion_threads(document, opt.conversion_threads);
+  ASSERT_EQ(opt.conversion_threads, 3);
 }
 
 TEST(MainOpt_T, test_find_conversion_worker_queue_size_returns_correct_value) {
@@ -150,6 +151,6 @@ TEST(MainOpt_T, test_find_conversion_worker_queue_size_returns_correct_value) {
       })";
   rapidjson::Document document;
   document.Parse(json);
-
-  ASSERT_EQ(opt.find_conversion_worker_queue_size(document), 3);
+  opt.find_conversion_worker_queue_size(document, opt.conversion_worker_queue_size);
+  ASSERT_EQ(opt.conversion_worker_queue_size, 3);
 }

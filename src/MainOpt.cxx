@@ -114,8 +114,8 @@ int MainOpt::parse_json_file(string config_file) {
   vali.Reset();
 
 
-  find_broker_config(document, &broker_config);
-  find_conversion_threads(document, &conversion_threads);
+  find_broker_config(document, broker_config);
+  find_conversion_threads(document, conversion_threads);
   find_conversion_worker_queue_size(document, conversion_worker_queue_size);
   find_main_poll_interval(document, main_poll_interval);
 
@@ -192,13 +192,23 @@ void MainOpt::find_main_poll_interval(rapidjson::Document &document, int &proper
 }
 
 void MainOpt::find_conversion_worker_queue_size(rapidjson::Document &document, uint32_t &property) {
-  static_cast<uint32_t>(find_int(document, "conversion-worker-queue-size", property));
+  find_uint32_t(document, "conversion-worker-queue-size", property);
 }
- void MainOpt::find_conversion_threads(rapidjson::Document &document, int &property) {
+
+void MainOpt::find_uint32_t(rapidjson::Document &document, const char *key, uint32_t &property) {
+  auto itr = document.FindMember(key);
+  if (itr != document.MemberEnd()) {
+    if (itr->value.IsInt()) {
+      property = static_cast<uint32_t>(itr->value.GetInt());
+    }
+  }
+}
+
+void MainOpt::find_conversion_threads(rapidjson::Document &document, int &property) {
   find_int(document, "conversion-threads", property);
 }
 
-void MainOpt::find_broker_config(rapidjson::Document &document, std::string &property) {
+void MainOpt::find_broker_config(rapidjson::Document &document, uri::URI &property) {
   auto itr = document.FindMember("broker-config");
   if (itr != document.MemberEnd()) {
     if (itr->value.IsString()) {
