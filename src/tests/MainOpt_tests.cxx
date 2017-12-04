@@ -29,17 +29,23 @@ TEST(MainOpt_T, test_find_broker_returns_correct_broker) {
   const char* json = R"({ "broker" : "localhost:9002" })";
   rapidjson::Document document;
   document.Parse(json);
+  opt.find_broker(document);
 
-  ASSERT_EQ(opt.find_broker(document), "localhost:9002");
+  ASSERT_EQ(opt.brokers.at(0).host, "localhost");
+  ASSERT_EQ(opt.brokers.at(0).host_port, "localhost:9002");
 }
 
 TEST(MainOpt_T, test_find_broker_with_no_broker_returns_default_string){
   MainOpt opt;
 
-  const char* json = R"({})";
+  const char* json = R"({
+      "main-poll-interval" : 3
+      })";
   rapidjson::Document document;
   document.Parse(json);
-  ASSERT_EQ(opt.find_broker(document), "localhost:9002");
+  opt.find_broker(document);
+  ASSERT_EQ(opt.brokers.at(0).host, "localhost");
+  ASSERT_EQ(opt.brokers.at(0).host_port, "localhost:9092");
 }
 
 
@@ -71,7 +77,9 @@ TEST(MainOpt_T, test_find_broker_returns_correct_broker_after_other_properties_f
   document.Parse(json);
   opt.find_conversion_threads(document, opt.conversion_threads);
   ASSERT_EQ(opt.conversion_threads, 4);
-  ASSERT_EQ(opt.find_broker(document), "localhost:9002");
+  opt.find_broker(document);
+  ASSERT_EQ(opt.brokers.at(0).host, "localhost");
+  ASSERT_EQ(opt.brokers.at(0).host_port, "localhost:9002");
 }
 
 TEST(MainOpt_T, test_find_brokers_config_finds_string_property) {

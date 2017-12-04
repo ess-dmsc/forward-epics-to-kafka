@@ -119,7 +119,7 @@ int MainOpt::parse_json_file(string config_file) {
 
   find_brokers_config(document);
   find_status_uri(document);
-  set_broker(find_broker(document));
+  find_broker(document);
   return 0;
 }
 
@@ -215,11 +215,11 @@ void MainOpt::find_broker_config(rapidjson::Document &document, uri::URI &proper
   }
 }
 
-std::string MainOpt::find_broker(rapidjson::Document &document) {
+void MainOpt::find_broker(rapidjson::Document &document) {
   auto itr = document.FindMember("broker");
   if (itr != document.MemberEnd()){
     if (itr->value.IsString()) {
-      return(itr->value.GetString());
+      set_broker(itr->value.GetString());
     }
   }
 }

@@ -38,7 +38,7 @@ struct MainOpt {
   int parse_json_file(string config_file);
   KafkaW::BrokerOpt broker_opt;
   void init_logger();
-  std::string find_broker(rapidjson::Document &document);
+  void find_broker(rapidjson::Document &document);
   void find_broker_config(rapidjson::Document &document, uri::URI &property);
   void find_conversion_threads(rapidjson::Document &document, int &property);
   void find_conversion_worker_queue_size(rapidjson::Document &document, uint32_t &property);
