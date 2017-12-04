@@ -25,8 +25,6 @@
 namespace BrightnESS {
 namespace ForwardEpicsToKafka {
 
-using std::string;
-using std::vector;
 
 MainOpt::MainOpt() {
   hostname.resize(128);
@@ -38,7 +36,7 @@ MainOpt::MainOpt() {
   set_broker("localhost:9092");
 }
 
-void MainOpt::set_broker(string broker) {
+void MainOpt::set_broker(std::string broker) {
   brokers.clear();
   auto a = split(broker, ",");
   for (auto &x : a) {

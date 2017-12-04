@@ -39,7 +39,6 @@ TEST(MainOpt_T, test_find_broker_with_no_broker_returns_default_string){
   const char* json = R"({})";
   rapidjson::Document document;
   document.Parse(json);
-
   ASSERT_EQ(opt.find_broker(document), "localhost:9002");
 }
 
