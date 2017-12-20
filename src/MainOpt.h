@@ -38,16 +38,16 @@ struct MainOpt {
   int parse_json_file(string config_file);
   KafkaW::BrokerOpt broker_opt;
   void init_logger();
-  void find_broker(rapidjson::Document &document);
-  void find_broker_config(rapidjson::Document &document, uri::URI &property);
-  void find_conversion_threads(rapidjson::Document &document, int &property);
-  void find_conversion_worker_queue_size(rapidjson::Document &document, uint32_t &property);
-  void find_main_poll_interval(rapidjson::Document &document, int &property);
-  void find_brokers_config(rapidjson::Document &document);
-  void find_status_uri(rapidjson::Document &document);
-  rapidjson::Document parse_document(const std::string &filepath);
-  void find_int(rapidjson::Document &document, const char *key, int &property) const;
-  void find_uint32_t(rapidjson::Document &document, const char *key, uint32_t &property);
+  void find_broker();
+  void find_broker_config(uri::URI &property);
+  void find_conversion_threads(int &property);
+  void find_conversion_worker_queue_size(uint32_t &property);
+  void find_main_poll_interval(int &property);
+  void find_brokers_config();
+  void find_status_uri();
+  void parse_document(const std::string &filepath);
+  void find_int(const char *key, int &property) const;
+  void find_uint32_t(const char *key, uint32_t &property);
   };
 
 static struct option LONG_OPTIONS[] = {

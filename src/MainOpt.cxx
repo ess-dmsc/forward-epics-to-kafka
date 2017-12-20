@@ -84,18 +84,18 @@ int MainOpt::parse_json_file(string config_file) {
   // Parse the JSON configuration and extract parameters.
   // Currently, these parameters take precedence over what is given on the
   // command line.
-  auto document = parse_document(config_file);
-  if (document.IsNull()) {
+  parse_document(config_file);
+  if (json->IsNull()) {
     return -4;
   }
-  if (document.HasParseError()) {
+  if (json->HasParseError()) {
     LOG(3, "configuration is not well formed");
     return -5;
   }
 
   SchemaValidator vali(schema);
 
-  if (!document.Accept(vali)) {
+  if (!json->Accept(vali)) {
     StringBuffer sb1, sb2;
     vali.GetInvalidSchemaPointer().StringifyUriFragment(sb1);
     vali.GetInvalidDocumentPointer().StringifyUriFragment(sb2);
@@ -112,32 +112,30 @@ int MainOpt::parse_json_file(string config_file) {
   vali.Reset();
 
 
-  find_broker_config(document, broker_config);
-  find_conversion_threads(document, conversion_threads);
-  find_conversion_worker_queue_size(document, conversion_worker_queue_size);
-  find_main_poll_interval(document, main_poll_interval);
+  find_broker_config(broker_config);
+  find_conversion_threads(conversion_threads);
+  find_conversion_worker_queue_size(conversion_worker_queue_size);
+  find_main_poll_interval(main_poll_interval);
 
-  find_brokers_config(document);
-  find_status_uri(document);
-  find_broker(document);
+  find_brokers_config();
+  find_status_uri();
+  find_broker();
   return 0;
 }
 
-rapidjson::Document MainOpt::parse_document(const std::string &filepath) {
+void MainOpt::parse_document(const std::string &filepath) {
   std::ifstream ifs(filepath);
   if (!ifs.is_open()){
     LOG(3, "Could not open JSON file")
-    return nullptr;
   }
   rapidjson::IStreamWrapper isw(ifs);
-  rapidjson::Document d;
-  d.ParseStream(isw);
-  return d;
+  json = std::make_shared<rapidjson::Document>();
+  json->ParseStream(isw);
 }
 
-void MainOpt::find_status_uri(rapidjson::Document &document) {
-  auto itr = document.FindMember("status-uri");
-  if (itr != document.MemberEnd() && itr->value.IsString()) {
+void MainOpt::find_status_uri() {
+  auto itr = json->FindMember("status-uri");
+  if (itr != json->MemberEnd() && itr->value.IsString()) {
     uri::URI u1;
     u1.port = 9092;
     u1.parse(itr->value.GetString());
@@ -145,13 +143,13 @@ void MainOpt::find_status_uri(rapidjson::Document &document) {
   }
 }
 
-void MainOpt::find_brokers_config(rapidjson::Document &document) {
-  auto kafka = document.FindMember("kafka");
-  if (kafka != document.MemberEnd()) {
+void MainOpt::find_brokers_config() {
+  auto kafka = json->FindMember("kafka");
+  if (kafka != json->MemberEnd()) {
     auto &brokers = kafka->value;
     if (brokers.IsObject()) {
       auto broker = brokers.FindMember("broker");
-      if (broker != document.MemberEnd()) {
+      if (broker != json->MemberEnd()) {
         auto &broker_properties = broker->value;
         if (broker_properties.IsObject()) {
           for (auto &broker_property : broker_properties.GetObject()) {
@@ -176,48 +174,48 @@ void MainOpt::find_brokers_config(rapidjson::Document &document) {
   }
 }
 
-void MainOpt::find_int(rapidjson::Document &document, const char *key, int &property) const {
-  auto itr = document.FindMember(key);
-  if (itr != document.MemberEnd()) {
+void MainOpt::find_int(const char *key, int &property) const {
+  auto itr = json->FindMember(key);
+  if (itr != json->MemberEnd()) {
     if (itr->value.IsInt()) {
       property = itr->value.GetInt();
     }
   }
 }
 
-void MainOpt::find_main_poll_interval(rapidjson::Document &document, int &property) {
-  find_int(document, "main-poll-interval", property);
+void MainOpt::find_main_poll_interval(int &property) {
+  find_int("main-poll-interval", property);
 }
 
-void MainOpt::find_conversion_worker_queue_size(rapidjson::Document &document, uint32_t &property) {
-  find_uint32_t(document, "conversion-worker-queue-size", property);
+void MainOpt::find_conversion_worker_queue_size(uint32_t &property) {
+  find_uint32_t("conversion-worker-queue-size", property);
 }
 
-void MainOpt::find_uint32_t(rapidjson::Document &document, const char *key, uint32_t &property) {
-  auto itr = document.FindMember(key);
-  if (itr != document.MemberEnd()) {
+void MainOpt::find_uint32_t(const char *key, uint32_t &property) {
+  auto itr = json->FindMember(key);
+  if (itr != json->MemberEnd()) {
     if (itr->value.IsInt()) {
       property = static_cast<uint32_t>(itr->value.GetInt());
     }
   }
 }
 
-void MainOpt::find_conversion_threads(rapidjson::Document &document, int &property) {
-  find_int(document, "conversion-threads", property);
+void MainOpt::find_conversion_threads(int &property) {
+  find_int("conversion-threads", property);
 }
 
-void MainOpt::find_broker_config(rapidjson::Document &document, uri::URI &property) {
-  auto itr = document.FindMember("broker-config");
-  if (itr != document.MemberEnd()) {
+void MainOpt::find_broker_config(uri::URI &property) {
+  auto itr = json->FindMember("broker-config");
+  if (itr != json->MemberEnd()) {
     if (itr->value.IsString()) {
       property = {std::string(itr->value.GetString())};
     }
   }
 }
 
-void MainOpt::find_broker(rapidjson::Document &document) {
-  auto itr = document.FindMember("broker");
-  if (itr != document.MemberEnd()){
+void MainOpt::find_broker() {
+  auto itr = json->FindMember("broker");
+  if (itr != json->MemberEnd()){
     if (itr->value.IsString()) {
       set_broker(itr->value.GetString());
     }
