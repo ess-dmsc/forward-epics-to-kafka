@@ -8,6 +8,7 @@ set(sources
         helper_tests.cxx
         uri_tests.cxx
         streams_tests.cxx
+        listener_tests.cxx
         $<TARGET_OBJECTS:__objects>
 )
 add_executable(${tgt} ${sources})

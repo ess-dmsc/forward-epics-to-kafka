@@ -149,7 +149,7 @@ PollStatus PollStatus::Empty() {
   return ret;
 }
 
-PollStatus PollStatus::make_Msg(std::unique_ptr<Msg> x) {
+PollStatus PollStatus::make_Msg(std::unique_ptr<AbstractMsg> x) {
   PollStatus ret;
   ret.state = 1;
   ret.data = x.release();
@@ -186,9 +186,9 @@ bool PollStatus::is_EOP() { return state == -2; }
 
 bool PollStatus::is_Empty() { return state == -3; }
 
-std::unique_ptr<Msg> PollStatus::is_Msg() {
+std::unique_ptr<AbstractMsg> PollStatus::is_Msg() {
   if (state == 1) {
-    std::unique_ptr<Msg> ret((Msg *)data);
+    std::unique_ptr<AbstractMsg> ret((AbstractMsg *)data);
     data = nullptr;
     return ret;
   }
@@ -196,23 +196,12 @@ std::unique_ptr<Msg> PollStatus::is_Msg() {
 }
 
 Consumer::Consumer(BrokerOpt opt) : opt(opt) {
-  // on_rebalance_start = nullptr;
-  // on_rebalance_assign = nullptr;
+  on_rebalance_assign = {};
+  on_rebalance_start = {};
+  add_topic(topic);
   init();
   id = g_kafka_instance_count++;
 }
-
-/*
-Consumer::Consumer(Consumer && x) {
-        using std::swap;
-        swap(on_rebalance_assign, x.on_rebalance_assign);
-        swap(on_rebalance_start, x.on_rebalance_start);
-        swap(rk, x.rk);
-        swap(opt, x.opt);
-        swap(plist, x.plist);
-        swap(id, x.id);
-}
-*/
 
 Consumer::~Consumer() {
   LOG(7, "~Consumer()");
@@ -409,7 +398,7 @@ PollStatus Consumer::poll() {
   }
 
   static_assert(sizeof(char) == 1, "Failed: sizeof(char) == 1");
-  std::unique_ptr<Msg> m2(new Msg);
+  std::unique_ptr<AbstractMsg> m2(new Msg);
   m2->kmsg = msg;
   // auto topic_name = rd_kafka_topic_name(msg->rkt);
   // int partition = msg->partition;
@@ -639,11 +628,6 @@ ProducerTopic::ProducerTopic(std::shared_ptr<Producer> producer,
   TopicOpt opt;
   rd_kafka_topic_conf_t *topic_conf = rd_kafka_topic_conf_new();
   opt.apply(topic_conf);
-
-  // rd_kafka_msg_partitioner_random, rd_kafka_msg_partitioner_consistent,
-  // rd_kafka_msg_partitioner_consistent_random
-  // rd_kafka_topic_conf_set_partitioner_cb(topic_conf,
-  // rd_kafka_msg_partitioner_random);
 
   rkt = rd_kafka_topic_new(producer->rd_kafka_ptr(), _name.c_str(), topic_conf);
   if (rkt == nullptr) {

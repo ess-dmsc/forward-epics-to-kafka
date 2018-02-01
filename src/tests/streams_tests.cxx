@@ -163,8 +163,9 @@ TEST(StreamsTest,
   ASSERT_EQ(2, streams.size());
 }
 
-TEST(StreamsTest,
-     channel_stop_removes_no_channels_with_no__given_channel_name) {
+
+TEST(StreamsTest, 
+     channel_stop_removes_no_channels_with_no_given_channel_name) {
   Streams streams;
   auto s = createMockStream("hello", "world");
   auto s2 = createMockStream("world", "world");
