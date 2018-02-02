@@ -196,9 +196,6 @@ std::unique_ptr<AbstractMsg> PollStatus::is_Msg() {
 }
 
 Consumer::Consumer(BrokerOpt opt) : opt(opt) {
-  on_rebalance_assign = {};
-  on_rebalance_start = {};
-  add_topic(topic);
   init();
   id = g_kafka_instance_count++;
 }
@@ -320,6 +317,8 @@ void Consumer::cb_rebalance(rd_kafka_t *rk, rd_kafka_resp_err_t err,
 }
 
 void Consumer::init() {
+  on_rebalance_assign = {};
+  on_rebalance_start = {};
   // librdkafka API sometimes wants to write errors into a buffer:
   int const errstr_N = 512;
   char errstr[errstr_N];
