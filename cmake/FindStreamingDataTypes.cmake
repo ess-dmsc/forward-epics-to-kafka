@@ -10,8 +10,15 @@
 # Usage of this package requires of course the git suite to be available.
 # Contact: Dominik Werder
 
+set(schemas_subdir "schemas")
+set(head_out_dir "${CMAKE_CURRENT_BINARY_DIR}/${schemas_subdir}")
+file(MAKE_DIRECTORY ${head_out_dir})
+
 if (CONAN_INCLUDE_DIRS_STREAMING-DATA-TYPES)
 	file(GLOB_RECURSE flatbuffers_generated_headers "${CONAN_INCLUDE_DIRS_STREAMING-DATA-TYPES}/*_generated.h")
+	foreach (header_file ${flatbuffers_generated_headers})
+		configure_file(${header_file} ${head_out_dir} COPYONLY)
+	endforeach()
 else ()
 	find_path(path_include_streaming_data_types NAMES schemas/f141_epics_nt.fbs HINTS
 	# The common case as fallback:
@@ -30,12 +37,8 @@ else ()
 		endif(UNIX)
 	endif()
 
-
 	set(flatbuffers_generated_headers "")
 
-	set(schemas_subdir "schemas")
-	set(head_out_dir "${CMAKE_CURRENT_BINARY_DIR}/${schemas_subdir}")
-	file(MAKE_DIRECTORY ${head_out_dir})
 	file(GLOB_RECURSE flatbuffers_schemata2 RELATIVE "${path_include_streaming_data_types}/schemas" "${path_include_streaming_data_types}/schemas/*.fbs")
 
 	foreach (f0 ${flatbuffers_schemata2})
