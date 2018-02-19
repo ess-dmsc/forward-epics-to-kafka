@@ -37,136 +37,134 @@ def Object get_container(image_key) {
         --env http_proxy=${env.http_proxy} \
         --env https_proxy=${env.https_proxy} \
         --env local_conan_server=${env.local_conan_server} \
-        --mount=type=bind,src=${epics_dir},dst=${epics_dir},readonly \
-        --mount=type=bind,src=${epics_profile_file},dst=${epics_profile_file},readonly \
         ")
     return container
 }
 
 def get_pipeline(image_key)
 {
-  return {
-    try {
-      def epics_dir = "/opt/epics"
-      def epics_profile_file = "/etc/profile.d/ess_epics_env.sh"
-      def container = get_container(image_key)
-      def custom_sh = images[image_key]['sh']
+    return {
+        try {
+            def epics_dir = "/opt/epics"
+            def epics_profile_file = "/etc/profile.d/ess_epics_env.sh"
+            def container = get_container(image_key)
+            def custom_sh = images[image_key]['sh']
 
-      // Copy sources to container and change owner and group.
-      sh "docker cp ${project} ${container_name(image_key)}:/home/jenkins/${project}"
-      sh """docker exec --user root ${container_name(image_key)} ${custom_sh} -c \"
-                    chown -R jenkins.jenkins /home/jenkins/${project}
-      \""""
-
-      if (image_key == clangformat_os) {
-        stage('${image_key} Check Formatting') {
-            sh """docker exec ${container_name(image_key)} sh -c \"
-                clang-format -version
-                cd ${project}
-                find . \\( -name '*.cpp' -or -name '*.cxx' -or -name '*.h' -or -name '*.hpp' \\) \
-                    -exec clangformatdiff.sh {} +
+            // Copy sources to container and change owner and group.
+            sh "docker cp ${project} ${container_name(image_key)}:/home/jenkins/${project}"
+            sh """docker exec --user root ${container_name(image_key)} ${custom_sh} -c \"
+                        chown -R jenkins.jenkins /home/jenkins/${project}
             \""""
+
+            if (image_key == clangformat_os) {
+                stage('${image_key} Check Formatting') {
+                    sh """docker exec ${container_name(image_key)} sh -c \"
+                        clang-format -version
+                        cd ${project}
+                        find . \\( -name '*.cpp' -or -name '*.cxx' -or -name '*.h' -or -name '*.hpp' \\) \
+                            -exec clangformatdiff.sh {} +
+                    \""""
+                }
+            } else {
+
+                stage('${image_key} Checkout Schemas') {
+                    def checkout_script = """
+                      git clone -b master https://github.com/ess-dmsc/streaming-data-types.git
+                    """
+                    sh "docker exec ${container_name(image_key)} ${custom_sh} -c \"${checkout_script}\""
+                }
+
+                stage('${image_key} Get Dependencies') {
+                    def conan_remote = "ess-dmsc-local"
+                    def dependencies_script = """
+                      mkdir build
+                      cd build
+                      conan remote add \
+                          --insert 0 \
+                          ${conan_remote} ${local_conan_server}
+                      cat ../${project}/CMakeLists.txt
+                      conan install --build=outdated ../${project}/conan/conanfile.txt
+                    """
+                    sh "docker exec ${container_name(image_key)} ${custom_sh} -c \"${dependencies_script}\""
+                }
+
+                stage('${image_key} Configure') {
+                  def configure_script = """
+                      cd build
+                      . ./activate_run.sh
+                      source ${epics_profile_file}
+                      cmake ../${project} -DREQUIRE_GTEST=ON
+                  """
+                  sh "docker exec ${container_name(image_key)} ${custom_sh} -c \"${configure_script}\""
+                }
+
+                stage('${image_key} Build') {
+                  def build_script = """
+                      cd build
+                      . ./activate_run.sh
+                      make VERBOSE=1
+                  """
+                  sh "docker exec ${container_name(image_key)} ${custom_sh} -c \"${build_script}\""
+                }
+
+                stage('${image_key} Test') {
+                    def test_output = "TestResults.xml"
+                    def test_script = """
+                      cd build
+                      . ./activate_run.sh
+                      ./tests/tests -- --gtest_output=xml:${test_output}
+                    """
+                    sh "docker exec ${container_name(image_key)} ${custom_sh} -c \"${test_script}\""
+
+                    // Remove file outside container.
+                    sh "rm -f ${test_output}"
+                    // Copy and publish test results (only from one container).
+                    if (image_key == 'centos-gcc6') {
+                        sh "docker cp ${container_name(image_key)}:/home/jenkins/build/${test_output} ."
+                        junit "${test_output}"
+                    }
+                }
+
+                if (image_key == 'centos-gcc6') {
+                    stage('${image_key} Archive') {
+                        // Remove file outside container.
+                        sh "rm -f forward-epics-to-kafka"
+                        // Copy archive from container.
+                        sh "docker cp ${container_name}:/home/jenkins/build/forward-epics-to-kafka ."
+
+                        archiveArtifacts 'forward-epics-to-kafka'
+                    }
+                }
+            }
+        } catch (e) {
+            failure_function(e, "Unknown build failure for ${image_key}")
+        } finally {
+            sh "docker stop ${container_name(image_key)}"
+            sh "docker rm -f ${container_name(image_key)}"
         }
-      } else {
-
-        stage('${image_key} Checkout Schemas') {
-          def checkout_script = """
-              git clone -b master https://github.com/ess-dmsc/streaming-data-types.git
-          """
-          sh "docker exec ${container_name(image_key)} ${custom_sh} -c \"${checkout_script}\""
-        }
-
-        stage('${image_key} Get Dependencies') {
-          def conan_remote = "ess-dmsc-local"
-          def dependencies_script = """
-              mkdir build
-              cd build
-              conan remote add \
-                  --insert 0 \
-                  ${conan_remote} ${local_conan_server}
-              cat ../${project}/CMakeLists.txt
-              conan install --build=outdated ../${project}/conan/conanfile.txt
-          """
-          sh "docker exec ${container_name(image_key)} ${custom_sh} -c \"${dependencies_script}\""
-        }
-
-        stage('${image_key} Configure') {
-          def configure_script = """
-              cd build
-              . ./activate_run.sh
-              source ${epics_profile_file}
-              cmake ../${project} -DREQUIRE_GTEST=ON
-          """
-          sh "docker exec ${container_name(image_key)} ${custom_sh} -c \"${configure_script}\""
-        }
-
-        stage('${image_key} Build') {
-          def build_script = """
-              cd build
-              . ./activate_run.sh
-              make VERBOSE=1
-          """
-          sh "docker exec ${container_name(image_key)} ${custom_sh} -c \"${build_script}\""
-        }
-
-        stage('${image_key} Test') {
-          def test_output = "TestResults.xml"
-          def test_script = """
-              cd build
-              . ./activate_run.sh
-              ./tests/tests -- --gtest_output=xml:${test_output}
-          """
-          sh "docker exec ${container_name(image_key)} ${custom_sh} -c \"${test_script}\""
-
-          // Remove file outside container.
-          sh "rm -f ${test_output}"
-          // Copy and publish test results (only from one container).
-          if (image_key == 'centos-gcc6') {
-            sh "docker cp ${container_name(image_key)}:/home/jenkins/build/${test_output} ."
-            junit "${test_output}"
-          }
-        }
-
-        if (image_key == 'centos-gcc6') {
-          stage('${image_key} Archive') {
-            // Remove file outside container.
-            sh "rm -f forward-epics-to-kafka"
-            // Copy archive from container.
-            sh "docker cp ${container_name}:/home/jenkins/build/forward-epics-to-kafka ."
-
-            archiveArtifacts 'forward-epics-to-kafka'
-          }
-        }
-      }
-    } catch (e) {
-      failure_function(e, "Unknown build failure for ${image_key}")
-    } finally {
-      sh "docker stop ${container_name(image_key)}"
-      sh "docker rm -f ${container_name(image_key)}"
     }
-  }
 }
 
 node('docker && eee') {
-  cleanWs()
+    cleanWs()
 
-  stage('Checkout') {
-    dir("${project}") {
-      try {
-        scm_vars = checkout scm
-      } catch (e) {
-        failure_function(e, 'Checkout failed')
-      }
+    stage('Checkout') {
+        dir("${project}") {
+            try {
+                scm_vars = checkout scm
+            } catch (e) {
+                failure_function(e, 'Checkout failed')
+            }
+        }
     }
-  }
 
-  def builders = [:]
-  for (x in images.keySet()) {
-    def image_key = x
-    builders[image_key] = get_pipeline(image_key)
-  }
-  parallel builders
+    def builders = [:]
+    for (x in images.keySet()) {
+        def image_key = x
+        builders[image_key] = get_pipeline(image_key)
+    }
+    parallel builders
 
-  // Delete workspace when build is done
-  cleanWs()
+    // Delete workspace when build is done
+    cleanWs()
 }
