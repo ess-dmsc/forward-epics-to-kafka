@@ -1,6 +1,9 @@
 project = "forward-epics-to-kafka"
 clangformat_os = "fedora"
 
+epics_dir = "/opt/epics"
+epics_profile_file = "/etc/profile.d/ess_epics_env.sh"
+
 images = [
     'centos-gcc6': [
         'name': 'essdmscdm/centos7-gcc6-build-node:2.0.0',
@@ -37,6 +40,8 @@ def Object get_container(image_key) {
         --env http_proxy=${env.http_proxy} \
         --env https_proxy=${env.https_proxy} \
         --env local_conan_server=${env.local_conan_server} \
+        --mount=type=bind,src=${epics_dir},dst=${epics_dir},readonly \
+        --mount=type=bind,src=${epics_profile_file},dst=${epics_profile_file},readonly \
         ")
     return container
 }
@@ -45,8 +50,6 @@ def get_pipeline(image_key)
 {
     return {
         try {
-            def epics_dir = "/opt/epics"
-            def epics_profile_file = "/etc/profile.d/ess_epics_env.sh"
             def container = get_container(image_key)
             def custom_sh = images[image_key]['sh']
 
