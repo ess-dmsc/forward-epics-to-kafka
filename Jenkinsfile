@@ -95,7 +95,7 @@ def get_pipeline(image_key)
                   def configure_script = """
                       cd build
                       . ./activate_run.sh
-                      source ${epics_profile_file}
+                      . ${epics_profile_file}
                       cmake ../${project} -DREQUIRE_GTEST=ON
                   """
                   sh "docker exec ${container_name(image_key)} ${custom_sh} -c \"${configure_script}\""
@@ -131,7 +131,7 @@ def get_pipeline(image_key)
                 if (image_key == 'centos-gcc6') {
                     stage('${image_key} Archive') {
                         // Remove file outside container.
-                        sh "rm -f forward-epics-to-kafka"
+                        sh "rm -rf forward-epics-to-kafka"
                         // Copy archive from container.
                         sh "docker cp ${container_name}:/home/jenkins/build/forward-epics-to-kafka ."
 
