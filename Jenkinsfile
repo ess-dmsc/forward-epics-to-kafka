@@ -133,7 +133,7 @@ def get_pipeline(image_key)
                         // Remove file outside container.
                         sh "rm -rf forward-epics-to-kafka"
                         // Copy archive from container.
-                        sh "docker cp ${container_name}:/home/jenkins/build/forward-epics-to-kafka ."
+                        sh "docker cp ${container_name(image_key)}:/home/jenkins/build/forward-epics-to-kafka ."
 
                         archiveArtifacts 'forward-epics-to-kafka'
                     }
