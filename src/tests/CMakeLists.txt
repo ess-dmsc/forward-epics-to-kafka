@@ -3,7 +3,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ../../tests)
 set(tgt "tests")
 set(sources
         tests.cxx
-        MainOpt.cxx
+        MainOpt_tests.cxx
         remote.cxx
         helper_tests.cxx
         uri_tests.cxx
