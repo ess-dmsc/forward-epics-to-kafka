@@ -15,6 +15,16 @@ find_package(GitCommitExtract)
 
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -fPIC -g")
+set(COV FALSE CACHE BOOL "Enable coverage support")
+if (COV)
+    set(GCC_COVERAGE_COMPILE_FLAGS "-fprofile-arcs -ftest-coverage")
+    set(GCC_COVERAGE_LINK_FLAGS    "-lgcov")
+    set(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} ${GCC_COVERAGE_COMPILE_FLAGS}")
+    set(CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} ${GCC_COVERAGE_LINK_FLAGS}")
+    set(CMAKE_CXX_OUTPUT_EXTENSION_REPLACE 1)
+    message(STATUS "Coverage Enabled")
+    include(../cmake/CodeCoverage.cmake)
+endif()
 
 if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS "4.9.3")
 else ()
@@ -137,8 +147,12 @@ endif()
 
 target_link_libraries(${tgt} ${libraries_common})
 
-
-
 if (have_gtest)
 add_subdirectory(tests)
+endif()
+
+if (COV)
+    set(COVERAGE_EXCLUDES 'ansible/*' 'build-script/*' 'cmake/*' 'conan/*')
+    SETUP_TARGET_FOR_COVERAGE_COBERTURA(NAME ${tgt}_cobertura EXECUTABLE tests)
+    MESSAGE(STATUS "Cobertura Enabled")
 endif()

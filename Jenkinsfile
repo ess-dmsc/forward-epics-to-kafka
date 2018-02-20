@@ -61,9 +61,17 @@ node('docker && eee') {
         }
 
         stage('Test') {
+            def configure_script = """
+                        make clean
+                        cd build/
+                        source ${epics_profile_file}
+                        cmake3 ../${project} -DREQUIRE_GTEST=ON -DCOV=true -DCMAKE_BUILD_TYPE=DEBUG
+                    """
+            sh "docker exec ${container_name} sh -c \"${configure_script}\""
+            def build_script = "make --directory=./build VERBOSE=1 ${project}_cobertura"
             def test_output = "TestResults.xml"
             def test_script = """
-                cd build
+                cd build/
                 ./tests/tests -- --gtest_output=xml:${test_output}
             """
             sh "docker exec ${container_name} sh -c \"${test_script}\""
@@ -72,15 +80,19 @@ node('docker && eee') {
             sh "rm -f ${test_output}"
             // Copy and publish test results.
             sh "docker cp ${container_name}:/home/jenkins/build/${test_output} ."
-
             junit "${test_output}"
+            sh "docker exec ${container_name} sh -c \"ls -al /home/jenkins/build/\" "
+            sh "docker exec ${container_name} sh -c \"ls -al /home/jenkins/build/tests/\" "
+            sh "docker cp ${container_name}:/home/jenkins/build/${project}_cobertura.xml ."
+            cobertura autoUpdateHealth: false, autoUpdateStability: false, coberturaReportFile: 'forward-epics-to-kafka_cobertura.xml', conditionalCoverageTargets: '70, 0, 0', failUnhealthy: false, failUnstable: false, lineCoverageTargets: '80, 0, 0', maxNumberOfBuilds: 0, methodCoverageTargets: '80, 0, 0', onlyStable: false, sourceEncoding: 'ASCII', zoomCoverageChart: false
         }
 
         stage('Archive') {
             // Remove file outside container.
             sh "rm -f forward-epics-to-kafka"
             // Copy archive from container.
-            sh "docker cp ${container_name}:/home/jenkins/build/forward-epics-to-kafka ."
+            sh "docker exec ${container_name} sh -c \"ls -al /home/jenkins/build/tests/\" "
+            sh "docker cp ${container_name}:/home/jenkins/build/tests/tests ."
 
             archiveArtifacts 'forward-epics-to-kafka'
         }
