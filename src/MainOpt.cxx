@@ -13,18 +13,17 @@
 #include "git_commit_current.h"
 #include "helper.h"
 #include "logger.h"
+#include <fstream>
 #include <iostream>
 #include <rapidjson/filereadstream.h>
+#include <rapidjson/istreamwrapper.h>
 #include <rapidjson/prettywriter.h>
 #include <rapidjson/schema.h>
 #include <rapidjson/stringbuffer.h>
 #include <rapidjson/writer.h>
-#include <rapidjson/istreamwrapper.h>
-#include <fstream>
 
 namespace BrightnESS {
 namespace ForwardEpicsToKafka {
-
 
 MainOpt::MainOpt() {
   hostname.resize(128);
@@ -111,7 +110,6 @@ int MainOpt::parse_json_file(string config_file) {
   }
   vali.Reset();
 
-
   find_broker_config(broker_config);
   find_conversion_threads(conversion_threads);
   find_conversion_worker_queue_size(conversion_worker_queue_size);
@@ -125,7 +123,7 @@ int MainOpt::parse_json_file(string config_file) {
 
 void MainOpt::parse_document(const std::string &filepath) {
   std::ifstream ifs(filepath);
-  if (!ifs.is_open()){
+  if (!ifs.is_open()) {
     LOG(3, "Could not open JSON file")
   }
   rapidjson::IStreamWrapper isw(ifs);
@@ -215,7 +213,7 @@ void MainOpt::find_broker_config(uri::URI &property) {
 
 void MainOpt::find_broker() {
   auto itr = json->FindMember("broker");
-  if (itr != json->MemberEnd()){
+  if (itr != json->MemberEnd()) {
     if (itr->value.IsString()) {
       set_broker(itr->value.GetString());
     }
@@ -269,52 +267,54 @@ std::pair<int, std::unique_ptr<MainOpt>> parse_opt(int argc, char **argv) {
   }
   return ret;
 }
-void parse_long_argument(const char *lname, std::pair<int, std::unique_ptr<MainOpt>> &ret, MainOpt &opt) {
+void parse_long_argument(const char *lname,
+                         std::pair<int, std::unique_ptr<MainOpt>> &ret,
+                         MainOpt &opt) {
   if (string("help") == lname) {
-        opt.help = true;
-      }
+    opt.help = true;
+  }
   if (string("config-file") == lname) {
-        if (opt.parse_json_file(optarg) != 0) {
-          opt.help = true;
-          ret.first = 1;
-        }
-      }
+    if (opt.parse_json_file(optarg) != 0) {
+      opt.help = true;
+      ret.first = 1;
+    }
+  }
   if (string("log-file") == lname) {
-        opt.log_file = optarg;
-      }
+    opt.log_file = optarg;
+  }
   if (string("broker-config") == lname) {
-        uri::URI u1;
-        u1.port = 9092;
-        u1.parse(optarg);
-        opt.broker_config = u1;
-      }
+    uri::URI u1;
+    u1.port = 9092;
+    u1.parse(optarg);
+    opt.broker_config = u1;
+  }
   if (string("broker") == lname) {
-        opt.set_broker(optarg);
-      }
+    opt.set_broker(optarg);
+  }
   if (string("kafka-gelf") == lname) {
-        opt.kafka_gelf = optarg;
-      }
+    opt.kafka_gelf = optarg;
+  }
   if (string("graylog-logger-address") == lname) {
-        opt.graylog_logger_address = optarg;
-      }
+    opt.graylog_logger_address = optarg;
+  }
   if (string("influx-url") == lname) {
-        opt.influx_url = optarg;
-      }
+    opt.influx_url = optarg;
+  }
   if (string("forwarder-ix") == lname) {
-        opt.forwarder_ix = std::stoi(optarg);
-      }
+    opt.forwarder_ix = std::stoi(optarg);
+  }
   if (string("write-per-message") == lname) {
-        opt.write_per_message = std::stoi(optarg);
-      }
+    opt.write_per_message = std::stoi(optarg);
+  }
   if (string("teamid") == lname) {
-        opt.teamid = strtoul(optarg, nullptr, 0);
-      }
+    opt.teamid = strtoul(optarg, nullptr, 0);
+  }
   if (string("status-uri") == lname) {
-        uri::URI u1;
-        u1.port = 9092;
-        u1.parse(optarg);
-        opt.status_uri = u1;
-      }
+    uri::URI u1;
+    u1.port = 9092;
+    u1.parse(optarg);
+    opt.status_uri = u1;
+  }
 }
 
 void MainOpt::init_logger() {
