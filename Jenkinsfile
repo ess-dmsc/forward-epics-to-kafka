@@ -152,8 +152,6 @@ def docker_archive(image_key) {
         def archive_output = "forward-epics-to-kafka.tar.gz"
         def archive_script = """
                     cd build
-                    rm -rf forward-epics-to-kafka; mkdir forward-epics-to-kafka
-                    cp forward-epics-to-kafka send-command forward-epics-to-kafka/
                     tar czf ${archive_output} forward-epics-to-kafka
                 """
         sh "docker exec ${container_name(image_key)} ${custom_sh} -c \"${archive_script}\""
