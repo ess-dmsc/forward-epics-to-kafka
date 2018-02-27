@@ -1,0 +1,9 @@
+fixes:
+  - "forward-epics-to-kafka/::"  # Corrects coverage paths to be relative to repo root
+
+ignore:
+  - "src/tests"
+
+comment:
+  layout: "header, diff, tree, changes, sunburst"
+  require_changes: false
