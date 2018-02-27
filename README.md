@@ -24,8 +24,6 @@ environment variables (see `src/CMakeLists.txt`):
 - EPICSv4
 - `streaming-data-types`, easiest if cloned parallel to this repository.
   <https://github.com/ess-dmsc/streaming-data-types>
-- pcre2 (e.g. `yum install pcre2 pcre2-devel` or `brew install pcre2`).
-  pcre is supported equally well.
 
 Tooling
 - conan
