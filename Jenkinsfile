@@ -161,6 +161,29 @@ def docker_archive(image_key) {
     }
 }
 
+def docker_coverage(image_key) {
+    try {
+        def custom_sh = images[image_key]['sh']
+        def test_output = "TestResults.xml"
+        def coverage_script = """
+                        cd build
+                        . ./activate_run.sh
+                        ./tests/tests -- --gtest_output=xml:${test_output}
+                        make coverage
+                        lcov --directory . --capture --output-file coverage.info
+                        lcov --remove coverage.info '*_generated.h' '*/src/date/*' '*/.conan/data/*' '*/usr/*' --output-file coverage.info
+                    """
+        sh "docker exec ${container_name(image_key)} ${custom_sh} -c \"${coverage_script}\""
+        sh "docker cp ${container_name(image_key)}:/home/jenkins/build ./"
+        junit "build/${test_output}"
+
+        withCredentials([string(credentialsId: 'forward-epics-to-kafka-codecov-token', variable: 'TOKEN')]) {
+            sh "curl -s https://codecov.io/bash | bash -s - -f build/coverage.info -t ${TOKEN} -C ${scm_vars.GIT_COMMIT}"
+        }
+    } catch (e) {
+        failure_function(e, "Coverage step for (${container_name(image_key)}) failed")
+    }
+}
 
 def get_pipeline(image_key) {
     return {
@@ -177,7 +200,12 @@ def get_pipeline(image_key) {
                     docker_formatting(image_key)
                 } else {
                     docker_build(image_key)
-                    docker_test(image_key)
+                    if (image_key == test_and_coverage_os) {
+                        docker_coverage(image_key)
+                    }
+                    else {
+                        docker_test(image_key)
+                    }
                 }
 
                 if (image_key == archive_os) {
