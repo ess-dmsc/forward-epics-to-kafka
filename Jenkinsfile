@@ -151,8 +151,7 @@ def docker_archive(image_key) {
         def custom_sh = images[image_key]['sh']
         def archive_output = "forward-epics-to-kafka.tar.gz"
         def archive_script = """
-                    cd build
-                    tar czf ${archive_output} forward-epics-to-kafka
+                    tar czf ${archive_output} build
                 """
         sh "docker exec ${container_name(image_key)} ${custom_sh} -c \"${archive_script}\""
         sh "docker cp ${container_name(image_key)}:/home/jenkins/build/${archive_output} ./"
