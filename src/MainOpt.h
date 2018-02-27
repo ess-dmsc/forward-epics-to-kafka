@@ -48,7 +48,7 @@ struct MainOpt {
   void parse_document(const std::string &filepath);
   void find_int(const char *key, int &property) const;
   void find_uint32_t(const char *key, uint32_t &property);
-  };
+};
 
 static struct option LONG_OPTIONS[] = {
     {"help", no_argument, nullptr, 'h'},
@@ -95,7 +95,9 @@ static string MAN_PAGE =
      "      Increase log_level by one step.\n"
      "\n");
 
-void parse_long_argument(const char *lname, std::pair<int, std::unique_ptr<MainOpt>> &ret, MainOpt &opt);
+void parse_long_argument(const char *lname,
+                         std::pair<int, std::unique_ptr<MainOpt>> &ret,
+                         MainOpt &opt);
 std::pair<int, std::unique_ptr<MainOpt>> parse_opt(int argc, char **argv);
 }
 }
