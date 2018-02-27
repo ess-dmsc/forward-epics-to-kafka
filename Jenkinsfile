@@ -197,7 +197,7 @@ def get_pipeline(image_key) {
     }
 }
 
-node('docker') {
+node('docker && eee') {
     cleanWs()
 
     stage('Checkout') {
