@@ -14,18 +14,6 @@ find_package(StaticData COMPONENTS "schema-config-global.json")
 find_package(GitCommitExtract)
 
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -fPIC -g")
-
-if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS "4.9.3")
-else ()
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fdiagnostics-color=auto")
-endif()
-
-if (WIN32)
-    add_definitions(-DNOGDI -DNOMINMAX)
-endif(WIN32)
-
-
 set(path_include_common
 ${FMT_INCLUDE_DIR}
 ${RDKAFKA_INCLUDE_DIR}
