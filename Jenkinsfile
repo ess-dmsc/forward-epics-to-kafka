@@ -89,7 +89,7 @@ def docker_cmake(image_key) {
         def configure_epics = ""
         if (image_key == eee_os) {
             // Only use the host machine's EPICS environment on eee_os
-            def configure_epics = ". ${epics_profile_file}"
+            configure_epics = ". ${epics_profile_file}"
         }
 
         def configure_script = """
