@@ -14,6 +14,7 @@ if(NOT CONAN_DISABLE)
     include(${CMAKE_MODULE_PATH}/conan.cmake)
     conan_cmake_run(CONANFILE conan/conanfile.txt
             BASIC_SETUP NO_OUTPUT_DIRS
+            BUILD_TYPE "None"
             BUILD outdated)
 endif()
 
