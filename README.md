@@ -54,8 +54,7 @@ remotes can be listed with `conan remote list`.
 Assuming you have `make`:
 
 ```
-conan install <path-to-source>/conan --build=missing
-cmake <path-to-source> [-DREQUIRE_GTEST=TRUE]
+cmake <path-to-source> [-DREQUIRE_GTEST=TRUE] [-DCONAN_DISABLE=TRUE]
 make
 make docs  # optional
 ```
