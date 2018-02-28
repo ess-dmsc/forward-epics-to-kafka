@@ -2,6 +2,7 @@ project = "forward-epics-to-kafka"
 clangformat_os = "fedora25"
 test_and_coverage_os = "centos7-gcc6"
 archive_os = "centos7-gcc6"
+eee_os = "centos7-gcc6"
 
 epics_dir = "/opt/epics"
 epics_profile_file = "/etc/profile.d/ess_epics_env.sh"
@@ -84,10 +85,23 @@ def docker_cmake(image_key) {
         if (image_key == test_and_coverage_os) {
             coverage_on = "-DCOV=1"
         }
-        def configure_script = """
+
+        if (image_key == eee_os) {
+            // Only use the host machine's EPICS environment on eee_os
+            def configure_script = """
+                        cd build
+                        . ${epics_profile_file}
+                        cmake ../${project} -DREQUIRE_GTEST=ON ${coverage_on}
+                    """
+        } else {
+            def configure_script = """
                         cd build
                         cmake ../${project} -DREQUIRE_GTEST=ON ${coverage_on}
                     """
+        }
+
+
+
         sh "docker exec ${container_name(image_key)} ${custom_sh} -c \"${configure_script}\""
     } catch (e) {
         failure_function(e, "CMake step for (${container_name(image_key)}) failed")
