@@ -21,24 +21,13 @@ if(CMAKE_COMPILER_IS_GNUCXX AND COV)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CMAKE_CXX_FLAGS_COVERAGE}")
 endif()
 
-# Simplify compiler version to, at most, major and minor version
-string(REPLACE "." ";" COMPILER_VERSION_LIST ${CMAKE_CXX_COMPILER_VERSION})
-list(LENGTH COMPILER_VERSION_LIST COMPILER_VERSION_LENGTH)
-if (COMPILER_VERSION_LENGTH GREATER 2)
-    list(GET COMPILER_VERSION_LIST 0 COMPILER_MAJOR_VERSION)
-    list(GET COMPILER_VERSION_LIST 1 COMPILER_MINOR_VERSION)
-    set(SIMPLE_COMPILER_VERSION ${COMPILER_MAJOR_VERSION}.${COMPILER_MINOR_VERSION})
-else()
-    set(SIMPLE_COMPILER_VERSION ${CMAKE_CXX_COMPILER_VERSION})
-endif()
-
 if(NOT CONAN_DISABLE)
     include(${CMAKE_MODULE_PATH}/conan.cmake)
     conan_cmake_run(CONANFILE conan/conanfile.txt
+            PROFILE default
             BASIC_SETUP NO_OUTPUT_DIRS
             BUILD_TYPE "None"
-            BUILD outdated
-            SETTINGS "compiler.version=${SIMPLE_COMPILER_VERSION}")
+            BUILD outdated)
 endif()
 
 # Yes, there exists also FindGTest.
