@@ -95,7 +95,7 @@ def docker_cmake(image_key) {
                         cd build
                         . ./activate_run.sh
                         . ${epics_profile_file}
-                        cmake ../${project} -DREQUIRE_GTEST=ON ${coverage_on}
+                        cmake ../${project} -DCMAKE_BUILD_TYPE=Debug -DREQUIRE_GTEST=ON ${coverage_on}
                     """
         sh "docker exec ${container_name(image_key)} ${custom_sh} -c \"${configure_script}\""
     } catch (e) {
