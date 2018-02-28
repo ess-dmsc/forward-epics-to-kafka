@@ -86,21 +86,17 @@ def docker_cmake(image_key) {
             coverage_on = "-DCOV=1"
         }
 
+        def configure_epics = ""
         if (image_key == eee_os) {
             // Only use the host machine's EPICS environment on eee_os
-            def configure_script = """
-                        cd build
-                        . ${epics_profile_file}
-                        cmake ../${project} -DREQUIRE_GTEST=ON ${coverage_on}
-                    """
-        } else {
-            def configure_script = """
-                        cd build
-                        cmake ../${project} -DREQUIRE_GTEST=ON ${coverage_on}
-                    """
+            def configure_epics = ". ${epics_profile_file}"
         }
 
-
+        def configure_script = """
+                    cd build
+                    ${configure_epics}
+                    cmake ../${project} -DREQUIRE_GTEST=ON ${coverage_on}
+                """
 
         sh "docker exec ${container_name(image_key)} ${custom_sh} -c \"${configure_script}\""
     } catch (e) {
