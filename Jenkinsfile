@@ -70,15 +70,8 @@ def docker_dependencies(image_key) {
                         conan remote add \
                             --insert 0 \
                             ${conan_remote} ${local_conan_server}
-                        cat ../${project}/CMakeLists.txt
-                        conan install --build=outdated ../${project}/conan/conanfile.txt
                     """
         sh "docker exec ${container_name(image_key)} ${custom_sh} -c \"${dependencies_script}\""
-
-        def checkout_script = """
-                        git clone -b master https://github.com/ess-dmsc/streaming-data-types.git
-                    """
-        sh "docker exec ${container_name(image_key)} ${custom_sh} -c \"${checkout_script}\""
     } catch (e) {
         failure_function(e, "Get dependencies for (${container_name(image_key)}) failed")
     }
