@@ -2,6 +2,7 @@ project = "forward-epics-to-kafka"
 clangformat_os = "fedora25"
 test_and_coverage_os = "centos7-gcc6"
 archive_os = "centos7-gcc6"
+eee_os = "centos7-gcc6"
 
 epics_dir = "/opt/epics"
 epics_profile_file = "/etc/profile.d/ess_epics_env.sh"
@@ -70,15 +71,8 @@ def docker_dependencies(image_key) {
                         conan remote add \
                             --insert 0 \
                             ${conan_remote} ${local_conan_server}
-                        cat ../${project}/CMakeLists.txt
-                        conan install --build=outdated ../${project}/conan/conanfile.txt
                     """
         sh "docker exec ${container_name(image_key)} ${custom_sh} -c \"${dependencies_script}\""
-
-        def checkout_script = """
-                        git clone -b master https://github.com/ess-dmsc/streaming-data-types.git
-                    """
-        sh "docker exec ${container_name(image_key)} ${custom_sh} -c \"${checkout_script}\""
     } catch (e) {
         failure_function(e, "Get dependencies for (${container_name(image_key)}) failed")
     }
@@ -91,12 +85,19 @@ def docker_cmake(image_key) {
         if (image_key == test_and_coverage_os) {
             coverage_on = "-DCOV=1"
         }
+
+        def configure_epics = ""
+        if (image_key == eee_os) {
+            // Only use the host machine's EPICS environment on eee_os
+            configure_epics = ". ${epics_profile_file}"
+        }
+
         def configure_script = """
-                        cd build
-                        . ./activate_run.sh
-                        . ${epics_profile_file}
-                        cmake ../${project} -DREQUIRE_GTEST=ON ${coverage_on}
-                    """
+                    cd build
+                    ${configure_epics}
+                    cmake ../${project} -DREQUIRE_GTEST=ON ${coverage_on}
+                """
+
         sh "docker exec ${container_name(image_key)} ${custom_sh} -c \"${configure_script}\""
     } catch (e) {
         failure_function(e, "CMake step for (${container_name(image_key)}) failed")

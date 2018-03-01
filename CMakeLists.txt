@@ -3,6 +3,17 @@ project(forward-epics-to-kafka)
 
 set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH};${PROJECT_SOURCE_DIR}/cmake")
 
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -fPIC -g")
+
+if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS "4.9.3")
+else ()
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fdiagnostics-color=auto")
+endif()
+
+if (WIN32)
+    add_definitions(-DNOGDI -DNOMINMAX)
+endif(WIN32)
+
 if(CMAKE_COMPILER_IS_GNUCXX AND COV)
     include(CodeCoverage)
     set(exclude_from_coverage "*_generated.h" "src/date/*" "*/.conan/data/*")
@@ -10,9 +21,13 @@ if(CMAKE_COMPILER_IS_GNUCXX AND COV)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CMAKE_CXX_FLAGS_COVERAGE}")
 endif()
 
-if(EXISTS "${CMAKE_BINARY_DIR}/conanbuildinfo.cmake")
-    include("${CMAKE_BINARY_DIR}/conanbuildinfo.cmake")
-    conan_basic_setup(NO_OUTPUT_DIRS)
+if(NOT CONAN_DISABLE)
+    include(${CMAKE_MODULE_PATH}/conan.cmake)
+    conan_cmake_run(CONANFILE conan/conanfile.txt
+            PROFILE default
+            BASIC_SETUP NO_OUTPUT_DIRS
+            BUILD_TYPE "None"
+            BUILD outdated)
 endif()
 
 # Yes, there exists also FindGTest.
