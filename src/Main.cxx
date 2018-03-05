@@ -11,10 +11,8 @@
 #endif
 #ifdef _MSC_VER
 #include "process.h"
-#include "wingetopt.h"
 #define getpid _getpid
 #else
-#include <getopt.h>
 #include <unistd.h>
 #endif
 #include <rapidjson/document.h>

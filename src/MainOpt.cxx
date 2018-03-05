@@ -2,10 +2,8 @@
 
 #ifdef _MSC_VER
 #include "WinSock2.h"
-#include "wingetopt.h"
 #include <iso646.h>
 #else
-#include <getopt.h>
 #include <unistd.h>
 #endif
 #include "SchemaRegistry.h"
