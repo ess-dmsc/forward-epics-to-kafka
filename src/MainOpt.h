@@ -24,7 +24,6 @@ struct MainOpt {
   string influx_url = "";
   int conversion_threads = 1;
   uint32_t conversion_worker_queue_size = 1024;
-  bool help = false;
   string log_file;
   string config_file;
   int forwarder_ix = 0;

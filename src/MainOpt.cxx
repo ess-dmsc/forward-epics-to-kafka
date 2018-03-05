@@ -237,10 +237,11 @@ std::pair<int, std::unique_ptr<MainOpt>> parse_opt(int argc, char **argv) {
   string StatusURL;
   app.add_option("--config-file", ConfigurationFile, "Configuration JSON file");
   app.add_option("--log-file", opt.log_file, "Log filename");
-  app.add_option("--broker-config", BrokerConfig, "Broker Config");
+  app.add_option("--broker-config", BrokerConfig,
+                 "//broker[:port]/topic for commands");
   app.add_option("--broker", BrokerDataDefault, "Default broker for data");
   app.add_option("--kafka-gelf", KafkaGELFBrokerTopic,
-                 "Kafka GELF address for logging");
+                 "Kafka GELF logging //broker[:port]/topic");
   app.add_option("--graylog-logger-address", GraylogLoggerAddress,
                  "Address for Graylog logging");
   app.add_option("--influx-url", InfluxURL, "Address for Influx logging");
@@ -251,20 +252,18 @@ std::pair<int, std::unique_ptr<MainOpt>> parse_opt(int argc, char **argv) {
   try {
     app.parse(argc, argv);
   } catch (CLI::CallForHelp const &e) {
-    std::cout << app.help();
     ret.first = 1;
-    opt.help = true;
-    return ret;
   } catch (CLI::ParseError const &e) {
     LOG(4, "Can not parse command line options: {}", e.what());
-    std::cout << app.help();
     ret.first = 1;
-    opt.help = true;
+  }
+  if (ret.first == 1) {
+    std::cout << app.help();
     return ret;
   }
   if (!ConfigurationFile.empty()) {
     if (opt.parse_json_file(ConfigurationFile) != 0) {
-      opt.help = true;
+      LOG(4, "Can not parse configuration file");
       ret.first = 1;
       return ret;
     }
