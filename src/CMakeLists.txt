@@ -75,9 +75,6 @@ ${FMT_SRC}
 schemas/f143/f143.cxx
 ${CMAKE_CURRENT_BINARY_DIR}/git_commit_current.cxx
 )
-if (WIN32)
-set(SOURCES ${SOURCES} wingetopt.c)
-endif (WIN32)
 
 set(tgt __objects)
 add_library(${tgt} OBJECT ${SOURCES})
