@@ -2,12 +2,6 @@
 #include "KafkaW.h"
 #include "SchemaRegistry.h"
 #include "uri.h"
-#ifdef _MSC_VER
-#include "wingetopt.h"
-#include <iso646.h>
-#else
-#include <getopt.h>
-#endif
 #include <rapidjson/document.h>
 #include <string>
 #include <vector>
