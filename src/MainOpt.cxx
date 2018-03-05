@@ -224,7 +224,12 @@ void MainOpt::find_broker() {
 std::pair<int, std::unique_ptr<MainOpt>> parse_opt(int argc, char **argv) {
   std::pair<int, std::unique_ptr<MainOpt>> ret{
       0, std::unique_ptr<MainOpt>(new MainOpt)};
+  using std::string;
   auto &opt = *ret.second;
+  CLI::App app{"forward-epics-to-kafka"};
+  string ConfigurationFile;
+  app.add_option("--config-file", ConfigurationFile, "Configuration JSON file");
+
   int option_index = 0;
   bool getopt_error = false;
   while (true) {
