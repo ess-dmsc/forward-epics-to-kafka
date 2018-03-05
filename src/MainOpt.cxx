@@ -25,6 +25,22 @@
 namespace BrightnESS {
 namespace ForwardEpicsToKafka {
 
+static struct option LONG_OPTIONS[] = {
+    {"help", no_argument, nullptr, 'h'},
+    {"broker-config", required_argument, nullptr, 0},
+    {"broker", required_argument, nullptr, 0},
+    {"kafka-gelf", required_argument, nullptr, 0},
+    {"graylog-logger-address", required_argument, nullptr, 0},
+    {"influx-url", required_argument, nullptr, 0},
+    {"config-file", required_argument, nullptr, 0},
+    {"log-file", required_argument, nullptr, 0},
+    {"forwarder-ix", required_argument, nullptr, 0},
+    {"write-per-message", required_argument, nullptr, 0},
+    {"teamid", required_argument, nullptr, 0},
+    {"status-uri", required_argument, nullptr, 0},
+    {nullptr, 0, nullptr, 0},
+};
+
 MainOpt::MainOpt() {
   hostname.resize(128);
   gethostname(hostname.data(), hostname.size());
