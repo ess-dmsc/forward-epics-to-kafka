@@ -54,7 +54,14 @@ helper.cxx
 logger.cxx
 configuration.cxx
 Kafka.cxx
-KafkaW.cxx
+KafkaW/BrokerSettings.cxx
+KafkaW/Consumer.cxx
+KafkaW/KafkaW.cxx
+KafkaW/Msg.cxx
+KafkaW/PollStatus.cxx
+KafkaW/Producer.cxx
+KafkaW/ProducerTopic.cxx
+KafkaW/TopicSettings.cxx
 Ring.cxx
 ConversionWorker.cxx
 epics-to-fb.cxx

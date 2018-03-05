@@ -12,24 +12,25 @@ namespace BrightnESS {
 namespace ForwardEpicsToKafka {
 namespace Kafka {
 
-sptr<InstanceSet> InstanceSet::Set(KafkaW::BrokerOpt opt) {
+sptr<InstanceSet> InstanceSet::Set(KafkaW::BrokerSettings BrokerSettings) {
   static std::mutex mx;
   std::unique_lock<std::mutex> lock(mx);
   LOG(4, "Kafka InstanceSet with rdkafka version: {}", rd_kafka_version_str());
   static std::shared_ptr<InstanceSet> kset;
   if (!kset) {
-    opt.poll_timeout_ms = 0;
-    kset.reset(new InstanceSet(opt));
+    BrokerSettings.PollTimeoutMS = 0;
+    kset.reset(new InstanceSet(BrokerSettings));
   }
   return kset;
 }
 
-InstanceSet::InstanceSet(KafkaW::BrokerOpt opt) : opt(opt) {}
+InstanceSet::InstanceSet(KafkaW::BrokerSettings BrokerSettings)
+    : BrokerSettings(BrokerSettings) {}
 
 static void prod_delivery_ok(rd_kafka_message_t const *msg) {
   if (auto x = msg->_private) {
     auto p = static_cast<KafkaW::Producer::Msg *>(x);
-    p->delivery_ok();
+    p->deliveryOk();
     delete p;
   }
 }
@@ -37,7 +38,7 @@ static void prod_delivery_ok(rd_kafka_message_t const *msg) {
 static void prod_delivery_failed(rd_kafka_message_t const *msg) {
   if (auto x = msg->_private) {
     auto p = static_cast<KafkaW::Producer::Msg *>(x);
-    p->delivery_fail();
+    p->deliveryError();
     // TODO really delete or just re-use?
     // but maybe we want to add information about the failure first?
     delete p;
@@ -51,9 +52,9 @@ KafkaW::Producer::Topic InstanceSet::producer_topic(uri::URI uri) {
   if (it != producers_by_host.end()) {
     return KafkaW::Producer::Topic(it->second, uri.topic);
   }
-  auto bopt = opt;
-  bopt.address = host_port;
-  auto p = std::make_shared<KafkaW::Producer>(bopt);
+  auto BrokerSettings = this->BrokerSettings;
+  BrokerSettings.Address = host_port;
+  auto p = std::make_shared<KafkaW::Producer>(BrokerSettings);
   p->on_delivery_ok = prod_delivery_ok;
   p->on_delivery_failed = prod_delivery_failed;
   {
@@ -76,16 +77,16 @@ void InstanceSet::log_stats() {
   std::unique_lock<std::mutex> lock(mx_producers_by_host);
   for (auto m : producers_by_host) {
     auto &p = m.second;
-    LOG(6, "Broker: {}  total: {}  outq: {}", m.first, p->total_produced(),
-        p->outq());
+    LOG(6, "Broker: {}  total: {}  outq: {}", m.first, p->TotalMessagesProduced,
+        p->outputQueueLength());
   }
 }
 
-std::vector<KafkaW::Producer::Stats> InstanceSet::stats_all() {
-  std::vector<KafkaW::Producer::Stats> ret;
+std::vector<KafkaW::ProducerStats> InstanceSet::stats_all() {
+  std::vector<KafkaW::ProducerStats> ret;
   std::unique_lock<std::mutex> lock(mx_producers_by_host);
   for (auto m : producers_by_host) {
-    ret.push_back(m.second->stats);
+    ret.push_back(m.second->Stats);
   }
   return ret;
 }

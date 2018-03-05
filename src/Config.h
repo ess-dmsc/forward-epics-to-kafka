@@ -1,6 +1,6 @@
 #pragma once
 
-#include "KafkaW.h"
+#include "KafkaW/KafkaW.h"
 #include "uri.h"
 #include <atomic>
 #include <chrono>
@@ -27,7 +27,7 @@ struct Listener_impl;
 
 class Listener {
 public:
-  Listener(KafkaW::BrokerOpt bopt, uri::URI uri);
+  Listener(KafkaW::BrokerSettings bopt, uri::URI uri);
   Listener(Listener const &) = delete;
   ~Listener();
   void poll(Callback &cb);

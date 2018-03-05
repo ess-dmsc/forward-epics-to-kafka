@@ -49,8 +49,11 @@ rapidjson::Document ConversionPath::status_json() const {
   auto &a = jd.GetAllocator();
   jd.SetObject();
   jd.AddMember("schema", Value(converter->schema_name().data(), a), a);
-  jd.AddMember("broker",
-               Value(kafka_output->pt.producer->opt.address.data(), a), a);
+  jd.AddMember(
+      "broker",
+      Value(kafka_output->pt.Producer_->ProducerBrokerSettings.Address.data(),
+            a),
+      a);
   jd.AddMember("topic", Value(kafka_output->topic_name().data(), a), a);
   return jd;
 }

@@ -96,7 +96,7 @@ TEST(MainOpt_T, test_find_brokers_config_finds_string_property) {
   opt.json = std::make_shared<rapidjson::Document>();
   opt.json->Parse(json);
   opt.find_brokers_config();
-  ASSERT_EQ(opt.broker_opt.conf_strings["hello"], "world");
+  ASSERT_EQ(opt.broker_opt.ConfigurationStrings["hello"], "world");
 }
 
 TEST(MainOpt_T, test_find_brokers_config_finds_int_property) {
@@ -111,7 +111,7 @@ TEST(MainOpt_T, test_find_brokers_config_finds_int_property) {
   opt.json = std::make_shared<rapidjson::Document>();
   opt.json->Parse(json);
   opt.find_brokers_config();
-  ASSERT_EQ(opt.broker_opt.conf_ints["hello"], 50);
+  ASSERT_EQ(opt.broker_opt.ConfigurationIntegers["hello"], 50);
 }
 
 TEST(MainOpt_T, test_find_brokers_config_does_nothing_with_object_property) {
@@ -127,10 +127,10 @@ TEST(MainOpt_T, test_find_brokers_config_does_nothing_with_object_property) {
   opt.json->Parse(json);
   opt.find_brokers_config();
 
-  ASSERT_TRUE(opt.broker_opt.conf_strings.find("hello") ==
-              opt.broker_opt.conf_strings.end());
-  ASSERT_TRUE(opt.broker_opt.conf_ints.find("hello") ==
-              opt.broker_opt.conf_ints.end());
+  ASSERT_TRUE(opt.broker_opt.ConfigurationStrings.find("hello") ==
+              opt.broker_opt.ConfigurationStrings.end());
+  ASSERT_TRUE(opt.broker_opt.ConfigurationIntegers.find("hello") ==
+              opt.broker_opt.ConfigurationIntegers.end());
 }
 
 TEST(MainOpt_T, test_find_main_poll_interval_returns_correct_value) {
