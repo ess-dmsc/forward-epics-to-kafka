@@ -163,5 +163,5 @@ TEST(MainOpt_T, test_find_conversion_worker_queue_size_returns_correct_value) {
   opt.json = std::make_shared<rapidjson::Document>();
   opt.json->Parse(json);
   opt.find_conversion_worker_queue_size(opt.conversion_worker_queue_size);
-  ASSERT_EQ(opt.conversion_worker_queue_size, 3);
+  ASSERT_EQ(opt.conversion_worker_queue_size, 3u);
 }
