@@ -13,6 +13,7 @@
 #include "git_commit_current.h"
 #include "helper.h"
 #include "logger.h"
+#include <CLI/CLI.hpp>
 #include <fstream>
 #include <iostream>
 #include <rapidjson/filereadstream.h>
