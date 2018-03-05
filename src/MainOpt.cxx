@@ -226,101 +226,76 @@ std::pair<int, std::unique_ptr<MainOpt>> parse_opt(int argc, char **argv) {
       0, std::unique_ptr<MainOpt>(new MainOpt)};
   using std::string;
   auto &opt = *ret.second;
-  CLI::App app{"forward-epics-to-kafka"};
+  CLI::App app{
+      fmt::format("forward-epics-to-kafka-0.1.0 {:.7} (ESS, BrightnESS)\n"
+                  "  Contact: dominik.werder@psi.ch\n\n",
+                  GIT_COMMIT)};
   string ConfigurationFile;
+  string BrokerConfig;
+  string BrokerDataDefault;
+  string KafkaGELFBrokerTopic;
+  string GraylogLoggerAddress;
+  string InfluxURL;
+  string StatusURL;
   app.add_option("--config-file", ConfigurationFile, "Configuration JSON file");
-
-  int option_index = 0;
-  bool getopt_error = false;
-  while (true) {
-    int c = getopt_long(argc, argv, "hvQ", LONG_OPTIONS, &option_index);
-    if (c == -1)
-      break;
-    if (c == '?') {
-      getopt_error = true;
-    }
-    switch (c) {
-    case 'h':
-      opt.help = true;
-      break;
-    case 'v':
-      log_level = (std::min)(9, log_level + 1);
-      break;
-    case 'Q':
-      log_level = (std::max)(0, log_level - 1);
-      break;
-    default:
-      // long option without short equivalent:
-      parse_long_argument(LONG_OPTIONS[option_index].name, ret, opt);
-    }
-  }
-  if (optind < argc) {
-    LOG(6, "Left-over commandline options:");
-    for (int i1 = optind; i1 < argc; ++i1) {
-      LOG(6, "{:2} {}", i1, argv[i1]);
-    }
-  }
-  if (getopt_error) {
-    opt.help = true;
+  app.add_option("--log-file", opt.log_file, "Log filename");
+  app.add_option("--broker-config", BrokerConfig, "Broker Config");
+  app.add_option("--broker", BrokerDataDefault, "Default broker for data");
+  app.add_option("--kafka-gelf", KafkaGELFBrokerTopic,
+                 "Kafka GELF address for logging");
+  app.add_option("--graylog-logger-address", GraylogLoggerAddress,
+                 "Address for Graylog logging");
+  app.add_option("--influx-url", InfluxURL, "Address for Influx logging");
+  app.add_option("--status-uri", StatusURL,
+                 "Kafka //broker:port/topic for status logging");
+  app.add_option("-v,--verbose", log_level, "Syslog logging level", true)
+      ->check(CLI::Range(1, 7));
+  try {
+    app.parse(argc, argv);
+  } catch (CLI::CallForHelp const &e) {
+    std::cout << app.help();
     ret.first = 1;
-  }
-  if (opt.help) {
-    fmt::print("forward-epics-to-kafka-0.1.0 {:.7} (ESS, BrightnESS)\n"
-               "  Contact: dominik.werder@psi.ch\n\n",
-               GIT_COMMIT);
-    fmt::print(MAN_PAGE, opt.brokers_as_comma_list());
-    ret.first = 1;
-  }
-  return ret;
-}
-void parse_long_argument(const char *lname,
-                         std::pair<int, std::unique_ptr<MainOpt>> &ret,
-                         MainOpt &opt) {
-  if (string("help") == lname) {
     opt.help = true;
+    return ret;
+  } catch (CLI::ParseError const &e) {
+    LOG(4, "Can not parse command line options: {}", e.what());
+    std::cout << app.help();
+    ret.first = 1;
+    opt.help = true;
+    return ret;
   }
-  if (string("config-file") == lname) {
-    if (opt.parse_json_file(optarg) != 0) {
+  if (!ConfigurationFile.empty()) {
+    if (opt.parse_json_file(ConfigurationFile) != 0) {
       opt.help = true;
       ret.first = 1;
+      return ret;
     }
   }
-  if (string("log-file") == lname) {
-    opt.log_file = optarg;
+  if (!BrokerConfig.empty()) {
+    uri::URI URI;
+    URI.port = 9092;
+    URI.parse(BrokerConfig);
+    opt.broker_config = URI;
   }
-  if (string("broker-config") == lname) {
-    uri::URI u1;
-    u1.port = 9092;
-    u1.parse(optarg);
-    opt.broker_config = u1;
+  if (!BrokerDataDefault.empty()) {
+    opt.set_broker(BrokerDataDefault);
   }
-  if (string("broker") == lname) {
-    opt.set_broker(optarg);
+  if (!KafkaGELFBrokerTopic.empty()) {
+    opt.kafka_gelf = KafkaGELFBrokerTopic;
   }
-  if (string("kafka-gelf") == lname) {
-    opt.kafka_gelf = optarg;
+  if (!GraylogLoggerAddress.empty()) {
+    opt.graylog_logger_address = GraylogLoggerAddress;
   }
-  if (string("graylog-logger-address") == lname) {
-    opt.graylog_logger_address = optarg;
+  if (!InfluxURL.empty()) {
+    opt.influx_url = InfluxURL;
   }
-  if (string("influx-url") == lname) {
-    opt.influx_url = optarg;
+  if (!InfluxURL.empty()) {
+    uri::URI URI;
+    URI.port = 9092;
+    URI.parse(optarg);
+    opt.status_uri = URI;
   }
-  if (string("forwarder-ix") == lname) {
-    opt.forwarder_ix = std::stoi(optarg);
-  }
-  if (string("write-per-message") == lname) {
-    opt.write_per_message = std::stoi(optarg);
-  }
-  if (string("teamid") == lname) {
-    opt.teamid = strtoul(optarg, nullptr, 0);
-  }
-  if (string("status-uri") == lname) {
-    uri::URI u1;
-    u1.port = 9092;
-    u1.parse(optarg);
-    opt.status_uri = u1;
-  }
+  return ret;
 }
 
 void MainOpt::init_logger() {
