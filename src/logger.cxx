@@ -6,12 +6,10 @@
 #include <cstdlib>
 #include <cstring>
 #ifdef _MSC_VER
-#include "wingetopt.h"
 #include <io.h>
 #include <iso646.h>
 #define isatty _isatty
 #else
-#include <getopt.h>
 #include <unistd.h>
 #endif
 #include <atomic>
