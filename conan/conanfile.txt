@@ -11,3 +11,8 @@ streaming-data-types/3e85b23@ess-dmsc/stable
 [generators]
 cmake
 virtualrunenv
+
+[options]
+FlatBuffers:shared=True
+gtest:shared=True
+librdkafka:shared=True
