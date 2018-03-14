@@ -22,3 +22,5 @@ ADD . /forwarder
 RUN mkdir build && cd build && cmake ../forwarder
 
 RUN make --directory=./build -j8 VERBOSE=1
+
+CMD ["./forwarder/docker_launch.sh"]
