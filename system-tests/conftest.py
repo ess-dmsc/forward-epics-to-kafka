@@ -9,6 +9,7 @@ from kazoo.handlers.threading import KazooTimeoutError
 
 ZOOKEEPER = {"image": "zookeeper:3.4", "label": "zookeeper-system-test"}
 KAFKA = {"image": "wurstmeister/kafka:0.11.0.1", "label": "kafka-system-test"}
+IOC = {"image": "screamingudder/ess-chopper-sim-ioc", "label": "chopper-sim-system-test"}
 TEST_SOFTWARE = {"image": "zookeeper:3.4", "label": "zookeeper"}
 
 
@@ -100,6 +101,10 @@ def example_container():
     docker_client = _docker_client()
     ids = []  # keep list of contain ids to clean up later
     start_kafka(docker_client, ids)
+    ioc_environment = {"FORWARDER_CONFIG_TOPIC": "TEST_forwarderConfig",
+                       "FORWARDER_OUTPUT_TOPIC": "TEST_sampleEnv"}
+    start_container(docker_client, IOC, ids, environment=ioc_environment)
+
     yield start_container(docker_client, TEST_SOFTWARE, ids)
 
-    # clean_up_containers(docker_client, ids)
+    clean_up_containers(docker_client, ids)
