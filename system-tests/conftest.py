@@ -1,13 +1,16 @@
 import json
 import pprint
 import os
-
 import docker
 import pytest
+import backoff
+from kazoo.client import KazooClient
+from kazoo.handlers.threading import KazooTimeoutError
 
 
-IMAGE = "zookeeper:3.4"
-CONTAINER_LABELS = ["zookeeper"]
+ZOOKEEPER = {"image": "zookeeper:3.4", "label": "zookeeper-system-test"}
+KAFKA = {"image": "wurstmeister/kafka:0.11.0.1", "label": "kafka-system-test"}
+TEST_SOFTWARE = {"image": "zookeeper:3.4", "label": "zookeeper"}
 
 
 def _docker_client():
@@ -19,7 +22,7 @@ def pytest_runtest_logreport(report):
         docker_client = _docker_client()
         test_containers = docker_client.containers(
             all=True,
-            filters={"label": CONTAINER_LABELS})
+            filters={"label": TEST_SOFTWARE["label"]})
         for container in test_containers:
             log_lines = [
                 ("docker inspect {!r}:".format(container['Id'])),
@@ -48,20 +51,47 @@ def pull_image(image):
             image, pull_result["error"]))
 
 
-@pytest.fixture
-def example_container():
-    docker_client = _docker_client()
-    pull_image(IMAGE)
+@backoff.on_exception(backoff.expo,
+                      KazooTimeoutError,
+                      max_tries=10)
+def wait_for_zookeeper_up(zk_address):
+    zk = KazooClient(hosts=zk_address)
+    zk.start()
+    zk.stop()
+
+
+def start_kafka(docker_client, ids):
+    zk_container = start_container(docker_client, ZOOKEEPER, ids)
+    wait_for_zookeeper_up(zk_container)
+    kafka_container = start_container(docker_client, KAFKA, ids)
+
+
+def start_container(docker_client, image, ids):
+    pull_image(image["image"])
     container = docker_client.create_container(
-        image=IMAGE,
-        labels=CONTAINER_LABELS
+        image=image["image"],
+        labels=[image["label"]]
     )
     docker_client.start(container=container["Id"])
     container_info = docker_client.inspect_container(container.get('Id'))
+    ids.append(container["Id"])
 
-    yield container_info["NetworkSettings"]["IPAddress"]
+    return container_info["NetworkSettings"]["IPAddress"]
 
-    docker_client.remove_container(
-        container=container["Id"],
-        force=True
-    )
+
+def clean_up_containers(docker_client, ids):
+    for identifier in ids:
+        docker_client.remove_container(
+            container=identifier,
+            force=True
+        )
+
+
+@pytest.fixture
+def example_container():
+    docker_client = _docker_client()
+    ids = []  # keep list of contain ids to clean up later
+    start_kafka(docker_client, ids)
+    yield start_container(docker_client, TEST_SOFTWARE, ids)
+
+    clean_up_containers(docker_client, ids)

@@ -1,3 +1,4 @@
 pytest
 docker-py
 kazoo
+backoff
