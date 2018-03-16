@@ -9,7 +9,7 @@ from kazoo.handlers.threading import KazooTimeoutError
 
 ZOOKEEPER = {"image": "zookeeper:3.4", "label": "zookeeper-system-test"}
 KAFKA = {"image": "wurstmeister/kafka:0.11.0.1", "label": "kafka-system-test"}
-IOC = {"image": "screamingudder/ess-chopper-sim-ioc", "label": "chopper-sim-system-test"}
+IOC = {"image": "screamingudder/ess-chopper-sim-ioc:latest", "label": "chopper-sim-system-test"}
 TEST_SOFTWARE = {"image": "zookeeper:3.4", "label": "zookeeper"}
 
 
@@ -33,24 +33,6 @@ def pytest_runtest_logreport(report):
             report.longrepr.addsection('docker logs', os.linesep.join(log_lines))
 
 
-def pull_image(image):
-    """ Pull the specified image using docker-py
-    This function will parse the result from docker-py and raise an exception
-    if there is an error.
-    :param image: Name of the image to pull
-    """
-    docker_client = _docker_client()
-    response = docker_client.api.pull(image)
-    lines = [line for line in response.splitlines() if line]
-
-    # The last line of the response contains the overall result of the pull
-    # operation.
-    pull_result = json.loads(lines[-1])
-    if "error" in pull_result:
-        raise Exception("Could not pull {}: {}".format(
-            image, pull_result["error"]))
-
-
 @backoff.on_exception(backoff.expo,
                       KazooTimeoutError,
                       max_tries=10)
@@ -60,53 +42,52 @@ def wait_for_zookeeper_up(zk_address):
     zk.stop()
 
 
-def start_kafka(docker_client, ids):
-    zk_container = start_container(docker_client, ZOOKEEPER, ids)
-    wait_for_zookeeper_up(zk_container)
-    kafka_env = {"KAFKA_ZOOKEEPER_CONNECT": zk_container,
+def start_kafka(docker_client, containers):
+    zk_container = start_container(docker_client, ZOOKEEPER)
+    wait_for_zookeeper_up(get_ip(docker_client, zk_container))
+    kafka_env = {"KAFKA_ZOOKEEPER_CONNECT": get_ip(docker_client, zk_container),
                  "KAFKA_ADVERTISED_HOST_NAME": "localhost"}
-    kafka_host_config = docker_client.api.create_host_config(port_bindings={
-        9092: 9092
-    })
-    kafka_container = start_container(docker_client, KAFKA, ids, environment=kafka_env, host_config=kafka_host_config,
-                                      ports=[9092])
+    port_bindings = {"9092": 9092}
+    kafka_container = start_container(docker_client, KAFKA, environment=kafka_env, ports=port_bindings)
+    containers.extend([zk_container, kafka_container])
 
 
-def start_container(docker_client, image, ids, environment=None, host_config=None, ports=None):
-    pull_image(image["image"])
-    container = docker_client.api.create_container(
-        image=image["image"],
-        host_config=host_config,
+def start_container(docker_client, image_info, environment=None, ports=None):
+    image = docker_client.images.pull(image_info["image"])
+    container = docker_client.containers.run(
+        image=image,
         ports=ports,
-        labels=[image["label"]],
-        environment=environment
+        labels=[image_info["label"]],
+        environment=environment,
+        detach=True
     )
-    docker_client.api.start(container=container["Id"])
-    container_info = docker_client.api.inspect_container(container.get('Id'))
-    ids.append(container["Id"])
-
-    return container_info["NetworkSettings"]["IPAddress"]
+    return container
 
 
-def clean_up_containers(docker_client, ids):
-    for identifier in ids:
-        docker_client.api.remove_container(
-            container=identifier,
-            force=True
-        )
+def clean_up_containers(containers):
+    for container in containers:
+        container.stop()
+        container.remove()
+
+
+def get_ip(docker_client, container):
+    return docker_client.api.inspect_container(container.id)["NetworkSettings"]["IPAddress"]
 
 
 @pytest.fixture
 def example_container():
     docker_client = _docker_client()
-    ids = []  # keep list of contain ids to clean up later
-    start_kafka(docker_client, ids)
+    containers = []  # keep list of containers to clean up later
+    start_kafka(docker_client, containers)
     ioc_environment = {"FORWARDER_CONFIG_TOPIC": "TEST_forwarderConfig",
                        "FORWARDER_OUTPUT_TOPIC": "TEST_sampleEnv"}
-    start_container(docker_client, IOC, ids, environment=ioc_environment)
+    ioc_container = start_container(docker_client, IOC, environment=ioc_environment)
+    containers.append(ioc_container)
 
-    #docker_client.build()
+    #forwarder = docker_client.images.build(fileobj="../Dockerfile")
 
-    yield start_container(docker_client, TEST_SOFTWARE, ids)
+    test_container = start_container(docker_client, TEST_SOFTWARE)
+    containers.append(test_container)
+    yield get_ip(docker_client, test_container)
 
-    clean_up_containers(docker_client, ids)
+    clean_up_containers(containers)
