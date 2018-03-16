@@ -14,21 +14,21 @@ TEST_SOFTWARE = {"image": "zookeeper:3.4", "label": "zookeeper"}
 
 
 def _docker_client():
-    return docker.Client('unix://var/run/docker.sock', version="auto")
+    return docker.from_env()
 
 
 def pytest_runtest_logreport(report):
     if report.failed:
         docker_client = _docker_client()
-        test_containers = docker_client.containers(
+        test_containers = docker_client.api.containers(
             all=True,
             filters={"label": TEST_SOFTWARE["label"]})
         for container in test_containers:
             log_lines = [
                 ("docker inspect {!r}:".format(container['Id'])),
-                (pprint.pformat(docker_client.inspect_container(container['Id']))),
+                (pprint.pformat(docker_client.api.inspect_container(container['Id']))),
                 ("docker logs {!r}:".format(container['Id'])),
-                (docker_client.logs(container['Id']).decode('utf-8')),
+                (docker_client.api.logs(container['Id']).decode('utf-8')),
             ]
             report.longrepr.addsection('docker logs', os.linesep.join(log_lines))
 
@@ -40,7 +40,7 @@ def pull_image(image):
     :param image: Name of the image to pull
     """
     docker_client = _docker_client()
-    response = docker_client.pull(image)
+    response = docker_client.api.pull(image)
     lines = [line for line in response.splitlines() if line]
 
     # The last line of the response contains the overall result of the pull
@@ -65,7 +65,7 @@ def start_kafka(docker_client, ids):
     wait_for_zookeeper_up(zk_container)
     kafka_env = {"KAFKA_ZOOKEEPER_CONNECT": zk_container,
                  "KAFKA_ADVERTISED_HOST_NAME": "localhost"}
-    kafka_host_config = docker_client.create_host_config(port_bindings={
+    kafka_host_config = docker_client.api.create_host_config(port_bindings={
         9092: 9092
     })
     kafka_container = start_container(docker_client, KAFKA, ids, environment=kafka_env, host_config=kafka_host_config,
@@ -74,15 +74,15 @@ def start_kafka(docker_client, ids):
 
 def start_container(docker_client, image, ids, environment=None, host_config=None, ports=None):
     pull_image(image["image"])
-    container = docker_client.create_container(
+    container = docker_client.api.create_container(
         image=image["image"],
         host_config=host_config,
         ports=ports,
         labels=[image["label"]],
         environment=environment
     )
-    docker_client.start(container=container["Id"])
-    container_info = docker_client.inspect_container(container.get('Id'))
+    docker_client.api.start(container=container["Id"])
+    container_info = docker_client.api.inspect_container(container.get('Id'))
     ids.append(container["Id"])
 
     return container_info["NetworkSettings"]["IPAddress"]
@@ -90,7 +90,7 @@ def start_container(docker_client, image, ids, environment=None, host_config=Non
 
 def clean_up_containers(docker_client, ids):
     for identifier in ids:
-        docker_client.remove_container(
+        docker_client.api.remove_container(
             container=identifier,
             force=True
         )
@@ -104,6 +104,8 @@ def example_container():
     ioc_environment = {"FORWARDER_CONFIG_TOPIC": "TEST_forwarderConfig",
                        "FORWARDER_OUTPUT_TOPIC": "TEST_sampleEnv"}
     start_container(docker_client, IOC, ids, environment=ioc_environment)
+
+    #docker_client.build()
 
     yield start_container(docker_client, TEST_SOFTWARE, ids)
 
