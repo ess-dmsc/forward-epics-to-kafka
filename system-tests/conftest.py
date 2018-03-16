@@ -7,7 +7,6 @@ import backoff
 from kazoo.client import KazooClient
 from kazoo.handlers.threading import KazooTimeoutError
 
-
 ZOOKEEPER = {"image": "zookeeper:3.4", "label": "zookeeper-system-test"}
 KAFKA = {"image": "wurstmeister/kafka:0.11.0.1", "label": "kafka-system-test"}
 TEST_SOFTWARE = {"image": "zookeeper:3.4", "label": "zookeeper"}
@@ -63,14 +62,23 @@ def wait_for_zookeeper_up(zk_address):
 def start_kafka(docker_client, ids):
     zk_container = start_container(docker_client, ZOOKEEPER, ids)
     wait_for_zookeeper_up(zk_container)
-    kafka_container = start_container(docker_client, KAFKA, ids)
+    kafka_env = {"KAFKA_ZOOKEEPER_CONNECT": zk_container,
+                 "KAFKA_ADVERTISED_HOST_NAME": "localhost"}
+    kafka_host_config = docker_client.create_host_config(port_bindings={
+        9092: 9092
+    })
+    kafka_container = start_container(docker_client, KAFKA, ids, environment=kafka_env, host_config=kafka_host_config,
+                                      ports=[9092])
 
 
-def start_container(docker_client, image, ids):
+def start_container(docker_client, image, ids, environment=None, host_config=None, ports=None):
     pull_image(image["image"])
     container = docker_client.create_container(
         image=image["image"],
-        labels=[image["label"]]
+        host_config=host_config,
+        ports=ports,
+        labels=[image["label"]],
+        environment=environment
     )
     docker_client.start(container=container["Id"])
     container_info = docker_client.inspect_container(container.get('Id'))
@@ -94,4 +102,4 @@ def example_container():
     start_kafka(docker_client, ids)
     yield start_container(docker_client, TEST_SOFTWARE, ids)
 
-    clean_up_containers(docker_client, ids)
+    # clean_up_containers(docker_client, ids)
