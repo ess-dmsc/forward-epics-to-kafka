@@ -48,7 +48,7 @@ def pull_image(image):
             image, pull_result["error"]))
 
 
-@pytest.yield_fixture
+@pytest.fixture
 def example_container():
     docker_client = _docker_client()
 
