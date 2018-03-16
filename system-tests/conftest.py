@@ -6,8 +6,8 @@ import docker
 import pytest
 
 
-IMAGE = "service"
-CONTAINERS_FOR_TESTING_LABEL = ["kafka", "zookeeper"]
+IMAGE = "zookeeper:3.4"
+CONTAINER_LABELS = ["zookeeper"]
 
 
 def _docker_client():
@@ -19,13 +19,13 @@ def pytest_runtest_logreport(report):
         docker_client = _docker_client()
         test_containers = docker_client.containers(
             all=True,
-            filters={"label": CONTAINERS_FOR_TESTING_LABEL})
+            filters={"label": CONTAINER_LABELS})
         for container in test_containers:
             log_lines = [
                 ("docker inspect {!r}:".format(container['Id'])),
                 (pprint.pformat(docker_client.inspect_container(container['Id']))),
                 ("docker logs {!r}:".format(container['Id'])),
-                (docker_client.logs(container['Id'])),
+                (docker_client.logs(container['Id']).decode('utf-8')),
             ]
             report.longrepr.addsection('docker logs', os.linesep.join(log_lines))
 
@@ -51,10 +51,10 @@ def pull_image(image):
 @pytest.fixture
 def example_container():
     docker_client = _docker_client()
-
+    pull_image(IMAGE)
     container = docker_client.create_container(
         image=IMAGE,
-        labels=[CONTAINERS_FOR_TESTING_LABEL]
+        labels=CONTAINER_LABELS
     )
     docker_client.start(container=container["Id"])
     container_info = docker_client.inspect_container(container.get('Id'))

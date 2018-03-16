@@ -1,2 +1,3 @@
 pytest
 docker-py
+kazoo
