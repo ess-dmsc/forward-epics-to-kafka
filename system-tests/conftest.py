@@ -7,7 +7,7 @@ import pytest
 
 
 IMAGE = "service"
-CONTAINERS_FOR_TESTING_LABEL = "pytest_docker_log"
+CONTAINERS_FOR_TESTING_LABEL = ["kafka", "zookeeper"]
 
 
 def _docker_client():
