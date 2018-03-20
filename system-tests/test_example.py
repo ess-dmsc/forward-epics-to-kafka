@@ -1,13 +1,6 @@
 import pytest
-from kazoo.client import KazooClient
 
 
-def test_can_get_info_from_zookeeper(zookeeper_container):
-    zk = KazooClient(hosts=zookeeper_container)
-    zk.start()
-    assert(zk.get_children('/zookeeper') == ['quota'])
-
-
-@pytest.mark.skip(reason="For demonstrating log output on failure")
-def test__error(example_container):
-    raise Exception("oh no!")
+@pytest.mark.parametrize('docker_compose', [False], indirect=['docker_compose'])
+def test_integration(docker_compose):
+    pass
