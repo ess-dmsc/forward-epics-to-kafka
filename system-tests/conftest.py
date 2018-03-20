@@ -2,6 +2,7 @@ import json
 import pprint
 import os
 import docker
+from docker import APIClient
 import pytest
 import backoff
 from kazoo.client import KazooClient
@@ -9,8 +10,8 @@ from kazoo.handlers.threading import KazooTimeoutError
 
 ZOOKEEPER = {"image": "zookeeper:3.4", "label": "zookeeper-system-test"}
 KAFKA = {"image": "wurstmeister/kafka:0.11.0.1", "label": "kafka-system-test"}
-IOC = {"image": "screamingudder/ess-chopper-sim-ioc:latest", "label": "chopper-sim-system-test"}
-TEST_SOFTWARE = {"image": "zookeeper:3.4", "label": "zookeeper"}
+IOC = {"image": "dmscid/lewis:latest", "label": "chopper-sim-system-test"}
+FORWARDER_LABEL = "forwarder-system-test"
 
 
 def _docker_client():
@@ -22,7 +23,7 @@ def pytest_runtest_logreport(report):
         docker_client = _docker_client()
         test_containers = docker_client.api.containers(
             all=True,
-            filters={"label": TEST_SOFTWARE["label"]})
+            filters={"label": FORWARDER_LABEL})
         for container in test_containers:
             log_lines = [
                 ("docker inspect {!r}:".format(container['Id'])),
@@ -50,12 +51,14 @@ def start_kafka(docker_client, containers):
     port_bindings = {"9092": 9092}
     kafka_container = start_container(docker_client, KAFKA, environment=kafka_env, ports=port_bindings)
     containers.extend([zk_container, kafka_container])
+    return get_ip(docker_client, kafka_container)
 
 
-def start_container(docker_client, image_info, environment=None, ports=None):
+def start_container(docker_client, image_info, environment=None, ports=None, command=None):
     image = docker_client.images.pull(image_info["image"])
     container = docker_client.containers.run(
         image=image,
+        command=command,
         ports=ports,
         labels=[image_info["label"]],
         environment=environment,
@@ -75,19 +78,48 @@ def get_ip(docker_client, container):
 
 
 @pytest.fixture
+def zookeeper_container():
+    docker_client = _docker_client()
+    zk_container = start_container(docker_client, ZOOKEEPER)
+    yield get_ip(docker_client, zk_container)
+    clean_up_containers([zk_container])
+
+
+@pytest.fixture
 def example_container():
     docker_client = _docker_client()
     containers = []  # keep list of containers to clean up later
-    start_kafka(docker_client, containers)
-    ioc_environment = {"FORWARDER_CONFIG_TOPIC": "TEST_forwarderConfig",
-                       "FORWARDER_OUTPUT_TOPIC": "TEST_sampleEnv"}
-    ioc_container = start_container(docker_client, IOC, environment=ioc_environment)
+    kafka_address = start_kafka(docker_client, containers)
+    ioc_command = "chopper -p \"epics: {prefix: 'SIM:'}\""
+    ioc_container = start_container(docker_client, IOC, command=ioc_command)
     containers.append(ioc_container)
 
-    #forwarder = docker_client.images.build(fileobj="../Dockerfile")
+    print("before build")
 
-    test_container = start_container(docker_client, TEST_SOFTWARE)
-    containers.append(test_container)
-    yield get_ip(docker_client, test_container)
+    # The "low-level API" (APIClient) seems to be recommended for builds
+    api_client = APIClient('unix://var/run/docker.sock', version="auto")
+    tag_string = "forwarder-test"
+    for response_line in api_client.build(path="../", dockerfile="Dockerfile", tag=tag_string):
+        json_reponse = json.loads(response_line.decode("utf-8"))
+        if 'stream' in json_reponse:
+            print(json_reponse['stream'], flush=True)
+        else:
+            print(json_reponse, flush=True)
+
+    forwarder_image = docker_client.images.get(tag_string)
+
+    forwarder_env = {"BROKER": kafka_address,
+                     "STATUS_URI": "//" + kafka_address + ":9092/TEST_forwarderConfig"}
+    forwarder_container = docker_client.containers.run(
+        image=forwarder_image,
+        labels=[FORWARDER_LABEL],
+        environment=forwarder_env,
+        detach=True
+    )
+    containers.append(forwarder_container)
+
+    print("after build and run")
+
+    yield get_ip(docker_client, ioc_container)
 
     clean_up_containers(containers)

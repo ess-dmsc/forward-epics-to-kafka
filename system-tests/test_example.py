@@ -2,8 +2,8 @@ import pytest
 from kazoo.client import KazooClient
 
 
-def test_can_get_info_from_zookeeper(example_container):
-    zk = KazooClient(hosts=example_container)
+def test_can_get_info_from_zookeeper(zookeeper_container):
+    zk = KazooClient(hosts=zookeeper_container)
     zk.start()
     assert(zk.get_children('/zookeeper') == ['quota'])
 
