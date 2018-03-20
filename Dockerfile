@@ -17,10 +17,12 @@ ADD "https://raw.githubusercontent.com/ess-dmsc/docker-ubuntu17.10-build-node/ma
 ADD "https://raw.githubusercontent.com/ess-dmsc/docker-ubuntu17.10-build-node/master/files/default_profile" "/root/.conan/profiles/default"
 
 RUN mkdir forwarder
-ADD . /forwarder
+RUN cd forwarder
+ADD . ../forwarder_src
 
-RUN mkdir build && cd build && cmake ../forwarder
+RUN cd forwarder && \
+    cmake ../forwarder_src && \
+    make -j8 VERBOSE=1
 
-RUN make --directory=./build -j8 VERBOSE=1
-
-CMD ["./forwarder/docker_launch.sh"]
+ADD docker_launch.sh /
+CMD ["./docker_launch.sh"]
