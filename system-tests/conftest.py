@@ -32,6 +32,7 @@ def docker_compose(request):
                "--timestamps": False,
                "--tail": "all",
                "-d": True,
+               "-v": True,  # remove volumes when docker-compose down (don't persist kafka and zk data)
                }
 
     project = project_from_options(os.path.dirname(__file__), options)
