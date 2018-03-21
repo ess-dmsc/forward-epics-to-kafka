@@ -7,7 +7,7 @@ RUN apt-get update && \
 
 RUN pip install --upgrade pip && \
     pip install conan==1.0.2 && \
-rm -rf /root/.cache/pip/*
+    rm -rf /root/.cache/pip/*
 
 # Force conan to create .conan directory and profile
 RUN conan profile new default

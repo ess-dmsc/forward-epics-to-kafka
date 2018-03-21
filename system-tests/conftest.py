@@ -27,21 +27,22 @@ def docker_compose(request):
                '--no-build': False,
                '--no-color': False,
                "--rmi": "none",
-               "--volumes": "",
+               "--volumes": True,  # remove volumes when docker-compose down (don't persist kafka and zk data)
                "--follow": False,
                "--timestamps": False,
                "--tail": "all",
-               "-d": True,
-               "-v": True,  # remove volumes when docker-compose down (don't persist kafka and zk data)
+               "--detach": True
                }
 
     project = project_from_options(os.path.dirname(__file__), options)
     cmd = TopLevelCommand(project)
+    print("Running docker-compose up", flush=True)
     cmd.up(options)
+    print("\nFinished docker-compose up\n", flush=True)
 
     def fin():
         cmd.logs(options)
-        cmd.down(options)
+        cmd.down(options)  # this stops the containers then removes them and their volumes (-v option)
 
     # Using a finalizer rather than yield in the fixture means
     # that the containers will be brought down even if tests fail
