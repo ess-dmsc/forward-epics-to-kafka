@@ -15,6 +15,7 @@ def docker_compose(request):
     except AttributeError:
         build = True
 
+    # Options must be given as long form
     options = {"--no-deps": False,
                "--always-recreate-deps": False,
                "--scale": "",
