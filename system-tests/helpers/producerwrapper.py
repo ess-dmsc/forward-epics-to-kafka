@@ -1,5 +1,6 @@
 from .forwarderconfig import ForwarderConfig
 from confluent_kafka import Producer, KafkaError, Consumer, KafkaException
+import uuid
 
 
 class ProducerWrapper:
@@ -10,13 +11,14 @@ class ProducerWrapper:
     def __init__(self, server, config_topic, data_topic):
         self.topic = config_topic
         self.converter = ForwarderConfig(data_topic)
-        self.set_up_producer(server)
+        self._set_up_producer(server)
 
-    def set_up_producer(self, server):
+    def _set_up_producer(self, server):
         conf = {'bootstrap.servers': server}
         try:
-            self.consumer = Consumer(**conf)
             self.producer = Producer(**conf)
+            conf['group.id'] = uuid.uuid4()
+            self.consumer = Consumer(**conf)
             if not self.topic_exists(self.topic):
                 print("WARNING: topic {} does not exist. It will be created by default.".format(self.topic))
         except KafkaException.args[0] == '_BROKER_NOT_AVAILABLE':
@@ -46,13 +48,14 @@ class ProducerWrapper:
 
         data = self.converter.create_forwarder_configuration(pvs)
         print("Sending data {}".format(data))
-        self.producer.produce(topic=self.topic, key=data, value="")
+        self.producer.produce(self.topic, key=data, value="")
 
     def topic_exists(self, topicname):
         try:
             self.consumer.subscribe([topicname])
-        except KafkaException:
-            print("topic {} does not exist".format(topicname))
+        except KafkaException as e:
+            print("topic '{}' does not exist".format(topicname))
+            print(e)
             return False
         return True
 
@@ -70,4 +73,4 @@ class ProducerWrapper:
         data = self.converter.remove_forwarder_configuration(pvs)
         for pv in data:
             print("Sending data {}".format(data))
-            self.producer.produce(topic=self.topic, key=pv, value="")
+            self.producer.produce(self.topic, key=pv, value="")
