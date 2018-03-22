@@ -1,8 +1,8 @@
 from .forwarderconfig import ForwarderConfig
-from kafka import KafkaProducer, errors, SimpleClient
+from confluent_kafka import Producer, KafkaError, Consumer, KafkaException
 
 
-class Producer:
+class ProducerWrapper:
     """
     A wrapper class for the kafka producer.
     """
@@ -13,23 +13,24 @@ class Producer:
         self.set_up_producer(server)
 
     def set_up_producer(self, server):
+        conf = {'bootstrap.servers': server}
         try:
-            self.client = SimpleClient(server)
-            self.producer = KafkaProducer(bootstrap_servers=server)
+            self.consumer = Consumer(**conf)
+            self.producer = Producer(**conf)
             if not self.topic_exists(self.topic):
                 print("WARNING: topic {} does not exist. It will be created by default.".format(self.topic))
-        except errors.NoBrokersAvailable:
+        except KafkaException.args[0] == '_BROKER_NOT_AVAILABLE':
             print("No brokers found on server: " + server[0])
             quit()
-        except errors.ConnectionError:
+        except KafkaException.args[0] == '_TIMED_OUT':
             print("No server found, connection error")
             quit()
-        except errors.InvalidConfigurationError:
+        except KafkaException.args[0] == '_INVALID_ARG':
             print("Invalid configuration")
             quit()
-        except errors.InvalidTopicError:
+        except KafkaException.args[0] == '_UNKNOWN_TOPIC':
             print("Invalid topic, to enable auto creation of topics set"
-                          " auto.create.topics.enable to false in broker configuration")
+                  " auto.create.topics.enable to false in broker configuration")
             quit()
 
     def add_config(self, pvs):
@@ -45,10 +46,15 @@ class Producer:
 
         data = self.converter.create_forwarder_configuration(pvs)
         print("Sending data {}".format(data))
-        self.producer.send(self.topic, bytes(data))
+        self.producer.produce(topic=self.topic, key=data, value="")
 
     def topic_exists(self, topicname):
-        return topicname in self.client.topics
+        try:
+            self.consumer.subscribe([topicname])
+        except KafkaException:
+            print("topic {} does not exist".format(topicname))
+            return False
+        return True
 
     def remove_config(self, pvs):
         """
@@ -64,4 +70,4 @@ class Producer:
         data = self.converter.remove_forwarder_configuration(pvs)
         for pv in data:
             print("Sending data {}".format(data))
-            self.producer.send(self.topic, bytes(pv))
+            self.producer.produce(topic=self.topic, key=pv, value="")

@@ -1,6 +1,6 @@
 import pytest
 from time import sleep
-from helpers.producer import Producer
+from helpers.producerwrapper import ProducerWrapper
 
 BUILD_FORWARDER = False
 
@@ -11,8 +11,10 @@ def test_integration(docker_compose):
 
 
 def set_up_producer(server, config_topic, data_topic):
-    sleep(10)
-    prod = Producer(server, config_topic, data_topic)
-    sleep(10)
+    sleep(30)
+    prod = ProducerWrapper(server, config_topic, data_topic)
+    sleep(20)
+    prod.add_config(["Sim:Spd", "Sim:ActSpd"])
+    sleep(20)
     assert prod.topic_exists(data_topic)
     assert prod.topic_exists(config_topic)
