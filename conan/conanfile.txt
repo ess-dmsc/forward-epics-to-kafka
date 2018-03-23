@@ -1,5 +1,4 @@
 [requires]
-gtest/3121b20-dm2@ess-dmsc/stable
 fmt/3.0.2-dm1@ess-dmsc/stable
 FlatBuffers/1.8.0@ess-dmsc/stable
 librdkafka/0.11.3-dm3@ess-dmsc/testing
