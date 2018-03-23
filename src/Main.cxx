@@ -297,7 +297,7 @@ void Main::report_stats(int dt) {
   b2 %= 1024;
   LOG(6, "dt: {:4}  m: {:4}.{:03}  b: {:3}.{:03}.{:03}", dt, m2, m1, b3, b2,
       b1);
-  if (stub_curl::use && main_opt.influx_url.size() != 0) {
+  if (stub_curl::use && main_opt.InfluxURI.size() != 0) {
     int i1 = 0;
     for (auto &s : kafka_instance_set->stats_all()) {
       auto &m1 = influxbuf;
@@ -338,7 +338,7 @@ void Main::report_stats(int dt) {
         ++i1;
       }
     }
-    curl->send(influxbuf, main_opt.influx_url);
+    curl->send(influxbuf, main_opt.InfluxURI);
   }
 }
 

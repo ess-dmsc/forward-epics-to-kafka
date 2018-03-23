@@ -18,7 +18,7 @@ struct MainOpt {
   std::vector<uri::URI> brokers;
   std::string KafkaGELFAddress = "";
   std::string graylog_logger_address = "";
-  std::string influx_url = "";
+  std::string InfluxURI = "";
   int conversion_threads = 1;
   uint32_t conversion_worker_queue_size = 1024;
   std::string LogFilename;

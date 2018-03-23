@@ -280,7 +280,7 @@ std::pair<int, std::unique_ptr<MainOpt>> parse_opt(int argc, char **argv) {
     opt.graylog_logger_address = GraylogLoggerAddress;
   }
   if (!InfluxURL.empty()) {
-    opt.influx_url = InfluxURL;
+    opt.InfluxURI = InfluxURL;
   }
   if (!InfluxURL.empty()) {
     uri::URI URI;
