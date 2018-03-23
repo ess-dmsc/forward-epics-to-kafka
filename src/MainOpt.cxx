@@ -136,7 +136,7 @@ void MainOpt::find_status_uri() {
     uri::URI u1;
     u1.port = 9092;
     u1.parse(itr->value.GetString());
-    status_uri = u1;
+    StatusReportURI = u1;
   }
 }
 
@@ -286,7 +286,7 @@ std::pair<int, std::unique_ptr<MainOpt>> parse_opt(int argc, char **argv) {
     uri::URI URI;
     URI.port = 9092;
     URI.parse(optarg);
-    opt.status_uri = URI;
+    opt.StatusReportURI = URI;
   }
   return ret;
 }
