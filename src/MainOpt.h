@@ -24,7 +24,7 @@ struct MainOpt {
   string influx_url = "";
   int conversion_threads = 1;
   uint32_t conversion_worker_queue_size = 1024;
-  string log_file;
+  std::string LogFilename;
   string config_file;
   int forwarder_ix = 0;
   int write_per_message = 0;

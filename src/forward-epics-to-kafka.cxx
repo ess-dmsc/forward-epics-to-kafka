@@ -36,8 +36,8 @@ int main(int argc, char **argv) {
   auto op = BrightnESS::ForwardEpicsToKafka::parse_opt(argc, argv);
   auto &opt = *op.second;
 
-  if (opt.log_file.size() > 0) {
-    use_log_file(opt.log_file);
+  if (!opt.LogFilename.empty()) {
+    use_log_file(opt.LogFilename);
   }
 
   opt.init_logger();

@@ -235,7 +235,7 @@ std::pair<int, std::unique_ptr<MainOpt>> parse_opt(int argc, char **argv) {
   string InfluxURL;
   string StatusURL;
   app.add_option("--config-file", ConfigurationFile, "Configuration JSON file");
-  app.add_option("--log-file", opt.log_file, "Log filename");
+  app.add_option("--log-file", opt.LogFilename, "Log filename");
   app.add_option("--broker-config", BrokerConfig,
                  "//broker[:port]/topic for commands");
   app.add_option("--broker", BrokerDataDefault, "Default broker for data");
