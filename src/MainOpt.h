@@ -27,7 +27,7 @@ struct MainOpt {
   int write_per_message = 0;
   int main_poll_interval = 500;
   uint64_t teamid = 0;
-  std::vector<char> hostname;
+  std::vector<char> Hostname;
   FlatBufs::SchemaRegistry schema_registry;
   std::shared_ptr<rapidjson::Document> json;
   int parse_json_file(std::string ConfigurationFile);

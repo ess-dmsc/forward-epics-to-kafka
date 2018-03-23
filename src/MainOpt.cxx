@@ -25,11 +25,11 @@ namespace BrightnESS {
 namespace ForwardEpicsToKafka {
 
 MainOpt::MainOpt() {
-  hostname.resize(128);
-  gethostname(hostname.data(), hostname.size());
-  if (hostname.back() != 0) {
+  Hostname.resize(256);
+  gethostname(Hostname.data(), Hostname.size());
+  if (Hostname.back() != 0) {
     // likely an error
-    hostname.back() = 0;
+    Hostname.back() = 0;
   }
   set_broker("localhost:9092");
 }

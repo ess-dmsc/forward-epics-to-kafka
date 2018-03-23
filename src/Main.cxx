@@ -302,7 +302,7 @@ void Main::report_stats(int dt) {
     for (auto &s : kafka_instance_set->stats_all()) {
       auto &m1 = influxbuf;
       m1.write("forward-epics-to-kafka,hostname={},set={}",
-               main_opt.hostname.data(), i1);
+               main_opt.Hostname.data(), i1);
       m1.write(" produced={}", s.produced);
       m1.write(",produce_fail={}", s.produce_fail);
       m1.write(",local_queue_full={}", s.local_queue_full);
@@ -323,7 +323,7 @@ void Main::report_stats(int dt) {
         auto stats = c.second.lock()->stats();
         auto &m1 = influxbuf;
         m1.write("forward-epics-to-kafka,hostname={},set={}",
-                 main_opt.hostname.data(), i1);
+                 main_opt.Hostname.data(), i1);
         int i2 = 0;
         for (auto x : stats) {
           if (i2 > 0) {
