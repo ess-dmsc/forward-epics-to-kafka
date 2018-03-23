@@ -9,9 +9,6 @@
 namespace BrightnESS {
 namespace ForwardEpicsToKafka {
 
-using std::string;
-using std::vector;
-
 struct MainOpt {
   MainOpt();
   void set_broker(std::string broker);
