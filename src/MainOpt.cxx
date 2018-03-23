@@ -231,7 +231,6 @@ std::pair<int, std::unique_ptr<MainOpt>> parse_opt(int argc, char **argv) {
   string ConfigurationFile;
   string BrokerConfig;
   string BrokerDataDefault;
-  string KafkaGELFBrokerTopic;
   string GraylogLoggerAddress;
   string InfluxURL;
   string StatusURL;
@@ -240,7 +239,7 @@ std::pair<int, std::unique_ptr<MainOpt>> parse_opt(int argc, char **argv) {
   app.add_option("--broker-config", BrokerConfig,
                  "//broker[:port]/topic for commands");
   app.add_option("--broker", BrokerDataDefault, "Default broker for data");
-  app.add_option("--kafka-gelf", KafkaGELFBrokerTopic,
+  app.add_option("--kafka-gelf", opt.KafkaGELFAddress,
                  "Kafka GELF logging //broker[:port]/topic");
   app.add_option("--graylog-logger-address", GraylogLoggerAddress,
                  "Address for Graylog logging");
@@ -277,9 +276,6 @@ std::pair<int, std::unique_ptr<MainOpt>> parse_opt(int argc, char **argv) {
   if (!BrokerDataDefault.empty()) {
     opt.set_broker(BrokerDataDefault);
   }
-  if (!KafkaGELFBrokerTopic.empty()) {
-    opt.kafka_gelf = KafkaGELFBrokerTopic;
-  }
   if (!GraylogLoggerAddress.empty()) {
     opt.graylog_logger_address = GraylogLoggerAddress;
   }
@@ -296,8 +292,8 @@ std::pair<int, std::unique_ptr<MainOpt>> parse_opt(int argc, char **argv) {
 }
 
 void MainOpt::init_logger() {
-  if (!kafka_gelf.empty()) {
-    uri::URI uri(kafka_gelf);
+  if (!KafkaGELFAddress.empty()) {
+    uri::URI uri(KafkaGELFAddress);
     log_kafka_gelf_start(uri.host, uri.topic);
     LOG(3, "Enabled kafka_gelf: //{}/{}", uri.host, uri.topic);
   }

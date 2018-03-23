@@ -19,7 +19,7 @@ struct MainOpt {
   uri::URI broker_config{"//localhost:9092/forward_epics_to_kafka_commands"};
   uri::URI status_uri;
   vector<uri::URI> brokers;
-  string kafka_gelf = "";
+  string KafkaGELFAddress = "";
   string graylog_logger_address = "";
   string influx_url = "";
   int conversion_threads = 1;
