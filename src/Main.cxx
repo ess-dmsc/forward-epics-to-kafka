@@ -79,11 +79,11 @@ Main::Main(MainOpt &opt)
   }
 
   bool use_config = true;
-  if (main_opt.broker_config.topic.size() == 0) {
+  if (!main_opt.BrokerConfig.topic.empty()) {
     LOG(3, "Name for configuration topic is empty");
     use_config = false;
   }
-  if (main_opt.broker_config.host.size() == 0) {
+  if (!main_opt.BrokerConfig.host.empty()) {
     LOG(3, "Host for configuration topic broker is empty");
     use_config = false;
   }
@@ -91,7 +91,7 @@ Main::Main(MainOpt &opt)
     KafkaW::BrokerOpt bopt;
     bopt.conf_strings["group.id"] =
         fmt::format("forwarder-command-listener--pid{}", getpid());
-    config_listener.reset(new Config::Listener{bopt, main_opt.broker_config});
+    config_listener.reset(new Config::Listener{bopt, main_opt.BrokerConfig});
   }
   if (main_opt.json) {
     auto m1 = main_opt.json->FindMember("streams");

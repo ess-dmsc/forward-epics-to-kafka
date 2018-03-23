@@ -109,7 +109,7 @@ int MainOpt::parse_json_file(std::string ConfigurationFile) {
   }
   vali.Reset();
 
-  find_broker_config(broker_config);
+  find_broker_config(BrokerConfig);
   find_conversion_threads(conversion_threads);
   find_conversion_worker_queue_size(conversion_worker_queue_size);
   find_main_poll_interval(main_poll_interval);
@@ -236,7 +236,7 @@ std::pair<int, std::unique_ptr<MainOpt>> parse_opt(int argc, char **argv) {
   app.add_option("--config-file", opt.ConfigurationFile,
                  "Configuration JSON file");
   app.add_option("--log-file", opt.LogFilename, "Log filename");
-  app.add_option("--broker-config", BrokerConfig,
+  app.add_option("--broker-config", opt.BrokerConfig,
                  "//broker[:port]/topic for commands");
   app.add_option("--broker", BrokerDataDefault, "Default broker for data");
   app.add_option("--kafka-gelf", opt.KafkaGELFAddress,
@@ -271,7 +271,7 @@ std::pair<int, std::unique_ptr<MainOpt>> parse_opt(int argc, char **argv) {
     uri::URI URI;
     URI.port = 9092;
     URI.parse(BrokerConfig);
-    opt.broker_config = URI;
+    opt.BrokerConfig = URI;
   }
   if (!BrokerDataDefault.empty()) {
     opt.set_broker(BrokerDataDefault);
