@@ -14,14 +14,14 @@ using std::vector;
 
 struct MainOpt {
   MainOpt();
-  void set_broker(string broker);
+  void set_broker(std::string broker);
   std::string brokers_as_comma_list() const;
   uri::URI broker_config{"//localhost:9092/forward_epics_to_kafka_commands"};
   uri::URI status_uri;
-  vector<uri::URI> brokers;
-  string KafkaGELFAddress = "";
-  string graylog_logger_address = "";
-  string influx_url = "";
+  std::vector<uri::URI> brokers;
+  std::string KafkaGELFAddress = "";
+  std::string graylog_logger_address = "";
+  std::string influx_url = "";
   int conversion_threads = 1;
   uint32_t conversion_worker_queue_size = 1024;
   std::string LogFilename;
