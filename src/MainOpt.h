@@ -25,7 +25,7 @@ struct MainOpt {
   int conversion_threads = 1;
   uint32_t conversion_worker_queue_size = 1024;
   std::string LogFilename;
-  string config_file;
+  std::string ConfigurationFile;
   int forwarder_ix = 0;
   int write_per_message = 0;
   int main_poll_interval = 500;
@@ -33,7 +33,7 @@ struct MainOpt {
   std::vector<char> hostname;
   FlatBufs::SchemaRegistry schema_registry;
   std::shared_ptr<rapidjson::Document> json;
-  int parse_json_file(string config_file);
+  int parse_json_file(std::string ConfigurationFile);
   KafkaW::BrokerOpt broker_opt;
   void init_logger();
   void find_broker();

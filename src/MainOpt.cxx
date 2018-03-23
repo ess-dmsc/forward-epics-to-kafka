@@ -58,12 +58,12 @@ std::string MainOpt::brokers_as_comma_list() const {
   return s1;
 }
 
-int MainOpt::parse_json_file(string config_file) {
-  if (config_file.empty()) {
+int MainOpt::parse_json_file(std::string ConfigurationFile) {
+  if (ConfigurationFile.empty()) {
     LOG(3, "given config filename is empty");
     return -1;
   }
-  this->config_file = config_file;
+  this->ConfigurationFile = ConfigurationFile;
   using namespace rapidjson;
   Document schema_;
   try {
@@ -82,7 +82,7 @@ int MainOpt::parse_json_file(string config_file) {
   // Parse the JSON configuration and extract parameters.
   // Currently, these parameters take precedence over what is given on the
   // command line.
-  parse_document(config_file);
+  parse_document(ConfigurationFile);
   if (json->IsNull()) {
     return -4;
   }
@@ -228,13 +228,13 @@ std::pair<int, std::unique_ptr<MainOpt>> parse_opt(int argc, char **argv) {
       fmt::format("forward-epics-to-kafka-0.1.0 {:.7} (ESS, BrightnESS)\n"
                   "  Contact: dominik.werder@psi.ch\n\n",
                   GIT_COMMIT)};
-  string ConfigurationFile;
   string BrokerConfig;
   string BrokerDataDefault;
   string GraylogLoggerAddress;
   string InfluxURL;
   string StatusURL;
-  app.add_option("--config-file", ConfigurationFile, "Configuration JSON file");
+  app.add_option("--config-file", opt.ConfigurationFile,
+                 "Configuration JSON file");
   app.add_option("--log-file", opt.LogFilename, "Log filename");
   app.add_option("--broker-config", BrokerConfig,
                  "//broker[:port]/topic for commands");
@@ -253,15 +253,15 @@ std::pair<int, std::unique_ptr<MainOpt>> parse_opt(int argc, char **argv) {
   } catch (CLI::CallForHelp const &e) {
     ret.first = 1;
   } catch (CLI::ParseError const &e) {
-    LOG(4, "Can not parse command line options: {}", e.what());
+    LOG(3, "Can not parse command line options: {}", e.what());
     ret.first = 1;
   }
   if (ret.first == 1) {
     std::cout << app.help();
     return ret;
   }
-  if (!ConfigurationFile.empty()) {
-    if (opt.parse_json_file(ConfigurationFile) != 0) {
+  if (!opt.ConfigurationFile.empty()) {
+    if (opt.parse_json_file(opt.ConfigurationFile) != 0) {
       LOG(4, "Can not parse configuration file");
       ret.first = 1;
       return ret;
