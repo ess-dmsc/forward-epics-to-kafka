@@ -241,6 +241,14 @@ def get_win10_pipeline() {
 			--settings arch=x86_64 \
             --build=outdated"""
         }  // stage
+	      
+	 stage("win10: Source") {
+          bat """conan.exe \
+            source conan\\conanfile.txt  \
+            --settings build_type=Release \
+			--settings arch=x86_64 \
+            --build=outdated"""
+        }  // stage
       }  // dir
       }
     }  // node
