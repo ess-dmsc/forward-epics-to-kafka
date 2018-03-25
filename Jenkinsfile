@@ -243,8 +243,7 @@ def get_win10_pipeline() {
         }  // stage
 	      
 	 stage("win10: Source") {
-          bat """conan.exe \
-            source conan\\conanfile.txt"""
+
         }  // stage
       }  // dir
       }
