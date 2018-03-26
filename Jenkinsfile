@@ -276,11 +276,11 @@ node('docker && eee') {
     }
 
     def builders = [:]
-    //for (x in images.keySet()) {
-    //    def image_key = x
-    //    builders[image_key] = get_pipeline(image_key)
-    //}
-	builders['windows10'] = get_win10_pipeline()
+    for (x in images.keySet()) {
+      def image_key = x
+      builders[image_key] = get_pipeline(image_key)
+    }
+    builders['windows10'] = get_win10_pipeline()
 
     parallel builders
 
