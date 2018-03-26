@@ -243,7 +243,6 @@ def get_win10_pipeline() {
 	   
 	    conan.exe \
             install ..\\conan\\conanfile.txt  \
-	    --settings arch=x86_64 \
             --build=outdated"""
         }  // stage
 	      
