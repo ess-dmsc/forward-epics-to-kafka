@@ -243,13 +243,11 @@ def get_win10_pipeline() {
 	   
 	    conan.exe \
             install ..\\conan\\conanfile.txt  \
-            --settings build_type=Release \
 	    --settings arch=x86_64 \
-	    --settings compiler.runtime=MD \
             --build=outdated"""
         }  // stage
 	      
-	 stage("win10: Source") {
+	 stage("win10: Build") {
            bat """cd _build
 	     cmake .. -G \"Visual Studio 15 2017 Win64\"
 	     """
