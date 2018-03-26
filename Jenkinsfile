@@ -243,7 +243,7 @@ def get_win10_pipeline() {
         }  // stage
 	      
 	 stage("win10: Source") {
-           bat """if exist _build\ rd /q /s _build
+           bat """if exist _build rd /q /s _build
 	     mkdir _build
 	     cmake . -B_build -G \"Visual Studio 15 2017 Win64\"
 	     """
