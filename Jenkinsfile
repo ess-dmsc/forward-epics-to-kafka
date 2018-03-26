@@ -1,5 +1,5 @@
 project = "forward-epics-to-kafka"
-clangformat_os = "fedora25"
+clangformat_os = "fedora25"git ch
 test_and_coverage_os = "centos7-gcc6"
 archive_os = "centos7-gcc6"
 eee_os = "centos7-gcc6"
@@ -233,7 +233,7 @@ def get_win10_pipeline() {
         stage("win10: Checkout") {
           checkout scm
         }  // stage
-		
+
 	stage("win10: Setup") {
           bat """if exist _build rd /q /s _build
 	    mkdir _build
@@ -241,14 +241,13 @@ def get_win10_pipeline() {
 	    """
 	} // stage
         stage("win10: Install") {
-          bat """cd _build	   
+          bat """cd _build
 	    conan.exe \
             install ..\\conan\\conanfile.txt  \
-	    --settings build_type=Release \
- 	    --settings arch=x86_64 \
+            --settings build_type=Release \
             --build=outdated"""
         }  // stage
-	      
+
 	 stage("win10: Build") {
            bat """cd _build
 	     cmake .. -G \"Visual Studio 15 2017 Win64\" -DCMAKE_BUILD_TYPE=Release
