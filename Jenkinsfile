@@ -233,18 +233,23 @@ def get_win10_pipeline() {
         stage("win10: Checkout") {
           checkout scm
         }  // stage
-
+		
+	stage("win10: Setup") {
+          bat """if exist _build rd /q /s _build
+	    mkdir _build"""
+	} // stage
         stage("win10: Install") {
-          bat """conan.exe \
-            install conan\\conanfile.txt  \
+          bat """cd _build
+	   
+	    conan.exe \
+            install ..\\conan\\conanfile.txt  \
             --settings build_type=Release \
 			--settings arch=x86_64 \
             --build=outdated"""
         }  // stage
 	      
 	 stage("win10: Source") {
-           bat """if exist _build rd /q /s _build
-	     mkdir _build
+           bat """
 	     cmake . -B_build -G \"Visual Studio 15 2017 Win64\"
 	     """
         }  // stage
