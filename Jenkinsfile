@@ -242,7 +242,7 @@ def get_win10_pipeline() {
           bat """cd _build
 	   
 	    conan.exe \
-            install ..\\conan\\conanfile.txt  \
+            install ..\\conan\\conanfile_win32.txt  \
 	    --settings build_type=Release \
  	    --settings arch=x86_64 \
             --build=outdated"""
