@@ -1,5 +1,5 @@
 project = "forward-epics-to-kafka"
-clangformat_os = "fedora25"git ch
+clangformat_os = "fedora25"
 test_and_coverage_os = "centos7-gcc6"
 archive_os = "centos7-gcc6"
 eee_os = "centos7-gcc6"
