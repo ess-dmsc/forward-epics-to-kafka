@@ -223,6 +223,44 @@ def get_pipeline(image_key) {
     }
 }
 
+def get_win10_pipeline() {
+  return {
+    node('windows10') {
+      // Use custom location to avoid Win32 path length issues
+      ws('c:\\jenkins\\') {
+      cleanWs()
+      dir("${project}") {
+        stage("win10: Checkout") {
+          checkout scm
+        }  // stage
+
+	stage("win10: Setup") {
+          bat """if exist _build rd /q /s _build
+	    mkdir _build
+	    xcopy /y conan\\conanfile_win32.txt conan\\conanfile.txt
+	    """
+	} // stage
+        stage("win10: Install") {
+          bat """cd _build
+	    conan.exe \
+            install ..\\conan\\conanfile.txt  \
+            --settings build_type=Release \
+            --build=outdated"""
+        }  // stage
+
+	 stage("win10: Build") {
+           bat """cd _build
+	     cmake .. -G \"Visual Studio 15 2017 Win64\" -DCMAKE_BUILD_TYPE=Release
+	     cmake --build .
+	     """
+        }  // stage
+      }  // dir
+      }
+    }  // node
+  }  // return
+}  // def
+
+
 node('docker && eee') {
     cleanWs()
 
@@ -238,9 +276,10 @@ node('docker && eee') {
 
     def builders = [:]
     for (x in images.keySet()) {
-        def image_key = x
-        builders[image_key] = get_pipeline(image_key)
+      def image_key = x
+      builders[image_key] = get_pipeline(image_key)
     }
+    builders['windows10'] = get_win10_pipeline()
 
     parallel builders
 
