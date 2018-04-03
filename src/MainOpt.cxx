@@ -275,7 +275,7 @@ std::pair<int, std::unique_ptr<MainOpt>> parse_opt(int argc, char **argv) {
   if (!StatusURL.empty()) {
     uri::URI URI;
     URI.port = 9092;
-    URI.parse(optarg);
+    URI.parse(StatusURL);
     opt.StatusReportURI = URI;
   }
   return ret;
