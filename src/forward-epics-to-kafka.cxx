@@ -24,7 +24,6 @@ static std::atomic<BrightnESS::ForwardEpicsToKafka::Main *> g__main{nullptr};
 
 void signal_handler(int signal) {
   std::lock_guard<std::mutex> lock(g__mutex_main);
-  LOG(0, "SIGNAL {}", signal);
   if (auto x = g__main.load()) {
     x->forwarding_exit();
   }
