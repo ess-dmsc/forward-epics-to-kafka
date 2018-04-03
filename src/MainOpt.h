@@ -1,4 +1,5 @@
 #pragma once
+
 #include "KafkaW.h"
 #include "SchemaRegistry.h"
 #include "uri.h"
@@ -17,7 +18,7 @@ struct MainOpt {
   uri::URI StatusReportURI;
   std::vector<uri::URI> brokers;
   std::string KafkaGELFAddress = "";
-  std::string graylog_logger_address = "";
+  std::string GraylogLoggerAddress = "";
   std::string InfluxURI = "";
   int conversion_threads = 1;
   uint32_t conversion_worker_queue_size = 1024;

@@ -241,7 +241,7 @@ std::pair<int, std::unique_ptr<MainOpt>> parse_opt(int argc, char **argv) {
   app.add_option("--broker", BrokerDataDefault, "Default broker for data");
   app.add_option("--kafka-gelf", opt.KafkaGELFAddress,
                  "Kafka GELF logging //broker[:port]/topic");
-  app.add_option("--graylog-logger-address", GraylogLoggerAddress,
+  app.add_option("--graylog-logger-address", opt.GraylogLoggerAddress,
                  "Address for Graylog logging");
   app.add_option("--influx-url", InfluxURL, "Address for Influx logging");
   app.add_option("--status-uri", StatusURL,
@@ -276,9 +276,6 @@ std::pair<int, std::unique_ptr<MainOpt>> parse_opt(int argc, char **argv) {
   if (!BrokerDataDefault.empty()) {
     opt.set_broker(BrokerDataDefault);
   }
-  if (!GraylogLoggerAddress.empty()) {
-    opt.graylog_logger_address = GraylogLoggerAddress;
-  }
   if (!InfluxURL.empty()) {
     opt.InfluxURI = InfluxURL;
   }
@@ -297,8 +294,8 @@ void MainOpt::init_logger() {
     log_kafka_gelf_start(uri.host, uri.topic);
     LOG(3, "Enabled kafka_gelf: //{}/{}", uri.host, uri.topic);
   }
-  if (!graylog_logger_address.empty()) {
-    fwd_graylog_logger_enable(graylog_logger_address);
+  if (!GraylogLoggerAddress.empty()) {
+    fwd_graylog_logger_enable(GraylogLoggerAddress);
   }
 }
 }
