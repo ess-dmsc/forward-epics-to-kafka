@@ -220,19 +220,15 @@ void MainOpt::find_broker() {
 }
 
 std::pair<int, std::unique_ptr<MainOpt>> parse_opt(int argc, char **argv) {
-  std::pair<int, std::unique_ptr<MainOpt>> ret{
-      0, std::unique_ptr<MainOpt>(new MainOpt)};
-  using std::string;
+  std::pair<int, std::unique_ptr<MainOpt>> ret{0, make_unique<MainOpt>()};
   auto &opt = *ret.second;
   CLI::App app{
       fmt::format("forward-epics-to-kafka-0.1.0 {:.7} (ESS, BrightnESS)\n"
                   "  Contact: dominik.werder@psi.ch\n\n",
                   GIT_COMMIT)};
-  string BrokerConfig;
-  string BrokerDataDefault;
-  string GraylogLoggerAddress;
-  string InfluxURL;
-  string StatusURL;
+  std::string BrokerConfig;
+  std::string BrokerDataDefault;
+  std::string StatusURL;
   app.add_option("--config-file", opt.ConfigurationFile,
                  "Configuration JSON file");
   app.add_option("--log-file", opt.LogFilename, "Log filename");
@@ -243,7 +239,7 @@ std::pair<int, std::unique_ptr<MainOpt>> parse_opt(int argc, char **argv) {
                  "Kafka GELF logging //broker[:port]/topic");
   app.add_option("--graylog-logger-address", opt.GraylogLoggerAddress,
                  "Address for Graylog logging");
-  app.add_option("--influx-url", InfluxURL, "Address for Influx logging");
+  app.add_option("--influx-url", opt.InfluxURI, "Address for Influx logging");
   app.add_option("--status-uri", StatusURL,
                  "Kafka //broker:port/topic for status logging");
   app.add_option("-v,--verbose", log_level, "Syslog logging level", true)
@@ -276,10 +272,7 @@ std::pair<int, std::unique_ptr<MainOpt>> parse_opt(int argc, char **argv) {
   if (!BrokerDataDefault.empty()) {
     opt.set_broker(BrokerDataDefault);
   }
-  if (!InfluxURL.empty()) {
-    opt.InfluxURI = InfluxURL;
-  }
-  if (!InfluxURL.empty()) {
+  if (!StatusURL.empty()) {
     uri::URI URI;
     URI.port = 9092;
     URI.parse(optarg);
