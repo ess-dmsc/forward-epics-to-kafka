@@ -19,19 +19,38 @@ namespace BrightnESS {
 namespace ForwardEpicsToKafka {}
 }
 
-static std::mutex g__mutex_main;
-static std::atomic<BrightnESS::ForwardEpicsToKafka::Main *> g__main{nullptr};
+static void handleSignal(int Signal);
 
-void signal_handler(int signal) {
-  std::lock_guard<std::mutex> lock(g__mutex_main);
-  if (auto x = g__main.load()) {
-    x->forwarding_exit();
+class SignalHandler;
+
+static std::atomic<SignalHandler *> g__SignalHandler;
+
+class SignalHandler {
+public:
+  SignalHandler(std::shared_ptr<BrightnESS::ForwardEpicsToKafka::Main> MainPtr_)
+      : MainPtr(MainPtr_) {
+    g__SignalHandler.store(this);
+    std::signal(SIGINT, handleSignal);
+    std::signal(SIGTERM, handleSignal);
+  }
+  ~SignalHandler() {
+    std::signal(SIGINT, SIG_DFL);
+    std::signal(SIGTERM, SIG_DFL);
+    g__SignalHandler.store(nullptr);
+  }
+  void handle(int Signal) { MainPtr->stopForwardingDueToSignal(); }
+
+private:
+  std::shared_ptr<BrightnESS::ForwardEpicsToKafka::Main> MainPtr;
+};
+
+static void handleSignal(int Signal) {
+  if (auto Handler = g__SignalHandler.load()) {
+    Handler->handle(Signal);
   }
 }
 
 int main(int argc, char **argv) {
-  std::signal(SIGINT, signal_handler);
-  std::signal(SIGTERM, signal_handler);
   auto op = BrightnESS::ForwardEpicsToKafka::parse_opt(argc, argv);
   auto &opt = *op.second;
 
@@ -45,23 +64,16 @@ int main(int argc, char **argv) {
     return 1;
   }
 
-  BrightnESS::ForwardEpicsToKafka::Main main(opt);
-  {
-    std::lock_guard<std::mutex> lock(g__mutex_main);
-    g__main = &main;
-  }
+  auto Main = std::make_shared<BrightnESS::ForwardEpicsToKafka::Main>(opt);
+  SignalHandler SignalHandlerInstance(Main);
   try {
-    main.forward_epics_to_kafka();
+    Main->forward_epics_to_kafka();
   } catch (std::runtime_error &e) {
     LOG(0, "CATCH runtime error in main watchdog thread: {}", e.what());
+    return 1;
   } catch (std::exception &e) {
     LOG(0, "CATCH EXCEPTION in main watchdog thread");
-  }
-  std::signal(SIGINT, SIG_DFL);
-  std::signal(SIGTERM, SIG_DFL);
-  {
-    std::lock_guard<std::mutex> lock(g__mutex_main);
-    g__main = nullptr;
+    return 1;
   }
   return 0;
 }

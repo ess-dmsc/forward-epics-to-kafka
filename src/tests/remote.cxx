@@ -165,7 +165,7 @@ void Remote_T::simple_f142() {
   // Let it do its thing for a few seconds...
   sleep_ms(5000);
 
-  main.forwarding_exit();
+  main.stopForwarding();
   if (thr_forwarder.joinable()) {
     thr_forwarder.join();
   }
