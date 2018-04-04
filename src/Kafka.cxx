@@ -66,7 +66,7 @@ KafkaW::Producer::Topic InstanceSet::producer_topic(uri::URI uri) {
 
 int InstanceSet::poll() {
   std::unique_lock<std::mutex> lock(mx_producers_by_host);
-  for (auto m : producers_by_host) {
+  for (auto const &m : producers_by_host) {
     auto &p = m.second;
     p->poll();
   }
@@ -75,7 +75,7 @@ int InstanceSet::poll() {
 
 void InstanceSet::log_stats() {
   std::unique_lock<std::mutex> lock(mx_producers_by_host);
-  for (auto m : producers_by_host) {
+  for (auto const &m : producers_by_host) {
     auto &p = m.second;
     LOG(6, "Broker: {}  total: {}  outq: {}", m.first, p->TotalMessagesProduced,
         p->outputQueueLength());
@@ -85,7 +85,7 @@ void InstanceSet::log_stats() {
 std::vector<KafkaW::ProducerStats> InstanceSet::stats_all() {
   std::vector<KafkaW::ProducerStats> ret;
   std::unique_lock<std::mutex> lock(mx_producers_by_host);
-  for (auto m : producers_by_host) {
+  for (auto const &m : producers_by_host) {
     ret.push_back(m.second->Stats);
   }
   return ret;
