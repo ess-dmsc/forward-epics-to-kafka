@@ -219,6 +219,22 @@ void MainOpt::find_broker() {
   }
 }
 
+/// Add a URI valued option to the given App.
+
+static void addOption(CLI::App &App, std::string const &Name, uri::URI &URIArg,
+                      std::string const &Description, bool Defaulted = false) {
+  CLI::callback_t Fun = [&URIArg](CLI::results_t Results) {
+    URIArg.parse(Results[0]);
+    return true;
+  };
+  CLI::Option *Opt = App.add_option(Name, Fun, Description, Defaulted);
+  Opt->set_custom_option("URI", 1);
+  if (Defaulted) {
+    Opt->set_default_str(std::string("//") + URIArg.host_port + "/" +
+                         URIArg.topic);
+  }
+}
+
 std::pair<int, std::unique_ptr<MainOpt>> parse_opt(int argc, char **argv) {
   std::pair<int, std::unique_ptr<MainOpt>> ret{0, make_unique<MainOpt>()};
   auto &opt = *ret.second;
@@ -226,24 +242,25 @@ std::pair<int, std::unique_ptr<MainOpt>> parse_opt(int argc, char **argv) {
       fmt::format("forward-epics-to-kafka-0.1.0 {:.7} (ESS, BrightnESS)\n"
                   "  Contact: dominik.werder@psi.ch\n\n",
                   GIT_COMMIT)};
-  std::string BrokerConfig;
   std::string BrokerDataDefault;
-  std::string StatusURL;
   app.add_option("--config-file", opt.ConfigurationFile,
                  "Configuration JSON file");
   app.add_option("--log-file", opt.LogFilename, "Log filename");
-  app.add_option("--broker-config", opt.BrokerConfig,
-                 "//broker[:port]/topic for commands");
   app.add_option("--broker", BrokerDataDefault, "Default broker for data");
   app.add_option("--kafka-gelf", opt.KafkaGELFAddress,
                  "Kafka GELF logging //broker[:port]/topic");
   app.add_option("--graylog-logger-address", opt.GraylogLoggerAddress,
                  "Address for Graylog logging");
   app.add_option("--influx-url", opt.InfluxURI, "Address for Influx logging");
-  app.add_option("--status-uri", StatusURL,
-                 "Kafka //broker:port/topic for status logging");
   app.add_option("-v,--verbose", log_level, "Syslog logging level", true)
       ->check(CLI::Range(1, 7));
+  addOption(app, "--broker-config", opt.BrokerConfig,
+            "<//host[:port]/topic> Kafka host/topic to listen for commands on",
+            true);
+  addOption(app, "--status-uri", opt.StatusReportURI,
+            "<//host[:port][/topic]> Kafka broker/topic to publish status "
+            "updates on");
+
   try {
     app.parse(argc, argv);
   } catch (CLI::CallForHelp const &e) {
@@ -263,20 +280,8 @@ std::pair<int, std::unique_ptr<MainOpt>> parse_opt(int argc, char **argv) {
       return ret;
     }
   }
-  if (!BrokerConfig.empty()) {
-    uri::URI URI;
-    URI.port = 9092;
-    URI.parse(BrokerConfig);
-    opt.BrokerConfig = URI;
-  }
   if (!BrokerDataDefault.empty()) {
     opt.set_broker(BrokerDataDefault);
-  }
-  if (!StatusURL.empty()) {
-    uri::URI URI;
-    URI.port = 9092;
-    URI.parse(StatusURL);
-    opt.StatusReportURI = URI;
   }
   return ret;
 }

@@ -79,11 +79,11 @@ Main::Main(MainOpt &opt)
   }
 
   bool use_config = true;
-  if (!main_opt.BrokerConfig.topic.empty()) {
+  if (main_opt.BrokerConfig.topic.empty()) {
     LOG(3, "Name for configuration topic is empty");
     use_config = false;
   }
-  if (!main_opt.BrokerConfig.host.empty()) {
+  if (main_opt.BrokerConfig.host.empty()) {
     LOG(3, "Host for configuration topic broker is empty");
     use_config = false;
   }
