@@ -238,31 +238,31 @@ static void addOption(CLI::App &App, std::string const &Name, uri::URI &URIArg,
 std::pair<int, std::unique_ptr<MainOpt>> parse_opt(int argc, char **argv) {
   std::pair<int, std::unique_ptr<MainOpt>> ret{0, make_unique<MainOpt>()};
   auto &opt = *ret.second;
-  CLI::App app{
+  CLI::App App{
       fmt::format("forward-epics-to-kafka-0.1.0 {:.7} (ESS, BrightnESS)\n"
                   "  Contact: dominik.werder@psi.ch\n\n",
                   GIT_COMMIT)};
   std::string BrokerDataDefault;
-  app.add_option("--config-file", opt.ConfigurationFile,
+  App.add_option("--config-file", opt.ConfigurationFile,
                  "Configuration JSON file");
-  app.add_option("--log-file", opt.LogFilename, "Log filename");
-  app.add_option("--broker", BrokerDataDefault, "Default broker for data");
-  app.add_option("--kafka-gelf", opt.KafkaGELFAddress,
+  App.add_option("--log-file", opt.LogFilename, "Log filename");
+  App.add_option("--broker", BrokerDataDefault, "Default broker for data");
+  App.add_option("--kafka-gelf", opt.KafkaGELFAddress,
                  "Kafka GELF logging //broker[:port]/topic");
-  app.add_option("--graylog-logger-address", opt.GraylogLoggerAddress,
+  App.add_option("--graylog-logger-address", opt.GraylogLoggerAddress,
                  "Address for Graylog logging");
-  app.add_option("--influx-url", opt.InfluxURI, "Address for Influx logging");
-  app.add_option("-v,--verbose", log_level, "Syslog logging level", true)
+  App.add_option("--influx-url", opt.InfluxURI, "Address for Influx logging");
+  App.add_option("-v,--verbose", log_level, "Syslog logging level", true)
       ->check(CLI::Range(1, 7));
-  addOption(app, "--broker-config", opt.BrokerConfig,
+  addOption(App, "--broker-config", opt.BrokerConfig,
             "<//host[:port]/topic> Kafka host/topic to listen for commands on",
             true);
-  addOption(app, "--status-uri", opt.StatusReportURI,
+  addOption(App, "--status-uri", opt.StatusReportURI,
             "<//host[:port][/topic]> Kafka broker/topic to publish status "
             "updates on");
 
   try {
-    app.parse(argc, argv);
+    App.parse(argc, argv);
   } catch (CLI::CallForHelp const &e) {
     ret.first = 1;
   } catch (CLI::ParseError const &e) {
@@ -270,7 +270,7 @@ std::pair<int, std::unique_ptr<MainOpt>> parse_opt(int argc, char **argv) {
     ret.first = 1;
   }
   if (ret.first == 1) {
-    std::cout << app.help();
+    std::cout << App.help();
     return ret;
   }
   if (!opt.ConfigurationFile.empty()) {
