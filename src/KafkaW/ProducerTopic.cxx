@@ -64,7 +64,7 @@ int ProducerTopic::produce(uchar *MsgData, size_t MsgSize, bool PrintError) {
 }
 
 int ProducerTopic::produce(unique_ptr<Producer::Msg> &Msg) {
-  if (not RdKafkaTopic) {
+  if (!RdKafkaTopic) {
     // Should never happen
     return RDKAFKATOPIC_NOT_INITIALIZED;
   }
