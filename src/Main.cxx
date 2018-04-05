@@ -22,6 +22,11 @@
 namespace BrightnESS {
 namespace ForwardEpicsToKafka {
 
+static bool isStopDueToSignal(ForwardingRunState Flag) {
+  return static_cast<int>(Flag) &
+         static_cast<int>(ForwardingRunState::STOP_DUE_TO_SIGNAL);
+}
+
 // Little helper
 static KafkaW::BrokerSettings make_broker_opt(MainOpt const &opt) {
   KafkaW::BrokerSettings ret = opt.broker_opt;
@@ -175,7 +180,7 @@ void ConfigCB::operator()(std::string const &msg) {
     main.streams.streams_clear();
   }
   if (cmd == "exit") {
-    main.forwarding_exit();
+    main.stopForwarding();
   }
 }
 
@@ -227,7 +232,7 @@ void Main::forward_epics_to_kafka() {
       x->start();
     }
   }
-  while (forwarding_run.load() == 1) {
+  while (ForwardingRunFlag.load() == ForwardingRunState::RUN) {
     auto do_stats = false;
     auto t1 = CLK::now();
     if (t1 - t_lf_last > MS(2000)) {
@@ -257,6 +262,9 @@ void Main::forward_epics_to_kafka() {
     } else {
       std::this_thread::sleep_for(Dt - dt);
     }
+  }
+  if (isStopDueToSignal(ForwardingRunFlag.load())) {
+    LOG(6, "Forwarder stopping due to signal.");
   }
   LOG(6, "Main::forward_epics_to_kafka   shutting down");
   conversion_workers_clear();
@@ -432,6 +440,21 @@ int Main::mapping_add(rapidjson::Value &mapping) {
 std::atomic<uint64_t> g__total_msgs_to_kafka{0};
 std::atomic<uint64_t> g__total_bytes_to_kafka{0};
 
-void Main::forwarding_exit() { forwarding_run.store(0); }
+void Main::raiseForwardingFlag(ForwardingRunState ToBeRaised) {
+  while (true) {
+    auto Expect = ForwardingRunFlag.load();
+    auto Desired = static_cast<ForwardingRunState>(
+        static_cast<int>(Expect) | static_cast<int>(ToBeRaised));
+    if (ForwardingRunFlag.compare_exchange_weak(Expect, Desired)) {
+      break;
+    }
+  }
+}
+
+void Main::stopForwarding() { raiseForwardingFlag(ForwardingRunState::STOP); }
+
+void Main::stopForwardingDueToSignal() {
+  raiseForwardingFlag(ForwardingRunState::STOP_DUE_TO_SIGNAL);
+}
 }
 }
