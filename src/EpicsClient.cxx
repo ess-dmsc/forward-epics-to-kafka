@@ -150,7 +150,10 @@ EpicsClientFactoryInit::~EpicsClientFactoryInit() {
   ulock lock(mxl);
   auto c = --count;
   if (c < 0) {
-    throw std::runtime_error("should never happen");
+    LOG(0, "Reference count {} is not consistent, should never happen, but "
+           "ignoring for now.",
+        c);
+    c = 0;
   }
   if (c == 0) {
     CLOG(7, 6, "STOP   Epics factories");

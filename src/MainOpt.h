@@ -1,5 +1,5 @@
 #pragma once
-#include "KafkaW.h"
+#include "KafkaW/KafkaW.h"
 #include "SchemaRegistry.h"
 #include "uri.h"
 #ifdef _MSC_VER
@@ -41,7 +41,7 @@ struct MainOpt {
   FlatBufs::SchemaRegistry schema_registry;
   std::shared_ptr<rapidjson::Document> json;
   int parse_json_file(string config_file);
-  KafkaW::BrokerOpt broker_opt;
+  KafkaW::BrokerSettings broker_opt;
   void init_logger();
   void find_broker();
   void find_broker_config(uri::URI &property);
@@ -53,22 +53,6 @@ struct MainOpt {
   void parse_document(const std::string &filepath);
   void find_int(const char *key, int &property) const;
   void find_uint32_t(const char *key, uint32_t &property);
-};
-
-static struct option LONG_OPTIONS[] = {
-    {"help", no_argument, nullptr, 'h'},
-    {"broker-config", required_argument, nullptr, 0},
-    {"broker", required_argument, nullptr, 0},
-    {"kafka-gelf", required_argument, nullptr, 0},
-    {"graylog-logger-address", required_argument, nullptr, 0},
-    {"influx-url", required_argument, nullptr, 0},
-    {"config-file", required_argument, nullptr, 0},
-    {"log-file", required_argument, nullptr, 0},
-    {"forwarder-ix", required_argument, nullptr, 0},
-    {"write-per-message", required_argument, nullptr, 0},
-    {"teamid", required_argument, nullptr, 0},
-    {"status-uri", required_argument, nullptr, 0},
-    {nullptr, 0, nullptr, 0},
 };
 
 static string MAN_PAGE =

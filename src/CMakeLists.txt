@@ -20,9 +20,12 @@ ${RDKAFKA_INCLUDE_DIR}
 ${FLATBUFFERS_INCLUDE_DIR}
 ${RAPIDJSON_INCLUDE_DIR}
 ${CURL_INCLUDE_DIRS}
-${EPICSV4_INCLUDE_DIRS}
 ${PROJECT_SOURCE_DIR}/src
 ${PROJECT_BINARY_DIR}/src
+)
+
+set(path_include_common_suppressed_warnings
+${EPICSV4_INCLUDE_DIRS}
 )
 
 set(libraries_common
@@ -54,7 +57,14 @@ helper.cxx
 logger.cxx
 configuration.cxx
 Kafka.cxx
-KafkaW.cxx
+KafkaW/BrokerSettings.cxx
+KafkaW/Consumer.cxx
+KafkaW/KafkaW.cxx
+KafkaW/Msg.cxx
+KafkaW/PollStatus.cxx
+KafkaW/Producer.cxx
+KafkaW/ProducerTopic.cxx
+KafkaW/TopicSettings.cxx
 Ring.cxx
 ConversionWorker.cxx
 epics-to-fb.cxx
@@ -82,6 +92,7 @@ endif (WIN32)
 set(tgt __objects)
 add_library(${tgt} OBJECT ${SOURCES})
 target_include_directories(${tgt} PRIVATE ${path_include_common})
+target_include_directories(${tgt} SYSTEM PRIVATE ${path_include_common_suppressed_warnings})
 
 if (WIN32)
     # Skip xxd_generate and git_commit_current

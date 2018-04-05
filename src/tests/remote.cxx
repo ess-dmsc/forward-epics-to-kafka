@@ -35,10 +35,10 @@ template <typename T> using uptr = std::unique_ptr<T>;
 
 class Consumer {
 public:
-  Consumer(KafkaW::BrokerOpt bopt, string topic);
+  Consumer(KafkaW::BrokerSettings BrokerSettings, string topic);
   void run();
   std::atomic<int> do_run{1};
-  KafkaW::BrokerOpt bopt;
+  KafkaW::BrokerSettings BrokerSettings;
   string topic;
   int msgs_good = 0;
   string source_name;
@@ -50,11 +50,11 @@ public:
   virtual void process_msg_impl(LogData const *fb);
 };
 
-Consumer::Consumer(KafkaW::BrokerOpt bopt, string topic)
-    : bopt(bopt), topic(topic) {}
+Consumer::Consumer(KafkaW::BrokerSettings BrokerSettings, string topic)
+    : BrokerSettings(BrokerSettings), topic(topic) {}
 
 void Consumer::run() {
-  KafkaW::Consumer consumer(bopt);
+  KafkaW::Consumer consumer(BrokerSettings);
   consumer.on_rebalance_assign =
       [this](rd_kafka_topic_partition_list_t *plist) {
         {
@@ -63,10 +63,10 @@ void Consumer::run() {
         }
         cv.notify_all();
       };
-  consumer.add_topic(topic);
+  consumer.addTopic(topic);
   while (do_run) {
     auto x = consumer.poll();
-    if (auto m = x.is_Msg()) {
+    if (auto m = x.isMsg()) {
       if (m->size() >= 8) {
         auto fbid = m->data() + 4;
         if (memcmp(fbid, "f142", 4) == 0) {
@@ -140,11 +140,11 @@ void Remote_T::simple_f142() {
   }
 
   using std::thread;
-  KafkaW::BrokerOpt bopt;
-  bopt.conf_strings["group.id"] = "forwarder-tests-123213ab";
-  bopt.conf_ints["receive.message.max.bytes"] = 25100100;
-  bopt.address = Tests::main_opt->brokers_as_comma_list();
-  Consumer consumer(bopt, get_string(&d0, "converter.topic"));
+  KafkaW::BrokerSettings BrokerSettings;
+  BrokerSettings.ConfigurationStrings["group.id"] = "forwarder-tests-123213ab";
+  BrokerSettings.ConfigurationIntegers["receive.message.max.bytes"] = 25100100;
+  BrokerSettings.Address = Tests::main_opt->brokers_as_comma_list();
+  Consumer consumer(BrokerSettings, get_string(&d0, "converter.topic"));
   consumer.source_name = get_string(&d0, "channel");
   thread thr_consumer([&consumer] { consumer.run(); });
 
@@ -238,9 +238,9 @@ void Remote_T::simple_f142_via_config_message(
     StringBuffer buf1;
     Writer<StringBuffer> wr(buf1);
     d0.Accept(wr);
-    BrokerOpt bopt;
-    bopt.address = Tests::main_opt->broker_config.host_port;
-    auto pr = std::make_shared<Producer>(bopt);
+    BrokerSettings BrokerSettings;
+    BrokerSettings.Address = Tests::main_opt->broker_config.host_port;
+    auto pr = std::make_shared<Producer>(BrokerSettings);
     ProducerTopic pt(pr, Tests::main_opt->broker_config.topic);
     pt.produce((uchar *)buf1.GetString(), buf1.GetSize());
   }
@@ -257,9 +257,9 @@ void Remote_T::simple_f142_via_config_message(
     StringBuffer buf1;
     Writer<StringBuffer> wr(buf1);
     d0.Accept(wr);
-    BrokerOpt bopt;
-    bopt.address = Tests::main_opt->broker_config.host_port;
-    auto pr = std::make_shared<Producer>(bopt);
+    BrokerSettings BrokerSettings;
+    BrokerSettings.Address = Tests::main_opt->broker_config.host_port;
+    auto pr = std::make_shared<Producer>(BrokerSettings);
     ProducerTopic pt(pr, Tests::main_opt->broker_config.topic);
     pt.produce((uchar *)buf1.GetString(), buf1.GetSize());
   }
@@ -309,15 +309,17 @@ TEST_F(Remote_T, simple_f142_via_config_message) {
       if (m != d0.MemberEnd()) {
         if (m->value.IsArray()) {
           for (auto &s : m->value.GetArray()) {
-            KafkaW::BrokerOpt bopt;
-            bopt.conf_strings["group.id"] =
+            KafkaW::BrokerSettings BrokerSettings;
+            BrokerSettings.ConfigurationStrings["group.id"] =
                 fmt::format("forwarder-tests-{}--{}", getpid(), cid);
-            bopt.conf_ints["receive.message.max.bytes"] = 25100100;
-            // bopt.conf_ints["session.timeout.ms"] = 1000;
-            bopt.address = Tests::main_opt->brokers_as_comma_list();
+            BrokerSettings.ConfigurationIntegers["receive.message.max.bytes"] =
+                25100100;
+            // BrokerSettings.ConfigurationIntegers["session.timeout.ms"] =
+            // 1000;
+            BrokerSettings.Address = Tests::main_opt->brokers_as_comma_list();
             auto channel = get_string(&s, "channel");
             auto mconv = s.FindMember("converter");
-            auto push_conv = [&cid, &consumers, &bopt,
+            auto push_conv = [&cid, &consumers, &BrokerSettings,
                               &channel](rapidjson::Value &s) {
               auto topic = get_string(&s, "topic");
               uri::URI topic_uri(topic);
@@ -325,9 +327,9 @@ TEST_F(Remote_T, simple_f142_via_config_message) {
               topic_uri.port = Tests::main_opt->brokers.at(0).port;
               LOG(7, "broker: {}  topic: {}  channel: {}", topic_uri.host_port,
                   topic_uri.topic, channel);
-              bopt.address = topic_uri.host_port;
-              consumers.push_back(
-                  uptr<Consumer>(new Consumer(bopt, topic_uri.topic)));
+              BrokerSettings.Address = topic_uri.host_port;
+              consumers.push_back(uptr<Consumer>(
+                  new Consumer(BrokerSettings, topic_uri.topic)));
               auto &c = consumers.back();
               c->source_name = channel;
               ++cid;
@@ -365,7 +367,8 @@ TEST_F(Remote_T, simple_f142_via_config_message) {
 TEST_F(Remote_T, named_converter) {
   struct Cons : public Consumer {
     std::array<uint32_t, 2> had{{0, 0}};
-    Cons(KafkaW::BrokerOpt bopt, string topic) : Consumer(bopt, topic) {}
+    Cons(KafkaW::BrokerSettings BrokerSettings, string topic)
+        : Consumer(BrokerSettings, topic) {}
     void process_msg_impl(LogData const *fb) {
       if (fb->value_type() == Value::ArrayUInt) {
         auto a = ((ArrayUInt *)fb->value())->value();
@@ -381,15 +384,17 @@ TEST_F(Remote_T, named_converter) {
       if (m != d0.MemberEnd()) {
         if (m->value.IsArray()) {
           for (auto &s : m->value.GetArray()) {
-            KafkaW::BrokerOpt bopt;
-            bopt.conf_strings["group.id"] =
+            KafkaW::BrokerSettings BrokerSettings;
+            BrokerSettings.ConfigurationStrings["group.id"] =
                 fmt::format("forwarder-tests-{}--{}", getpid(), cid);
-            bopt.conf_ints["receive.message.max.bytes"] = 25100100;
-            // bopt.conf_ints["session.timeout.ms"] = 1000;
-            bopt.address = Tests::main_opt->brokers_as_comma_list();
+            BrokerSettings.ConfigurationIntegers["receive.message.max.bytes"] =
+                25100100;
+            // BrokerSettings.ConfigurationIntegers["session.timeout.ms"] =
+            // 1000;
+            BrokerSettings.Address = Tests::main_opt->brokers_as_comma_list();
             auto channel = get_string(&s, "channel");
             auto mconv = s.FindMember("converter");
-            auto push_conv = [&cid, &consumers, &bopt,
+            auto push_conv = [&cid, &consumers, &BrokerSettings,
                               &channel](rapidjson::Value &s) {
               auto topic = get_string(&s, "topic");
               uri::URI topic_uri(topic);
@@ -397,9 +402,9 @@ TEST_F(Remote_T, named_converter) {
               topic_uri.port = Tests::main_opt->brokers.at(0).port;
               LOG(7, "broker: {}  topic: {}  channel: {}", topic_uri.host_port,
                   topic_uri.topic, channel);
-              bopt.address = topic_uri.host_port;
+              BrokerSettings.Address = topic_uri.host_port;
               consumers.push_back(
-                  uptr<Consumer>(new Cons(bopt, topic_uri.topic)));
+                  uptr<Consumer>(new Cons(BrokerSettings, topic_uri.topic)));
               auto &c = consumers.back();
               c->source_name = channel;
               ++cid;
@@ -451,15 +456,17 @@ TEST_F(Remote_T, different_brokers) {
       if (m != d0.MemberEnd()) {
         if (m->value.IsArray()) {
           for (auto &s : m->value.GetArray()) {
-            KafkaW::BrokerOpt bopt;
-            bopt.conf_strings["group.id"] =
+            KafkaW::BrokerSettings BrokerSettings;
+            BrokerSettings.ConfigurationStrings["group.id"] =
                 fmt::format("forwarder-tests-{}--{}", getpid(), cid);
-            bopt.conf_ints["receive.message.max.bytes"] = 25100100;
-            // bopt.conf_ints["session.timeout.ms"] = 1000;
-            bopt.address = Tests::main_opt->brokers_as_comma_list();
+            BrokerSettings.ConfigurationIntegers["receive.message.max.bytes"] =
+                25100100;
+            // BrokerSettings.ConfigurationIntegers["session.timeout.ms"] =
+            // 1000;
+            BrokerSettings.Address = Tests::main_opt->brokers_as_comma_list();
             auto channel = get_string(&s, "channel");
             auto mconv = s.FindMember("converter");
-            auto push_conv = [&cid, &consumers, &bopt,
+            auto push_conv = [&cid, &consumers, &BrokerSettings,
                               &channel](rapidjson::Value &s) {
               auto topic = get_string(&s, "topic");
               uri::URI topic_uri(topic);
@@ -467,9 +474,9 @@ TEST_F(Remote_T, different_brokers) {
               topic_uri.port = Tests::main_opt->brokers.at(0).port;
               LOG(7, "broker: {}  topic: {}  channel: {}", topic_uri.host_port,
                   topic_uri.topic, channel);
-              bopt.address = topic_uri.host_port;
-              consumers.push_back(
-                  uptr<Consumer>(new Consumer(bopt, topic_uri.topic)));
+              BrokerSettings.Address = topic_uri.host_port;
+              consumers.push_back(uptr<Consumer>(
+                  new Consumer(BrokerSettings, topic_uri.topic)));
               auto &c = consumers.back();
               c->source_name = channel;
               ++cid;

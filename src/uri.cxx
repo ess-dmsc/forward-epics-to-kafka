@@ -1,9 +1,6 @@
 #include "uri.h"
 #include "logger.h"
 #include <iostream>
-#ifdef _MSC_VER
-#include <iso646.h>
-#endif
 
 namespace uri {
 
@@ -34,7 +31,7 @@ void URI::update_deps() {
     host_port = host;
   }
   auto t = topic_from_path(path);
-  if (not t.empty()) {
+  if (!t.empty()) {
     topic = t;
   }
 }
@@ -45,7 +42,7 @@ URI::URI(string uri) { parse(uri); }
 
 static bool is_alpha(string s) {
   for (auto c : s) {
-    if (c < 'a' or c > 'z') {
+    if (c < 'a' || c > 'z') {
       return false;
     }
   }
@@ -54,11 +51,11 @@ static bool is_alpha(string s) {
 
 static vector<string> protocol(string s) {
   auto slashes = s.find("://");
-  if (slashes == string::npos or slashes == 0) {
+  if (slashes == string::npos || slashes == 0) {
     return {string(), s};
   }
   auto proto = s.substr(0, slashes);
-  if (not is_alpha(proto)) {
+  if (!is_alpha(proto)) {
     return {string(), s};
   }
   return {proto, s.substr(slashes + 1, string::npos)};
@@ -111,23 +108,23 @@ static string trim(string s) {
 void URI::parse(string uri) {
   uri = trim(uri);
   auto proto = protocol(uri);
-  if (not proto[0].empty()) {
+  if (!proto[0].empty()) {
     scheme = proto[0];
   }
   auto s = proto[1];
-  if (not require_host_slashes) {
+  if (!require_host_slashes) {
     if (s.find("/") != 0) {
       s = "//" + s;
     }
   }
   auto hp = hostport(s);
-  if (not hp[0].empty()) {
+  if (!hp[0].empty()) {
     host = hp[0];
   }
-  if (not hp[1].empty()) {
+  if (!hp[1].empty()) {
     port = strtoul(hp[1].data(), nullptr, 10);
   }
-  if (not hp[2].empty()) {
+  if (!hp[2].empty()) {
     path = hp[2];
   }
   update_deps();
