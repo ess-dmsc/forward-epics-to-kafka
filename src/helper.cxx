@@ -3,7 +3,6 @@
 #include <array>
 #include <chrono>
 #include <fstream>
-#include <fstream>
 #include <rapidjson/document.h>
 #include <string>
 #include <thread>
