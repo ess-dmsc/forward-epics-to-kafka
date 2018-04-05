@@ -108,7 +108,8 @@ Main::Main(MainOpt &opt)
     KafkaW::BrokerSettings BrokerSettings;
     BrokerSettings.Address = main_opt.StatusReportURI.host_port;
     status_producer = std::make_shared<KafkaW::Producer>(BrokerSettings);
-    status_producer_topic = ::make_unique<KafkaW::ProducerTopic>(status_producer, main_opt.StatusReportURI.topic);
+    status_producer_topic = ::make_unique<KafkaW::ProducerTopic>(
+        status_producer, main_opt.StatusReportURI.topic);
   }
 }
 
