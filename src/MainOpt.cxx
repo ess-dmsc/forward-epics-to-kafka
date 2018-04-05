@@ -155,11 +155,11 @@ void MainOpt::find_brokers_config() {
               if (broker_property.value.IsString()) {
                 auto const &value = broker_property.value.GetString();
                 LOG(6, "kafka broker config {}: {}", name, value);
-                broker_opt.conf_strings[name] = value;
+                broker_opt.ConfigurationStrings[name] = value;
               } else if (broker_property.value.IsInt()) {
                 auto const &value = broker_property.value.GetUint();
                 LOG(6, "kafka broker config {}: {}", name, value);
-                broker_opt.conf_ints[name] = value;
+                broker_opt.ConfigurationIntegers[name] = value;
               } else {
                 LOG(3, "ERROR can not understand option: {}", name);
               }

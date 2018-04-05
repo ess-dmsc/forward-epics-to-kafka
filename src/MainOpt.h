@@ -1,6 +1,6 @@
 #pragma once
 
-#include "KafkaW.h"
+#include "KafkaW/KafkaW.h"
 #include "SchemaRegistry.h"
 #include "uri.h"
 #include <rapidjson/document.h>
@@ -32,7 +32,7 @@ struct MainOpt {
   FlatBufs::SchemaRegistry schema_registry;
   std::shared_ptr<rapidjson::Document> json;
   int parse_json_file(std::string ConfigurationFile);
-  KafkaW::BrokerOpt broker_opt;
+  KafkaW::BrokerSettings broker_opt;
   void init_logger();
   void find_broker();
   void find_broker_config(uri::URI &property);

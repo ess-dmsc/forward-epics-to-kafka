@@ -3,7 +3,7 @@
 
 TEST(URITests, port_is_set_to_zero_on_initialisation) {
   uri::URI uri1;
-  ASSERT_EQ(uri1.port, 0);
+  ASSERT_EQ(uri1.port, 0u);
 }
 
 TEST(URITests, default_host_is_set_to_nothing_on_initialisation) {
@@ -13,7 +13,7 @@ TEST(URITests, default_host_is_set_to_nothing_on_initialisation) {
 
 TEST(URITests, init_with_host_port_and_path) {
   uri::URI uri1("http://shizune:9000/isis_test_clusters/");
-  ASSERT_EQ(uri1.port, 9000);
+  ASSERT_EQ(uri1.port, 9000u);
   ASSERT_EQ(uri1.host, "shizune");
   ASSERT_EQ(uri1.path, "/isis_test_clusters/");
 }
@@ -186,5 +186,5 @@ TEST(URITests, uri_parses_host_with_domain_seperator_then_adds_path) {
 TEST(URITests, trim) {
   uri::URI u1("  //some:123     ");
   ASSERT_EQ(u1.host, "some");
-  ASSERT_EQ(u1.port, 123);
+  ASSERT_EQ(u1.port, 123u);
 }

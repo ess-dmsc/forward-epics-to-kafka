@@ -1,6 +1,6 @@
 #pragma once
 
-#include "KafkaW.h"
+#include "KafkaW/KafkaW.h"
 #include <flatbuffers/flatbuffers.h>
 #include <memory>
 #include <utility>

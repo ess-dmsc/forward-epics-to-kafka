@@ -19,20 +19,20 @@ std::shared_ptr<MockStream> createMockStream(std::string provider_type,
 
 TEST(StreamsTest, streams_are_empty_on_initialisation) {
   Streams streams;
-  ASSERT_EQ(streams.size(), 0);
+  ASSERT_EQ(streams.size(), 0u);
 }
 
 TEST(StreamsTest, stream_size_is_one_when_stream_is_added) {
   Streams streams;
   streams.add(createMockStream("hello", "world"));
-  ASSERT_EQ(1, streams.size());
+  ASSERT_EQ(streams.size(), 1u);
 }
 
 TEST(StreamsTest, stream_size_is_two_when_two_streams_are_added) {
   Streams streams;
   streams.add(createMockStream("hello", "world"));
   streams.add(createMockStream("world", "hello"));
-  ASSERT_EQ(2, streams.size());
+  ASSERT_EQ(streams.size(), 2u);
 }
 
 TEST(StreamsTest, stream_size_is_zero_when_clear_is_called) {
@@ -40,7 +40,7 @@ TEST(StreamsTest, stream_size_is_zero_when_clear_is_called) {
   streams.add(createMockStream("hello", "world"));
   streams.add(createMockStream("world", "hello"));
   streams.streams_clear();
-  ASSERT_EQ(0, streams.size());
+  ASSERT_EQ(streams.size(), 0u);
 }
 
 TEST(StreamsTest, stream_size_is_one_stream_is_added_after_clear) {
@@ -49,7 +49,7 @@ TEST(StreamsTest, stream_size_is_one_stream_is_added_after_clear) {
   streams.add(createMockStream("world", "hello"));
   streams.streams_clear();
   streams.add(createMockStream("hello", "hello"));
-  ASSERT_EQ(1, streams.size());
+  ASSERT_EQ(streams.size(), 1u);
 }
 
 TEST(StreamsTest, back_returns_correct_stream_when_streams_are_added) {
@@ -110,7 +110,7 @@ TEST(
   streams.add(s2);
   streams.check_stream_status();
   ASSERT_EQ(nullptr, streams.back().get());
-  ASSERT_EQ(0, streams.size());
+  ASSERT_EQ(streams.size(), 0u);
 }
 
 TEST(
@@ -125,7 +125,7 @@ TEST(
   streams.add(s2);
   streams.check_stream_status();
   ASSERT_EQ(s2.get(), streams.back().get());
-  ASSERT_EQ(1, streams.size());
+  ASSERT_EQ(streams.size(), 1u);
 }
 
 TEST(StreamsTest,
@@ -135,7 +135,7 @@ TEST(StreamsTest,
   streams.add(s);
   streams.channel_stop("world");
   ASSERT_EQ(nullptr, streams.back().get());
-  ASSERT_EQ(0, streams.size());
+  ASSERT_EQ(streams.size(), 0u);
 }
 
 TEST(StreamsTest, channel_stop_removes_all_channels_with_matched_channel_name) {
@@ -148,7 +148,7 @@ TEST(StreamsTest, channel_stop_removes_all_channels_with_matched_channel_name) {
   streams.add(s2);
   streams.channel_stop("world");
   ASSERT_EQ(nullptr, streams.back().get());
-  ASSERT_EQ(0, streams.size());
+  ASSERT_EQ(streams.size(), 0u);
 }
 
 TEST(StreamsTest,
@@ -160,7 +160,7 @@ TEST(StreamsTest,
   streams.add(s2);
   streams.channel_stop("nothelloworld");
   ASSERT_EQ(s2.get(), streams.back().get());
-  ASSERT_EQ(2, streams.size());
+  ASSERT_EQ(streams.size(), 2u);
 }
 
 TEST(StreamsTest,
@@ -172,5 +172,5 @@ TEST(StreamsTest,
   streams.add(s2);
   streams.channel_stop("");
   ASSERT_EQ(s2.get(), streams.back().get());
-  ASSERT_EQ(2, streams.size());
+  ASSERT_EQ(streams.size(), 2u);
 }
