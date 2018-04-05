@@ -104,7 +104,7 @@ Main::Main(MainOpt &opt)
     }
   }
   curl = ::make_unique<stub_curl>();
-  if (not main_opt.StatusReportURI.host.empty()) {
+  if (!main_opt.StatusReportURI.host.empty()) {
     KafkaW::BrokerOpt bopt;
     bopt.address = main_opt.StatusReportURI.host_port;
     status_producer = std::make_shared<KafkaW::Producer>(bopt);
@@ -384,7 +384,7 @@ int Main::mapping_add(rapidjson::Value &mapping) {
         uri = main_opt.brokers.at(0);
       }
       uri::URI topic_uri;
-      if (not uri.host.empty()) {
+      if (!uri.host.empty()) {
         topic_uri.host = uri.host;
       }
       if (uri.port != 0) {
