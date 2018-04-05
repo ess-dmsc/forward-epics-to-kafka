@@ -30,9 +30,9 @@ static bool isStopDueToSignal(ForwardingRunState Flag) {
 }
 
 // Little helper
-static KafkaW::BrokerOpt make_broker_opt(MainOpt const &opt) {
-  KafkaW::BrokerOpt ret = opt.broker_opt;
-  ret.address = opt.brokers_as_comma_list();
+static KafkaW::BrokerSettings make_broker_opt(MainOpt const &opt) {
+  KafkaW::BrokerSettings ret = opt.broker_opt;
+  ret.Address = opt.brokers_as_comma_list();
   return ret;
 }
 
@@ -95,8 +95,8 @@ Main::Main(MainOpt &opt)
     use_config = false;
   }
   if (use_config) {
-    KafkaW::BrokerOpt bopt;
-    bopt.conf_strings["group.id"] =
+    KafkaW::BrokerSettings bopt;
+    bopt.ConfigurationStrings["group.id"] =
         fmt::format("forwarder-command-listener--pid{}", getpid());
     config_listener.reset(new Config::Listener{bopt, main_opt.broker_config});
   }
@@ -111,10 +111,10 @@ Main::Main(MainOpt &opt)
     }
   }
   curl = ::make_unique<stub_curl>();
-  if (not main_opt.status_uri.host.empty()) {
-    KafkaW::BrokerOpt bopt;
-    bopt.address = main_opt.status_uri.host_port;
-    status_producer = std::make_shared<KafkaW::Producer>(bopt);
+  if (!main_opt.status_uri.host.empty()) {
+    KafkaW::BrokerSettings BrokerSettings;
+    BrokerSettings.Address = main_opt.status_uri.host_port;
+    status_producer = std::make_shared<KafkaW::Producer>(BrokerSettings);
     status_producer_topic = ::make_unique<KafkaW::ProducerTopic>(
         status_producer, main_opt.status_uri.topic);
   }
@@ -321,7 +321,7 @@ void Main::report_stats(int dt) {
       m1.write(",poll_served={}", s.poll_served);
       m1.write(",msg_too_large={}", s.msg_too_large);
       m1.write(",produced_bytes={}", double(s.produced_bytes));
-      m1.write(",outq={}", s.outq);
+      m1.write(",outq={}", s.out_queue);
       m1.write("\n");
       ++i1;
     }
@@ -394,7 +394,7 @@ int Main::mapping_add(rapidjson::Value &mapping) {
         uri = main_opt.brokers.at(0);
       }
       uri::URI topic_uri;
-      if (not uri.host.empty()) {
+      if (!uri.host.empty()) {
         topic_uri.host = uri.host;
       }
       if (uri.port != 0) {

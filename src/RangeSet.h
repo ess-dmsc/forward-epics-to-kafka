@@ -5,9 +5,6 @@
 #include <mutex>
 #include <rapidjson/document.h>
 #include <set>
-#ifdef _MSC_VER
-#include <iso646.h>
-#endif
 
 // Represent inclusive range
 template <typename T> class Range {
@@ -25,11 +22,11 @@ public:
 
 template <typename T>
 constexpr bool operator<(Range<T> const &a, Range<T> const &b) {
-  return (a.a < b.a or (a.a == b.a and a.b < b.b));
+  return (a.a < b.a || (a.a == b.a && a.b < b.b));
 }
 
 template <typename T> bool is_gapless(Range<T> const &a, Range<T> const &b) {
-  if (not(a < b)) {
+  if (!(a < b)) {
     throw std::runtime_error("expect a < b");
   }
   if (a.b + 1 >= b.a) {
@@ -39,7 +36,7 @@ template <typename T> bool is_gapless(Range<T> const &a, Range<T> const &b) {
 }
 
 template <typename T> Range<T> merge(Range<T> const &a, Range<T> const &b) {
-  if (not(a < b)) {
+  if (!(a < b)) {
     throw std::runtime_error("expect a < b");
   }
   return Range<T>(a.a, std::max(a.b, b.b));
@@ -48,10 +45,10 @@ template <typename T> Range<T> merge(Range<T> const &a, Range<T> const &b) {
 template <typename T> inline void minmax(T *mm, T const &x) {
   T &min = mm[0];
   T &max = mm[1];
-  if (min == -1 or x < min) {
+  if (min == -1 || x < min) {
     min = x;
   }
-  if (max == -1 or x > max) {
+  if (max == -1 || x > max) {
     max = x;
   }
 }
