@@ -1,5 +1,6 @@
 #pragma once
-#include "fbschemas.h"
+
+#include "FlatbufferMessage.h"
 #include <map>
 #include <memory>
 #include <string>

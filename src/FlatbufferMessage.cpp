@@ -1,4 +1,4 @@
-#include "fbschemas.h"
+#include "FlatbufferMessage.h"
 #include "logger.h"
 #include <flatbuffers/reflection.h>
 

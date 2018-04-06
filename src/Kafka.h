@@ -17,9 +17,9 @@ Simple load balance over the available producers.
 #include "tools.h"
 #include "uri.h"
 
+#include "FlatbufferMessage.h"
 #include "KafkaW/KafkaW.h"
 #include "fbhelper.h"
-#include "fbschemas.h"
 #include <librdkafka/rdkafka.h>
 
 namespace BrightnESS {

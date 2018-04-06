@@ -69,7 +69,7 @@ Ring.cpp
 ConversionWorker.cpp
 epics-to-fb.cpp
 Config.cpp
-fbschemas.cpp
+FlatbufferMessage.cpp
 SchemaRegistry.cpp
 MakeFlatBufferFromPVStructure.cpp
 uri.cpp

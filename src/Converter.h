@@ -1,9 +1,9 @@
 #pragma once
 
+#include "FlatbufferMessage.h"
 #include "MainOpt.h"
 #include "MakeFlatBufferFromPVStructure.h"
 #include "SchemaRegistry.h"
-#include "fbschemas.h"
 #include <map>
 #include <string>
 

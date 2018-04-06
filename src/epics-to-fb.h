@@ -1,6 +1,6 @@
 #pragma once
 
-#include "fbschemas.h"
+#include "FlatbufferMessage.h"
 #include <memory>
 #include <pv/pvData.h>
 #include <string>

@@ -1,6 +1,7 @@
 #pragma once
+
+#include "FlatbufferMessage.h"
 #include "KafkaW/KafkaW.h"
-#include "fbschemas.h"
 #include <memory>
 
 namespace BrightnESS {
