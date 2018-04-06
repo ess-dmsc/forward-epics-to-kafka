@@ -31,6 +31,7 @@ template <typename T> using sptr = std::shared_ptr<T>;
 class InstanceSet {
 public:
   static sptr<InstanceSet> Set(KafkaW::BrokerSettings opt);
+  static void clear();
   KafkaW::Producer::Topic producer_topic(uri::URI uri);
   int poll();
   void log_stats();

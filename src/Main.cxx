@@ -123,6 +123,7 @@ Main::~Main() {
   streams.streams_clear();
   conversion_workers_clear();
   converters_clear();
+  Kafka::InstanceSet::clear();
 }
 
 /**

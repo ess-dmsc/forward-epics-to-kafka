@@ -12,16 +12,22 @@ namespace BrightnESS {
 namespace ForwardEpicsToKafka {
 namespace Kafka {
 
+static std::mutex mx;
+static std::shared_ptr<InstanceSet> kset;
+
 sptr<InstanceSet> InstanceSet::Set(KafkaW::BrokerSettings BrokerSettings) {
-  static std::mutex mx;
   std::unique_lock<std::mutex> lock(mx);
   LOG(4, "Kafka InstanceSet with rdkafka version: {}", rd_kafka_version_str());
-  static std::shared_ptr<InstanceSet> kset;
   if (!kset) {
     BrokerSettings.PollTimeoutMS = 0;
     kset.reset(new InstanceSet(BrokerSettings));
   }
   return kset;
+}
+
+void InstanceSet::clear() {
+  std::unique_lock<std::mutex> lock(mx);
+  kset.reset();
 }
 
 InstanceSet::InstanceSet(KafkaW::BrokerSettings BrokerSettings)

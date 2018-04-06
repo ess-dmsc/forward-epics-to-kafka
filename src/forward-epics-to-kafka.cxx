@@ -65,8 +65,8 @@ int main(int argc, char **argv) {
   }
 
   auto Main = std::make_shared<BrightnESS::ForwardEpicsToKafka::Main>(opt);
-  SignalHandler SignalHandlerInstance(Main);
   try {
+    SignalHandler SignalHandlerInstance(Main);
     Main->forward_epics_to_kafka();
   } catch (std::runtime_error &e) {
     LOG(0, "CATCH runtime error in main watchdog thread: {}", e.what());
