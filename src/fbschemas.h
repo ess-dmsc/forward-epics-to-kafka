@@ -8,12 +8,14 @@
 namespace BrightnESS {
 namespace FlatBufs {
 
-// POD
-class FBmsg {
-public:
+/// A raw view into a Flatbuffer
+
+struct FlatbufferRawMessageSlice {
   uint8_t *data;
   size_t size;
 };
+
+/// Forward declarations for friending.
 
 namespace f140 {
 class Converter;
@@ -33,7 +35,7 @@ public:
   FB();
   FB(uint32_t initial_size);
   ~FB() override;
-  FBmsg message();
+  FlatbufferRawMessageSlice message();
   std::unique_ptr<flatbuffers::FlatBufferBuilder> builder;
 
 private:

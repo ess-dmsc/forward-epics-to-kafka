@@ -39,7 +39,7 @@ FB::~FB() {}
 Returns the underlying data of the flatbuffer.
 Called when actually writing to Kafka.
 */
-FBmsg FB::message() {
+FlatbufferRawMessageSlice FB::message() {
   if (!builder) {
     CLOG(8, 1, "builder no longer available");
     return {nullptr, 0};
