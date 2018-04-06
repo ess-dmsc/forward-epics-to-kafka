@@ -2,13 +2,13 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ../../tests)
 
 set(tgt "tests")
 set(sources
-        tests.cxx
-        MainOpt_tests.cxx
-        remote.cxx
-        helper_tests.cxx
-        uri_tests.cxx
-        streams_tests.cxx
-        $<TARGET_OBJECTS:__objects>
+tests.cpp
+MainOpt_tests.cpp
+remote.cpp
+helper_tests.cpp
+uri_tests.cpp
+streams_tests.cpp
+$<TARGET_OBJECTS:__objects>
 )
 add_executable(${tgt} ${sources})
 add_dependencies(${tgt} flatbuffers_generate)

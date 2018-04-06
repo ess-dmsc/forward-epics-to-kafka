@@ -49,41 +49,41 @@ endif()
 
 
 set(SOURCES
-MainOpt.cxx
-Main.cxx
-ForwarderInfo.cxx
-EpicsClient.cxx
-helper.cxx
-logger.cxx
-configuration.cxx
-Kafka.cxx
-KafkaW/BrokerSettings.cxx
-KafkaW/Consumer.cxx
-KafkaW/KafkaW.cxx
-KafkaW/Msg.cxx
-KafkaW/PollStatus.cxx
-KafkaW/Producer.cxx
-KafkaW/ProducerTopic.cxx
-KafkaW/TopicSettings.cxx
-Ring.cxx
-ConversionWorker.cxx
-epics-to-fb.cxx
-Config.cxx
-fbschemas.cxx
-SchemaRegistry.cxx
-MakeFlatBufferFromPVStructure.cxx
-uri.cxx
-blobs.cxx
-Converter.cxx
-KafkaOutput.cxx
-Stream.cxx
-Streams.cxx
-schema_f140_general.cxx
-schema_f141_epics_nt.cxx
-schemas/f142/f142.cxx
+MainOpt.cpp
+Main.cpp
+ForwarderInfo.cpp
+EpicsClient.cpp
+helper.cpp
+logger.cpp
+configuration.cpp
+Kafka.cpp
+KafkaW/BrokerSettings.cpp
+KafkaW/Consumer.cpp
+KafkaW/KafkaW.cpp
+KafkaW/Msg.cpp
+KafkaW/PollStatus.cpp
+KafkaW/Producer.cpp
+KafkaW/ProducerTopic.cpp
+KafkaW/TopicSettings.cpp
+Ring.cpp
+ConversionWorker.cpp
+epics-to-fb.cpp
+Config.cpp
+fbschemas.cpp
+SchemaRegistry.cpp
+MakeFlatBufferFromPVStructure.cpp
+uri.cpp
+blobs.cpp
+Converter.cpp
+KafkaOutput.cpp
+Stream.cpp
+Streams.cpp
+schema_f140_general.cpp
+schema_f141_epics_nt.cpp
+schemas/f142/f142.cpp
 ${FMT_SRC}
-schemas/f143/f143.cxx
-${CMAKE_CURRENT_BINARY_DIR}/git_commit_current.cxx
+schemas/f143/f143.cpp
+${CMAKE_CURRENT_BINARY_DIR}/git_commit_current.cpp
 )
 
 set(tgt __objects)
@@ -104,7 +104,7 @@ target_compile_definitions(${tgt} PRIVATE ${compile_defs_common})
 
 set(tgt forward-epics-to-kafka)
 add_executable(${tgt}
-forward-epics-to-kafka.cxx
+forward-epics-to-kafka.cpp
 $<TARGET_OBJECTS:__objects>
 )
 
