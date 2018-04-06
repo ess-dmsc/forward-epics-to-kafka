@@ -9,13 +9,11 @@
 #include <pv/clientFactory.h>
 // EPICS 4 supports access via the channel access protocol as well,
 // and we need it because some hardware speaks EPICS base.
-#include <pv/caProvider.h>
-//#include "fbhelper.h"
-//#include "fbschemas.h"
 #include "RangeSet.h"
 #include "epics-pvstr.h"
 #include "epics-to-fb.h"
 #include "logger.h"
+#include <pv/caProvider.h>
 #ifdef _MSC_VER
 #include <iso646.h>
 #endif
