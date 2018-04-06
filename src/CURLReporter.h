@@ -1,3 +1,5 @@
+#pragma once
+
 #if HAVE_CURL
 #include <curl/curl.h>
 #endif
