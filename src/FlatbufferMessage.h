@@ -1,5 +1,6 @@
 #pragma once
 
+#include "FlatbufferMessageSlice.h"
 #include "KafkaW/KafkaW.h"
 #include <flatbuffers/flatbuffers.h>
 #include <memory>
@@ -7,13 +8,6 @@
 
 namespace BrightnESS {
 namespace FlatBufs {
-
-/// A raw view into a Flatbuffer
-
-struct FlatbufferRawMessageSlice {
-  uint8_t *data;
-  size_t size;
-};
 
 /// Forward declarations for friending.
 
@@ -36,7 +30,7 @@ public:
   FlatbufferMessage();
   FlatbufferMessage(uint32_t initial_size);
   ~FlatbufferMessage() override;
-  FlatbufferRawMessageSlice message();
+  FlatbufferMessageSlice message();
   std::unique_ptr<flatbuffers::FlatBufferBuilder> builder;
 
 private:

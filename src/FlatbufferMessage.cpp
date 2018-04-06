@@ -25,7 +25,7 @@ FlatbufferMessage::~FlatbufferMessage() {}
 /// Returns the underlying data of the flatbuffer.
 /// Called when actually writing to Kafka.
 
-FlatbufferRawMessageSlice FlatbufferMessage::message() {
+FlatbufferMessageSlice FlatbufferMessage::message() {
   if (!builder) {
     CLOG(8, 1, "builder no longer available");
     return {nullptr, 0};
