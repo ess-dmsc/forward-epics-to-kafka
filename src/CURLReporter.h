@@ -5,11 +5,17 @@
 namespace BrightnESS {
 namespace ForwardEpicsToKafka {
 
+/// Helper class which provides the fact whether or not we have CURL support
+/// and which allows to easily send a message to a given URL.
+
 class CURLReporter {
 public:
+  /// Set to true if we are compiled with CURL support
   static bool const HaveCURL;
   CURLReporter();
   ~CURLReporter();
+  /// Delivers a message in form of the given MemoryWriter.
+  /// If CURL is not available, this is a no-op.
   void send(fmt::MemoryWriter &MemoryWriter, std::string const &URL);
 };
 
