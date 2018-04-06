@@ -11,10 +11,8 @@
 #endif
 #ifdef _MSC_VER
 #include "process.h"
-#include "wingetopt.h"
 #define getpid _getpid
 #else
-#include <getopt.h>
 #include <unistd.h>
 #endif
 #include <rapidjson/document.h>
@@ -86,11 +84,11 @@ Main::Main(MainOpt &opt)
   }
 
   bool use_config = true;
-  if (main_opt.broker_config.topic.size() == 0) {
+  if (main_opt.BrokerConfig.topic.empty()) {
     LOG(3, "Name for configuration topic is empty");
     use_config = false;
   }
-  if (main_opt.broker_config.host.size() == 0) {
+  if (main_opt.BrokerConfig.host.empty()) {
     LOG(3, "Host for configuration topic broker is empty");
     use_config = false;
   }
@@ -98,7 +96,7 @@ Main::Main(MainOpt &opt)
     KafkaW::BrokerSettings bopt;
     bopt.ConfigurationStrings["group.id"] =
         fmt::format("forwarder-command-listener--pid{}", getpid());
-    config_listener.reset(new Config::Listener{bopt, main_opt.broker_config});
+    config_listener.reset(new Config::Listener{bopt, main_opt.BrokerConfig});
   }
   if (main_opt.json) {
     auto m1 = main_opt.json->FindMember("streams");
@@ -111,12 +109,12 @@ Main::Main(MainOpt &opt)
     }
   }
   curl = ::make_unique<stub_curl>();
-  if (!main_opt.status_uri.host.empty()) {
+  if (!main_opt.StatusReportURI.host.empty()) {
     KafkaW::BrokerSettings BrokerSettings;
-    BrokerSettings.Address = main_opt.status_uri.host_port;
+    BrokerSettings.Address = main_opt.StatusReportURI.host_port;
     status_producer = std::make_shared<KafkaW::Producer>(BrokerSettings);
     status_producer_topic = ::make_unique<KafkaW::ProducerTopic>(
-        status_producer, main_opt.status_uri.topic);
+        status_producer, main_opt.StatusReportURI.topic);
   }
 }
 
@@ -125,6 +123,7 @@ Main::~Main() {
   streams.streams_clear();
   conversion_workers_clear();
   converters_clear();
+  Kafka::InstanceSet::clear();
 }
 
 /**
@@ -307,12 +306,12 @@ void Main::report_stats(int dt) {
   b2 %= 1024;
   LOG(6, "dt: {:4}  m: {:4}.{:03}  b: {:3}.{:03}.{:03}", dt, m2, m1, b3, b2,
       b1);
-  if (stub_curl::use && main_opt.influx_url.size() != 0) {
+  if (stub_curl::use && main_opt.InfluxURI.size() != 0) {
     int i1 = 0;
     for (auto &s : kafka_instance_set->stats_all()) {
       auto &m1 = influxbuf;
       m1.write("forward-epics-to-kafka,hostname={},set={}",
-               main_opt.hostname.data(), i1);
+               main_opt.Hostname.data(), i1);
       m1.write(" produced={}", s.produced);
       m1.write(",produce_fail={}", s.produce_fail);
       m1.write(",local_queue_full={}", s.local_queue_full);
@@ -333,7 +332,7 @@ void Main::report_stats(int dt) {
         auto stats = c.second.lock()->stats();
         auto &m1 = influxbuf;
         m1.write("forward-epics-to-kafka,hostname={},set={}",
-                 main_opt.hostname.data(), i1);
+                 main_opt.Hostname.data(), i1);
         int i2 = 0;
         for (auto x : stats) {
           if (i2 > 0) {
@@ -348,7 +347,7 @@ void Main::report_stats(int dt) {
         ++i1;
       }
     }
-    curl->send(influxbuf, main_opt.influx_url);
+    curl->send(influxbuf, main_opt.InfluxURI);
   }
 }
 

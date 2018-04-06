@@ -54,8 +54,8 @@ int main(int argc, char **argv) {
   auto op = BrightnESS::ForwardEpicsToKafka::parse_opt(argc, argv);
   auto &opt = *op.second;
 
-  if (opt.log_file.size() > 0) {
-    use_log_file(opt.log_file);
+  if (!opt.LogFilename.empty()) {
+    use_log_file(opt.LogFilename);
   }
 
   opt.init_logger();
@@ -65,8 +65,8 @@ int main(int argc, char **argv) {
   }
 
   auto Main = std::make_shared<BrightnESS::ForwardEpicsToKafka::Main>(opt);
-  SignalHandler SignalHandlerInstance(Main);
   try {
+    SignalHandler SignalHandlerInstance(Main);
     Main->forward_epics_to_kafka();
   } catch (std::runtime_error &e) {
     LOG(0, "CATCH runtime error in main watchdog thread: {}", e.what());

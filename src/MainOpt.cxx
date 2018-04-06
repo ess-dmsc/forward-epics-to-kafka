@@ -2,10 +2,8 @@
 
 #ifdef _MSC_VER
 #include "WinSock2.h"
-#include "wingetopt.h"
 #include <iso646.h>
 #else
-#include <getopt.h>
 #include <unistd.h>
 #endif
 #include "SchemaRegistry.h"
@@ -13,6 +11,7 @@
 #include "git_commit_current.h"
 #include "helper.h"
 #include "logger.h"
+#include <CLI/CLI.hpp>
 #include <fstream>
 #include <iostream>
 #include <rapidjson/filereadstream.h>
@@ -25,28 +24,12 @@
 namespace BrightnESS {
 namespace ForwardEpicsToKafka {
 
-static struct option LONG_OPTIONS[] = {
-    {"help", no_argument, nullptr, 'h'},
-    {"broker-config", required_argument, nullptr, 0},
-    {"broker", required_argument, nullptr, 0},
-    {"kafka-gelf", required_argument, nullptr, 0},
-    {"graylog-logger-address", required_argument, nullptr, 0},
-    {"influx-url", required_argument, nullptr, 0},
-    {"config-file", required_argument, nullptr, 0},
-    {"log-file", required_argument, nullptr, 0},
-    {"forwarder-ix", required_argument, nullptr, 0},
-    {"write-per-message", required_argument, nullptr, 0},
-    {"teamid", required_argument, nullptr, 0},
-    {"status-uri", required_argument, nullptr, 0},
-    {nullptr, 0, nullptr, 0},
-};
-
 MainOpt::MainOpt() {
-  hostname.resize(128);
-  gethostname(hostname.data(), hostname.size());
-  if (hostname.back() != 0) {
+  Hostname.resize(256);
+  gethostname(Hostname.data(), Hostname.size());
+  if (Hostname.back() != 0) {
     // likely an error
-    hostname.back() = 0;
+    Hostname.back() = 0;
   }
   set_broker("localhost:9092");
 }
@@ -75,12 +58,12 @@ std::string MainOpt::brokers_as_comma_list() const {
   return s1;
 }
 
-int MainOpt::parse_json_file(string config_file) {
-  if (config_file.empty()) {
+int MainOpt::parse_json_file(std::string ConfigurationFile) {
+  if (ConfigurationFile.empty()) {
     LOG(3, "given config filename is empty");
     return -1;
   }
-  this->config_file = config_file;
+  this->ConfigurationFile = ConfigurationFile;
   using namespace rapidjson;
   Document schema_;
   try {
@@ -99,7 +82,7 @@ int MainOpt::parse_json_file(string config_file) {
   // Parse the JSON configuration and extract parameters.
   // Currently, these parameters take precedence over what is given on the
   // command line.
-  parse_document(config_file);
+  parse_document(ConfigurationFile);
   if (json->IsNull()) {
     return -4;
   }
@@ -126,7 +109,7 @@ int MainOpt::parse_json_file(string config_file) {
   }
   vali.Reset();
 
-  find_broker_config(broker_config);
+  find_broker_config(BrokerConfig);
   find_conversion_threads(conversion_threads);
   find_conversion_worker_queue_size(conversion_worker_queue_size);
   find_main_poll_interval(main_poll_interval);
@@ -153,7 +136,7 @@ void MainOpt::find_status_uri() {
     uri::URI u1;
     u1.port = 9092;
     u1.parse(itr->value.GetString());
-    status_uri = u1;
+    StatusReportURI = u1;
   }
 }
 
@@ -236,111 +219,81 @@ void MainOpt::find_broker() {
   }
 }
 
-std::pair<int, std::unique_ptr<MainOpt>> parse_opt(int argc, char **argv) {
-  std::pair<int, std::unique_ptr<MainOpt>> ret{
-      0, std::unique_ptr<MainOpt>(new MainOpt)};
-  auto &opt = *ret.second;
-  int option_index = 0;
-  bool getopt_error = false;
-  while (true) {
-    int c = getopt_long(argc, argv, "hvQ", LONG_OPTIONS, &option_index);
-    if (c == -1)
-      break;
-    if (c == '?') {
-      getopt_error = true;
-    }
-    switch (c) {
-    case 'h':
-      opt.help = true;
-      break;
-    case 'v':
-      log_level = (std::min)(9, log_level + 1);
-      break;
-    case 'Q':
-      log_level = (std::max)(0, log_level - 1);
-      break;
-    default:
-      // long option without short equivalent:
-      parse_long_argument(LONG_OPTIONS[option_index].name, ret, opt);
-    }
-  }
-  if (optind < argc) {
-    LOG(6, "Left-over commandline options:");
-    for (int i1 = optind; i1 < argc; ++i1) {
-      LOG(6, "{:2} {}", i1, argv[i1]);
-    }
-  }
-  if (getopt_error) {
-    opt.help = true;
-    ret.first = 1;
-  }
-  if (opt.help) {
-    fmt::print("forward-epics-to-kafka-0.1.0 {:.7} (ESS, BrightnESS)\n"
-               "  Contact: dominik.werder@psi.ch\n\n",
-               GIT_COMMIT);
-    fmt::print(MAN_PAGE, opt.brokers_as_comma_list());
-    ret.first = 1;
-  }
-  return ret;
-}
-void parse_long_argument(const char *lname,
-                         std::pair<int, std::unique_ptr<MainOpt>> &ret,
-                         MainOpt &opt) {
-  if (string("help") == lname) {
-    opt.help = true;
-  }
-  if (string("config-file") == lname) {
-    if (opt.parse_json_file(optarg) != 0) {
-      opt.help = true;
-      ret.first = 1;
-    }
-  }
-  if (string("log-file") == lname) {
-    opt.log_file = optarg;
-  }
-  if (string("broker-config") == lname) {
-    uri::URI u1;
-    u1.port = 9092;
-    u1.parse(optarg);
-    opt.broker_config = u1;
-  }
-  if (string("broker") == lname) {
-    opt.set_broker(optarg);
-  }
-  if (string("kafka-gelf") == lname) {
-    opt.kafka_gelf = optarg;
-  }
-  if (string("graylog-logger-address") == lname) {
-    opt.graylog_logger_address = optarg;
-  }
-  if (string("influx-url") == lname) {
-    opt.influx_url = optarg;
-  }
-  if (string("forwarder-ix") == lname) {
-    opt.forwarder_ix = std::stoi(optarg);
-  }
-  if (string("write-per-message") == lname) {
-    opt.write_per_message = std::stoi(optarg);
-  }
-  if (string("teamid") == lname) {
-    opt.teamid = strtoul(optarg, nullptr, 0);
-  }
-  if (string("status-uri") == lname) {
-    uri::URI u1;
-    u1.port = 9092;
-    u1.parse(optarg);
-    opt.status_uri = u1;
+/// Add a URI valued option to the given App.
+
+static void addOption(CLI::App &App, std::string const &Name, uri::URI &URIArg,
+                      std::string const &Description, bool Defaulted = false) {
+  CLI::callback_t Fun = [&URIArg](CLI::results_t Results) {
+    URIArg.parse(Results[0]);
+    return true;
+  };
+  CLI::Option *Opt = App.add_option(Name, Fun, Description, Defaulted);
+  Opt->set_custom_option("URI", 1);
+  if (Defaulted) {
+    Opt->set_default_str(std::string("//") + URIArg.host_port + "/" +
+                         URIArg.topic);
   }
 }
 
+std::pair<int, std::unique_ptr<MainOpt>> parse_opt(int argc, char **argv) {
+  std::pair<int, std::unique_ptr<MainOpt>> ret{0, make_unique<MainOpt>()};
+  auto &opt = *ret.second;
+  CLI::App App{
+      fmt::format("forward-epics-to-kafka-0.1.0 {:.7} (ESS, BrightnESS)\n"
+                  "  Contact: dominik.werder@psi.ch\n\n",
+                  GIT_COMMIT)};
+  std::string BrokerDataDefault;
+  App.add_option("--config-file", opt.ConfigurationFile,
+                 "Configuration JSON file");
+  App.add_option("--log-file", opt.LogFilename, "Log filename");
+  App.add_option("--broker", BrokerDataDefault, "Default broker for data");
+  App.add_option("--kafka-gelf", opt.KafkaGELFAddress,
+                 "Kafka GELF logging //broker[:port]/topic");
+  App.add_option("--graylog-logger-address", opt.GraylogLoggerAddress,
+                 "Address for Graylog logging");
+  App.add_option("--influx-url", opt.InfluxURI, "Address for Influx logging");
+  App.add_option("-v,--verbose", log_level, "Syslog logging level", true)
+      ->check(CLI::Range(1, 7));
+  addOption(App, "--broker-config", opt.BrokerConfig,
+            "<//host[:port]/topic> Kafka host/topic to listen for commands on",
+            true);
+  addOption(App, "--status-uri", opt.StatusReportURI,
+            "<//host[:port][/topic]> Kafka broker/topic to publish status "
+            "updates on");
+
+  try {
+    App.parse(argc, argv);
+  } catch (CLI::CallForHelp const &e) {
+    ret.first = 1;
+  } catch (CLI::ParseError const &e) {
+    LOG(3, "Can not parse command line options: {}", e.what());
+    ret.first = 1;
+  }
+  if (ret.first == 1) {
+    std::cout << App.help();
+    return ret;
+  }
+  if (!opt.ConfigurationFile.empty()) {
+    if (opt.parse_json_file(opt.ConfigurationFile) != 0) {
+      LOG(4, "Can not parse configuration file");
+      ret.first = 1;
+      return ret;
+    }
+  }
+  if (!BrokerDataDefault.empty()) {
+    opt.set_broker(BrokerDataDefault);
+  }
+  return ret;
+}
+
 void MainOpt::init_logger() {
-  if (!kafka_gelf.empty()) {
-    uri::URI uri(kafka_gelf);
+  if (!KafkaGELFAddress.empty()) {
+    uri::URI uri(KafkaGELFAddress);
     log_kafka_gelf_start(uri.host, uri.topic);
     LOG(3, "Enabled kafka_gelf: //{}/{}", uri.host, uri.topic);
   }
-  if (!graylog_logger_address.empty()) {
-    fwd_graylog_logger_enable(graylog_logger_address);
+  if (!GraylogLoggerAddress.empty()) {
+    fwd_graylog_logger_enable(GraylogLoggerAddress);
   }
 }
 }

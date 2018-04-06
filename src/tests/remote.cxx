@@ -239,9 +239,9 @@ void Remote_T::simple_f142_via_config_message(
     Writer<StringBuffer> wr(buf1);
     d0.Accept(wr);
     BrokerSettings BrokerSettings;
-    BrokerSettings.Address = Tests::main_opt->broker_config.host_port;
+    BrokerSettings.Address = Tests::main_opt->BrokerConfig.host_port;
     auto pr = std::make_shared<Producer>(BrokerSettings);
-    ProducerTopic pt(pr, Tests::main_opt->broker_config.topic);
+    ProducerTopic pt(pr, Tests::main_opt->BrokerConfig.topic);
     pt.produce((uchar *)buf1.GetString(), buf1.GetSize());
   }
   LOG(7, "CONFIG has been sent out...");
@@ -258,9 +258,9 @@ void Remote_T::simple_f142_via_config_message(
     Writer<StringBuffer> wr(buf1);
     d0.Accept(wr);
     BrokerSettings BrokerSettings;
-    BrokerSettings.Address = Tests::main_opt->broker_config.host_port;
+    BrokerSettings.Address = Tests::main_opt->BrokerConfig.host_port;
     auto pr = std::make_shared<Producer>(BrokerSettings);
-    ProducerTopic pt(pr, Tests::main_opt->broker_config.topic);
+    ProducerTopic pt(pr, Tests::main_opt->BrokerConfig.topic);
     pt.produce((uchar *)buf1.GetString(), buf1.GetSize());
   }
 

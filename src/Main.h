@@ -72,7 +72,7 @@ private:
   std::shared_ptr<KafkaW::Producer> status_producer;
   std::unique_ptr<KafkaW::ProducerTopic> status_producer_topic;
   Streams streams;
-  std::atomic<ForwardingRunState> ForwardingRunFlag;
+  std::atomic<ForwardingRunState> ForwardingRunFlag{ForwardingRunState::RUN};
   void raiseForwardingFlag(ForwardingRunState ToBeRaised);
 };
 

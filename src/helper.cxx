@@ -1,11 +1,4 @@
 #include "helper.h"
-#include <fstream>
-#ifdef _MSC_VER
-#include "wingetopt.h"
-#else
-#include <getopt.h>
-#include <unistd.h>
-#endif
 #include "logger.h"
 #include <array>
 #include <chrono>
