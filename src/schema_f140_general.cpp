@@ -249,6 +249,9 @@ F_t Field(flatbuffers::FlatBufferBuilder &builder,
 }
 }
 
+/// Schema f140 will be likely not used infavor of f142 and f143.
+/// Discussing removal.
+
 class Converter : public MakeFlatBufferFromPVStructure {
 public:
   BrightnESS::FlatBufs::FlatbufferMessage::uptr
@@ -261,8 +264,6 @@ public:
             pvstr->getSubField<epics::pvData::PVScalarValue<uint64_t>>("ts")) {
       ts_data = x->get();
     }
-    fb->seq = up.seq_fwd;
-    fb->fwdix = up.fwdix;
     auto builder = fb->builder.get();
     auto n = builder->CreateString("some-name-must-go-here");
     auto vF = fbg::Field(*builder, pvstr, 0);

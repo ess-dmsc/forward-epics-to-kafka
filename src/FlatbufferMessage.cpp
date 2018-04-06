@@ -7,15 +7,6 @@ namespace FlatBufs {
 
 static_assert(FLATBUFFERS_LITTLEENDIAN, "We require little endian.");
 
-/// \class FB
-/// \brief
-/// Holds the flatbuffer until it has been sent.
-///
-/// Basically POD.  Holds the flatbuffer until no longer needed.
-/// Also holds some internal testing data.
-/// If you want to implement your own custom memory management, this is the
-/// class to inherit from.
-
 /// Gives a standard FlatBufferBuilder.
 
 FlatbufferMessage::FlatbufferMessage()

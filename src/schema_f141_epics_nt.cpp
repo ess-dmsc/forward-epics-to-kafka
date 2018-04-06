@@ -132,37 +132,21 @@ struct BuilderType_to_Enum_PV<NTScalarArrayDoubleBuilder>
 
 template <typename T0> class Make_Scalar {
 public:
-  using T1 = typename std::conditional<
-      std::is_same<T0, epics::pvData::boolean>::value, NTScalarByteBuilder,
-      typename std::conditional<
-          std::is_same<T0, int8_t>::value, NTScalarByteBuilder,
-          typename std::conditional<
-              std::is_same<T0, int16_t>::value, NTScalarShortBuilder,
-              typename std::conditional<
-                  std::is_same<T0, int32_t>::value, NTScalarIntBuilder,
-                  typename std::conditional<
-                      std::is_same<T0, int64_t>::value, NTScalarLongBuilder,
-                      typename std::conditional<
-                          std::is_same<T0, uint8_t>::value,
-                          NTScalarUByteBuilder,
-                          typename std::conditional<
-                              std::is_same<T0, uint16_t>::value,
-                              NTScalarUShortBuilder,
-                              typename std::conditional<
-                                  std::is_same<T0, uint32_t>::value,
-                                  NTScalarUIntBuilder,
-                                  typename std::conditional<
-                                      std::is_same<T0, uint64_t>::value,
-                                      NTScalarULongBuilder,
-                                      typename std::conditional<
-                                          std::is_same<T0, float>::value,
-                                          NTScalarFloatBuilder,
-                                          typename std::conditional<
-                                              std::is_same<T0, double>::value,
-                                              NTScalarDoubleBuilder,
-                                              std::nullptr_t>::type>::type>::
-                                      type>::type>::type>::type>::type>::type>::
-              type>::type>::type;
+  // clang-format off
+  using T1 =
+    typename std::conditional<std::is_same<T0, epics::pvData::boolean>::value, NTScalarByteBuilder,
+    typename std::conditional<std::is_same<T0,   int8_t>::value, NTScalarByteBuilder,
+    typename std::conditional<std::is_same<T0,  int16_t>::value, NTScalarShortBuilder,
+    typename std::conditional<std::is_same<T0,  int32_t>::value, NTScalarIntBuilder,
+    typename std::conditional<std::is_same<T0,  int64_t>::value, NTScalarLongBuilder,
+    typename std::conditional<std::is_same<T0,  uint8_t>::value, NTScalarUByteBuilder,
+    typename std::conditional<std::is_same<T0, uint16_t>::value, NTScalarUShortBuilder,
+    typename std::conditional<std::is_same<T0, uint32_t>::value, NTScalarUIntBuilder,
+    typename std::conditional<std::is_same<T0, uint64_t>::value, NTScalarULongBuilder,
+    typename std::conditional<std::is_same<T0,    float>::value, NTScalarFloatBuilder,
+    typename std::conditional<std::is_same<T0,   double>::value, NTScalarDoubleBuilder,
+    std::nullptr_t>::type>::type>::type>::type>::type>::type>::type>::type>::type>::type>::type;
+  // clang-format on
 
   static PV_t convert(flatbuffers::FlatBufferBuilder *builder,
                       epics::pvData::PVScalar *field_) {
@@ -176,42 +160,23 @@ public:
 
 template <typename T0> class Make_ScalarArray {
 public:
-  using T1 = typename std::conditional<
-      std::is_same<T0, epics::pvData::boolean>::value, NTScalarArrayByteBuilder,
-      typename std::conditional<
-          std::is_same<T0, int8_t>::value, NTScalarArrayByteBuilder,
-          typename std::conditional<
-              std::is_same<T0, int16_t>::value, NTScalarArrayShortBuilder,
-              typename std::conditional<
-                  std::is_same<T0, int32_t>::value, NTScalarArrayIntBuilder,
-                  typename std::conditional<
-                      std::is_same<T0, int64_t>::value,
-                      NTScalarArrayLongBuilder,
-                      typename std::conditional<
-                          std::is_same<T0, uint8_t>::value,
-                          NTScalarArrayUByteBuilder,
-                          typename std::conditional<
-                              std::is_same<T0, uint16_t>::value,
-                              NTScalarArrayUShortBuilder,
-                              typename std::conditional<
-                                  std::is_same<T0, uint32_t>::value,
-                                  NTScalarArrayUIntBuilder,
-                                  typename std::conditional<
-                                      std::is_same<T0, uint64_t>::value,
-                                      NTScalarArrayULongBuilder,
-                                      typename std::conditional<
-                                          std::is_same<T0, float>::value,
-                                          NTScalarArrayFloatBuilder,
-                                          typename std::conditional<
-                                              std::is_same<T0, double>::value,
-                                              NTScalarArrayDoubleBuilder,
-                                              std::nullptr_t>::type>::type>::
-                                      type>::type>::type>::type>::type>::type>::
-              type>::type>::type;
+  // clang-format off
+  using T1 =
+    typename std::conditional<std::is_same<T0, epics::pvData::boolean>::value, NTScalarArrayByteBuilder,
+    typename std::conditional<std::is_same<T0,   int8_t>::value, NTScalarArrayByteBuilder,
+    typename std::conditional<std::is_same<T0,  int16_t>::value, NTScalarArrayShortBuilder,
+    typename std::conditional<std::is_same<T0,  int32_t>::value, NTScalarArrayIntBuilder,
+    typename std::conditional<std::is_same<T0,  int64_t>::value, NTScalarArrayLongBuilder,
+    typename std::conditional<std::is_same<T0,  uint8_t>::value, NTScalarArrayUByteBuilder,
+    typename std::conditional<std::is_same<T0, uint16_t>::value, NTScalarArrayUShortBuilder,
+    typename std::conditional<std::is_same<T0, uint32_t>::value, NTScalarArrayUIntBuilder,
+    typename std::conditional<std::is_same<T0, uint64_t>::value, NTScalarArrayULongBuilder,
+    typename std::conditional<std::is_same<T0,    float>::value, NTScalarArrayFloatBuilder,
+    typename std::conditional<std::is_same<T0,   double>::value, NTScalarArrayDoubleBuilder,
+    std::nullptr_t>::type>::type>::type>::type>::type>::type>::type>::type>::type>::type>::type;
 
-  using T3 =
-      typename std::conditional<std::is_same<T0, epics::pvData::boolean>::value,
-                                signed char, T0>::type;
+  using T3 = typename std::conditional<std::is_same<T0, epics::pvData::boolean>::value, signed char, T0>::type;
+  // clang-format on
 
   static PV_t convert(flatbuffers::FlatBufferBuilder *builder,
                       epics::pvData::PVScalarArray *field_) {
@@ -334,6 +299,9 @@ PV_t make_PV(flatbuffers::FlatBufferBuilder &builder,
   return {PV::NTScalarByte, 0};
 }
 
+/// Schema f141 will be likely not used infavor of f142 and f143.
+/// Discussing removal.
+
 class Converter : public MakeFlatBufferFromPVStructure {
 public:
   BrightnESS::FlatBufs::FlatbufferMessage::uptr
@@ -345,9 +313,6 @@ public:
             pvstr->getSubField<epics::pvData::PVScalarValue<uint64_t>>("ts")) {
       ts_data = x->get();
     }
-
-    fb->seq = up.seq_fwd;
-    fb->fwdix = up.fwdix;
     auto builder = fb->builder.get();
     // this is the field type ID string: up.pvstr->getStructure()->getID()
     auto n = builder->CreateString(up.channel);

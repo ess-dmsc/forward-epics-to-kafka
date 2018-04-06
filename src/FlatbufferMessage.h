@@ -17,18 +17,18 @@ struct FlatbufferRawMessageSlice {
 
 /// Forward declarations for friending.
 
-namespace f140 {
-class Converter;
-}
-namespace f141 {
-class Converter;
-}
 namespace f142 {
 class Converter;
-}
-namespace f142 {
 class ConverterTestNamed;
 }
+
+/// \brief
+/// Holds the flatbuffer until it has been sent.
+///
+/// Basically POD.  Holds the flatbuffer until no longer needed.
+/// Also holds some internal counters for performance testing.
+/// If you want to implement your own custom memory management, this is the
+/// class to inherit from.
 
 class FlatbufferMessage : public KafkaW::Producer::Msg {
 public:
@@ -46,10 +46,8 @@ private:
   uint32_t fwdix = 0;
   friend class Kafka;
   // Only here for some specific tests:
-  friend class f142::ConverterTestNamed;
-  friend class f140::Converter;
-  friend class f141::Converter;
   friend class f142::Converter;
+  friend class f142::ConverterTestNamed;
 };
 
 void inspect(FlatbufferMessage const &fb);
