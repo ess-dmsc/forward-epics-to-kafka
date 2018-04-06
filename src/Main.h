@@ -27,7 +27,7 @@ enum class ForwardingStatus : int32_t {
   STOPPED,
 };
 
-struct stub_curl;
+struct CURLReporter;
 
 enum class ForwardingRunState : int {
   RUN = 0,
@@ -68,7 +68,7 @@ private:
   friend class ConversionScheduler;
   std::atomic<uint32_t> converter_ix{0};
   std::atomic<ForwardingStatus> forwarding_status{ForwardingStatus::NORMAL};
-  std::unique_ptr<stub_curl> curl;
+  std::unique_ptr<CURLReporter> curl;
   std::shared_ptr<KafkaW::Producer> status_producer;
   std::unique_ptr<KafkaW::ProducerTopic> status_producer_topic;
   Streams streams;
