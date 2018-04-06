@@ -30,16 +30,17 @@ namespace f142 {
 class ConverterTestNamed;
 }
 
-class FB : public KafkaW::Producer::Msg {
+class FlatbufferMessage : public KafkaW::Producer::Msg {
 public:
-  FB();
-  FB(uint32_t initial_size);
-  ~FB() override;
+  using uptr = std::unique_ptr<FlatbufferMessage>;
+  FlatbufferMessage();
+  FlatbufferMessage(uint32_t initial_size);
+  ~FlatbufferMessage() override;
   FlatbufferRawMessageSlice message();
   std::unique_ptr<flatbuffers::FlatBufferBuilder> builder;
 
 private:
-  FB(FB const &) = delete;
+  FlatbufferMessage(FlatbufferMessage const &) = delete;
   // Used for performance tests, please do not touch.
   uint64_t seq = 0;
   uint32_t fwdix = 0;
@@ -50,8 +51,7 @@ private:
   friend class f141::Converter;
   friend class f142::Converter;
 };
-using FB_uptr = std::unique_ptr<FB>;
 
-void inspect(FB const &fb);
+void inspect(FlatbufferMessage const &fb);
 }
 }

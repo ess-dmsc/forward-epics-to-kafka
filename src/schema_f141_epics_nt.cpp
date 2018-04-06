@@ -336,9 +336,10 @@ PV_t make_PV(flatbuffers::FlatBufferBuilder &builder,
 
 class Converter : public MakeFlatBufferFromPVStructure {
 public:
-  BrightnESS::FlatBufs::FB_uptr convert(EpicsPVUpdate const &up) override {
+  BrightnESS::FlatBufs::FlatbufferMessage::uptr
+  convert(EpicsPVUpdate const &up) override {
     auto &pvstr = up.epics_pvstr;
-    auto fb = BrightnESS::FlatBufs::FB_uptr(new BrightnESS::FlatBufs::FB);
+    auto fb = make_unique<BrightnESS::FlatBufs::FlatbufferMessage>();
     uint64_t ts_data = 0;
     if (auto x =
             pvstr->getSubField<epics::pvData::PVScalarValue<uint64_t>>("ts")) {

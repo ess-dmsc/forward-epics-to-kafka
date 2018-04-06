@@ -391,9 +391,10 @@ public:
 
   ~Converter() override { LOG(3, "~Converter"); }
 
-  BrightnESS::FlatBufs::FB_uptr convert(EpicsPVUpdate const &up) override {
+  BrightnESS::FlatBufs::FlatbufferMessage::uptr
+  convert(EpicsPVUpdate const &up) override {
     auto &pvstr = up.epics_pvstr;
-    auto fb = BrightnESS::FlatBufs::FB_uptr(new BrightnESS::FlatBufs::FB);
+    auto fb = make_unique<BrightnESS::FlatBufs::FlatbufferMessage>();
 
     auto builder = fb->builder.get();
     // this is the field type ID string: up.pvstr->getStructure()->getID()
@@ -487,7 +488,8 @@ public:
 /// This class is purely for testing
 class ConverterTestNamed : public MakeFlatBufferFromPVStructure {
 public:
-  BrightnESS::FlatBufs::FB_uptr convert(EpicsPVUpdate const &up) override {
+  BrightnESS::FlatBufs::FlatbufferMessage::uptr
+  convert(EpicsPVUpdate const &up) override {
     auto &pvstr = up.epics_pvstr;
 
     {
@@ -509,7 +511,7 @@ public:
       }
     }
 
-    auto fb = BrightnESS::FlatBufs::FB_uptr(new BrightnESS::FlatBufs::FB);
+    auto fb = make_unique<BrightnESS::FlatBufs::FlatbufferMessage>();
     auto builder = fb->builder.get();
     using uchar = unsigned char;
     static_assert(sizeof(uchar) == 1, "");

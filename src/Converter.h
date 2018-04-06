@@ -16,7 +16,8 @@ public:
   using sptr = std::shared_ptr<Converter>;
   static sptr create(FlatBufs::SchemaRegistry const &schema_registry,
                      std::string schema, MainOpt const &main_opt);
-  BrightnESS::FlatBufs::FB_uptr convert(FlatBufs::EpicsPVUpdate const &up);
+  BrightnESS::FlatBufs::FlatbufferMessage::uptr
+  convert(FlatBufs::EpicsPVUpdate const &up);
   std::map<std::string, double> stats();
   std::string schema_name();
 

@@ -18,31 +18,32 @@ static_assert(FLATBUFFERS_LITTLEENDIAN, "We require little endian.");
 
 /// Gives a standard FlatBufferBuilder.
 
-FB::FB() : builder(new flatbuffers::FlatBufferBuilder()) {}
+FlatbufferMessage::FlatbufferMessage()
+    : builder(new flatbuffers::FlatBufferBuilder()) {}
 
 /// \brief FlatBufferBuilder with initial_size in bytes.
 /// \param initial_size Initial size of the FlatBufferBuilder in bytes.
 
-FB::FB(uint32_t initial_size)
+FlatbufferMessage::FlatbufferMessage(uint32_t initial_size)
     : builder(new flatbuffers::FlatBufferBuilder(initial_size)) {}
 
 /// \brief Your chance to implement your own memory recycling.
 
-FB::~FB() {}
+FlatbufferMessage::~FlatbufferMessage() {}
 
 /// Returns the underlying data of the flatbuffer.
 /// Called when actually writing to Kafka.
 
-FlatbufferRawMessageSlice FB::message() {
+FlatbufferRawMessageSlice FlatbufferMessage::message() {
   if (!builder) {
     CLOG(8, 1, "builder no longer available");
     return {nullptr, 0};
   }
-  auto ret =
-      decltype(FB::message()){builder->GetBufferPointer(), builder->GetSize()};
+  auto ret = decltype(FlatbufferMessage::message()){builder->GetBufferPointer(),
+                                                    builder->GetSize()};
   return ret;
 }
 
-void inspect(FB const &fb) {}
+void inspect(FlatbufferMessage const &fb) {}
 }
 }
