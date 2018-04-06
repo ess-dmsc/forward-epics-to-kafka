@@ -5,16 +5,20 @@ from confluent_kafka import Producer, Consumer
 from helpers.f142_logdata import LogData, Value, Int
 import flatbuffers
 import uuid
+import subprocess
 import time
+import threading
+from CaChannel import CaChannel, CaChannelException
 
 BUILD_FORWARDER = False
 CONFIG_TOPIC = "TEST_forwarderConfig"
+DATA_TOPIC = "TEST_forwarderData"
 
 
 @pytest.mark.parametrize('docker_compose', [BUILD_FORWARDER], indirect=['docker_compose'])
 def test_topic_exists_on_creation(docker_compose):
-    prod = ProducerWrapper("localhost:9092", CONFIG_TOPIC, "TEST_forwarderData")
-    prod.add_config(["Sim:Spd", "Sim:ActSpd"])
+    prod = ProducerWrapper("localhost:9092", CONFIG_TOPIC, DATA_TOPIC)
+    prod.add_config(["SIM:Spd", "SIM:ActSpd"])
     sleep(2)
     assert prod.topic_exists(CONFIG_TOPIC)
 
@@ -53,3 +57,43 @@ def test_flatbuffers_encode_and_decode(docker_compose):
     file_id = buffer[4:8].decode(encoding="utf-8")
     assert file_id == file_identifier
     cons.close()
+
+
+@pytest.mark.parametrize('docker_compose', [BUILD_FORWARDER], indirect=['docker_compose'])
+def test_forwarder_sends_pv_updates(docker_compose):
+    consumer_config = {'bootstrap.servers': 'localhost:9092', 'default.topic.config': {'auto.offset.reset': 'smallest'},
+                       'group.id': uuid.uuid4()}
+    cons = Consumer(**consumer_config)
+    prod = ProducerWrapper("localhost:9092", CONFIG_TOPIC, DATA_TOPIC)
+    prod.add_config(["SIM:Spd"])
+    sleep(5)
+    # check config topic then exists
+    assert prod.topic_exists(CONFIG_TOPIC)
+    cons.subscribe([CONFIG_TOPIC])
+    msg = cons.poll()
+    assert not msg.error()
+    buf = msg.value()
+    print(buf)  # CONFIGURATION
+    # update value
+    change_pv_value("SIM:Spd", 5)
+    sleep(10)
+    # check kafka has new message containing pv and value
+    cons.subscribe([DATA_TOPIC])
+    msg = cons.poll()
+    sleep(5)
+    assert not msg.error()
+    buf = msg.value()
+    print(buf)  # DATA
+
+
+def change_pv_value(pvname, value):
+    try:
+        chan = CaChannel(pvname)
+        print("created CaChannel")
+        chan.searchw()
+        chan.putw(value)
+        chan.getw()
+    except CaChannelException as e:
+        print(e)
+
+

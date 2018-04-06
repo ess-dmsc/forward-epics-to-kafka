@@ -48,7 +48,7 @@ class ProducerWrapper:
 
         data = self.converter.create_forwarder_configuration(pvs)
         print("Sending data {}".format(data))
-        self.producer.produce(self.topic, key=data, value="")
+        self.producer.produce(self.topic, value=data)
 
     def topic_exists(self, topicname):
         try:

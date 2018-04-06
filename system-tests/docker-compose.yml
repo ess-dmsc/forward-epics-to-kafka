@@ -24,6 +24,7 @@ services:
 
   ioc:
     image: dmscid/lewis:latest
+    network_mode: "host"
     depends_on:
       - zookeeper
       - kafka
