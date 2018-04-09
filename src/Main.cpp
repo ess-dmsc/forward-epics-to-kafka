@@ -4,6 +4,7 @@
 #include "ForwarderInfo.h"
 #include "Stream.h"
 #include "helper.h"
+#include "json.h"
 #include "logger.h"
 #include <sys/types.h>
 #ifdef _MSC_VER
@@ -45,9 +46,9 @@ Main::Main(MainOpt &opt)
   finfo = std::shared_ptr<ForwarderInfo>(new ForwarderInfo(this));
   finfo->teamid = main_opt.teamid;
 
-  for (int i1 = 0; i1 < opt.conversion_threads; ++i1) {
+  for (size_t i1 = 0; i1 < opt.ConversionThreads; ++i1) {
     conversion_workers.emplace_back(new ConversionWorker(
-        &conversion_scheduler, opt.conversion_worker_queue_size));
+        &conversion_scheduler, opt.ConversionWorkerQueueSize));
   }
 
   bool use_config = true;
@@ -65,13 +66,13 @@ Main::Main(MainOpt &opt)
         fmt::format("forwarder-command-listener--pid{}", getpid());
     config_listener.reset(new Config::Listener{bopt, main_opt.BrokerConfig});
   }
-  if (main_opt.json) {
-    auto m1 = main_opt.json->FindMember("streams");
-    if (m1 != main_opt.json->MemberEnd()) {
-      if (m1->value.IsArray()) {
-        for (auto &m : m1->value.GetArray()) {
-          mapping_add(m);
-        }
+  using nlohmann::json;
+  if (auto Streams = find_array("streams", main_opt.JSONConfiguration)) {
+    for (auto const &Stream : Streams.inner()) {
+      try {
+        mappingAdd(Stream);
+      } catch (std::exception &e) {
+        LOG(4, "Could not add mapping: {}  {}", Stream.dump(), e.what());
       }
     }
   }
@@ -134,7 +135,8 @@ void ConfigCB::operator()(std::string const &msg) {
     }
     if (m2->value.IsArray()) {
       for (auto &x : m2->value.GetArray()) {
-        main.mapping_add(x);
+        // TODO json
+        // main.mapping_add(x);
       }
     }
   }
@@ -318,91 +320,96 @@ void Main::report_stats(int dt) {
   }
 }
 
-int Main::mapping_add(rapidjson::Value &mapping) {
+void Main::mappingAdd(nlohmann::json const &Mapping) {
   using std::string;
-  string channel = get_string(&mapping, "channel");
-  string channel_provider_type = get_string(&mapping, "channel_provider_type");
-  if (channel.size() == 0) {
-    LOG(3, "mapping channel is not specified");
-    return -1;
+  using nlohmann::json;
+  if (!Mapping.is_object()) {
+    throw MappingAddException("Given Mapping is not a JSON object");
   }
-  if (channel_provider_type.size() == 0) {
-    channel_provider_type = "pva";
+  auto ChannelMaybe = find<string>("channel", Mapping);
+  if (!ChannelMaybe) {
+    throw MappingAddException("Can not find channel");
   }
+  auto Channel = ChannelMaybe.inner();
+
+  auto ChannelProviderTypeMaybe =
+      find<string>("channel_provider_type", Mapping);
+  if (!ChannelProviderTypeMaybe) {
+    throw MappingAddException("Can not find channel");
+  }
+  auto ChannelProviderType = ChannelProviderTypeMaybe.inner();
+
   std::unique_lock<std::mutex> lock(streams_mutex);
   try {
-    ChannelInfo ci{channel_provider_type, channel};
-    streams.add(std::make_shared<Stream>(finfo, ci));
+    ChannelInfo ChannelInfo{ChannelProviderType, Channel};
+    streams.add(std::make_shared<Stream>(finfo, ChannelInfo));
   } catch (std::runtime_error &e) {
-    return -1;
+    std::throw_with_nested(MappingAddException("Can not add stream"));
   }
-  auto stream = streams.back();
-  {
-    auto push_conv = [this, &stream](rapidjson::Value &c) {
-      string schema = get_string(&c, "schema");
-      string cname = get_string(&c, "name");
-      string topic = get_string(&c, "topic");
-      if (schema.size() == 0) {
-        LOG(3, "mapping schema is not specified");
-      }
-      if (topic.size() == 0) {
-        LOG(3, "mapping topic is not specified");
-      }
-      if (cname.size() == 0) {
-        cname = fmt::format("converter_{}", converter_ix++);
-      }
-      auto r1 = main_opt.schema_registry.items().find(schema);
-      if (r1 == main_opt.schema_registry.items().end()) {
-        LOG(3, "can not handle (yet?) schema id {}", schema);
-      }
-      uri::URI uri;
-      if (main_opt.brokers.size() > 0) {
-        uri = main_opt.brokers.at(0);
-      }
-      uri::URI topic_uri;
-      if (!uri.host.empty()) {
-        topic_uri.host = uri.host;
-      }
-      if (uri.port != 0) {
-        topic_uri.port = uri.port;
-      }
-      topic_uri.parse(topic);
-      Converter::sptr conv;
-      if (cname.size() > 0) {
-        auto lock = get_lock_converters();
-        auto c1 = converters.find(cname);
-        if (c1 != converters.end()) {
-          conv = c1->second.lock();
-          if (!conv) {
-            conv =
-                Converter::create(main_opt.schema_registry, schema, main_opt);
-            converters[cname] = std::weak_ptr<Converter>(conv);
-          }
-        } else {
-          conv = Converter::create(main_opt.schema_registry, schema, main_opt);
-          converters[cname] = std::weak_ptr<Converter>(conv);
+  auto Stream = streams.back();
+  auto PushConverterToStream = [this](
+      nlohmann::json const &JSON,
+      std::shared_ptr<ForwardEpicsToKafka::Stream> &Stream) {
+    string Schema = find<string>("schema", JSON).inner();
+    string Topic = find<string>("topic", JSON).inner();
+    string ConverterName;
+    if (auto x = find<string>("name", JSON)) {
+      ConverterName = x.inner();
+    } else {
+      // Assign automatically generated name
+      ConverterName = fmt::format("converter_{}", converter_ix++);
+    }
+    auto r1 = main_opt.schema_registry.items().find(Schema);
+    if (r1 == main_opt.schema_registry.items().end()) {
+      throw MappingAddException(
+          fmt::format("Can not handle flatbuffer schema id {}", Schema));
+    }
+    uri::URI URI;
+    if (main_opt.brokers.size() > 0) {
+      URI = main_opt.brokers.at(0);
+    }
+    uri::URI TopicURI;
+    if (!URI.host.empty()) {
+      TopicURI.host = URI.host;
+    }
+    if (URI.port != 0) {
+      TopicURI.port = URI.port;
+    }
+    TopicURI.parse(Topic);
+    Converter::sptr ConverterShared;
+    if (ConverterName.size() > 0) {
+      auto Lock = get_lock_converters();
+      auto ConverterIt = converters.find(ConverterName);
+      if (ConverterIt != converters.end()) {
+        ConverterShared = ConverterIt->second.lock();
+        if (!ConverterShared) {
+          ConverterShared =
+              Converter::create(main_opt.schema_registry, Schema, main_opt);
+          converters[ConverterName] = std::weak_ptr<Converter>(ConverterShared);
         }
       } else {
-        conv = Converter::create(main_opt.schema_registry, schema, main_opt);
+        ConverterShared =
+            Converter::create(main_opt.schema_registry, Schema, main_opt);
+        converters[ConverterName] = std::weak_ptr<Converter>(ConverterShared);
       }
-      if (!conv) {
-        LOG(3, "can not create a converter");
-      }
-      stream->converter_add(*kafka_instance_set, conv, topic_uri);
-    };
-    auto mconv = mapping.FindMember("converter");
-    if (mconv != mapping.MemberEnd()) {
-      auto &conv = mconv->value;
-      if (conv.IsObject()) {
-        push_conv(conv);
-      } else if (conv.IsArray()) {
-        for (auto &c : conv.GetArray()) {
-          push_conv(c);
-        }
+    } else {
+      ConverterShared =
+          Converter::create(main_opt.schema_registry, Schema, main_opt);
+    }
+    if (!ConverterShared) {
+      throw MappingAddException("Can not create a converter");
+    }
+    Stream->converter_add(*kafka_instance_set, ConverterShared, TopicURI);
+  };
+  if (auto x = find<json>("converter", Mapping)) {
+    if (x.inner().is_object()) {
+      PushConverterToStream(x.inner(), Stream);
+    } else if (x.inner().is_array()) {
+      for (auto const &ConverterSettings : x.inner()) {
+        PushConverterToStream(ConverterSettings, Stream);
       }
     }
   }
-  return 0;
 }
 
 std::atomic<uint64_t> g__total_msgs_to_kafka{0};

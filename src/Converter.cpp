@@ -1,4 +1,5 @@
 #include "Converter.h"
+#include "json.h"
 #include "logger.h"
 
 namespace BrightnESS {
@@ -20,25 +21,25 @@ Converter::create(FlatBufs::SchemaRegistry const &schema_registry,
     LOG(3, "can not create a converter");
     return ret;
   }
-  using std::map;
   using std::string;
-  map<string, int64_t> config_ints;
-  map<string, string> config_strings;
-  if (true) {
-    if (main_opt.json) {
-      auto m = main_opt.json->FindMember("converters");
-      if (m != main_opt.json->MemberEnd()) {
-        if (m->value.IsObject()) {
-          auto m2 = m->value.GetObject().FindMember(schema.c_str());
-          if (m2 != main_opt.json->MemberEnd()) {
-            if (m2->value.IsObject()) {
-              for (auto &v : m2->value.GetObject()) {
-                if (v.value.IsInt64()) {
-                  config_ints[v.name.GetString()] = v.value.GetInt64();
-                }
-                if (v.value.IsString()) {
-                  config_strings[v.name.GetString()] = v.value.GetString();
-                }
+  std::map<string, int64_t> config_ints;
+  std::map<string, string> config_strings;
+
+  if (main_opt.JSONConfiguration.is_object()) {
+    rapidjson::Document JSON;
+    JSON.Parse(main_opt.JSONConfiguration.dump().c_str());
+    auto m = JSON.FindMember("converters");
+    if (m != JSON.MemberEnd()) {
+      if (m->value.IsObject()) {
+        auto m2 = m->value.GetObject().FindMember(schema.c_str());
+        if (m2 != m->value.GetObject().MemberEnd()) {
+          if (m2->value.IsObject()) {
+            for (auto &v : m2->value.GetObject()) {
+              if (v.value.IsInt64()) {
+                config_ints[v.name.GetString()] = v.value.GetInt64();
+              }
+              if (v.value.IsString()) {
+                config_strings[v.name.GetString()] = v.value.GetString();
               }
             }
           }

@@ -74,6 +74,7 @@ SchemaRegistry.cpp
 MakeFlatBufferFromPVStructure.cpp
 uri.cpp
 blobs.cpp
+json.cpp
 Converter.cpp
 KafkaOutput.cpp
 Stream.cpp
