@@ -9,7 +9,7 @@ KafkaOutput::KafkaOutput(KafkaOutput &&x) : pt(std::move(x.pt)) {}
 
 KafkaOutput::KafkaOutput(KafkaW::Producer::Topic &&pt) : pt(std::move(pt)) {}
 
-int KafkaOutput::emit(std::unique_ptr<BrightnESS::FlatBufs::FB> fb) {
+int KafkaOutput::emit(BrightnESS::FlatBufs::FlatbufferMessage::uptr fb) {
   if (!fb) {
     CLOG(8, 1, "KafkaOutput::emit  empty fb");
     return -1024;

@@ -1,6 +1,7 @@
 #include "SchemaRegistry.h"
 #include "epics-pvstr.h"
 #include "epics-to-fb.h"
+#include "helper.h"
 #include "logger.h"
 #include "schemas/f140_general_generated.h"
 
@@ -248,19 +249,21 @@ F_t Field(flatbuffers::FlatBufferBuilder &builder,
 }
 }
 
+/// Schema f140 will be likely not used infavor of f142 and f143.
+/// Discussing removal.
+
 class Converter : public MakeFlatBufferFromPVStructure {
 public:
-  BrightnESS::FlatBufs::FB_uptr convert(EpicsPVUpdate const &up) override {
+  BrightnESS::FlatBufs::FlatbufferMessage::uptr
+  convert(EpicsPVUpdate const &up) override {
     // Passing initial size:
     auto &pvstr = up.epics_pvstr;
-    auto fb = BrightnESS::FlatBufs::FB_uptr(new BrightnESS::FlatBufs::FB);
+    auto fb = make_unique<BrightnESS::FlatBufs::FlatbufferMessage>();
     uint64_t ts_data = 0;
     if (auto x =
             pvstr->getSubField<epics::pvData::PVScalarValue<uint64_t>>("ts")) {
       ts_data = x->get();
     }
-    fb->seq = up.seq_fwd;
-    fb->fwdix = up.fwdix;
     auto builder = fb->builder.get();
     auto n = builder->CreateString("some-name-must-go-here");
     auto vF = fbg::Field(*builder, pvstr, 0);

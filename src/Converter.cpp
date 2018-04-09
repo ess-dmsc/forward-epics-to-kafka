@@ -50,7 +50,7 @@ Converter::create(FlatBufs::SchemaRegistry const &schema_registry,
   return ret;
 }
 
-BrightnESS::FlatBufs::FB_uptr
+BrightnESS::FlatBufs::FlatbufferMessage::uptr
 Converter::convert(FlatBufs::EpicsPVUpdate const &up) {
   return conv->convert(up);
 }
