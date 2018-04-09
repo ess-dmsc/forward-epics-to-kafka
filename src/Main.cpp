@@ -6,15 +6,13 @@
 #include "helper.h"
 #include "logger.h"
 #include <sys/types.h>
-#if HAVE_CURL
-#include <curl/curl.h>
-#endif
 #ifdef _MSC_VER
 #include "process.h"
 #define getpid _getpid
 #else
 #include <unistd.h>
 #endif
+#include "CURLReporter.h"
 #include <rapidjson/document.h>
 #include <rapidjson/prettywriter.h>
 #include <rapidjson/writer.h>
@@ -35,37 +33,6 @@ static KafkaW::BrokerSettings make_broker_opt(MainOpt const &opt) {
 }
 
 using ulock = std::unique_lock<std::mutex>;
-
-struct stub_curl {
-  static bool use;
-  stub_curl();
-  ~stub_curl();
-  void send(fmt::MemoryWriter &m1, std::string const &url);
-};
-#if HAVE_CURL
-stub_curl::stub_curl() { curl_global_init(CURL_GLOBAL_ALL); }
-stub_curl::~stub_curl() { curl_global_cleanup(); }
-bool stub_curl::use = true;
-void stub_curl::send(fmt::MemoryWriter &m1, std::string const &url) {
-  CURL *curl;
-  CURLcode res;
-  curl = curl_easy_init();
-  if (curl) {
-    curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
-    curl_easy_setopt(curl, CURLOPT_POSTFIELDS, m1.c_str());
-    res = curl_easy_perform(curl);
-    if (res != CURLE_OK) {
-      LOG(5, "curl_easy_perform() failed: {}", curl_easy_strerror(res));
-    }
-  }
-  curl_easy_cleanup(curl);
-}
-#else
-stub_curl::stub_curl() {}
-stub_curl::~stub_curl() {}
-bool stub_curl::use = false;
-void stub_curl::send(fmt::MemoryWriter &m1, std::string const &url) {}
-#endif
 
 /**
 \class Main
@@ -108,7 +75,7 @@ Main::Main(MainOpt &opt)
       }
     }
   }
-  curl = ::make_unique<stub_curl>();
+  curl = ::make_unique<CURLReporter>();
   if (!main_opt.StatusReportURI.host.empty()) {
     KafkaW::BrokerSettings BrokerSettings;
     BrokerSettings.Address = main_opt.StatusReportURI.host_port;
@@ -306,7 +273,7 @@ void Main::report_stats(int dt) {
   b2 %= 1024;
   LOG(6, "dt: {:4}  m: {:4}.{:03}  b: {:3}.{:03}.{:03}", dt, m2, m1, b3, b2,
       b1);
-  if (stub_curl::use && main_opt.InfluxURI.size() != 0) {
+  if (CURLReporter::HaveCURL && main_opt.InfluxURI.size() != 0) {
     int i1 = 0;
     for (auto &s : kafka_instance_set->stats_all()) {
       auto &m1 = influxbuf;
