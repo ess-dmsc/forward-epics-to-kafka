@@ -7,8 +7,9 @@
 namespace BrightnESS {
 namespace ForwardEpicsToKafka {
 
-/// Helper class which provides the fact whether or not we have CURL support
-/// and which allows to easily send a message to a given URL.
+/// CURLReporter is used to push metrics into InfluxDB via the HTTP endpoint.
+/// It allow to easily send a message to a given URL.
+/// It also provides the fact whether or not we have CURL support.
 
 class CURLReporter {
 public:
