@@ -14,9 +14,6 @@
 #include <unistd.h>
 #endif
 #include "CURLReporter.h"
-#include <rapidjson/document.h>
-#include <rapidjson/prettywriter.h>
-#include <rapidjson/writer.h>
 
 namespace BrightnESS {
 namespace ForwardEpicsToKafka {
@@ -241,23 +238,18 @@ void Main::forward_epics_to_kafka() {
 }
 
 void Main::report_status() {
-  using rapidjson::Document;
-  using rapidjson::Value;
-  Document jd;
-  auto &a = jd.GetAllocator();
-  jd.SetObject();
-  Value j_streams;
-  j_streams.SetArray();
-  for (auto &stream : streams.get_streams()) {
-    j_streams.PushBack(Value().CopyFrom(stream->status_json(), a), a);
+  using nlohmann::json;
+  auto Status = json::object();
+  auto Streams = json::array();
+  for (auto const &Stream : streams.get_streams()) {
+    // j_streams.PushBack(Value().CopyFrom(stream->status_json(), a), a);
+    Streams.push_back(Stream->status_json());
   }
-  jd.AddMember("streams", Value(j_streams, a), a);
-  rapidjson::StringBuffer buf;
-  rapidjson::PrettyWriter<rapidjson::StringBuffer> wr(buf);
-  jd.Accept(wr);
-  LOG(8, "status: {:.{}}", buf.GetString(), buf.GetSize());
-  status_producer_topic->produce((KafkaW::uchar *)buf.GetString(),
-                                 buf.GetSize());
+  Status["streams"] = Streams;
+  auto StatusString = Status.dump();
+  LOG(0, "status: {}", StatusString);
+  status_producer_topic->produce((KafkaW::uchar *)StatusString.c_str(),
+                                 StatusString.size());
 }
 
 void Main::report_stats(int dt) {

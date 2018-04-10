@@ -9,7 +9,7 @@
 #include <array>
 #include <atomic>
 #include <memory>
-#include <rapidjson/document.h>
+#include <nlohmann/json.hpp>
 #include <string>
 #include <vector>
 
@@ -40,7 +40,7 @@ public:
   ~ConversionPath();
   int emit(std::unique_ptr<FlatBufs::EpicsPVUpdate> up);
   std::atomic<uint32_t> transit{0};
-  rapidjson::Document status_json() const;
+  nlohmann::json status_json() const;
 
 private:
   std::shared_ptr<Converter> converter;
@@ -64,9 +64,9 @@ public:
   int stop();
   void error_in_epics();
   int status();
-  ChannelInfo const &channel_info();
+  ChannelInfo const &channel_info() const;
   size_t emit_queue_size();
-  rapidjson::Document status_json();
+  nlohmann::json status_json();
   using mutex = std::mutex;
   using ulock = std::unique_lock<mutex>;
 
