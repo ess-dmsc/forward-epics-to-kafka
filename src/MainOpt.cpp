@@ -60,7 +60,6 @@ int MainOpt::parse_json_file(std::string ConfigurationFile) {
   }
   this->ConfigurationFile = ConfigurationFile;
   using std::string;
-  using rapidjson::Document;
 
   // Parse the JSON configuration and extract parameters.
   // Currently, these parameters take precedence over what is given on the
