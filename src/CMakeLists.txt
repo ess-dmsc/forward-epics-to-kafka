@@ -4,7 +4,6 @@ message(STATUS "CMAKE_BUILD_TYPE: ${CMAKE_BUILD_TYPE}")
 
 find_package(EPICSV4)
 find_package(Fmt REQUIRED)
-find_package(Rapidjson REQUIRED)
 find_package(RdKafka REQUIRED)
 find_package(FlatBuffers REQUIRED)
 find_package(StreamingDataTypes COMPONENTS ce9a4745431e54bc45b0c927857a866fa77b84ec)
@@ -18,7 +17,6 @@ set(path_include_common
 ${FMT_INCLUDE_DIR}
 ${RDKAFKA_INCLUDE_DIR}
 ${FLATBUFFERS_INCLUDE_DIR}
-${RAPIDJSON_INCLUDE_DIR}
 ${CURL_INCLUDE_DIRS}
 ${PROJECT_SOURCE_DIR}/src
 ${PROJECT_BINARY_DIR}/src
