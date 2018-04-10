@@ -3,7 +3,6 @@
 #include <array>
 #include <chrono>
 #include <fstream>
-#include <rapidjson/document.h>
 #include <string>
 #include <thread>
 #include <vector>
@@ -67,51 +66,6 @@ std::vector<std::string> split(std::string const &input, std::string token) {
     ret.push_back(input.substr(i1));
   }
   return ret;
-}
-
-std::string get_string(rapidjson::Value const *v, std::string path) {
-  auto a = split(path, ".");
-  uint32_t i1 = 0;
-  for (auto &x : a) {
-    bool num = true;
-    for (char &c : x) {
-      if (c < 48 || c > 57) {
-        num = false;
-        break;
-      }
-    }
-    if (num) {
-      if (!v->IsArray())
-        return "";
-      auto n1 = (uint32_t)strtol(x.c_str(), nullptr, 10);
-      if (n1 >= v->Size())
-        return "";
-      auto &v2 = v->GetArray()[n1];
-      if (i1 == a.size() - 1) {
-        if (v2.IsString()) {
-          return v2.GetString();
-        }
-      } else {
-        v = &v2;
-      }
-    } else {
-      if (!v->IsObject())
-        return "";
-      auto it = v->FindMember(x.c_str());
-      if (it == v->MemberEnd()) {
-        return "";
-      }
-      if (i1 == a.size() - 1) {
-        if (it->value.IsString()) {
-          return it->value.GetString();
-        }
-      } else {
-        v = &it->value;
-      }
-    }
-    ++i1;
-  }
-  return "";
 }
 
 void sleep_ms(uint32_t ms) {
