@@ -19,7 +19,8 @@ TEST(json_tests, JSONIntegerMaximumValues) {
   ASSERT_TRUE(find<int32_t>("large_int32_neg", Doc));
   ASSERT_EQ(0xffffffffu, find<uint32_t>("large_uint32", Doc).inner());
   ASSERT_EQ(+0x7fffffff, find<int32_t>("large_int32_pos", Doc).inner());
-  ASSERT_EQ(-0x80000000, find<int32_t>("large_int32_neg", Doc).inner());
+  ASSERT_EQ(int32_t(-0x80000000),
+            find<int32_t>("large_int32_neg", Doc).inner());
 
   ASSERT_TRUE(find<uint64_t>("large_uint64", Doc));
   ASSERT_TRUE(find<int64_t>("large_int64_pos", Doc));
@@ -27,7 +28,7 @@ TEST(json_tests, JSONIntegerMaximumValues) {
   ASSERT_EQ(0xffffffffffffffffull, find<uint64_t>("large_uint64", Doc).inner());
   ASSERT_EQ(+0x7fffffffffffffffll,
             find<int64_t>("large_int64_pos", Doc).inner());
-  ASSERT_EQ(-0x8000000000000000ll,
+  ASSERT_EQ(int64_t(-0x8000000000000000ll),
             find<int64_t>("large_int64_neg", Doc).inner());
 }
 
@@ -54,7 +55,7 @@ TEST(json_tests, IterateObject) {
   for (auto It = Doc.begin(); It != Doc.end(); ++It) {
     Count += 1;
   }
-  ASSERT_EQ(Count, 3);
+  ASSERT_EQ(Count, 3u);
 }
 
 TEST(json_tests, AccessingMissingKeyShouldThrow) {
