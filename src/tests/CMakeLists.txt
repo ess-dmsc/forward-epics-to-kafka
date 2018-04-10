@@ -4,7 +4,7 @@ set(tgt "tests")
 set(sources
 tests.cpp
 MainOpt_tests.cpp
-#remote.cpp
+remote.cpp
 helper_tests.cpp
 uri_tests.cpp
 json_tests.cpp
