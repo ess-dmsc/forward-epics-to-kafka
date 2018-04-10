@@ -103,6 +103,7 @@ public:
   // This is called from the same thread as the main watchdog below, because the
   // code below calls the config poll which in turn calls this callback.
   void operator()(std::string const &msg) override;
+  void handleParsedJSON(nlohmann::json const &Document);
 
 private:
   Main &main;
@@ -111,46 +112,42 @@ private:
 ConfigCB::ConfigCB(Main &main) : main(main) {}
 
 void ConfigCB::operator()(std::string const &msg) {
-  using std::string;
-  using namespace rapidjson;
+  using nlohmann::json;
   LOG(7, "Command received: {}", msg.c_str());
-  Document j0;
-  j0.Parse(msg.c_str());
-  if (j0.HasParseError()) {
-    LOG(3, "Command does not look like valid json");
-    return;
+  try {
+    auto Document = json::parse(msg);
+    handleParsedJSON(Document);
+  } catch (...) {
+    LOG(3, "Command does not look like valid json: {}", msg);
   }
-  auto m1 = j0.FindMember("cmd");
-  if (m1 == j0.MemberEnd()) {
-    return;
-  }
-  if (!m1->value.IsString()) {
-    return;
-  }
-  string cmd = m1->value.GetString();
-  if (cmd == "add") {
-    auto m2 = j0.FindMember("streams");
-    if (m2 == j0.MemberEnd()) {
-      return;
-    }
-    if (m2->value.IsArray()) {
-      for (auto &x : m2->value.GetArray()) {
-        // TODO json
-        // main.mapping_add(x);
+}
+
+void ConfigCB::handleParsedJSON(nlohmann::json const &Document) {
+  using std::string;
+  using nlohmann::json;
+  if (auto x = find<string>("cmd", Document)) {
+    auto Command = x.inner();
+    if (Command == "add") {
+      if (auto x = find<json>("streams", Document)) {
+        auto Streams = x.inner();
+        if (Streams.is_array()) {
+          for (auto const &Stream : Streams) {
+            main.mappingAdd(Stream);
+          }
+        }
       }
     }
-  }
-  if (cmd == "stop_channel") {
-    auto channel = get_string(&j0, "channel");
-    if (channel.size() > 0) {
-      main.streams.channel_stop(channel);
+    if (Command == "stop_channel") {
+      if (auto x = find<string>("channel", Document)) {
+        main.streams.channel_stop(x.inner());
+      }
     }
-  }
-  if (cmd == "stop_all") {
-    main.streams.streams_clear();
-  }
-  if (cmd == "exit") {
-    main.stopForwarding();
+    if (Command == "stop_all") {
+      main.streams.streams_clear();
+    }
+    if (Command == "exit") {
+      main.stopForwarding();
+    }
   }
 }
 
