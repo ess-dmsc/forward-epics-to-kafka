@@ -14,9 +14,7 @@
 #endif
 #include <atomic>
 #include <memory>
-#include <rapidjson/document.h>
-#include <rapidjson/stringbuffer.h>
-#include <rapidjson/writer.h>
+#include <nlohmann/json.hpp>
 #include <string>
 #include <thread>
 #ifdef HAVE_GRAYLOG_LOGGER
@@ -147,20 +145,16 @@ void Logger::dwlog_inner(int level, int color, char const *file, int line,
     auto lmsg = fmt::format("{}:{} [{}]:  {}\n", f1, line, level, s1);
     // If we will use logging to Kafka in the future, refactor a bit to reduce
     // duplicate work..
-    using namespace rapidjson;
-    Document d;
-    auto &a = d.GetAllocator();
-    d.SetObject();
-    d.AddMember("version", "1.1", a);
-    d.AddMember("short_message", Value(lmsg.c_str(), a), a);
-    d.AddMember("level", Value(level), a);
-    d.AddMember("_FILE", Value(file, a), a);
-    d.AddMember("_LINE", Value(line), a);
-    StringBuffer buf1;
-    Writer<StringBuffer> wr(buf1);
-    d.Accept(wr);
-    auto s1 = buf1.GetString();
-    topic->produce((KafkaW::uchar *)s1, strlen(s1), true);
+    using nlohmann::json;
+    auto Document = json::object();
+    Document["version"] = "1.1";
+    Document["short_message"] = lmsg;
+    Document["level"] = level;
+    Document["_FILE"] = file;
+    Document["_LINE"] = line;
+    auto DocumentString = Document.dump();
+    topic->produce((KafkaW::uchar *)DocumentString.c_str(),
+                   DocumentString.size(), true);
   }
 #ifdef HAVE_GRAYLOG_LOGGER
   if (do_use_graylog_logger.load() and level < 7) {
