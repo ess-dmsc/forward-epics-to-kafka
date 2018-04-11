@@ -121,10 +121,10 @@ KafkaBrokerSettings
 extractKafkaBrokerSettingsFromJSON(nlohmann::json const &JSONConfiguration) {
   KafkaBrokerSettings Settings;
   using nlohmann::json;
-  if (auto x = find<json>("kafka", JSONConfiguration)) {
-    auto Kafka = x.inner();
-    if (auto x = find<json>("broker", Kafka)) {
-      auto Broker = x.inner();
+  if (auto KafkaMaybe = find<json>("kafka", JSONConfiguration)) {
+    auto Kafka = KafkaMaybe.inner();
+    if (auto BrokerMaybe = find<json>("broker", Kafka)) {
+      auto Broker = BrokerMaybe.inner();
       for (auto Property = Broker.begin(); Property != Broker.end();
            ++Property) {
         auto const Key = Property.key();

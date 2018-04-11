@@ -40,12 +40,12 @@ Main::Main(MainOpt &opt)
     : main_opt(opt),
       kafka_instance_set(Kafka::InstanceSet::Set(make_broker_opt(opt))),
       conversion_scheduler(this) {
-  finfo = std::shared_ptr<ForwarderInfo>(new ForwarderInfo(this));
+  finfo = std::make_shared<ForwarderInfo>(this);
   finfo->teamid = main_opt.teamid;
 
   for (size_t i1 = 0; i1 < opt.ConversionThreads; ++i1) {
     conversion_workers.emplace_back(new ConversionWorker(
-        &conversion_scheduler, opt.ConversionWorkerQueueSize));
+        &conversion_scheduler, static_cast<uint32_t>(opt.ConversionWorkerQueueSize)));
   }
 
   bool use_config = true;
@@ -122,11 +122,11 @@ void ConfigCB::operator()(std::string const &msg) {
 void ConfigCB::handleParsedJSON(nlohmann::json const &Document) {
   using std::string;
   using nlohmann::json;
-  if (auto x = find<string>("cmd", Document)) {
-    auto Command = x.inner();
+  if (auto CommandMaybe = find<string>("cmd", Document)) {
+    auto Command = CommandMaybe.inner();
     if (Command == "add") {
-      if (auto x = find<json>("streams", Document)) {
-        auto Streams = x.inner();
+      if (auto StreamsMaybe = find<json>("streams", Document)) {
+        auto Streams = StreamsMaybe.inner();
         if (Streams.is_array()) {
           for (auto const &Stream : Streams) {
             main.mappingAdd(Stream);
@@ -135,8 +135,8 @@ void ConfigCB::handleParsedJSON(nlohmann::json const &Document) {
       }
     }
     if (Command == "stop_channel") {
-      if (auto x = find<string>("channel", Document)) {
-        main.streams.channel_stop(x.inner());
+      if (auto ChannelMaybe = find<string>("channel", Document)) {
+        main.streams.channel_stop(ChannelMaybe.inner());
       }
     }
     if (Command == "stop_all") {
@@ -242,7 +242,6 @@ void Main::report_status() {
   auto Status = json::object();
   auto Streams = json::array();
   for (auto const &Stream : streams.get_streams()) {
-    // j_streams.PushBack(Value().CopyFrom(stream->status_json(), a), a);
     Streams.push_back(Stream->status_json());
   }
   Status["streams"] = Streams;
@@ -366,7 +365,7 @@ void Main::mappingAdd(nlohmann::json const &Mapping) {
     }
     TopicURI.parse(Topic);
     Converter::sptr ConverterShared;
-    if (ConverterName.size() > 0) {
+    if (!ConverterName.empty()) {
       auto Lock = get_lock_converters();
       auto ConverterIt = converters.find(ConverterName);
       if (ConverterIt != converters.end()) {

@@ -24,8 +24,6 @@ struct MainOpt {
   size_t ConversionWorkerQueueSize = 1024;
   std::string LogFilename;
   std::string ConfigurationFile;
-  int forwarder_ix = 0;
-  int write_per_message = 0;
   int main_poll_interval = 500;
   uint64_t teamid = 0;
   std::vector<char> Hostname;
@@ -34,7 +32,6 @@ struct MainOpt {
   int parse_json_file(std::string ConfigurationFile);
   KafkaW::BrokerSettings broker_opt;
   void init_logger();
-  void find_broker_config(uri::URI &property);
   void find_status_uri();
   void parse_document(const std::string &filepath);
 };
