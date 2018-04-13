@@ -191,6 +191,7 @@ def docker_cppcheck(image_key) {
         def custom_sh = images[image_key]['sh']
         def test_output = "cppcheck.xml"
         def cppcheck_script = """
+                        pwd
                         cppcheck --enable=all --inconclusive --xml --xml-version=2 src/ 2> ${test_output}
                     """
         sh "docker exec ${container_name(image_key)} ${custom_sh} -c \"${cppcheck_script}\""
