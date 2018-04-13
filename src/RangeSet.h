@@ -1,4 +1,5 @@
 #pragma once
+
 #include <algorithm>
 #include <fmt/format.h>
 #include <memory>
@@ -6,7 +7,7 @@
 #include <rapidjson/document.h>
 #include <set>
 
-// Represent inclusive range
+/// Represents an inclusive range.
 template <typename T> class Range {
 public:
   Range(T a, T b) : a(a), b(b) {}
@@ -53,6 +54,7 @@ template <typename T> inline void minmax(T *mm, T const &x) {
   }
 }
 
+/// A set of continuous inclusive ranges.
 template <typename T> class RangeSet {
 public:
   void insert(T k) {
