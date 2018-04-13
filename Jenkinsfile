@@ -196,6 +196,7 @@ def docker_cppcheck(image_key) {
                     """
         sh "docker exec ${container_name(image_key)} ${custom_sh} -c \"${cppcheck_script}\""
         sh "docker cp ${container_name(image_key)}:/home/jenkins/forward-epics-to-kafka/cppcheck.xml ."
+        junit "${test_output}"
     } catch (e) {
         failure_function(e, "Cppcheck step for (${container_name(image_key)}) failed")
     }
