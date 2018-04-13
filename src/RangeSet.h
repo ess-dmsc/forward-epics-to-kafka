@@ -26,6 +26,7 @@ constexpr bool operator<(Range<T> const &a, Range<T> const &b) {
   return (a.a < b.a || (a.a == b.a && a.b < b.b));
 }
 
+/// Test if the given ranges form together a gapless range.
 template <typename T> bool is_gapless(Range<T> const &a, Range<T> const &b) {
   if (!(a < b)) {
     throw std::runtime_error("expect a < b");
@@ -36,6 +37,7 @@ template <typename T> bool is_gapless(Range<T> const &a, Range<T> const &b) {
   return false;
 }
 
+/// Merge the given ranges into a new range.
 template <typename T> Range<T> merge(Range<T> const &a, Range<T> const &b) {
   if (!(a < b)) {
     throw std::runtime_error("expect a < b");
