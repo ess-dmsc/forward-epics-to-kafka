@@ -189,13 +189,13 @@ def docker_coverage(image_key) {
 def docker_cppcheck(image_key) {
     try {
         def custom_sh = images[image_key]['sh']
-        def test_output = "cppcheck.xml"
+        def test_output = "cppcheck.txt"
         def cppcheck_script = """
                         cd forward-epics-to-kafka
-                        cppcheck --enable=all --inconclusive --xml --xml-version=2 src/ 2> ${test_output}
+                        cppcheck --enable=all --inconclusive --template="{file},{line},{severity},{id},{message}" src/ 2> ${test_output}
                     """
         sh "docker exec ${container_name(image_key)} ${custom_sh} -c \"${cppcheck_script}\""
-        sh "docker cp ${container_name(image_key)}:/home/jenkins/forward-epics-to-kafka/cppcheck.xml ."
+        sh "docker cp ${container_name(image_key)}:/home/jenkins/forward-epics-to-kafka/${test_output} ."
         junit "${test_output}"
     } catch (e) {
         failure_function(e, "Cppcheck step for (${container_name(image_key)}) failed")
@@ -216,6 +216,7 @@ def get_pipeline(image_key) {
                 if (image_key == clangformat_os) {
                     docker_formatting(image_key)
                     docker_cppcheck(image_key)
+                    step([$class: 'WarningsPublisher', parserConfigurations: [[parserName: 'Cppcheck Parser', pattern: 'cppcheck.txt']])
                 } else {
                     docker_build(image_key)
                     if (image_key == test_and_coverage_os) {
