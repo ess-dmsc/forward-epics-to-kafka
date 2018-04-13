@@ -186,6 +186,21 @@ def docker_coverage(image_key) {
     }
 }
 
+def docker_cppcheck(image_key) {
+    try {
+        def custom_sh = images[image_key]['sh']
+        def test_output = "cppcheck.xml"
+        def cppcheck_script = """
+                        cppcheck --enable=all --inconclusive --xml --xml-version=2 src/ 2> ${test_output}
+                    """
+        sh "docker exec ${container_name(image_key)} ${custom_sh} -c \"${cppcheck_script}\""
+        sh "docker cp ${container_name(image_key)}:/home/jenkins/build ./"
+        junit "build/${test_output}"
+    } catch (e) {
+        failure_function(e, "Cppcheck step for (${container_name(image_key)}) failed")
+    }
+}
+
 def get_pipeline(image_key) {
     return {
         stage("${image_key}") {
