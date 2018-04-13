@@ -8,22 +8,22 @@ epics_dir = "/opt/epics"
 epics_profile_file = "/etc/profile.d/ess_epics_env.sh"
 
 images = [
-        // 'centos7-gcc6': [
-        //         'name': 'essdmscdm/centos7-gcc6-build-node:2.1.0',
-        //         'sh'  : '/usr/bin/scl enable rh-python35 devtoolset-6 -- /bin/bash'
-        // ],
+        'centos7-gcc6': [
+                'name': 'essdmscdm/centos7-gcc6-build-node:2.1.0',
+                'sh'  : '/usr/bin/scl enable rh-python35 devtoolset-6 -- /bin/bash'
+        ],
         'fedora25'    : [
                 'name': 'essdmscdm/fedora25-build-node:1.0.0',
                 'sh'  : 'sh'
         ],
-        // 'ubuntu1604'  : [
-        //         'name': 'essdmscdm/ubuntu16.04-build-node:2.1.0',
-        //         'sh'  : 'sh'
-        // ],
-        // 'ubuntu1710': [
-        //         'name': 'essdmscdm/ubuntu17.10-build-node:2.0.0',
-        //         'sh': 'sh'
-        // ]
+        'ubuntu1604'  : [
+                'name': 'essdmscdm/ubuntu16.04-build-node:2.1.0',
+                'sh'  : 'sh'
+        ],
+        'ubuntu1710': [
+                'name': 'essdmscdm/ubuntu17.10-build-node:2.0.0',
+                'sh': 'sh'
+        ]
 ]
 
 base_container_name = "${project}-${env.BRANCH_NAME}-${env.BUILD_NUMBER}"
@@ -296,7 +296,7 @@ node('docker && eee') {
       def image_key = x
       builders[image_key] = get_pipeline(image_key)
     }
-    //builders['windows10'] = get_win10_pipeline()
+    builders['windows10'] = get_win10_pipeline()
 
     parallel builders
 
