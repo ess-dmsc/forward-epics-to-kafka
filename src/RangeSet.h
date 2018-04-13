@@ -57,8 +57,6 @@ template <typename T> class RangeSet {
 public:
   void insert(T k) {
     std::unique_lock<std::mutex> lock(mx);
-    // DWLOG(3, "Before message insert");
-    // for (auto & x : set) DWLOG(3, "{}", x.to_s());
     set.emplace(k, k);
     while (true) {
       auto a1 = std::adjacent_find(set.begin(), set.end(), is_gapless<T>);
@@ -67,15 +65,12 @@ public:
       } else {
         auto a2 = a1;
         ++a2;
-        // DWLOG(3, "have adjacent: {} and {}", a1->to_s(), a2->to_s());
         auto a3 = merge(*a1, *a2);
         set.erase(a1);
         set.erase(a2);
         set.insert(a3);
       }
     }
-    // DWLOG(3, "After message insert");
-    // for (auto & x : set) DWLOG(3, "{}", x.to_s());
   }
 
   rapidjson::Value to_json_value(rapidjson::Document &doc) {
