@@ -192,7 +192,7 @@ def docker_cppcheck(image_key) {
         def test_output = "cppcheck.xml"
         def cppcheck_script = """
                         cd forward-epics-to-kafka
-                        cppcheck --enable=all --inconclusive --xml --xml-version=2 src/ 2> build/${test_output}
+                        cppcheck --enable=all --inconclusive --xml --xml-version=2 src/ 
                     """
         sh "docker exec ${container_name(image_key)} ${custom_sh} -c \"${cppcheck_script}\""
         sh "docker cp ${container_name(image_key)}:/home/jenkins/build ./"
