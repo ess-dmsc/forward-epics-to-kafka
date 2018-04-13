@@ -195,7 +195,7 @@ def docker_cppcheck(image_key) {
                         cppcheck --enable=all --inconclusive --xml --xml-version=2 src/ 2> ../${test_output}
                     """
         sh "docker exec ${container_name(image_key)} ${custom_sh} -c \"${cppcheck_script}\""
-        sh "docker cp ${container_name(image_key)}:/home/jenkins/build ./"
+        sh "docker cp ${container_name(image_key)}:${test_output} ."
     } catch (e) {
         failure_function(e, "Cppcheck step for (${container_name(image_key)}) failed")
     }
