@@ -216,7 +216,7 @@ def get_pipeline(image_key) {
                 if (image_key == clangformat_os) {
                     docker_formatting(image_key)
                     docker_cppcheck(image_key)
-                    step([$class: 'WarningsPublisher', parserConfigurations: [[parserName: 'Cppcheck Parser', pattern: 'cppcheck.txt']])
+                    step([$class: 'WarningsPublisher', parserConfigurations: [[parserName: 'Cppcheck Parser', pattern: 'cppcheck.txt']]])
                 } else {
                     docker_build(image_key)
                     if (image_key == test_and_coverage_os) {
