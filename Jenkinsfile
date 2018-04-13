@@ -196,7 +196,6 @@ def docker_cppcheck(image_key) {
                     """
         sh "docker exec ${container_name(image_key)} ${custom_sh} -c \"${cppcheck_script}\""
         sh "docker cp ${container_name(image_key)}:/home/jenkins/build ./"
-        junit "build/${test_output}"
     } catch (e) {
         failure_function(e, "Cppcheck step for (${container_name(image_key)}) failed")
     }
