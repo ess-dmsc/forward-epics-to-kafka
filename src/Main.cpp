@@ -321,6 +321,62 @@ void Main::report_stats(int dt) {
   }
 }
 
+void Main::pushConverterToStream(
+    nlohmann::json const &JSON,
+    std::shared_ptr<ForwardEpicsToKafka::Stream> &Stream) {
+  using std::string;
+  string Schema = find<string>("schema", JSON).inner();
+  string Topic = find<string>("topic", JSON).inner();
+  string ConverterName;
+  if (auto x = find<string>("name", JSON)) {
+    ConverterName = x.inner();
+  } else {
+    // Assign automatically generated name
+    ConverterName = fmt::format("converter_{}", converter_ix++);
+  }
+  auto r1 = main_opt.schema_registry.items().find(Schema);
+  if (r1 == main_opt.schema_registry.items().end()) {
+    throw MappingAddException(
+        fmt::format("Can not handle flatbuffer schema id {}", Schema));
+  }
+  uri::URI URI;
+  if (main_opt.brokers.size() > 0) {
+    URI = main_opt.brokers.at(0);
+  }
+  uri::URI TopicURI;
+  if (!URI.host.empty()) {
+    TopicURI.host = URI.host;
+  }
+  if (URI.port != 0) {
+    TopicURI.port = URI.port;
+  }
+  TopicURI.parse(Topic);
+  Converter::sptr ConverterShared;
+  if (!ConverterName.empty()) {
+    auto Lock = get_lock_converters();
+    auto ConverterIt = converters.find(ConverterName);
+    if (ConverterIt != converters.end()) {
+      ConverterShared = ConverterIt->second.lock();
+      if (!ConverterShared) {
+        ConverterShared =
+            Converter::create(main_opt.schema_registry, Schema, main_opt);
+        converters[ConverterName] = std::weak_ptr<Converter>(ConverterShared);
+      }
+    } else {
+      ConverterShared =
+          Converter::create(main_opt.schema_registry, Schema, main_opt);
+      converters[ConverterName] = std::weak_ptr<Converter>(ConverterShared);
+    }
+  } else {
+    ConverterShared =
+        Converter::create(main_opt.schema_registry, Schema, main_opt);
+  }
+  if (!ConverterShared) {
+    throw MappingAddException("Can not create a converter");
+  }
+  Stream->converter_add(*kafka_instance_set, ConverterShared, TopicURI);
+}
+
 void Main::mappingAdd(nlohmann::json const &Mapping) {
   using std::string;
   using nlohmann::json;
@@ -348,66 +404,12 @@ void Main::mappingAdd(nlohmann::json const &Mapping) {
     std::throw_with_nested(MappingAddException("Can not add stream"));
   }
   auto Stream = streams.back();
-  auto PushConverterToStream = [this](
-      nlohmann::json const &JSON,
-      std::shared_ptr<ForwardEpicsToKafka::Stream> &Stream) {
-    string Schema = find<string>("schema", JSON).inner();
-    string Topic = find<string>("topic", JSON).inner();
-    string ConverterName;
-    if (auto x = find<string>("name", JSON)) {
-      ConverterName = x.inner();
-    } else {
-      // Assign automatically generated name
-      ConverterName = fmt::format("converter_{}", converter_ix++);
-    }
-    auto r1 = main_opt.schema_registry.items().find(Schema);
-    if (r1 == main_opt.schema_registry.items().end()) {
-      throw MappingAddException(
-          fmt::format("Can not handle flatbuffer schema id {}", Schema));
-    }
-    uri::URI URI;
-    if (main_opt.brokers.size() > 0) {
-      URI = main_opt.brokers.at(0);
-    }
-    uri::URI TopicURI;
-    if (!URI.host.empty()) {
-      TopicURI.host = URI.host;
-    }
-    if (URI.port != 0) {
-      TopicURI.port = URI.port;
-    }
-    TopicURI.parse(Topic);
-    Converter::sptr ConverterShared;
-    if (!ConverterName.empty()) {
-      auto Lock = get_lock_converters();
-      auto ConverterIt = converters.find(ConverterName);
-      if (ConverterIt != converters.end()) {
-        ConverterShared = ConverterIt->second.lock();
-        if (!ConverterShared) {
-          ConverterShared =
-              Converter::create(main_opt.schema_registry, Schema, main_opt);
-          converters[ConverterName] = std::weak_ptr<Converter>(ConverterShared);
-        }
-      } else {
-        ConverterShared =
-            Converter::create(main_opt.schema_registry, Schema, main_opt);
-        converters[ConverterName] = std::weak_ptr<Converter>(ConverterShared);
-      }
-    } else {
-      ConverterShared =
-          Converter::create(main_opt.schema_registry, Schema, main_opt);
-    }
-    if (!ConverterShared) {
-      throw MappingAddException("Can not create a converter");
-    }
-    Stream->converter_add(*kafka_instance_set, ConverterShared, TopicURI);
-  };
   if (auto x = find<json>("converter", Mapping)) {
     if (x.inner().is_object()) {
-      PushConverterToStream(x.inner(), Stream);
+      pushConverterToStream(x.inner(), Stream);
     } else if (x.inner().is_array()) {
       for (auto const &ConverterSettings : x.inner()) {
-        PushConverterToStream(ConverterSettings, Stream);
+        pushConverterToStream(ConverterSettings, Stream);
       }
     }
   }

@@ -82,6 +82,9 @@ private:
   Streams streams;
   std::atomic<ForwardingRunState> ForwardingRunFlag{ForwardingRunState::RUN};
   void raiseForwardingFlag(ForwardingRunState ToBeRaised);
+  void
+  pushConverterToStream(nlohmann::json const &JSON,
+                        std::shared_ptr<ForwardEpicsToKafka::Stream> &Stream);
 };
 
 extern std::atomic<uint64_t> g__total_msgs_to_kafka;
