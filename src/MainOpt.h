@@ -29,7 +29,7 @@ struct MainOpt {
   std::vector<char> Hostname;
   FlatBufs::SchemaRegistry schema_registry;
   nlohmann::json JSONConfiguration;
-  int parse_json_file(std::string ConfigurationFile);
+  void parse_json_file(std::string ConfigurationFile);
   KafkaW::BrokerSettings broker_opt;
   void init_logger();
   void find_status_uri();

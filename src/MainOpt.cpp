@@ -53,20 +53,18 @@ std::string MainOpt::brokers_as_comma_list() const {
   return s1;
 }
 
-int MainOpt::parse_json_file(std::string ConfigurationFile) {
+void MainOpt::parse_json_file(std::string ConfigurationFile) {
   if (ConfigurationFile.empty()) {
-    LOG(3, "given config filename is empty");
-    return -1;
+    throw std::runtime_error("Name of configuration file is empty");
   }
   this->ConfigurationFile = ConfigurationFile;
-  using std::string;
 
   // Parse the JSON configuration and extract parameters.
   // Currently, these parameters take precedence over what is given on the
   // command line.
   parse_document(ConfigurationFile);
   if (JSONConfiguration.is_null()) {
-    return -4;
+    throw std::runtime_error("Can not parse configuration file as JSON");
   }
 
   if (auto x = find<std::string>("broker-config", JSONConfiguration)) {
@@ -92,10 +90,9 @@ int MainOpt::parse_json_file(std::string ConfigurationFile) {
 
   find_status_uri();
 
-  if (auto x = find<string>("broker", JSONConfiguration)) {
+  if (auto x = find<std::string>("broker", JSONConfiguration)) {
     set_broker(x.inner());
   }
-  return 0;
 }
 
 void MainOpt::parse_document(const std::string &filepath) {
@@ -204,8 +201,10 @@ std::pair<int, std::unique_ptr<MainOpt>> parse_opt(int argc, char **argv) {
     return ret;
   }
   if (!opt.ConfigurationFile.empty()) {
-    if (opt.parse_json_file(opt.ConfigurationFile) != 0) {
-      LOG(4, "Can not parse configuration file");
+    try {
+      opt.parse_json_file(opt.ConfigurationFile);
+    } catch (std::exception const &e) {
+      LOG(4, "Can not parse configuration file: {}", e.what());
       ret.first = 1;
       return ret;
     }
