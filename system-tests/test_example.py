@@ -2,13 +2,14 @@ import pytest
 from time import sleep
 from helpers.producerwrapper import ProducerWrapper
 from confluent_kafka import Producer, Consumer
-from helpers.f142_logdata import LogData, Value, Int
+from helpers.f142_logdata import LogData, Value, Int, Double
 import flatbuffers
 import uuid
 import subprocess
 import time
 import threading
 from CaChannel import CaChannel, CaChannelException
+import math
 
 BUILD_FORWARDER = False
 CONFIG_TOPIC = "TEST_forwarderConfig"
@@ -63,11 +64,11 @@ def test_flatbuffers_encode_and_decode(docker_compose):
 def test_forwarder_sends_pv_updates_single_pv(docker_compose):
     consumer_config = {'bootstrap.servers': 'localhost:9092', 'default.topic.config': {'auto.offset.reset': 'smallest'},
                        'group.id': uuid.uuid4()}
-    sleep(10)
-    cons = Consumer(**consumer_config)
+    sleep(10)  # Waiting for forwarder container to be started
     prod = ProducerWrapper("localhost:9092", CONFIG_TOPIC, DATA_TOPIC)
     prod.add_config(["SIM:Spd"])
-    sleep(5)
+    sleep(2)  # Waiting for config to be pushed
+    cons = Consumer(**consumer_config)
     cons.subscribe([CONFIG_TOPIC])
     msg = cons.poll()
     assert not msg.error()
@@ -75,15 +76,22 @@ def test_forwarder_sends_pv_updates_single_pv(docker_compose):
     assert topic == CONFIG_TOPIC
     # update value
     change_pv_value("SIM:Spd", 5)
-    sleep(10)
+    sleep(10)  # Waiting for PV to be updated
     # check kafka has new message containing pv and value
     cons.subscribe([DATA_TOPIC])
-    # cons.subscribe(["SIM:Spd"])
+    first_msg = cons.poll()
     received_msg = cons.poll()
-    sleep(5)
     assert not received_msg.error()
     buf = received_msg.value()
-    assert bytes("SIM:Spd", encoding="utf-8") in buf
+    log_data = LogData.LogData.GetRootAsLogData(buf, 0)
+    assert Value.Value.Double == log_data.ValueType()
+    assert b'SIM:Spd' == log_data.SourceName()
+
+    union_double = Double.Double()
+    union_double.Init(log_data.Value().Bytes, log_data.Value().Pos)
+    union_value = union_double.Value()
+    assert math.isclose(5, union_value)
+
     cons.close()
 
 
