@@ -102,6 +102,10 @@ public:
   // code below calls the config poll which in turn calls this callback.
   void operator()(std::string const &msg) override;
   void handleParsedJSON(nlohmann::json const &Document);
+  void handleCommandAdd(nlohmann::json const &Document);
+  void handleCommandStopChannel(nlohmann::json const &Document);
+  void handleCommandStopAll(nlohmann::json const &Document);
+  void handleCommandExit(nlohmann::json const &Document);
 
 private:
   Main &main;
@@ -120,31 +124,46 @@ void ConfigCB::operator()(std::string const &msg) {
   }
 }
 
-void ConfigCB::handleParsedJSON(nlohmann::json const &Document) {
-  using std::string;
+void ConfigCB::handleCommandAdd(nlohmann::json const &Document) {
   using nlohmann::json;
-  if (auto CommandMaybe = find<string>("cmd", Document)) {
+  if (auto StreamsMaybe = find<json>("streams", Document)) {
+    auto Streams = StreamsMaybe.inner();
+    if (Streams.is_array()) {
+      for (auto const &Stream : Streams) {
+        main.mappingAdd(Stream);
+      }
+    }
+  }
+}
+
+void ConfigCB::handleCommandStopChannel(nlohmann::json const &Document) {
+  if (auto ChannelMaybe = find<std::string>("channel", Document)) {
+    main.streams.channel_stop(ChannelMaybe.inner());
+  }
+}
+
+void ConfigCB::handleCommandStopAll(nlohmann::json const &Document) {
+  main.streams.streams_clear();
+}
+
+void ConfigCB::handleCommandExit(nlohmann::json const &Document) {
+  main.stopForwarding();
+}
+
+void ConfigCB::handleParsedJSON(nlohmann::json const &Document) {
+  if (auto CommandMaybe = find<std::string>("cmd", Document)) {
     auto Command = CommandMaybe.inner();
     if (Command == "add") {
-      if (auto StreamsMaybe = find<json>("streams", Document)) {
-        auto Streams = StreamsMaybe.inner();
-        if (Streams.is_array()) {
-          for (auto const &Stream : Streams) {
-            main.mappingAdd(Stream);
-          }
-        }
-      }
+      handleCommandAdd(Document);
     }
     if (Command == "stop_channel") {
-      if (auto ChannelMaybe = find<string>("channel", Document)) {
-        main.streams.channel_stop(ChannelMaybe.inner());
-      }
+      handleCommandStopChannel(Document);
     }
     if (Command == "stop_all") {
-      main.streams.streams_clear();
+      handleCommandStopAll(Document);
     }
     if (Command == "exit") {
-      main.stopForwarding();
+      handleCommandExit(Document);
     }
   }
 }
