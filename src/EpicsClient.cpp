@@ -166,7 +166,7 @@ EpicsClientFactoryInit::~EpicsClientFactoryInit() {
 
 class EpicsClient_impl {
 public:
-  EpicsClient_impl(EpicsClient *epics_client);
+  explicit EpicsClient_impl(EpicsClient *epics_client);
   ~EpicsClient_impl();
   int init(string epics_channel_provider_type);
   int monitoring_start();
