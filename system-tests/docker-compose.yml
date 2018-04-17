@@ -36,6 +36,7 @@ services:
     depends_on:
       - kafka
       - ioc
+    network_mode: "host"
     environment:
       CONFIG_URI: "//localhost:9092/TEST_forwarderConfig"
       KAFKA_BROKER: "localhost:9092"

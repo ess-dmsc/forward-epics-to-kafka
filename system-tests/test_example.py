@@ -60,30 +60,35 @@ def test_flatbuffers_encode_and_decode(docker_compose):
 
 
 @pytest.mark.parametrize('docker_compose', [BUILD_FORWARDER], indirect=['docker_compose'])
-def test_forwarder_sends_pv_updates(docker_compose):
+def test_forwarder_sends_pv_updates_single_pv(docker_compose):
     consumer_config = {'bootstrap.servers': 'localhost:9092', 'default.topic.config': {'auto.offset.reset': 'smallest'},
                        'group.id': uuid.uuid4()}
+    sleep(10)
     cons = Consumer(**consumer_config)
     prod = ProducerWrapper("localhost:9092", CONFIG_TOPIC, DATA_TOPIC)
     prod.add_config(["SIM:Spd"])
     sleep(5)
-    # check config topic then exists
+    # check config topic exists
     assert prod.topic_exists(CONFIG_TOPIC)
     cons.subscribe([CONFIG_TOPIC])
     msg = cons.poll()
     assert not msg.error()
-    buf = msg.value()
-    print(buf)  # CONFIGURATION
+    topic = msg.topic()
+    assert topic == CONFIG_TOPIC
     # update value
     change_pv_value("SIM:Spd", 5)
     sleep(10)
     # check kafka has new message containing pv and value
     cons.subscribe([DATA_TOPIC])
-    msg = cons.poll()
+    # cons.subscribe(["SIM:Spd"])
+    received_msg = cons.poll()
     sleep(5)
-    assert not msg.error()
-    buf = msg.value()
+    assert not received_msg.error()
+    buf = received_msg.value()
     print(buf)  # DATA
+    assert bytes("SIM:Spd", encoding="utf-8") in buf
+    cons.close()
+    print("TEST PASSED")
 
 
 def change_pv_value(pvname, value):
