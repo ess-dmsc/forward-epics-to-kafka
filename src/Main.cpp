@@ -111,7 +111,7 @@ ConfigCB::ConfigCB(Main &main) : main(main) {}
 
 void ConfigCB::operator()(std::string const &msg) {
   using nlohmann::json;
-  LOG(7, "Command received: {}", msg.c_str());
+  LOG(7, "Command received: {}", msg);
   try {
     auto Document = json::parse(msg);
     handleParsedJSON(Document);
