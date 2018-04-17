@@ -32,10 +32,8 @@ static KafkaW::BrokerSettings make_broker_opt(MainOpt const &opt) {
 
 using ulock = std::unique_lock<std::mutex>;
 
-/**
-\class Main
-\brief Main program entry class.
-*/
+/// \class Main
+/// \brief Main program entry class.
 Main::Main(MainOpt &opt)
     : main_opt(opt),
       kafka_instance_set(Kafka::InstanceSet::Set(make_broker_opt(opt))),
@@ -92,9 +90,7 @@ Main::~Main() {
   Kafka::InstanceSet::clear();
 }
 
-/**
-\brief Helper class to provide a callback for the Kafka command listener.
-*/
+/// \brief Helper class to provide a callback for the Kafka command listener.
 class ConfigCB : public Config::Callback {
 public:
   ConfigCB(Main &main);
@@ -197,12 +193,10 @@ std::unique_lock<std::mutex> Main::get_lock_converters() {
   return std::unique_lock<std::mutex>(converters_mutex);
 }
 
-/**
-\brief Main program loop.
-
-Start conversion worker threads, poll for command sfrom Kafka.
-When stop flag raised, clear all workers and streams.
-*/
+/// \brief Main program loop.
+///
+/// Start conversion worker threads, poll for command sfrom Kafka.
+/// When stop flag raised, clear all workers and streams.
 void Main::forward_epics_to_kafka() {
   using CLK = std::chrono::steady_clock;
   using MS = std::chrono::milliseconds;
