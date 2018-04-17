@@ -44,8 +44,9 @@ Main::Main(MainOpt &opt)
   finfo->teamid = main_opt.teamid;
 
   for (size_t i1 = 0; i1 < opt.ConversionThreads; ++i1) {
-    conversion_workers.emplace_back(new ConversionWorker(
-        &conversion_scheduler, static_cast<uint32_t>(opt.ConversionWorkerQueueSize)));
+    conversion_workers.emplace_back(make_unique<ConversionWorker>(
+        &conversion_scheduler,
+        static_cast<uint32_t>(opt.ConversionWorkerQueueSize)));
   }
 
   bool use_config = true;
