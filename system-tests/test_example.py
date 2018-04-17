@@ -68,8 +68,6 @@ def test_forwarder_sends_pv_updates_single_pv(docker_compose):
     prod = ProducerWrapper("localhost:9092", CONFIG_TOPIC, DATA_TOPIC)
     prod.add_config(["SIM:Spd"])
     sleep(5)
-    # check config topic exists
-    assert prod.topic_exists(CONFIG_TOPIC)
     cons.subscribe([CONFIG_TOPIC])
     msg = cons.poll()
     assert not msg.error()
@@ -85,10 +83,8 @@ def test_forwarder_sends_pv_updates_single_pv(docker_compose):
     sleep(5)
     assert not received_msg.error()
     buf = received_msg.value()
-    print(buf)  # DATA
     assert bytes("SIM:Spd", encoding="utf-8") in buf
     cons.close()
-    print("TEST PASSED")
 
 
 def change_pv_value(pvname, value):

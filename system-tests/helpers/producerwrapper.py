@@ -1,5 +1,5 @@
 from .forwarderconfig import ForwarderConfig
-from confluent_kafka import Producer, KafkaError, Consumer, KafkaException
+from confluent_kafka import Producer, Consumer, KafkaException
 import uuid
 
 
@@ -17,9 +17,8 @@ class ProducerWrapper:
         conf = {'bootstrap.servers': server}
         try:
             self.producer = Producer(**conf)
-            conf['group.id'] = uuid.uuid4()
-            self.consumer = Consumer(**conf)
-            if not self.topic_exists(self.topic):
+
+            if not self.topic_exists(self.topic, server):
                 print("WARNING: topic {} does not exist. It will be created by default.".format(self.topic))
         except KafkaException.args[0] == '_BROKER_NOT_AVAILABLE':
             print("No brokers found on server: " + server[0])
@@ -49,10 +48,15 @@ class ProducerWrapper:
         data = self.converter.create_forwarder_configuration(pvs)
         print("Sending data {}".format(data))
         self.producer.produce(self.topic, value=data)
+        self.producer.flush()
 
-    def topic_exists(self, topicname):
+    @staticmethod
+    def topic_exists(topicname, server):
+        conf = {'bootstrap.servers': server, 'group.id': uuid.uuid4()}
+        consumer = Consumer(**conf)
         try:
-            self.consumer.subscribe([topicname])
+            consumer.subscribe([topicname])
+            consumer.close()
         except KafkaException as e:
             print("topic '{}' does not exist".format(topicname))
             print(e)
