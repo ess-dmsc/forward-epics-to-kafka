@@ -151,15 +151,14 @@ void ConfigCB::handleParsedJSON(nlohmann::json const &Document) {
     auto Command = CommandMaybe.inner();
     if (Command == "add") {
       handleCommandAdd(Document);
-    }
-    if (Command == "stop_channel") {
+    } else if (Command == "stop_channel") {
       handleCommandStopChannel(Document);
-    }
-    if (Command == "stop_all") {
+    } else if (Command == "stop_all") {
       handleCommandStopAll(Document);
-    }
-    if (Command == "exit") {
+    } else if (Command == "exit") {
       handleCommandExit(Document);
+    } else {
+      LOG(6, "Can not understand command: {}", Command);
     }
   }
 }
