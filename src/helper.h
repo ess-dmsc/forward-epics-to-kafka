@@ -1,6 +1,6 @@
 #pragma once
+
 #include <memory>
-#include <rapidjson/document.h>
 #include <string>
 #include <utility>
 #include <vector>
@@ -16,7 +16,5 @@ std::vector<char> gulp(std::string fname);
 std::vector<char> binary_to_hex(char const *data, int len);
 
 std::vector<std::string> split(std::string const &input, std::string token);
-
-std::string get_string(rapidjson::Value const *v, std::string path);
 
 void sleep_ms(uint32_t ms);

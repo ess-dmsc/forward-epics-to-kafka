@@ -43,19 +43,14 @@ static uint16_t _fmt(std::unique_ptr<FlatBufs::EpicsPVUpdate> &x) {
   return (uint16_t)(((uint64_t)x.get()) >> 0);
 }
 
-rapidjson::Document ConversionPath::status_json() const {
-  using namespace rapidjson;
-  Document jd;
-  auto &a = jd.GetAllocator();
-  jd.SetObject();
-  jd.AddMember("schema", Value(converter->schema_name().data(), a), a);
-  jd.AddMember(
-      "broker",
-      Value(kafka_output->pt.Producer_->ProducerBrokerSettings.Address.data(),
-            a),
-      a);
-  jd.AddMember("topic", Value(kafka_output->topic_name().data(), a), a);
-  return jd;
+nlohmann::json ConversionPath::status_json() const {
+  using nlohmann::json;
+  auto Document = json::object();
+  Document["schema"] = converter->schema_name();
+  Document["broker"] =
+      kafka_output->pt.Producer_->ProducerBrokerSettings.Address;
+  Document["topic"] = kafka_output->topic_name();
+  return Document;
 }
 
 Stream::Stream(std::shared_ptr<ForwarderInfo> finfo, ChannelInfo channel_info)
@@ -200,34 +195,30 @@ void Stream::error_in_epics() { status_ = -1; }
 
 int Stream::status() { return status_; }
 
-ChannelInfo const &Stream::channel_info() { return channel_info_; }
+ChannelInfo const &Stream::channel_info() const { return channel_info_; }
 
 size_t Stream::emit_queue_size() { return emit_queue.size(); }
 
-rapidjson::Document Stream::status_json() {
-  using namespace rapidjson;
-  Document jd;
-  auto &a = jd.GetAllocator();
-  jd.SetObject();
-  auto cthis = (Stream *)this;
-  auto &ci = cthis->channel_info();
-  jd.AddMember("channel_name", Value(ci.channel_name.data(), a), a);
-  jd.AddMember("emit_queue_size", Value().SetUint64(cthis->emit_queue_size()),
-               a);
+nlohmann::json Stream::status_json() {
+  using nlohmann::json;
+  auto Document = json::object();
+  auto const &ChannelInfo = channel_info();
+  Document["channel_name"] = ChannelInfo.channel_name;
+  Document["emit_queue_size"] = emit_queue_size();
   {
     std::unique_lock<std::mutex> lock(seq_data_emitted.mx);
-    auto it = seq_data_emitted.set.rbegin();
-    if (it != seq_data_emitted.set.rend()) {
-      jd.AddMember("emitted_max", Value().SetUint64(it->b), a);
+    auto const &Set = seq_data_emitted.set;
+    auto Last = Set.rbegin();
+    if (Last != Set.rend()) {
+      Document["emitted_max"] = Last->b;
     }
   }
-  Value cps;
-  cps.SetArray();
-  for (auto &cp : conversion_paths) {
-    cps.PushBack(Value().CopyFrom(cp->status_json(), a), a);
+  auto Converters = json::array();
+  for (auto const &Converter : conversion_paths) {
+    Converters.push_back(Converter->status_json());
   }
-  jd.AddMember("converters", cps, a);
-  return jd;
+  Document["converters"] = Converters;
+  return Document;
 }
 }
 }

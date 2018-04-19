@@ -4,7 +4,6 @@
 #include <fmt/format.h>
 #include <memory>
 #include <mutex>
-#include <rapidjson/document.h>
 #include <set>
 
 /// Represents an inclusive range.
@@ -75,26 +74,6 @@ public:
         set.insert(a3);
       }
     }
-  }
-
-  rapidjson::Value to_json_value(rapidjson::Document &doc) {
-    std::unique_lock<std::mutex> lock(mx);
-    auto &a = doc.GetAllocator();
-    rapidjson::Value v;
-    v.SetArray();
-    int i1 = 0;
-    for (auto &rr : set) {
-      rapidjson::Value w;
-      w.SetArray();
-      w.PushBack(rapidjson::Value(rr.a), a);
-      w.PushBack(rapidjson::Value(rr.b), a);
-      v.PushBack(w, a);
-      i1 += 1;
-      if (i1 > 128) {
-        break;
-      }
-    }
-    return v;
   }
 
   size_t size() {

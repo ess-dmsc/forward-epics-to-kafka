@@ -4,6 +4,7 @@
 #include "ForwarderInfo.h"
 #include "Stream.h"
 #include "helper.h"
+#include "json.h"
 #include "logger.h"
 #include <sys/types.h>
 #ifdef _MSC_VER
@@ -13,9 +14,6 @@
 #include <unistd.h>
 #endif
 #include "CURLReporter.h"
-#include <rapidjson/document.h>
-#include <rapidjson/prettywriter.h>
-#include <rapidjson/writer.h>
 
 namespace BrightnESS {
 namespace ForwardEpicsToKafka {
@@ -34,20 +32,19 @@ static KafkaW::BrokerSettings make_broker_opt(MainOpt const &opt) {
 
 using ulock = std::unique_lock<std::mutex>;
 
-/**
-\class Main
-\brief Main program entry class.
-*/
+/// \class Main
+/// \brief Main program entry class.
 Main::Main(MainOpt &opt)
     : main_opt(opt),
       kafka_instance_set(Kafka::InstanceSet::Set(make_broker_opt(opt))),
       conversion_scheduler(this) {
-  finfo = std::shared_ptr<ForwarderInfo>(new ForwarderInfo(this));
+  finfo = std::make_shared<ForwarderInfo>(this);
   finfo->teamid = main_opt.teamid;
 
-  for (int i1 = 0; i1 < opt.conversion_threads; ++i1) {
-    conversion_workers.emplace_back(new ConversionWorker(
-        &conversion_scheduler, opt.conversion_worker_queue_size));
+  for (size_t i1 = 0; i1 < opt.ConversionThreads; ++i1) {
+    conversion_workers.emplace_back(make_unique<ConversionWorker>(
+        &conversion_scheduler,
+        static_cast<uint32_t>(opt.ConversionWorkerQueueSize)));
   }
 
   bool use_config = true;
@@ -65,13 +62,13 @@ Main::Main(MainOpt &opt)
         fmt::format("forwarder-command-listener--pid{}", getpid());
     config_listener.reset(new Config::Listener{bopt, main_opt.BrokerConfig});
   }
-  if (main_opt.json) {
-    auto m1 = main_opt.json->FindMember("streams");
-    if (m1 != main_opt.json->MemberEnd()) {
-      if (m1->value.IsArray()) {
-        for (auto &m : m1->value.GetArray()) {
-          mapping_add(m);
-        }
+  using nlohmann::json;
+  if (auto Streams = find_array("streams", main_opt.JSONConfiguration)) {
+    for (auto const &Stream : Streams.inner()) {
+      try {
+        mappingAdd(Stream);
+      } catch (std::exception &e) {
+        LOG(4, "Could not add mapping: {}  {}", Stream.dump(), e.what());
       }
     }
   }
@@ -93,15 +90,18 @@ Main::~Main() {
   Kafka::InstanceSet::clear();
 }
 
-/**
-\brief Helper class to provide a callback for the Kafka command listener.
-*/
+/// \brief Helper class to provide a callback for the Kafka command listener.
 class ConfigCB : public Config::Callback {
 public:
   ConfigCB(Main &main);
   // This is called from the same thread as the main watchdog below, because the
   // code below calls the config poll which in turn calls this callback.
   void operator()(std::string const &msg) override;
+  void handleParsedJSON(nlohmann::json const &Document);
+  void handleCommandAdd(nlohmann::json const &Document);
+  void handleCommandStopChannel(nlohmann::json const &Document);
+  void handleCommandStopAll(nlohmann::json const &Document);
+  void handleCommandExit(nlohmann::json const &Document);
 
 private:
   Main &main;
@@ -110,45 +110,56 @@ private:
 ConfigCB::ConfigCB(Main &main) : main(main) {}
 
 void ConfigCB::operator()(std::string const &msg) {
-  using std::string;
-  using namespace rapidjson;
-  LOG(7, "Command received: {}", msg.c_str());
-  Document j0;
-  j0.Parse(msg.c_str());
-  if (j0.HasParseError()) {
-    LOG(3, "Command does not look like valid json");
-    return;
+  using nlohmann::json;
+  LOG(7, "Command received: {}", msg);
+  try {
+    auto Document = json::parse(msg);
+    handleParsedJSON(Document);
+  } catch (...) {
+    LOG(3, "Command does not look like valid json: {}", msg);
   }
-  auto m1 = j0.FindMember("cmd");
-  if (m1 == j0.MemberEnd()) {
-    return;
-  }
-  if (!m1->value.IsString()) {
-    return;
-  }
-  string cmd = m1->value.GetString();
-  if (cmd == "add") {
-    auto m2 = j0.FindMember("streams");
-    if (m2 == j0.MemberEnd()) {
-      return;
-    }
-    if (m2->value.IsArray()) {
-      for (auto &x : m2->value.GetArray()) {
-        main.mapping_add(x);
+}
+
+void ConfigCB::handleCommandAdd(nlohmann::json const &Document) {
+  using nlohmann::json;
+  if (auto StreamsMaybe = find<json>("streams", Document)) {
+    auto Streams = StreamsMaybe.inner();
+    if (Streams.is_array()) {
+      for (auto const &Stream : Streams) {
+        main.mappingAdd(Stream);
       }
     }
   }
-  if (cmd == "stop_channel") {
-    auto channel = get_string(&j0, "channel");
-    if (channel.size() > 0) {
-      main.streams.channel_stop(channel);
+}
+
+void ConfigCB::handleCommandStopChannel(nlohmann::json const &Document) {
+  if (auto ChannelMaybe = find<std::string>("channel", Document)) {
+    main.streams.channel_stop(ChannelMaybe.inner());
+  }
+}
+
+void ConfigCB::handleCommandStopAll(nlohmann::json const &Document) {
+  main.streams.streams_clear();
+}
+
+void ConfigCB::handleCommandExit(nlohmann::json const &Document) {
+  main.stopForwarding();
+}
+
+void ConfigCB::handleParsedJSON(nlohmann::json const &Document) {
+  if (auto CommandMaybe = find<std::string>("cmd", Document)) {
+    auto Command = CommandMaybe.inner();
+    if (Command == "add") {
+      handleCommandAdd(Document);
+    } else if (Command == "stop_channel") {
+      handleCommandStopChannel(Document);
+    } else if (Command == "stop_all") {
+      handleCommandStopAll(Document);
+    } else if (Command == "exit") {
+      handleCommandExit(Document);
+    } else {
+      LOG(6, "Can not understand command: {}", Command);
     }
-  }
-  if (cmd == "stop_all") {
-    main.streams.streams_clear();
-  }
-  if (cmd == "exit") {
-    main.stopForwarding();
   }
 }
 
@@ -181,12 +192,10 @@ std::unique_lock<std::mutex> Main::get_lock_converters() {
   return std::unique_lock<std::mutex>(converters_mutex);
 }
 
-/**
-\brief Main program loop.
-
-Start conversion worker threads, poll for command sfrom Kafka.
-When stop flag raised, clear all workers and streams.
-*/
+/// \brief Main program loop.
+///
+/// Start conversion worker threads, poll for command sfrom Kafka.
+/// When stop flag raised, clear all workers and streams.
 void Main::forward_epics_to_kafka() {
   using CLK = std::chrono::steady_clock;
   using MS = std::chrono::milliseconds;
@@ -242,23 +251,17 @@ void Main::forward_epics_to_kafka() {
 }
 
 void Main::report_status() {
-  using rapidjson::Document;
-  using rapidjson::Value;
-  Document jd;
-  auto &a = jd.GetAllocator();
-  jd.SetObject();
-  Value j_streams;
-  j_streams.SetArray();
-  for (auto &stream : streams.get_streams()) {
-    j_streams.PushBack(Value().CopyFrom(stream->status_json(), a), a);
+  using nlohmann::json;
+  auto Status = json::object();
+  auto Streams = json::array();
+  for (auto const &Stream : streams.get_streams()) {
+    Streams.push_back(Stream->status_json());
   }
-  jd.AddMember("streams", Value(j_streams, a), a);
-  rapidjson::StringBuffer buf;
-  rapidjson::PrettyWriter<rapidjson::StringBuffer> wr(buf);
-  jd.Accept(wr);
-  LOG(8, "status: {:.{}}", buf.GetString(), buf.GetSize());
-  status_producer_topic->produce((KafkaW::uchar *)buf.GetString(),
-                                 buf.GetSize());
+  Status["streams"] = Streams;
+  auto StatusString = Status.dump();
+  LOG(0, "status: {}", StatusString);
+  status_producer_topic->produce((KafkaW::uchar *)StatusString.c_str(),
+                                 StatusString.size());
 }
 
 void Main::report_stats(int dt) {
@@ -318,91 +321,98 @@ void Main::report_stats(int dt) {
   }
 }
 
-int Main::mapping_add(rapidjson::Value &mapping) {
+void Main::pushConverterToStream(
+    nlohmann::json const &JSON,
+    std::shared_ptr<ForwardEpicsToKafka::Stream> &Stream) {
   using std::string;
-  string channel = get_string(&mapping, "channel");
-  string channel_provider_type = get_string(&mapping, "channel_provider_type");
-  if (channel.size() == 0) {
-    LOG(3, "mapping channel is not specified");
-    return -1;
+  string Schema = find<string>("schema", JSON).inner();
+  string Topic = find<string>("topic", JSON).inner();
+  string ConverterName;
+  if (auto x = find<string>("name", JSON)) {
+    ConverterName = x.inner();
+  } else {
+    // Assign automatically generated name
+    ConverterName = fmt::format("converter_{}", converter_ix++);
   }
-  if (channel_provider_type.size() == 0) {
-    channel_provider_type = "pva";
+  auto r1 = main_opt.schema_registry.items().find(Schema);
+  if (r1 == main_opt.schema_registry.items().end()) {
+    throw MappingAddException(
+        fmt::format("Can not handle flatbuffer schema id {}", Schema));
   }
+  uri::URI URI;
+  if (main_opt.brokers.size() > 0) {
+    URI = main_opt.brokers.at(0);
+  }
+  uri::URI TopicURI;
+  if (!URI.host.empty()) {
+    TopicURI.host = URI.host;
+  }
+  if (URI.port != 0) {
+    TopicURI.port = URI.port;
+  }
+  TopicURI.parse(Topic);
+  Converter::sptr ConverterShared;
+  if (!ConverterName.empty()) {
+    auto Lock = get_lock_converters();
+    auto ConverterIt = converters.find(ConverterName);
+    if (ConverterIt != converters.end()) {
+      ConverterShared = ConverterIt->second.lock();
+      if (!ConverterShared) {
+        ConverterShared =
+            Converter::create(main_opt.schema_registry, Schema, main_opt);
+        converters[ConverterName] = std::weak_ptr<Converter>(ConverterShared);
+      }
+    } else {
+      ConverterShared =
+          Converter::create(main_opt.schema_registry, Schema, main_opt);
+      converters[ConverterName] = std::weak_ptr<Converter>(ConverterShared);
+    }
+  } else {
+    ConverterShared =
+        Converter::create(main_opt.schema_registry, Schema, main_opt);
+  }
+  if (!ConverterShared) {
+    throw MappingAddException("Can not create a converter");
+  }
+  Stream->converter_add(*kafka_instance_set, ConverterShared, TopicURI);
+}
+
+void Main::mappingAdd(nlohmann::json const &Mapping) {
+  using std::string;
+  using nlohmann::json;
+  if (!Mapping.is_object()) {
+    throw MappingAddException("Given Mapping is not a JSON object");
+  }
+  auto ChannelMaybe = find<string>("channel", Mapping);
+  if (!ChannelMaybe) {
+    throw MappingAddException("Can not find channel");
+  }
+  auto Channel = ChannelMaybe.inner();
+
+  auto ChannelProviderTypeMaybe =
+      find<string>("channel_provider_type", Mapping);
+  if (!ChannelProviderTypeMaybe) {
+    throw MappingAddException("Can not find channel");
+  }
+  auto ChannelProviderType = ChannelProviderTypeMaybe.inner();
+
   std::unique_lock<std::mutex> lock(streams_mutex);
   try {
-    ChannelInfo ci{channel_provider_type, channel};
-    streams.add(std::make_shared<Stream>(finfo, ci));
+    ChannelInfo ChannelInfo{ChannelProviderType, Channel};
+    streams.add(std::make_shared<Stream>(finfo, ChannelInfo));
   } catch (std::runtime_error &e) {
-    return -1;
+    std::throw_with_nested(MappingAddException("Can not add stream"));
   }
-  auto stream = streams.back();
-  {
-    auto push_conv = [this, &stream](rapidjson::Value &c) {
-      string schema = get_string(&c, "schema");
-      string cname = get_string(&c, "name");
-      string topic = get_string(&c, "topic");
-      if (schema.size() == 0) {
-        LOG(3, "mapping schema is not specified");
-      }
-      if (topic.size() == 0) {
-        LOG(3, "mapping topic is not specified");
-      }
-      if (cname.size() == 0) {
-        cname = fmt::format("converter_{}", converter_ix++);
-      }
-      auto r1 = main_opt.schema_registry.items().find(schema);
-      if (r1 == main_opt.schema_registry.items().end()) {
-        LOG(3, "can not handle (yet?) schema id {}", schema);
-      }
-      uri::URI uri;
-      if (main_opt.brokers.size() > 0) {
-        uri = main_opt.brokers.at(0);
-      }
-      uri::URI topic_uri;
-      if (!uri.host.empty()) {
-        topic_uri.host = uri.host;
-      }
-      if (uri.port != 0) {
-        topic_uri.port = uri.port;
-      }
-      topic_uri.parse(topic);
-      Converter::sptr conv;
-      if (cname.size() > 0) {
-        auto lock = get_lock_converters();
-        auto c1 = converters.find(cname);
-        if (c1 != converters.end()) {
-          conv = c1->second.lock();
-          if (!conv) {
-            conv =
-                Converter::create(main_opt.schema_registry, schema, main_opt);
-            converters[cname] = std::weak_ptr<Converter>(conv);
-          }
-        } else {
-          conv = Converter::create(main_opt.schema_registry, schema, main_opt);
-          converters[cname] = std::weak_ptr<Converter>(conv);
-        }
-      } else {
-        conv = Converter::create(main_opt.schema_registry, schema, main_opt);
-      }
-      if (!conv) {
-        LOG(3, "can not create a converter");
-      }
-      stream->converter_add(*kafka_instance_set, conv, topic_uri);
-    };
-    auto mconv = mapping.FindMember("converter");
-    if (mconv != mapping.MemberEnd()) {
-      auto &conv = mconv->value;
-      if (conv.IsObject()) {
-        push_conv(conv);
-      } else if (conv.IsArray()) {
-        for (auto &c : conv.GetArray()) {
-          push_conv(c);
-        }
+  auto Stream = streams.back();
+  if (auto x = find<json>("converter", Mapping)) {
+    if (x.inner().is_object()) {
+      pushConverterToStream(x.inner(), Stream);
+    } else if (x.inner().is_array()) {
+      for (auto const &ConverterSettings : x.inner()) {
+        pushConverterToStream(ConverterSettings, Stream);
       }
     }
   }
-  return 0;
 }
 
 std::atomic<uint64_t> g__total_msgs_to_kafka{0};

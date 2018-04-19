@@ -10,16 +10,11 @@
 #include "blobs.h"
 #include "git_commit_current.h"
 #include "helper.h"
+#include "json.h"
 #include "logger.h"
 #include <CLI/CLI.hpp>
 #include <fstream>
 #include <iostream>
-#include <rapidjson/filereadstream.h>
-#include <rapidjson/istreamwrapper.h>
-#include <rapidjson/prettywriter.h>
-#include <rapidjson/schema.h>
-#include <rapidjson/stringbuffer.h>
-#include <rapidjson/writer.h>
 
 namespace BrightnESS {
 namespace ForwardEpicsToKafka {
@@ -58,66 +53,46 @@ std::string MainOpt::brokers_as_comma_list() const {
   return s1;
 }
 
-int MainOpt::parse_json_file(std::string ConfigurationFile) {
+void MainOpt::parse_json_file(std::string ConfigurationFile) {
   if (ConfigurationFile.empty()) {
-    LOG(3, "given config filename is empty");
-    return -1;
+    throw std::runtime_error("Name of configuration file is empty");
   }
   this->ConfigurationFile = ConfigurationFile;
-  using namespace rapidjson;
-  Document schema_;
-  try {
-    schema_.Parse(blobs::schema_config_global_json,
-                  strlen(blobs::schema_config_global_json));
-  } catch (...) {
-    LOG(3, "schema is not valid!");
-    return -2;
-  }
-  if (schema_.HasParseError()) {
-    LOG(3, "could not parse schema");
-    return -3;
-  }
-  SchemaDocument schema(schema_);
 
   // Parse the JSON configuration and extract parameters.
   // Currently, these parameters take precedence over what is given on the
   // command line.
   parse_document(ConfigurationFile);
-  if (json->IsNull()) {
-    return -4;
-  }
-  if (json->HasParseError()) {
-    LOG(3, "configuration is not well formed");
-    return -5;
+  if (JSONConfiguration.is_null()) {
+    throw std::runtime_error("Can not parse configuration file as JSON");
   }
 
-  SchemaValidator vali(schema);
-
-  if (!json->Accept(vali)) {
-    StringBuffer sb1, sb2;
-    vali.GetInvalidSchemaPointer().StringifyUriFragment(sb1);
-    vali.GetInvalidDocumentPointer().StringifyUriFragment(sb2);
-    LOG(3,
-        "command message schema validation:  Invalid schema: {}  keyword: {}",
-        sb1.GetString(), vali.GetInvalidSchemaKeyword());
-    if (std::string("additionalProperties") == vali.GetInvalidSchemaKeyword()) {
-      LOG(3, "Sorry, you have probably specified more properties than what is "
-             "allowed by the schema.");
-    }
-    LOG(3, "configuration is not valid");
-    return -6;
+  if (auto x = find<std::string>("broker-config", JSONConfiguration)) {
+    BrokerConfig = x.inner();
   }
-  vali.Reset();
 
-  find_broker_config(BrokerConfig);
-  find_conversion_threads(conversion_threads);
-  find_conversion_worker_queue_size(conversion_worker_queue_size);
-  find_main_poll_interval(main_poll_interval);
+  if (auto x = find<size_t>("conversion-threads", JSONConfiguration)) {
+    ConversionThreads = x.inner();
+  }
 
-  find_brokers_config();
+  if (auto x =
+          find<size_t>("conversion-worker-queue-size", JSONConfiguration)) {
+    ConversionWorkerQueueSize = x.inner();
+  }
+
+  if (auto x = find<int32_t>("main-poll-interval", JSONConfiguration)) {
+    main_poll_interval = x.inner();
+  }
+
+  auto Settings = extractKafkaBrokerSettingsFromJSON(JSONConfiguration);
+  broker_opt.ConfigurationStrings = Settings.ConfigurationStrings;
+  broker_opt.ConfigurationIntegers = Settings.ConfigurationIntegers;
+
   find_status_uri();
-  find_broker();
-  return 0;
+
+  if (auto x = find<std::string>("broker", JSONConfiguration)) {
+    set_broker(x.inner());
+  }
 }
 
 void MainOpt::parse_document(const std::string &filepath) {
@@ -125,98 +100,50 @@ void MainOpt::parse_document(const std::string &filepath) {
   if (!ifs.is_open()) {
     LOG(3, "Could not open JSON file")
   }
-  rapidjson::IStreamWrapper isw(ifs);
-  json = std::make_shared<rapidjson::Document>();
-  json->ParseStream(isw);
+  JSONConfiguration = nlohmann::json();
+  ifs >> JSONConfiguration;
 }
 
 void MainOpt::find_status_uri() {
-  auto itr = json->FindMember("status-uri");
-  if (itr != json->MemberEnd() && itr->value.IsString()) {
-    uri::URI u1;
-    u1.port = 9092;
-    u1.parse(itr->value.GetString());
-    StatusReportURI = u1;
+  if (auto x = find<std::string>("status-uri", JSONConfiguration)) {
+    auto URIString = x.inner();
+    uri::URI URI;
+    URI.port = 9092;
+    URI.parse(URIString);
+    StatusReportURI = URI;
   }
 }
 
-void MainOpt::find_brokers_config() {
-  auto kafka = json->FindMember("kafka");
-  if (kafka != json->MemberEnd()) {
-    auto &brokers = kafka->value;
-    if (brokers.IsObject()) {
-      auto broker = brokers.FindMember("broker");
-      if (broker != json->MemberEnd()) {
-        auto &broker_properties = broker->value;
-        if (broker_properties.IsObject()) {
-          for (auto &broker_property : broker_properties.GetObject()) {
-            auto const &name = broker_property.name.GetString();
-            if (strncmp("___", name, 3) != 0) {
-              if (broker_property.value.IsString()) {
-                auto const &value = broker_property.value.GetString();
-                LOG(6, "kafka broker config {}: {}", name, value);
-                broker_opt.ConfigurationStrings[name] = value;
-              } else if (broker_property.value.IsInt()) {
-                auto const &value = broker_property.value.GetUint();
-                LOG(6, "kafka broker config {}: {}", name, value);
-                broker_opt.ConfigurationIntegers[name] = value;
-              } else {
-                LOG(3, "ERROR can not understand option: {}", name);
-              }
-            }
-          }
+KafkaBrokerSettings
+extractKafkaBrokerSettingsFromJSON(nlohmann::json const &JSONConfiguration) {
+  KafkaBrokerSettings Settings;
+  using nlohmann::json;
+  if (auto KafkaMaybe = find<json>("kafka", JSONConfiguration)) {
+    auto Kafka = KafkaMaybe.inner();
+    if (auto BrokerMaybe = find<json>("broker", Kafka)) {
+      auto Broker = BrokerMaybe.inner();
+      for (auto Property = Broker.begin(); Property != Broker.end();
+           ++Property) {
+        auto const Key = Property.key();
+        if (Key.find("___") == 0) {
+          // Skip this property
+          continue;
+        }
+        if (Property.value().is_string()) {
+          auto Value = Property.value().get<std::string>();
+          LOG(6, "kafka broker config {}: {}", Key, Value);
+          Settings.ConfigurationStrings[Key] = Value;
+        } else if (Property.value().is_number()) {
+          auto Value = Property.value().get<int64_t>();
+          LOG(6, "kafka broker config {}: {}", Key, Value);
+          Settings.ConfigurationIntegers[Key] = Value;
+        } else {
+          LOG(3, "can not understand option: {}", Key);
         }
       }
     }
   }
-}
-
-void MainOpt::find_int(const char *key, int &property) const {
-  auto itr = json->FindMember(key);
-  if (itr != json->MemberEnd()) {
-    if (itr->value.IsInt()) {
-      property = itr->value.GetInt();
-    }
-  }
-}
-
-void MainOpt::find_main_poll_interval(int &property) {
-  find_int("main-poll-interval", property);
-}
-
-void MainOpt::find_conversion_worker_queue_size(uint32_t &property) {
-  find_uint32_t("conversion-worker-queue-size", property);
-}
-
-void MainOpt::find_uint32_t(const char *key, uint32_t &property) {
-  auto itr = json->FindMember(key);
-  if (itr != json->MemberEnd()) {
-    if (itr->value.IsInt()) {
-      property = static_cast<uint32_t>(itr->value.GetInt());
-    }
-  }
-}
-
-void MainOpt::find_conversion_threads(int &property) {
-  find_int("conversion-threads", property);
-}
-
-void MainOpt::find_broker_config(uri::URI &property) {
-  auto itr = json->FindMember("broker-config");
-  if (itr != json->MemberEnd()) {
-    if (itr->value.IsString()) {
-      property = {std::string(itr->value.GetString())};
-    }
-  }
-}
-
-void MainOpt::find_broker() {
-  auto itr = json->FindMember("broker");
-  if (itr != json->MemberEnd()) {
-    if (itr->value.IsString()) {
-      set_broker(itr->value.GetString());
-    }
-  }
+  return Settings;
 }
 
 /// Add a URI valued option to the given App.
@@ -274,8 +201,10 @@ std::pair<int, std::unique_ptr<MainOpt>> parse_opt(int argc, char **argv) {
     return ret;
   }
   if (!opt.ConfigurationFile.empty()) {
-    if (opt.parse_json_file(opt.ConfigurationFile) != 0) {
-      LOG(4, "Can not parse configuration file");
+    try {
+      opt.parse_json_file(opt.ConfigurationFile);
+    } catch (std::exception const &e) {
+      LOG(4, "Can not parse configuration file: {}", e.what());
       ret.first = 1;
       return ret;
     }

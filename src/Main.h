@@ -1,4 +1,5 @@
 #pragma once
+
 #include "ConversionWorker.h"
 #include "ForwarderInfo.h"
 #include "MainOpt.h"
@@ -8,9 +9,16 @@
 #include <list>
 #include <map>
 #include <mutex>
+#include <nlohmann/json.hpp>
+#include <stdexcept>
 
 namespace BrightnESS {
 namespace ForwardEpicsToKafka {
+
+class MappingAddException : public std::runtime_error {
+public:
+  MappingAddException(std::string what) : std::runtime_error(what) {}
+};
 
 class Converter;
 class Stream;
@@ -40,7 +48,7 @@ public:
   Main(MainOpt &opt);
   ~Main();
   void forward_epics_to_kafka();
-  int mapping_add(rapidjson::Value &mapping);
+  void mappingAdd(nlohmann::json const &Mapping);
   void stopForwarding();
   void stopForwardingDueToSignal();
   void report_status();
@@ -74,6 +82,9 @@ private:
   Streams streams;
   std::atomic<ForwardingRunState> ForwardingRunFlag{ForwardingRunState::RUN};
   void raiseForwardingFlag(ForwardingRunState ToBeRaised);
+  void
+  pushConverterToStream(nlohmann::json const &JSON,
+                        std::shared_ptr<ForwardEpicsToKafka::Stream> &Stream);
 };
 
 extern std::atomic<uint64_t> g__total_msgs_to_kafka;

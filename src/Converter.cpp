@@ -1,4 +1,5 @@
 #include "Converter.h"
+#include "json.h"
 #include "logger.h"
 
 namespace BrightnESS {
@@ -20,25 +21,27 @@ Converter::create(FlatBufs::SchemaRegistry const &schema_registry,
     LOG(3, "can not create a converter");
     return ret;
   }
-  using std::map;
   using std::string;
-  map<string, int64_t> config_ints;
-  map<string, string> config_strings;
-  if (true) {
-    if (main_opt.json) {
-      auto m = main_opt.json->FindMember("converters");
-      if (m != main_opt.json->MemberEnd()) {
-        if (m->value.IsObject()) {
-          auto m2 = m->value.GetObject().FindMember(schema.c_str());
-          if (m2 != main_opt.json->MemberEnd()) {
-            if (m2->value.IsObject()) {
-              for (auto &v : m2->value.GetObject()) {
-                if (v.value.IsInt64()) {
-                  config_ints[v.name.GetString()] = v.value.GetInt64();
-                }
-                if (v.value.IsString()) {
-                  config_strings[v.name.GetString()] = v.value.GetString();
-                }
+  using nlohmann::json;
+  std::map<string, int64_t> config_ints;
+  std::map<string, string> config_strings;
+
+  auto const &JSON = main_opt.JSONConfiguration;
+  if (JSON.is_object()) {
+    if (auto x = find<json>("converters", JSON)) {
+      auto const &Converters = x.inner();
+      if (Converters.is_object()) {
+        if (auto x = find<json>(schema, Converters)) {
+          auto const &ConverterSchemaConfig = x.inner();
+          if (ConverterSchemaConfig.is_object()) {
+            for (auto SettingIt = ConverterSchemaConfig.begin();
+                 SettingIt != ConverterSchemaConfig.end(); ++SettingIt) {
+              if (SettingIt.value().is_number()) {
+                config_ints[SettingIt.key()] = SettingIt.value().get<int64_t>();
+              }
+              if (SettingIt.value().is_string()) {
+                config_strings[SettingIt.key()] =
+                    SettingIt.value().get<string>();
               }
             }
           }
