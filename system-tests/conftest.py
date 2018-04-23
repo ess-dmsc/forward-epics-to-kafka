@@ -40,7 +40,7 @@ def docker_compose(request):
     try:
         build = request.param
     except AttributeError:
-        build = True
+        build = False
 
     # Options must be given as long form
     options = {"--no-deps": False,

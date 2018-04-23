@@ -5,9 +5,7 @@ from confluent_kafka import Producer, Consumer
 from helpers.f142_logdata import LogData, Value, Int, Double
 import flatbuffers
 import uuid
-import subprocess
 import time
-import threading
 from CaChannel import CaChannel, CaChannelException
 import math
 
@@ -16,15 +14,14 @@ CONFIG_TOPIC = "TEST_forwarderConfig"
 DATA_TOPIC = "TEST_forwarderData"
 
 
-@pytest.mark.parametrize('docker_compose', [BUILD_FORWARDER], indirect=['docker_compose'])
 def test_topic_exists_on_creation(docker_compose):
-    prod = ProducerWrapper("localhost:9092", CONFIG_TOPIC, DATA_TOPIC)
+    topic_suffix = "_topic_exists_on_creation"
+    server = "localhost:9092"
+    prod = ProducerWrapper(server, CONFIG_TOPIC + topic_suffix , DATA_TOPIC + topic_suffix)
     prod.add_config(["SIM:Spd", "SIM:ActSpd"])
-    sleep(2)
-    assert prod.topic_exists(CONFIG_TOPIC)
+    assert prod.topic_exists(CONFIG_TOPIC + topic_suffix, server)
 
 
-@pytest.mark.parametrize('docker_compose', [BUILD_FORWARDER], indirect=['docker_compose'])
 def test_flatbuffers_encode_and_decode(docker_compose):
     global_config = {'bootstrap.servers': 'localhost:9092'}
     producer_config = global_config
@@ -60,39 +57,51 @@ def test_flatbuffers_encode_and_decode(docker_compose):
     cons.close()
 
 
-@pytest.mark.parametrize('docker_compose', [BUILD_FORWARDER], indirect=['docker_compose'])
 def test_forwarder_sends_pv_updates_single_pv(docker_compose):
+
+    data_topic = "TEST_forwarderData_send_pv_update"
+    config_topic = "TEST_forwarderConfig_send_pv_update"
+
     consumer_config = {'bootstrap.servers': 'localhost:9092', 'default.topic.config': {'auto.offset.reset': 'smallest'},
                        'group.id': uuid.uuid4()}
-    sleep(10)  # Waiting for forwarder container to be started
-    prod = ProducerWrapper("localhost:9092", CONFIG_TOPIC, DATA_TOPIC)
+    prod = ProducerWrapper("localhost:9092", config_topic , data_topic )
     prod.add_config(["SIM:Spd"])
     sleep(2)  # Waiting for config to be pushed
     cons = Consumer(**consumer_config)
-    cons.subscribe([CONFIG_TOPIC])
+    cons.subscribe([config_topic])
     msg = cons.poll()
     assert not msg.error()
     topic = msg.topic()
-    assert topic == CONFIG_TOPIC
-    # update value
+    # assert str(msg.value(), encoding="utf-8") == '{"cmd": "add", "streams": [{"converter": {"schema": "f142", "topic": "TEST_forwarderDatasend_pv_update"}, "channel_provider_type": "ca", "channel": "SIM:Spd"}] }'
+    assert topic == config_topic      # update value
     change_pv_value("SIM:Spd", 5)
     sleep(10)  # Waiting for PV to be updated
-    # check kafka has new message containing pv and value
-    cons.subscribe([DATA_TOPIC])
+    cons.subscribe([data_topic])
     first_msg = cons.poll()
-    received_msg = cons.poll()
-    assert not received_msg.error()
-    buf = received_msg.value()
-    log_data = LogData.LogData.GetRootAsLogData(buf, 0)
-    assert Value.Value.Double == log_data.ValueType()
-    assert b'SIM:Spd' == log_data.SourceName()
+    assert not first_msg.error()
+    first_msg_buf = first_msg.value()
+    log_data_first = LogData.LogData.GetRootAsLogData(first_msg_buf, 0)
+    check_message_value(log_data_first, Value.Value.Double, b'SIM:Spd')
+    check_double_value_and_equality(log_data_first, 0)
+    second_msg = cons.poll()
+    assert not second_msg.error()
+    second_msg_buf = second_msg.value()
+    log_data_second = LogData.LogData.GetRootAsLogData(second_msg_buf, 0)
+    check_message_value(log_data_second, Value.Value.Double, b'SIM:Spd')
+    check_double_value_and_equality(log_data_second, 5)
+    cons.close()
 
+
+def check_double_value_and_equality(log_data, expected_value):
     union_double = Double.Double()
     union_double.Init(log_data.Value().Bytes, log_data.Value().Pos)
     union_value = union_double.Value()
-    assert math.isclose(5, union_value)
+    assert math.isclose(expected_value, union_value)
 
-    cons.close()
+
+def check_message_value(log_data, value_type, value):
+    assert value_type == log_data.ValueType()
+    assert value == log_data.SourceName()
 
 
 def change_pv_value(pvname, value):
@@ -104,5 +113,15 @@ def change_pv_value(pvname, value):
         chan.getw()
     except CaChannelException as e:
         print(e)
+
+
+# def subscribe_and_poll(topic_name):
+#     cons = Consumer(**{'bootstrap.servers': 'localhost:9092', 'default.topic.config': {'auto.offset.reset': 'smallest'},
+#                      'group.id': uuid.uuid4()})
+#     cons.subscribe([topic_name])
+#     msg = cons.poll()
+#     assert not msg.error()
+#     cons.close()
+#     return msg.value()
 
 
