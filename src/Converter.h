@@ -4,6 +4,7 @@
 #include "MainOpt.h"
 #include "MakeFlatBufferFromPVStructure.h"
 #include "SchemaRegistry.h"
+#include <nlohmann/json.hpp>
 #include <map>
 #include <string>
 
@@ -16,10 +17,14 @@ public:
   using sptr = std::shared_ptr<Converter>;
   static sptr create(FlatBufs::SchemaRegistry const &schema_registry,
                      std::string schema, MainOpt const &main_opt);
-  BrightnESS::FlatBufs::FlatbufferMessage::uptr
+  FlatBufs::FlatbufferMessage::uptr
   convert(FlatBufs::EpicsPVUpdate const &up);
   std::map<std::string, double> stats();
   std::string schema_name();
+  static void extractConfig(std::string &schema,
+                            nlohmann::json const &config,
+                            std::map<std::string, int64_t> &config_ints,
+                            std::map<std::string, std::string> &config_strings);
 
 private:
   std::string schema;

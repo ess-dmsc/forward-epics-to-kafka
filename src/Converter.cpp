@@ -21,14 +21,24 @@ Converter::create(FlatBufs::SchemaRegistry const &schema_registry,
     LOG(3, "can not create a converter");
     return ret;
   }
-  using std::string;
-  using nlohmann::json;
-  std::map<string, int64_t> config_ints;
-  std::map<string, string> config_strings;
 
-  auto const &JSON = main_opt.JSONConfiguration;
-  if (JSON.is_object()) {
-    if (auto x = find<json>("converters", JSON)) {
+  std::map<std::string, int64_t> config_ints;
+  std::map<std::string, std::string> config_strings;
+
+  extractConfig(schema, main_opt.JSONConfiguration, config_ints, config_strings);
+
+  conv->config(config_ints, config_strings);
+  return ret;
+}
+
+void Converter::extractConfig(std::string &schema,
+                              nlohmann::json const &config,
+                              std::map<std::string, int64_t> &config_ints,
+                              std::map<std::string, std::string> &config_strings) {
+  using nlohmann::json;
+  if (config.is_object()) {
+    if (auto x = find<json>("converters", config)) {
+      printf("Found converter(s)\n");
       auto const &Converters = x.inner();
       if (Converters.is_object()) {
         if (auto x = find<json>(schema, Converters)) {
@@ -41,7 +51,7 @@ Converter::create(FlatBufs::SchemaRegistry const &schema_registry,
               }
               if (SettingIt.value().is_string()) {
                 config_strings[SettingIt.key()] =
-                    SettingIt.value().get<string>();
+                    SettingIt.value().get<std::string>();
               }
             }
           }
@@ -49,8 +59,6 @@ Converter::create(FlatBufs::SchemaRegistry const &schema_registry,
       }
     }
   }
-  conv->config(config_ints, config_strings);
-  return ret;
 }
 
 BrightnESS::FlatBufs::FlatbufferMessage::uptr
