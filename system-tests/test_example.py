@@ -8,18 +8,29 @@ import uuid
 import time
 from CaChannel import CaChannel, CaChannelException
 import math
+from json import loads
+
 
 BUILD_FORWARDER = False
 CONFIG_TOPIC = "TEST_forwarderConfig"
-DATA_TOPIC = "TEST_forwarderData"
 
 
-def test_topic_exists_on_creation(docker_compose):
+def test_config_created_correctly(docker_compose):
     topic_suffix = "_topic_exists_on_creation"
     server = "localhost:9092"
-    prod = ProducerWrapper(server, CONFIG_TOPIC + topic_suffix , DATA_TOPIC + topic_suffix)
-    prod.add_config(["SIM:Spd", "SIM:ActSpd"])
+    data_topic = "TEST_forwarderData" + topic_suffix
+    pvs = ["SIM:Spd", "SIM:ActSpd"]
+    prod = ProducerWrapper(server, CONFIG_TOPIC + topic_suffix, data_topic)
+    prod.add_config(pvs)
     assert prod.topic_exists(CONFIG_TOPIC + topic_suffix, server)
+    cons = Consumer(**{'bootstrap.servers': 'localhost:9092', 'default.topic.config': {'auto.offset.reset': 'smallest'},
+                                       'group.id': uuid.uuid4()})
+    cons.subscribe([CONFIG_TOPIC + topic_suffix])
+    msg = cons.poll()
+    assert not msg.error()
+    buf_json = loads(str(msg.value(), encoding="utf-8"))
+    check_json_config(buf_json, data_topic, pvs)
+    cons.close()
 
 
 def test_flatbuffers_encode_and_decode(docker_compose):
@@ -60,21 +71,22 @@ def test_flatbuffers_encode_and_decode(docker_compose):
 def test_forwarder_sends_pv_updates_single_pv(docker_compose):
 
     data_topic = "TEST_forwarderData_send_pv_update"
-    config_topic = "TEST_forwarderConfig_send_pv_update"
+    pvs = ["SIM:Spd"]
 
     consumer_config = {'bootstrap.servers': 'localhost:9092', 'default.topic.config': {'auto.offset.reset': 'smallest'},
                        'group.id': uuid.uuid4()}
-    prod = ProducerWrapper("localhost:9092", config_topic , data_topic )
-    prod.add_config(["SIM:Spd"])
+    prod = ProducerWrapper("localhost:9092", CONFIG_TOPIC, data_topic)
+    prod.add_config(pvs)
     sleep(2)  # Waiting for config to be pushed
     cons = Consumer(**consumer_config)
-    cons.subscribe([config_topic])
+    cons.subscribe([CONFIG_TOPIC])
     msg = cons.poll()
     assert not msg.error()
     topic = msg.topic()
-    # assert str(msg.value(), encoding="utf-8") == '{"cmd": "add", "streams": [{"converter": {"schema": "f142", "topic": "TEST_forwarderDatasend_pv_update"}, "channel_provider_type": "ca", "channel": "SIM:Spd"}] }'
-    assert topic == config_topic      # update value
-    change_pv_value("SIM:Spd", 5)
+    assert topic == CONFIG_TOPIC
+    check_json_config(loads(str(msg.value(), encoding="utf-8")), data_topic, pvs)
+
+    change_pv_value("SIM:Spd", 5)  # update value
     sleep(10)  # Waiting for PV to be updated
     cons.subscribe([data_topic])
     first_msg = cons.poll()
@@ -115,13 +127,14 @@ def change_pv_value(pvname, value):
         print(e)
 
 
-# def subscribe_and_poll(topic_name):
-#     cons = Consumer(**{'bootstrap.servers': 'localhost:9092', 'default.topic.config': {'auto.offset.reset': 'smallest'},
-#                      'group.id': uuid.uuid4()})
-#     cons.subscribe([topic_name])
-#     msg = cons.poll()
-#     assert not msg.error()
-#     cons.close()
-#     return msg.value()
-
-
+def check_json_config(json_object, topicname, pvs, schema="f142", channel_provider_type="ca"):
+    assert json_object["cmd"] == "add"
+    used_pvs = []
+    for stream in json_object["streams"]:
+        assert channel_provider_type == stream["channel_provider_type"]
+        channel = stream["channel"]
+        assert channel not in used_pvs and channel in pvs
+        used_pvs.append(channel)
+        conv = stream["converter"]
+        assert conv["schema"] == schema
+        assert conv["topic"] == topicname

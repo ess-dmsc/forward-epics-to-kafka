@@ -35,12 +35,7 @@ def docker_compose(request):
     :type request: _pytest.python.FixtureRequest
     """
     print("Started preparing test environment...", flush=True)
-    # Allows option of preventing build occurring by decorating test function with:
-    # @pytest.mark.parametrize('docker_compose', [False], indirect=['docker_compose'])
-    try:
-        build = request.param
-    except AttributeError:
-        build = False
+    build = False
 
     # Options must be given as long form
     options = {"--no-deps": False,
