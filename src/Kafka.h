@@ -17,9 +17,8 @@ Simple load balance over the available producers.
 #include "tools.h"
 #include "uri.h"
 
-#include "KafkaW.h"
-#include "fbhelper.h"
-#include "fbschemas.h"
+#include "FlatbufferMessage.h"
+#include "KafkaW/KafkaW.h"
 #include <librdkafka/rdkafka.h>
 
 namespace BrightnESS {
@@ -30,16 +29,17 @@ template <typename T> using sptr = std::shared_ptr<T>;
 
 class InstanceSet {
 public:
-  static sptr<InstanceSet> Set(KafkaW::BrokerOpt opt);
+  static sptr<InstanceSet> Set(KafkaW::BrokerSettings opt);
+  static void clear();
   KafkaW::Producer::Topic producer_topic(uri::URI uri);
   int poll();
   void log_stats();
-  std::vector<KafkaW::Producer::Stats> stats_all();
+  std::vector<KafkaW::ProducerStats> stats_all();
 
 private:
   InstanceSet(InstanceSet const &&) = delete;
-  InstanceSet(KafkaW::BrokerOpt opt);
-  KafkaW::BrokerOpt opt;
+  InstanceSet(KafkaW::BrokerSettings opt);
+  KafkaW::BrokerSettings BrokerSettings;
   std::mutex mx_producers_by_host;
   std::map<std::string, std::shared_ptr<KafkaW::Producer>> producers_by_host;
 };

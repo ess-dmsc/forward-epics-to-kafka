@@ -186,6 +186,21 @@ def docker_coverage(image_key) {
     }
 }
 
+def docker_cppcheck(image_key) {
+    try {
+        def custom_sh = images[image_key]['sh']
+        def test_output = "cppcheck.txt"
+        def cppcheck_script = """
+                        cd forward-epics-to-kafka
+                        cppcheck --enable=all --inconclusive --template="{file},{line},{severity},{id},{message}" src/ 2> ${test_output}
+                    """
+        sh "docker exec ${container_name(image_key)} ${custom_sh} -c \"${cppcheck_script}\""
+        sh "docker cp ${container_name(image_key)}:/home/jenkins/forward-epics-to-kafka/${test_output} ."
+    } catch (e) {
+        failure_function(e, "Cppcheck step for (${container_name(image_key)}) failed")
+    }
+}
+
 def get_pipeline(image_key) {
     return {
         stage("${image_key}") {
@@ -199,6 +214,8 @@ def get_pipeline(image_key) {
 
                 if (image_key == clangformat_os) {
                     docker_formatting(image_key)
+                    docker_cppcheck(image_key)
+                    step([$class: 'WarningsPublisher', parserConfigurations: [[parserName: 'Cppcheck Parser', pattern: 'cppcheck.txt']]])
                 } else {
                     docker_build(image_key)
                     if (image_key == test_and_coverage_os) {
@@ -223,6 +240,44 @@ def get_pipeline(image_key) {
     }
 }
 
+def get_win10_pipeline() {
+  return {
+    node('windows10') {
+      // Use custom location to avoid Win32 path length issues
+      ws('c:\\jenkins\\') {
+      cleanWs()
+      dir("${project}") {
+        stage("win10: Checkout") {
+          checkout scm
+        }  // stage
+
+	stage("win10: Setup") {
+          bat """if exist _build rd /q /s _build
+	    mkdir _build
+	    xcopy /y conan\\conanfile_win32.txt conan\\conanfile.txt
+	    """
+	} // stage
+        stage("win10: Install") {
+          bat """cd _build
+	    conan.exe \
+            install ..\\conan\\conanfile.txt  \
+            --settings build_type=Release \
+            --build=outdated"""
+        }  // stage
+
+	 stage("win10: Build") {
+           bat """cd _build
+	     cmake .. -G \"Visual Studio 15 2017 Win64\" -DCMAKE_BUILD_TYPE=Release
+	     cmake --build .
+	     """
+        }  // stage
+      }  // dir
+      }
+    }  // node
+  }  // return
+}  // def
+
+
 node('docker && eee') {
     cleanWs()
 
@@ -238,9 +293,10 @@ node('docker && eee') {
 
     def builders = [:]
     for (x in images.keySet()) {
-        def image_key = x
-        builders[image_key] = get_pipeline(image_key)
+      def image_key = x
+      builders[image_key] = get_pipeline(image_key)
     }
+    builders['windows10'] = get_win10_pipeline()
 
     parallel builders
 

@@ -1,4 +1,5 @@
 #pragma once
+
 #include "ConversionWorker.h"
 #include "ForwarderInfo.h"
 #include "MainOpt.h"
@@ -8,9 +9,16 @@
 #include <list>
 #include <map>
 #include <mutex>
+#include <nlohmann/json.hpp>
+#include <stdexcept>
 
 namespace BrightnESS {
 namespace ForwardEpicsToKafka {
+
+class MappingAddException : public std::runtime_error {
+public:
+  MappingAddException(std::string what) : std::runtime_error(what) {}
+};
 
 class Converter;
 class Stream;
@@ -27,15 +35,22 @@ enum class ForwardingStatus : int32_t {
   STOPPED,
 };
 
-struct stub_curl;
+struct CURLReporter;
+
+enum class ForwardingRunState : int {
+  RUN = 0,
+  STOP = 1,
+  STOP_DUE_TO_SIGNAL = 2,
+};
 
 class Main {
 public:
   Main(MainOpt &opt);
   ~Main();
   void forward_epics_to_kafka();
-  int mapping_add(rapidjson::Value &mapping);
-  void forwarding_exit();
+  void mappingAdd(nlohmann::json const &Mapping);
+  void stopForwarding();
+  void stopForwardingDueToSignal();
   void report_status();
   void report_stats(int started_in_current_round);
   int conversion_workers_clear();
@@ -60,12 +75,16 @@ private:
   friend class tests::Remote_T;
   friend class ConversionScheduler;
   std::atomic<uint32_t> converter_ix{0};
-  std::atomic<int32_t> forwarding_run{1};
   std::atomic<ForwardingStatus> forwarding_status{ForwardingStatus::NORMAL};
-  std::unique_ptr<stub_curl> curl;
+  std::unique_ptr<CURLReporter> curl;
   std::shared_ptr<KafkaW::Producer> status_producer;
   std::unique_ptr<KafkaW::ProducerTopic> status_producer_topic;
   Streams streams;
+  std::atomic<ForwardingRunState> ForwardingRunFlag{ForwardingRunState::RUN};
+  void raiseForwardingFlag(ForwardingRunState ToBeRaised);
+  void
+  pushConverterToStream(nlohmann::json const &JSON,
+                        std::shared_ptr<ForwardEpicsToKafka::Stream> &Stream);
 };
 
 extern std::atomic<uint64_t> g__total_msgs_to_kafka;

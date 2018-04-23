@@ -4,7 +4,6 @@ message(STATUS "CMAKE_BUILD_TYPE: ${CMAKE_BUILD_TYPE}")
 
 find_package(EPICSV4)
 find_package(Fmt REQUIRED)
-find_package(Rapidjson REQUIRED)
 find_package(RdKafka REQUIRED)
 find_package(FlatBuffers REQUIRED)
 find_package(StreamingDataTypes COMPONENTS ce9a4745431e54bc45b0c927857a866fa77b84ec)
@@ -18,11 +17,13 @@ set(path_include_common
 ${FMT_INCLUDE_DIR}
 ${RDKAFKA_INCLUDE_DIR}
 ${FLATBUFFERS_INCLUDE_DIR}
-${RAPIDJSON_INCLUDE_DIR}
 ${CURL_INCLUDE_DIRS}
-${EPICSV4_INCLUDE_DIRS}
 ${PROJECT_SOURCE_DIR}/src
 ${PROJECT_BINARY_DIR}/src
+)
+
+set(path_include_common_suppressed_warnings
+${EPICSV4_INCLUDE_DIRS}
 )
 
 set(libraries_common
@@ -46,42 +47,48 @@ endif()
 
 
 set(SOURCES
-MainOpt.cxx
-Main.cxx
-ForwarderInfo.cxx
-EpicsClient.cxx
-helper.cxx
-logger.cxx
-configuration.cxx
-Kafka.cxx
-KafkaW.cxx
-Ring.cxx
-ConversionWorker.cxx
-epics-to-fb.cxx
-Config.cxx
-fbschemas.cxx
-SchemaRegistry.cxx
-MakeFlatBufferFromPVStructure.cxx
-uri.cxx
-blobs.cxx
-Converter.cxx
-KafkaOutput.cxx
-Stream.cxx
-Streams.cxx
-schema_f140_general.cxx
-schema_f141_epics_nt.cxx
-schemas/f142/f142.cxx
+MainOpt.cpp
+Main.cpp
+ForwarderInfo.cpp
+EpicsClient.cpp
+helper.cpp
+logger.cpp
+configuration.cpp
+Kafka.cpp
+KafkaW/BrokerSettings.cpp
+KafkaW/Consumer.cpp
+KafkaW/KafkaW.cpp
+KafkaW/Msg.cpp
+KafkaW/PollStatus.cpp
+KafkaW/Producer.cpp
+KafkaW/ProducerTopic.cpp
+KafkaW/TopicSettings.cpp
+Ring.cpp
+ConversionWorker.cpp
+epics-to-fb.cpp
+Config.cpp
+FlatbufferMessage.cpp
+SchemaRegistry.cpp
+MakeFlatBufferFromPVStructure.cpp
+uri.cpp
+blobs.cpp
+json.cpp
+Converter.cpp
+KafkaOutput.cpp
+Stream.cpp
+Streams.cpp
+schema_f140_general.cpp
+schema_f141_epics_nt.cpp
+schemas/f142/f142.cpp
 ${FMT_SRC}
-schemas/f143/f143.cxx
-${CMAKE_CURRENT_BINARY_DIR}/git_commit_current.cxx
+schemas/f143/f143.cpp
+${CMAKE_CURRENT_BINARY_DIR}/git_commit_current.cpp
 )
-if (WIN32)
-set(SOURCES ${SOURCES} wingetopt.c)
-endif (WIN32)
 
 set(tgt __objects)
 add_library(${tgt} OBJECT ${SOURCES})
 target_include_directories(${tgt} PRIVATE ${path_include_common})
+target_include_directories(${tgt} SYSTEM PRIVATE ${path_include_common_suppressed_warnings})
 
 if (WIN32)
     # Skip xxd_generate and git_commit_current
@@ -96,7 +103,7 @@ target_compile_definitions(${tgt} PRIVATE ${compile_defs_common})
 
 set(tgt forward-epics-to-kafka)
 add_executable(${tgt}
-forward-epics-to-kafka.cxx
+forward-epics-to-kafka.cpp
 $<TARGET_OBJECTS:__objects>
 )
 
