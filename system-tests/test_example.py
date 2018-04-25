@@ -79,7 +79,7 @@ def test_flatbuffers_encode_and_decode(docker_compose):
     cons.close()
 
 
-def test_forwarder_sends_pv_updates_single_pv(docker_compose):
+def test_forwarder_sends_pv_updates_single_pv_double(docker_compose):
     """
     test the forwarder pushes new PV value when the value is updated.
     :param docker_compose: test fixture
