@@ -8,7 +8,7 @@
 
 ### Acceptance Criteria
 
-*List the changes in functionality or code that the reviewers needs to review.*
+*List the changes in functionality or code that the reviewer needs to review.*
 
 ### Unit Tests
 
@@ -20,12 +20,12 @@
 
 ---
 
-#### Code Review
+#### Code Review (To be filled in by the reviewer only)
 
 - [ ] Is the code of an acceptable quality?
 - [ ] Do the changes function as described and is it robust?
 
-### Recommend for Group Code Review
+### Nominate for Group Code Review (Anyone can nominate it)
 Indicate if you think the code should be reviewed in a Thursday code review session.
 
 - [ ] Recommend for group code review
