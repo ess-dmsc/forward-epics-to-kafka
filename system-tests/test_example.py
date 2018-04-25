@@ -104,12 +104,14 @@ def test_forwarder_sends_pv_updates_single_pv(docker_compose):
     change_pv_value("SIM:Spd", 5)  # update value
     sleep(10)  # Waiting for PV to be updated
     cons.subscribe([data_topic])
+
     first_msg = cons.poll()
     assert not first_msg.error()
     first_msg_buf = first_msg.value()
     log_data_first = LogData.LogData.GetRootAsLogData(first_msg_buf, 0)
     check_message_pv_name_and_value_type(log_data_first, Value.Value.Double, b'SIM:Spd')
     check_double_value_and_equality(log_data_first, 0)
+
     second_msg = cons.poll()
     assert not second_msg.error()
     second_msg_buf = second_msg.value()
