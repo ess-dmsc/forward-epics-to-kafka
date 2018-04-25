@@ -20,12 +20,14 @@
 
 ---
 
-#### Code Review (To be filled in by the reviewer only)
+## Code Review (To be filled in by the reviewer only)
 
 - [ ] Is the code of an acceptable quality?
 - [ ] Do the changes function as described and is it robust?
 
-### Nominate for Group Code Review (Anyone can nominate it)
+---
+
+## Nominate for Group Code Review (Anyone can nominate it)
 Indicate if you think the code should be reviewed in a Thursday code review session.
 
 - [ ] Recommend for group code review
