@@ -35,6 +35,10 @@ struct MainOpt {
   void find_status_uri();
   void parse_document(const std::string &filepath);
   void find_broker();
+  void find_broker_config();
+  void find_conversion_threads();
+  void find_conversion_worker_queue_size();
+  void find_main_poll_interval();
 };
 
 std::pair<int, std::unique_ptr<MainOpt>> parse_opt(int argc, char **argv);

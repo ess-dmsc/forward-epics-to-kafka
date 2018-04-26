@@ -60,29 +60,14 @@ void MainOpt::parse_json_file(std::string ConfigurationFile) {
   this->ConfigurationFile = ConfigurationFile;
 
   // Parse the JSON configuration and extract parameters.
-  // Currently, these parameters take precedence over what is given on the
+  // These parameters take precedence over what is given on the
   // command line.
   parse_document(ConfigurationFile);
-  if (JSONConfiguration.is_null()) {
-    throw std::runtime_error("Can not parse configuration file as JSON");
-  }
 
-  if (auto x = find<std::string>("broker-config", JSONConfiguration)) {
-    BrokerConfig = x.inner();
-  }
-
-  if (auto x = find<size_t>("conversion-threads", JSONConfiguration)) {
-    ConversionThreads = x.inner();
-  }
-
-  if (auto x =
-          find<size_t>("conversion-worker-queue-size", JSONConfiguration)) {
-    ConversionWorkerQueueSize = x.inner();
-  }
-
-  if (auto x = find<int32_t>("main-poll-interval", JSONConfiguration)) {
-    main_poll_interval = x.inner();
-  }
+  find_broker_config();
+  find_conversion_threads();
+  find_conversion_worker_queue_size();
+  find_main_poll_interval();
 
   auto Settings = extractKafkaBrokerSettingsFromJSON(JSONConfiguration);
   broker_opt.ConfigurationStrings = Settings.ConfigurationStrings;
@@ -91,6 +76,31 @@ void MainOpt::parse_json_file(std::string ConfigurationFile) {
   find_status_uri();
 
   find_broker();
+}
+
+void MainOpt::find_main_poll_interval() {
+  if (auto x = find<int32_t>("main-poll-interval", JSONConfiguration)) {
+    main_poll_interval = x.inner();
+  }
+}
+
+void MainOpt::find_conversion_worker_queue_size() {
+  if (auto x =
+          find<size_t>("conversion-worker-queue-size", JSONConfiguration)) {
+    ConversionWorkerQueueSize = x.inner();
+  }
+}
+
+void MainOpt::find_conversion_threads() {
+  if (auto x = find<size_t>("conversion-threads", JSONConfiguration)) {
+    ConversionThreads = x.inner();
+  }
+}
+
+void MainOpt::find_broker_config() {
+  if (auto x = find<std::string>("broker-config", JSONConfiguration)) {
+    BrokerConfig = x.inner();
+  }
 }
 
 void MainOpt::find_broker() {
@@ -106,6 +116,10 @@ void MainOpt::parse_document(const std::string &filepath) {
   }
   JSONConfiguration = nlohmann::json();
   ifs >> JSONConfiguration;
+
+  if (JSONConfiguration.is_null()) {
+    throw std::runtime_error("Can not parse configuration file as JSON");
+  }
 }
 
 void MainOpt::find_status_uri() {
