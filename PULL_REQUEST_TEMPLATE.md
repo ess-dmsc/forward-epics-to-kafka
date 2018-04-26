@@ -4,7 +4,7 @@
 
 ### Issue
 
-*Link to Issue, if there is one.*
+*If there is an associated issue, write 'Closes #XXX'*
 
 ### Acceptance Criteria
 
@@ -16,7 +16,7 @@
 
 ### Other
 
-*Give information on anything else that might be relevant to the reviewer.*
+*Give information on anything else that might be relevant to the reviewer. Such as added system tests, update documentation etc.*
 
 ---
 
