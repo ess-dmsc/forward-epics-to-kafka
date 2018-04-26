@@ -90,6 +90,10 @@ void MainOpt::parse_json_file(std::string ConfigurationFile) {
 
   find_status_uri();
 
+  find_broker();
+}
+
+void MainOpt::find_broker() {
   if (auto x = find<std::string>("broker", JSONConfiguration)) {
     set_broker(x.inner());
   }
