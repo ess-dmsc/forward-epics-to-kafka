@@ -27,8 +27,7 @@ def test_config_created_correctly(docker_compose):
     prod = ProducerWrapper(server, CONFIG_TOPIC + topic_suffix, data_topic)
     prod.add_config(pvs)
     assert prod.topic_exists(CONFIG_TOPIC + topic_suffix, server)
-    cons = Consumer(**{'bootstrap.servers': 'localhost:9092', 'default.topic.config': {'auto.offset.reset': 'smallest'},
-                                       'group.id': uuid.uuid4()})
+    cons = create_consumer()
     cons.subscribe([CONFIG_TOPIC + topic_suffix])
     msg = cons.poll()
     assert not msg.error()
@@ -45,14 +44,25 @@ def test_flatbuffers_encode_and_decode(docker_compose):
     :param docker_compose: test fixture
     :return: none
     """
-    global_config = {'bootstrap.servers': 'localhost:9092'}
-    producer_config = global_config
-    consumer_config = global_config
-    consumer_config['default.topic.config'] = {'auto.offset.reset': 'smallest'}
-    consumer_config['group.id'] = uuid.uuid4()
-    topic_name = "TEST_flatbuffers_encoding"
     file_identifier = "f142"
-    prod = Producer(**producer_config)
+    topic_name = "TEST_flatbuffers_encoding"
+    global_config = {'bootstrap.servers': 'localhost:9092'}
+
+    prod = Producer(**global_config)
+    buf = create_flatbuffers_object(file_identifier)
+    prod.produce(topic_name, key="SIM:Spd", value=bytes(buf))
+    sleep(5)
+
+    cons = create_consumer()
+    cons.subscribe([topic_name])
+
+    msg = poll_and_assert(cons).value()
+    file_id = msg[4:8].decode(encoding="utf-8")
+    assert file_id == file_identifier
+    cons.close()
+
+
+def create_flatbuffers_object(file_identifier):
     builder = flatbuffers.Builder(512)
     source_name = builder.CreateString("test")
     Int.IntStart(builder)
@@ -67,16 +77,7 @@ def test_flatbuffers_encode_and_decode(docker_compose):
     builder.Finish(end_offset)
     buf = builder.Output()
     buf[4:8] = bytes(file_identifier, encoding="utf-8")
-    prod.produce(topic_name, key="SIM:Spd", value=bytes(buf))
-    sleep(5)
-    cons = Consumer(**consumer_config)
-    cons.subscribe([topic_name])
-    msg = cons.poll()
-    assert not msg.error()
-    buffer = msg.value()
-    file_id = buffer[4:8].decode(encoding="utf-8")
-    assert file_id == file_identifier
-    cons.close()
+    return buf
 
 
 def test_forwarder_sends_pv_updates_single_pv_double(docker_compose):
@@ -88,15 +89,12 @@ def test_forwarder_sends_pv_updates_single_pv_double(docker_compose):
     data_topic = "TEST_forwarderData_send_pv_update"
     pvs = ["SIM:Spd"]
 
-    consumer_config = {'bootstrap.servers': 'localhost:9092', 'default.topic.config': {'auto.offset.reset': 'smallest'},
-                       'group.id': uuid.uuid4()}
     prod = ProducerWrapper("localhost:9092", CONFIG_TOPIC, data_topic)
     prod.add_config(pvs)
     sleep(2)  # Waiting for config to be pushed
-    cons = Consumer(**consumer_config)
+    cons = create_consumer()
     cons.subscribe([CONFIG_TOPIC])
-    msg = cons.poll()
-    assert not msg.error()
+    msg = poll_and_assert(cons)
     topic = msg.topic()
     assert topic == CONFIG_TOPIC
     check_json_config(loads(str(msg.value(), encoding="utf-8")), data_topic, pvs)
@@ -105,20 +103,29 @@ def test_forwarder_sends_pv_updates_single_pv_double(docker_compose):
     sleep(10)  # Waiting for PV to be updated
     cons.subscribe([data_topic])
 
-    first_msg = cons.poll()
-    assert not first_msg.error()
-    first_msg_buf = first_msg.value()
-    log_data_first = LogData.LogData.GetRootAsLogData(first_msg_buf, 0)
+    first_msg = poll_and_assert(cons).value()
+    log_data_first = LogData.LogData.GetRootAsLogData(first_msg, 0)
     check_message_pv_name_and_value_type(log_data_first, Value.Value.Double, b'SIM:Spd')
     check_double_value_and_equality(log_data_first, 0)
 
-    second_msg = cons.poll()
-    assert not second_msg.error()
-    second_msg_buf = second_msg.value()
-    log_data_second = LogData.LogData.GetRootAsLogData(second_msg_buf, 0)
+    second_msg = poll_and_assert(cons).value()
+    log_data_second = LogData.LogData.GetRootAsLogData(second_msg, 0)
     check_message_pv_name_and_value_type(log_data_second, Value.Value.Double, b'SIM:Spd')
     check_double_value_and_equality(log_data_second, 5)
     cons.close()
+
+
+def poll_and_assert(consumer):
+    msg = consumer.poll()
+    assert not msg.error()
+    return msg
+
+
+def create_consumer():
+    consumer_config = {'bootstrap.servers': 'localhost:9092', 'default.topic.config': {'auto.offset.reset': 'smallest'},
+                       'group.id': uuid.uuid4()}
+    cons = Consumer(**consumer_config)
+    return cons
 
 
 def check_double_value_and_equality(log_data, expected_value):
