@@ -5,7 +5,7 @@ RUN apt-get update && \
     apt-get -y autoremove && \
     apt-get clean all
 
-RUN pip install --upgrade pip && \
+RUN pip install --upgrade pip==9.0.3 && \
     pip install conan==1.0.2 && \
     rm -rf /root/.cache/pip/*
 
