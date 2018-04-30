@@ -99,8 +99,8 @@ def test_forwarder_sends_pv_updates_single_pv_double(docker_compose):
     cons.subscribe([CONFIG_TOPIC])
     msg = poll_for_valid_message(cons)
     check_json_config(loads(str(msg.value(), encoding="utf-8")), data_topic, pvs)
-
-    change_pv_value("SIM:Spd", 5)  # update value
+    # Update value
+    change_pv_value("SIM:Spd", 5)
     sleep(10)  # Waiting for PV to be updated
     cons.subscribe([data_topic])
 
@@ -162,15 +162,14 @@ def check_message_pv_name_and_value_type(log_data, value_type, pv_name):
 
 def change_pv_value(pvname, value):
     """
-    Epics call to change PV value provided with the PV name
+    Epics call to change PV value provided with the PV name.
     TODO: call inside a docker container rather than locally
-    :param pvname: string PV name
+    :param pvname:(string) PV name
     :param value: PV value to change to
     :return: none
     """
     try:
         chan = CaChannel(pvname)
-        print("created CaChannel")
         chan.searchw()
         chan.putw(value)
         chan.getw()
@@ -189,13 +188,12 @@ def check_json_config(json_object, topicname, pvs, schema="f142", channel_provid
     :return: none
     """
     assert json_object["cmd"] == "add"
-    used_pvs = []  # used for checking which PVs have been already configured to avoid setting up multiple streams
-    # for one PV
+    configured_pvs = []
     for stream in json_object["streams"]:
         assert channel_provider_type == stream["channel_provider_type"]
         channel = stream["channel"]
-        assert channel not in used_pvs and channel in pvs
-        used_pvs.append(channel)
+        assert channel not in configured_pvs and channel in pvs
+        configured_pvs.append(channel)
         converter = stream["converter"]
         assert converter["schema"] == schema
         assert converter["topic"] == topicname

@@ -25,7 +25,7 @@ def wait_until_kafka_ready(docker_cmd, docker_options):
         n_polls += 1
 
     if not kafka_ready:
-        docker_cmd.down(docker_options)  # bring down containers cleanly
+        docker_cmd.down(docker_options)  # Bring down containers cleanly
         raise Exception('Kafka broker was not ready after 100 seconds, aborting tests.')
 
 
@@ -50,7 +50,7 @@ def docker_compose(request):
                '--no-build': False,
                '--no-color': False,
                "--rmi": "none",
-               "--volumes": True,  # remove volumes when docker-compose down (don't persist kafka and zk data)
+               "--volumes": True,  # Remove volumes when docker-compose down (don't persist kafka and zk data)
                "--follow": False,
                "--timestamps": False,
                "--tail": "all",
@@ -66,7 +66,7 @@ def docker_compose(request):
 
     def fin():
         cmd.logs(options)
-        cmd.down(options)  # this stops the containers then removes them and their volumes (--volumes option)
+        cmd.down(options)  # This stops the containers then removes them and their volumes (--volumes option)
 
     # Using a finalizer rather than yield in the fixture means
     # that the containers will be brought down even if tests fail
