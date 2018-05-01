@@ -186,7 +186,7 @@ def change_pv_value(pvname, value):
 def check_json_config(json_object, topicname, pvs, schema="f142", channel_provider_type="ca"):
     """
     Check the json config is valid that gets sent to the configuration topic.
-    
+
     :param json_object: Dictionary containing all config options
     :param topicname: The data topic name to push updates to
     :param pvs: The list of PVs to listen for changes
