@@ -175,9 +175,7 @@ def check_message_pv_name_and_value_type(log_data, value_type, pv_name):
 def change_pv_value(pvname, value):
     """
     Epics call to change PV value.
-    
-    TODO: call inside a docker container rather than locally.
-    
+
     :param pvname:(string) PV name
     :param value: PV value to change to
     :return: none
@@ -188,6 +186,7 @@ def change_pv_value(pvname, value):
 def check_json_config(json_object, topicname, pvs, schema="f142", channel_provider_type="ca"):
     """
     Check the json config is valid that gets sent to the configuration topic.
+    
     :param json_object: Dictionary containing all config options
     :param topicname: The data topic name to push updates to
     :param pvs: The list of PVs to listen for changes
