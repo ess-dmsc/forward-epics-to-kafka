@@ -13,7 +13,7 @@ class ForwarderConfig:
 
     def _get_converter(self):
         """
-        Gets the flatbuffers schema and the topic it's being applied to.
+        Get the flatbuffers schema and the topic it's being applied to.
         
         :return:(dict) The dictionary of the schema and topic for the flatbuffers converter.
         """
@@ -21,7 +21,7 @@ class ForwarderConfig:
 
     def _create_stream(self, blk):
         """
-        Creates a stream for the JSON for specified block.
+        Create a stream for the JSON for specified block.
         
         :param blk:(string) The block containing the PV data.
         :return:(dict) The stream information including channel and flatbuffer encoding.
@@ -47,7 +47,7 @@ class ForwarderConfig:
 
     def remove_forwarder_configuration(self, pvs):
         """
-        Removes old forwarder configuration with the stop_channel command.
+        Remove old forwarder configuration with the stop_channel command.
         
         :param pvs:(list) All PVs to be removed.
         :return:(list) A list of json strings with all PVs to remove.
