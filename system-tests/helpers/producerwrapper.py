@@ -37,8 +37,9 @@ class ProducerWrapper:
     def add_config(self, pvs):
         """
         Creates a forwarder configuration to add more pvs to be monitored.
+        
         :param pvs:(list) A list of new PVs to add to the forwarder configuration.
-        :return: none
+        :return: None
         """
         data = self.converter.create_forwarder_configuration(pvs)
         print("Sending data {}".format(data))
@@ -61,8 +62,9 @@ class ProducerWrapper:
     def remove_config(self, pvs):
         """
         Creates a forwarder configuration to remove pvs that are being monitored.
+        
         :param pvs:(list) A list of PVs to remove from the forwarder configuration.
-        :return: none
+        :return: None
         """
         data = self.converter.remove_forwarder_configuration(pvs)
         for pv in data:
