@@ -5,7 +5,7 @@ from helpers.f142_logdata import LogData, Value, Int, Double
 import flatbuffers
 import uuid
 import time
-from CaChannel import CaChannel, CaChannelException
+from epics import caput
 import math
 from json import loads
 
@@ -110,7 +110,7 @@ def test_forwarder_sends_pv_updates_single_pv_double(docker_compose):
     # Update value
     change_pv_value("SIM:Spd", 5)
     # Wait for PV to be updated
-    sleep(10)  
+    sleep(5)
     cons.subscribe([data_topic])
 
     first_msg = poll_for_valid_message(cons).value()
@@ -175,25 +175,18 @@ def check_message_pv_name_and_value_type(log_data, value_type, pv_name):
 def change_pv_value(pvname, value):
     """
     Epics call to change PV value.
-    
-    TODO: call inside a docker container rather than locally.
-    
+
     :param pvname:(string) PV name
     :param value: PV value to change to
     :return: none
     """
-    try:
-        chan = CaChannel(pvname)
-        chan.searchw()
-        chan.putw(value)
-        chan.getw()
-    except CaChannelException as e:
-        print(e)
+    caput(pvname, value, wait=True)
 
 
 def check_json_config(json_object, topicname, pvs, schema="f142", channel_provider_type="ca"):
     """
     Check the json config is valid that gets sent to the configuration topic.
+
     :param json_object: Dictionary containing all config options
     :param topicname: The data topic name to push updates to
     :param pvs: The list of PVs to listen for changes
