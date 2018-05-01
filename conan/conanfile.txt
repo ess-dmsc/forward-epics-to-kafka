@@ -12,3 +12,8 @@ jsonformoderncpp/3.1.0@vthiery/stable
 [generators]
 cmake
 virtualrunenv
+
+[options]
+FlatBuffers:shared=True
+gtest:shared=True
+librdkafka:shared=True
