@@ -66,7 +66,8 @@ def docker_compose(request):
 
     def fin():
         cmd.logs(options)
-        cmd.down(options)  # This stops the containers then removes them and their volumes (--volumes option)
+        # Stop the containers then remove them and their volumes (--volumes option)
+        cmd.down(options)
 
     # Using a finalizer rather than yield in the fixture means
     # that the containers will be brought down even if tests fail
