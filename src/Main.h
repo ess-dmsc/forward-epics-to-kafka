@@ -4,6 +4,7 @@
 #include "ForwarderInfo.h"
 #include "MainOpt.h"
 #include "Streams.h"
+#include "Config.h"
 #include <algorithm>
 #include <atomic>
 #include <list>
@@ -91,6 +92,24 @@ private:
   void
   pushConverterToStream(nlohmann::json const &JSON,
                         std::shared_ptr<ForwardEpicsToKafka::Stream> &Stream);
+};
+
+/// \brief Helper class to provide a callback for the Kafka command listener.
+class ConfigCB : public Config::Callback {
+public:
+  ConfigCB(Main &main);
+  // This is called from the same thread as the main watchdog below, because the
+  // code below calls the config poll which in turn calls this callback.
+  void operator()(std::string const &msg) override;
+  void handleCommand(std::string const &Msg);
+  void handleCommandAdd(nlohmann::json const &Document);
+  void handleCommandStopChannel(nlohmann::json const &Document);
+  void handleCommandStopAll();
+  void handleCommandExit();
+  std::string findCommand(nlohmann::json const &Document);
+
+private:
+  Main &main;
 };
 
 extern std::atomic<uint64_t> g__total_msgs_to_kafka;

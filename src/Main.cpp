@@ -1,5 +1,4 @@
 #include "Main.h"
-#include "Config.h"
 #include "Converter.h"
 #include "ForwarderInfo.h"
 #include "Stream.h"
@@ -90,31 +89,12 @@ Main::~Main() {
   Kafka::InstanceSet::clear();
 }
 
-/// \brief Helper class to provide a callback for the Kafka command listener.
-class ConfigCB : public Config::Callback {
-public:
-  ConfigCB(Main &main);
-  // This is called from the same thread as the main watchdog below, because the
-  // code below calls the config poll which in turn calls this callback.
-  void operator()(std::string const &msg) override;
-  void handleParsedJSON(nlohmann::json const &Document);
-  void handleCommandAdd(nlohmann::json const &Document);
-  void handleCommandStopChannel(nlohmann::json const &Document);
-  void handleCommandStopAll(nlohmann::json const &Document);
-  void handleCommandExit(nlohmann::json const &Document);
-
-private:
-  Main &main;
-};
-
 ConfigCB::ConfigCB(Main &main) : main(main) {}
 
 void ConfigCB::operator()(std::string const &msg) {
-  using nlohmann::json;
   LOG(7, "Command received: {}", msg);
   try {
-    auto Document = json::parse(msg);
-    handleParsedJSON(Document);
+    handleCommand(msg);
   } catch (...) {
     LOG(3, "Command does not look like valid json: {}", msg);
   }
@@ -138,29 +118,39 @@ void ConfigCB::handleCommandStopChannel(nlohmann::json const &Document) {
   }
 }
 
-void ConfigCB::handleCommandStopAll(nlohmann::json const &Document) {
+void ConfigCB::handleCommandStopAll() {
   main.streams.streams_clear();
 }
 
-void ConfigCB::handleCommandExit(nlohmann::json const &Document) {
+void ConfigCB::handleCommandExit() {
   main.stopForwarding();
 }
 
-void ConfigCB::handleParsedJSON(nlohmann::json const &Document) {
-  if (auto CommandMaybe = find<std::string>("cmd", Document)) {
-    auto Command = CommandMaybe.inner();
-    if (Command == "add") {
-      handleCommandAdd(Document);
-    } else if (Command == "stop_channel") {
-      handleCommandStopChannel(Document);
-    } else if (Command == "stop_all") {
-      handleCommandStopAll(Document);
-    } else if (Command == "exit") {
-      handleCommandExit(Document);
-    } else {
-      LOG(6, "Can not understand command: {}", Command);
-    }
+void ConfigCB::handleCommand(std::string const &Msg) {
+  using nlohmann::json;
+  auto Document = json::parse(Msg);
+
+  std::string Command = findCommand(Document);
+
+  if (Command == "add") {
+    handleCommandAdd(Document);
+  } else if (Command == "stop_channel") {
+    handleCommandStopChannel(Document);
+  } else if (Command == "stop_all") {
+    handleCommandStopAll();
+  } else if (Command == "exit") {
+    handleCommandExit();
+  } else {
+    LOG(6, "Can not understand command: {}", Command);
   }
+}
+
+std::string ConfigCB::findCommand(nlohmann::json const &Document) {
+  if (auto CommandMaybe = find<std::string>("cmd", Document)) {
+    return CommandMaybe.inner();
+  }
+
+  return std::string();
 }
 
 int Main::conversion_workers_clear() {
