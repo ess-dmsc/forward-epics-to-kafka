@@ -17,6 +17,7 @@ CONFIG_TOPIC = "TEST_forwarderConfig"
 def test_config_created_correctly(docker_compose):
     """
     Test we can send a configuration message through kafka.
+    
     :param docker_compose: Test fixture
     :return: none
     """
@@ -37,8 +38,10 @@ def test_config_created_correctly(docker_compose):
 def test_flatbuffers_encode_and_decode(docker_compose):
     """
     Test the flatbuffers schema gets pushed to kafka then pulled back and decompiled.
+    
     Note: this is more for documentation purposes than a system test as it shows how to construct a flatbuffers
     object.
+    
     :param docker_compose: Test fixture
     :return: none
     """
@@ -63,6 +66,7 @@ def test_flatbuffers_encode_and_decode(docker_compose):
 def create_flatbuffers_object(file_identifier):
     """
     Create a sample flatbuffers buffer.
+    
     :param file_identifier: The flatbuffers schema ID
     :return: The constructed buffer
     """
@@ -86,6 +90,7 @@ def create_flatbuffers_object(file_identifier):
 def test_forwarder_sends_pv_updates_single_pv_double(docker_compose):
     """
     Test the forwarder pushes new PV value when the value is updated.
+    
     :param docker_compose: Test fixture
     :return: none
     """
@@ -94,14 +99,18 @@ def test_forwarder_sends_pv_updates_single_pv_double(docker_compose):
 
     prod = ProducerWrapper("localhost:9092", CONFIG_TOPIC, data_topic)
     prod.add_config(pvs)
-    sleep(2)  # Waiting for config to be pushed
+    # Wait for config to be pushed
+    sleep(2)  
+    
     cons = create_consumer()
     cons.subscribe([CONFIG_TOPIC])
     msg = poll_for_valid_message(cons)
     check_json_config(loads(str(msg.value(), encoding="utf-8")), data_topic, pvs)
+    
     # Update value
     change_pv_value("SIM:Spd", 5)
-    sleep(10)  # Waiting for PV to be updated
+    # Wait for PV to be updated
+    sleep(10)  
     cons.subscribe([data_topic])
 
     first_msg = poll_for_valid_message(cons).value()
@@ -119,6 +128,7 @@ def test_forwarder_sends_pv_updates_single_pv_double(docker_compose):
 def poll_for_valid_message(consumer):
     """
     Polls the subscribed topics by the consumer and checks the buffer is not empty or malformed.
+    
     :param consumer: The consumer object.
     :return: The message object received from polling.
     """
@@ -138,6 +148,7 @@ def check_double_value_and_equality(log_data, expected_value):
     """
     Initialises the log data object from bytes and checks the union table
     and converts to Python Double then compares against the expected Double value.
+    
     :param log_data: Log data object from the received stream buffer
     :param expected_value: Double value to compare against
     :return: none
@@ -150,7 +161,8 @@ def check_double_value_and_equality(log_data, expected_value):
 
 def check_message_pv_name_and_value_type(log_data, value_type, pv_name):
     """
-    Checks the message value name (PV) and value type (type of PV)
+    Checks the message name (PV) and value type (type of PV).
+    
     :param log_data: Log data object from the received stream buffer
     :param value_type: Flatbuffers value type
     :param pv_name: Byte encoded string of the PV/channel name
@@ -162,8 +174,10 @@ def check_message_pv_name_and_value_type(log_data, value_type, pv_name):
 
 def change_pv_value(pvname, value):
     """
-    Epics call to change PV value provided with the PV name.
-    TODO: call inside a docker container rather than locally
+    Epics call to change PV value.
+    
+    TODO: call inside a docker container rather than locally.
+    
     :param pvname:(string) PV name
     :param value: PV value to change to
     :return: none
