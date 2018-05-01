@@ -325,15 +325,12 @@ void Main::pushConverterToStream(
     nlohmann::json const &JSON,
     std::shared_ptr<ForwardEpicsToKafka::Stream> &Stream) {
   using std::string;
-  string Schema = find<string>("schema", JSON).inner();
-  string Topic = find<string>("topic", JSON).inner();
-  string ConverterName;
-  if (auto x = find<string>("name", JSON)) {
-    ConverterName = x.inner();
-  } else {
-    // Assign automatically generated name
-    ConverterName = fmt::format("converter_{}", converter_ix++);
-  }
+
+  std::string Schema;
+  std::string Topic;
+  std::string ConverterName;
+  extractConverterInfo(JSON, Schema, Topic, ConverterName);
+
   auto r1 = main_opt.schema_registry.items().find(Schema);
   if (r1 == main_opt.schema_registry.items().end()) {
     throw MappingAddException(
@@ -375,6 +372,20 @@ void Main::pushConverterToStream(
     throw MappingAddException("Can not create a converter");
   }
   Stream->converter_add(*kafka_instance_set, ConverterShared, TopicURI);
+}
+
+void Main::extractConverterInfo(const nlohmann::json &JSON,
+                                std::string &Schema,
+                                std::string &Topic,
+                                std::string &ConverterName) {
+  Schema= find<std::string>("schema", JSON).inner();
+  Topic= find<std::string>("topic", JSON).inner();
+  if (auto x = find<std::__cxx11::string>("name", JSON)) {
+    ConverterName = x.inner();
+  } else {
+    // Assign automatically generated name
+    ConverterName = fmt::format("converter_{}", converter_ix++);
+  }
 }
 
 void Main::mappingAdd(nlohmann::json const &Mapping) {

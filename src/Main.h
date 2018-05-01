@@ -58,6 +58,12 @@ public:
   std::unique_lock<std::mutex> get_lock_streams();
   std::unique_lock<std::mutex> get_lock_converters();
 
+  // Public for unit testing
+  void extractConverterInfo(const nlohmann::json &JSON,
+                            std::string &Schema,
+                            std::string &Topic,
+                            std::string &ConverterName);
+
 private:
   int const init_pool_max = 64;
   int const memory_release_grace_time = 45;

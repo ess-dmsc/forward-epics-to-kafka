@@ -3,6 +3,7 @@
 #include <gtest/gtest.h>
 #include "../Converter.h"
 #include "../MainOpt.h"
+#include "../Main.h"
 
 TEST(json_extraction_tests, no_converters_specified_has_no_side_effects) {
   std::string NoConvertersJson = "{}";
@@ -152,13 +153,13 @@ TEST(json_extraction_tests, no_kafka_broker_settings_has_no_side_effects) {
 
 TEST(json_extraction_tests, ints_in_kafka_broker_settings_are_extracted) {
   std::string BrokerJson = "{"
-                             "  \"kafka\": {"
-                             "    \"broker\": { "
-                             "      \"some_option1\": 123, "
-                             "      \"some_option2\": 456"
-                             "    }"
-                             "  }"
-                             "}";
+                           "  \"kafka\": {"
+                           "    \"broker\": { "
+                           "      \"some_option1\": 123, "
+                           "      \"some_option2\": 456"
+                           "    }"
+                           "  }"
+                           "}";
 
   nlohmann::json Json = nlohmann::json::parse(BrokerJson);
 
@@ -171,13 +172,13 @@ TEST(json_extraction_tests, ints_in_kafka_broker_settings_are_extracted) {
 
 TEST(json_extraction_tests, strings_in_kafka_broker_settings_are_extracted) {
   std::string BrokerJson = "{"
-                             "  \"kafka\": {"
-                             "    \"broker\": { "
-                             "      \"some_option1\": \"hello\", "
-                             "      \"some_option2\": \"goodbye\""
-                             "    }"
-                             "  }"
-                             "}";
+                           "  \"kafka\": {"
+                           "    \"broker\": { "
+                           "      \"some_option1\": \"hello\", "
+                           "      \"some_option2\": \"goodbye\""
+                           "    }"
+                           "  }"
+                           "}";
 
   nlohmann::json Json = nlohmann::json::parse(BrokerJson);
 
@@ -258,8 +259,8 @@ TEST(json_extraction_tests, no_conversion_worker_queue_size_sets_default) {
 
 TEST(json_extraction_tests, extracting_conversion_worker_queue_size_sets_value) {
   std::string SizeJson = "{"
-                            "  \"conversion-worker-queue-size\": 1234"
-                            "}";
+                         "  \"conversion-worker-queue-size\": 1234"
+                         "}";
 
   nlohmann::json Json = nlohmann::json::parse(SizeJson);
   BrightnESS::ForwardEpicsToKafka::MainOpt main;
@@ -271,9 +272,9 @@ TEST(json_extraction_tests, extracting_conversion_worker_queue_size_sets_value) 
 }
 
 TEST(json_extraction_tests, no_main_poll_interval_sets_default) {
-  std::string NoSizeJson = "{}";
+  std::string NoPollJson = "{}";
 
-  nlohmann::json Json = nlohmann::json::parse(NoSizeJson);
+  nlohmann::json Json = nlohmann::json::parse(NoPollJson);
   BrightnESS::ForwardEpicsToKafka::MainOpt main;
   main.JSONConfiguration = Json;
 
@@ -283,15 +284,84 @@ TEST(json_extraction_tests, no_main_poll_interval_sets_default) {
 }
 
 TEST(json_extraction_tests, extracting_main_poll_interval_sets_value) {
-  std::string SizeJson = "{"
-                            "  \"main-poll-interval\": 1234"
-                            "}";
+  std::string PollJson = "{"
+                         "  \"main-poll-interval\": 1234"
+                         "}";
 
-  nlohmann::json Json = nlohmann::json::parse(SizeJson);
+  nlohmann::json Json = nlohmann::json::parse(PollJson);
   BrightnESS::ForwardEpicsToKafka::MainOpt main;
   main.JSONConfiguration = Json;
 
   main.find_main_poll_interval();
 
   ASSERT_EQ(1234, main.main_poll_interval);
+}
+
+TEST(json_extraction_tests, extracting_converter_info_gets_schema_topic_and_name) {
+  std::string SizeJson = "{"
+                         "  \"schema\": \"f142\", \"topic\": \"Kafka_topic_name\", \"name\": \"my_name\""
+                         "}";
+
+  nlohmann::json Json = nlohmann::json::parse(SizeJson);
+  BrightnESS::ForwardEpicsToKafka::MainOpt mainOpt;
+  BrightnESS::ForwardEpicsToKafka::Main main(mainOpt);
+
+  std::string Schema;
+  std::string Topic;
+  std::string Name;
+  main.extractConverterInfo(Json, Schema, Topic, Name);
+
+  ASSERT_EQ("f142", Schema);
+  ASSERT_EQ("Kafka_topic_name", Topic);
+  ASSERT_EQ("my_name", Name);
+}
+
+TEST(json_extraction_tests, extracting_converter_info_with_no_name_gets_auto_named) {
+  std::string SizeJson = "{"
+                         "  \"schema\": \"f142\", \"topic\": \"Kafka_topic_name\""
+                         "}";
+
+  nlohmann::json Json = nlohmann::json::parse(SizeJson);
+  BrightnESS::ForwardEpicsToKafka::MainOpt mainOpt;
+  BrightnESS::ForwardEpicsToKafka::Main main(mainOpt);
+
+  std::string Schema;
+  std::string Topic;
+  std::string Name;
+  main.extractConverterInfo(Json, Schema, Topic, Name);
+
+  // Don't carry what the name is, but it must be something
+  ASSERT_TRUE(!Name.empty());
+}
+
+TEST(json_extraction_tests, extracting_converter_info_with_no_schema_throws) {
+  std::string SizeJson = "{"
+                         "  \"topic\": \"Kafka_topic_name\""
+                         "}";
+
+  nlohmann::json Json = nlohmann::json::parse(SizeJson);
+  BrightnESS::ForwardEpicsToKafka::MainOpt mainOpt;
+  BrightnESS::ForwardEpicsToKafka::Main main(mainOpt);
+
+  std::string Schema;
+  std::string Topic;
+  std::string Name;
+
+  ASSERT_ANY_THROW(main.extractConverterInfo(Json, Schema, Topic, Name));
+}
+
+TEST(json_extraction_tests, extracting_converter_info_with_no_topic_throws) {
+  std::string SizeJson = "{"
+                         "  \"schema\": \"f142\""
+                         "}";
+
+  nlohmann::json Json = nlohmann::json::parse(SizeJson);
+  BrightnESS::ForwardEpicsToKafka::MainOpt mainOpt;
+  BrightnESS::ForwardEpicsToKafka::Main main(mainOpt);
+
+  std::string Schema;
+  std::string Topic;
+  std::string Name;
+
+  ASSERT_ANY_THROW(main.extractConverterInfo(Json, Schema, Topic, Name));
 }
