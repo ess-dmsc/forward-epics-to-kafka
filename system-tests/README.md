@@ -1,15 +1,19 @@
 ## Forward-epics-to-kafka system tests 
 
-### How to run tests
+### How to run the tests
 
-[requirement] currently a local EPICS installation is needed.
+[requirement] Currently a local EPICS installation is needed.
 
-[optional] set up a python virtual environment and activate it 
+[optional] Set up a Python virtual environment and activate it (see [here](https://virtualenv.pypa.io/en/stable/))
 
-* Set environment variables : `EPICS_BASE` and `EPICS_HOST_ARCH`
+* Set the EPICS environment variables : `EPICS_BASE` and `EPICS_HOST_ARCH`. For example:
+```
+export EPICS_BASE=/opt/epics/bases/base-3.15.5
+export EPICS_HOST_ARCH=linux-x86_64
+```
 
-* Install [py.test](https://docs.pytest.org/en/latest/getting-started.html), [docker-compose](https://pypi.org/project/docker-compose/), [confluent-kafka](https://pypi.org/project/confluent-kafka/), [flatbuffers](https://pypi.org/project/flatbuffers/) and [CaChannel](https://pypi.org/project/CaChannel/)
+* Install the requirements using pip: `pip install -r system-tests/requirements.txt`
 
 * Compile the `f142_logdata` flatbuffers schema with `flatc --python` into `/system-tests/helpers/f142_logdata`
 
-* Run `pytest test_example.py`
+* Run `pytest system-tests/test_example.py`
