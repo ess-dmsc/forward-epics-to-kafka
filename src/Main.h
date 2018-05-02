@@ -64,6 +64,9 @@ public:
                             std::string &Schema,
                             std::string &Topic,
                             std::string &ConverterName);
+  void extractMappingInfo(nlohmann::json const &Mapping,
+                          std::string &Channel,
+                          std::string &ChannelProviderType);
 
 private:
   int const init_pool_max = 64;

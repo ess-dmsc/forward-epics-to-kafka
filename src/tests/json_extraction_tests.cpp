@@ -103,7 +103,7 @@ TEST(json_extraction_tests, setting_broker_sets_host_and_port) {
   BrightnESS::ForwardEpicsToKafka::MainOpt Main;
   Main.JSONConfiguration = Json;
 
-  Main.find_broker();
+  Main.findBroker();
 
   ASSERT_EQ("kafkabroker", Main.brokers[0].host);
   ASSERT_EQ(1234u, Main.brokers[0].port);
@@ -118,7 +118,7 @@ TEST(json_extraction_tests, setting_multiple_brokers_sets_multiple_hosts_and_por
   BrightnESS::ForwardEpicsToKafka::MainOpt Main;
   Main.JSONConfiguration = Json;
 
-  Main.find_broker();
+  Main.findBroker();
 
   ASSERT_EQ(2u, Main.brokers.size());
   ASSERT_EQ("kafkabroker1", Main.brokers[0].host);
@@ -135,7 +135,7 @@ TEST(json_extraction_tests, setting_no_brokers_sets_default_host_and_port) {
   BrightnESS::ForwardEpicsToKafka::MainOpt Main;
   Main.JSONConfiguration = Json;
 
-  Main.find_broker();
+  Main.findBroker();
 
   ASSERT_EQ("localhost", Main.brokers[0].host);
   ASSERT_EQ(9092u, Main.brokers[0].port);
@@ -197,7 +197,7 @@ TEST(json_extraction_tests, no_broker_config_settings_sets_default_host_port_and
   BrightnESS::ForwardEpicsToKafka::MainOpt Main;
   Main.JSONConfiguration = Json;
 
-  Main.find_broker_config();
+  Main.findBrokerConfig();
 
   ASSERT_EQ("localhost", Main.BrokerConfig.host);
   ASSERT_EQ(9092u, Main.BrokerConfig.port);
@@ -213,7 +213,7 @@ TEST(json_extraction_tests, extracting_broker_config_settings_sets_host_port_and
   BrightnESS::ForwardEpicsToKafka::MainOpt Main;
   Main.JSONConfiguration = Json;
 
-  Main.find_broker_config();
+  Main.findBrokerConfig();
 
   ASSERT_EQ("kafkabroker", Main.BrokerConfig.host);
   ASSERT_EQ(1234u, Main.BrokerConfig.port);
@@ -227,7 +227,7 @@ TEST(json_extraction_tests, no_conversion_threads_settings_sets_default) {
   BrightnESS::ForwardEpicsToKafka::MainOpt Main;
   Main.JSONConfiguration = Json;
 
-  Main.find_conversion_threads();
+  Main.findConversionThreads();
 
   ASSERT_EQ(1u, Main.ConversionThreads);
 }
@@ -241,7 +241,7 @@ TEST(json_extraction_tests, extracting_conversion_threads_sets_value) {
   BrightnESS::ForwardEpicsToKafka::MainOpt Main;
   Main.JSONConfiguration = Json;
 
-  Main.find_conversion_threads();
+  Main.findConversionThreads();
 
   ASSERT_EQ(3u, Main.ConversionThreads);
 }
@@ -253,7 +253,7 @@ TEST(json_extraction_tests, no_conversion_worker_queue_size_sets_default) {
   BrightnESS::ForwardEpicsToKafka::MainOpt Main;
   Main.JSONConfiguration = Json;
 
-  Main.find_conversion_worker_queue_size();
+  Main.findConversionWorkerQueueSize();
 
   ASSERT_EQ(1024u, Main.ConversionWorkerQueueSize);
 }
@@ -267,7 +267,7 @@ TEST(json_extraction_tests, extracting_conversion_worker_queue_size_sets_value) 
   BrightnESS::ForwardEpicsToKafka::MainOpt Main;
   Main.JSONConfiguration = Json;
 
-  Main.find_conversion_worker_queue_size();
+  Main.findConversionWorkerQueueSize();
 
   ASSERT_EQ(1234u, Main.ConversionWorkerQueueSize);
 }
@@ -279,7 +279,7 @@ TEST(json_extraction_tests, no_main_poll_interval_sets_default) {
   BrightnESS::ForwardEpicsToKafka::MainOpt Main;
   Main.JSONConfiguration = Json;
 
-  Main.find_main_poll_interval();
+  Main.findMainPollInterval();
 
   ASSERT_EQ(500, Main.main_poll_interval);
 }
@@ -293,7 +293,7 @@ TEST(json_extraction_tests, extracting_main_poll_interval_sets_value) {
   BrightnESS::ForwardEpicsToKafka::MainOpt Main;
   Main.JSONConfiguration = Json;
 
-  Main.find_main_poll_interval();
+  Main.findMainPollInterval();
 
   ASSERT_EQ(1234, Main.main_poll_interval);
 }
@@ -365,6 +365,24 @@ TEST(json_extraction_tests, extracting_converter_info_with_no_topic_throws) {
   std::string Name;
 
   ASSERT_ANY_THROW(Main.extractConverterInfo(Json, Schema, Topic, Name));
+}
+
+TEST(json_extraction_tests, extracting_mapping_info_gets_channel_and_provider) {
+  std::string RawJson = "{"
+                        "  \"channel\": \"my_channel_name\","
+                        "  \"channel_provider_type\": \"ca\""
+                        "}";
+
+  nlohmann::json Json = nlohmann::json::parse(RawJson);
+  BrightnESS::ForwardEpicsToKafka::MainOpt MainOpt;
+  BrightnESS::ForwardEpicsToKafka::Main Main(MainOpt);
+
+  std::string Channel;
+  std::string ProviderType;
+  Main.extractMappingInfo(Json, Channel, ProviderType);
+
+  ASSERT_EQ("my_channel_name", Channel);
+  ASSERT_EQ("ca", ProviderType);
 }
 
 class ExtractCommandsTest : public ::testing::TestWithParam<const char*> {

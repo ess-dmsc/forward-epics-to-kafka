@@ -379,23 +379,10 @@ void Main::extractConverterInfo(const nlohmann::json &JSON,
 }
 
 void Main::mappingAdd(nlohmann::json const &Mapping) {
-  using std::string;
-  using nlohmann::json;
-  if (!Mapping.is_object()) {
-    throw MappingAddException("Given Mapping is not a JSON object");
-  }
-  auto ChannelMaybe = find<string>("channel", Mapping);
-  if (!ChannelMaybe) {
-    throw MappingAddException("Can not find channel");
-  }
-  auto Channel = ChannelMaybe.inner();
+  std::string Channel;
+  std::string ChannelProviderType;
 
-  auto ChannelProviderTypeMaybe =
-      find<string>("channel_provider_type", Mapping);
-  if (!ChannelProviderTypeMaybe) {
-    throw MappingAddException("Can not find channel");
-  }
-  auto ChannelProviderType = ChannelProviderTypeMaybe.inner();
+  extractMappingInfo(Mapping, Channel, ChannelProviderType);
 
   std::unique_lock<std::mutex> lock(streams_mutex);
   try {
@@ -405,7 +392,7 @@ void Main::mappingAdd(nlohmann::json const &Mapping) {
     std::throw_with_nested(MappingAddException("Can not add stream"));
   }
   auto Stream = streams.back();
-  if (auto x = find<json>("converter", Mapping)) {
+  if (auto x = find<nlohmann::json>("converter", Mapping)) {
     if (x.inner().is_object()) {
       pushConverterToStream(x.inner(), Stream);
     } else if (x.inner().is_array()) {
@@ -414,6 +401,27 @@ void Main::mappingAdd(nlohmann::json const &Mapping) {
       }
     }
   }
+}
+
+void Main::extractMappingInfo(nlohmann::json const &Mapping,
+                              std::string & Channel,
+                              std::string & ChannelProviderType) {
+  if (!Mapping.is_object()) {
+    throw MappingAddException("Given Mapping is not a JSON object");
+  }
+
+  auto ChannelMaybe = find<std::string>("channel", Mapping);
+  if (!ChannelMaybe) {
+    throw MappingAddException("Can not find channel");
+  }
+  Channel = ChannelMaybe.inner();
+
+  auto ChannelProviderTypeMaybe =
+      find<std::string>("channel_provider_type", Mapping);
+  if (!ChannelProviderTypeMaybe) {
+    throw MappingAddException("Can not find channel");
+  }
+  ChannelProviderType = ChannelProviderTypeMaybe.inner();
 }
 
 std::atomic<uint64_t> g__total_msgs_to_kafka{0};

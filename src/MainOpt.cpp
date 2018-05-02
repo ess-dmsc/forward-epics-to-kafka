@@ -64,10 +64,10 @@ void MainOpt::parse_json_file(std::string ConfigurationFile) {
   // command line.
   parse_document(ConfigurationFile);
 
-  find_broker_config();
-  find_conversion_threads();
-  find_conversion_worker_queue_size();
-  find_main_poll_interval();
+  findBrokerConfig();
+  findConversionThreads();
+  findConversionWorkerQueueSize();
+  findMainPollInterval();
 
   auto Settings = extractKafkaBrokerSettingsFromJSON(JSONConfiguration);
   broker_opt.ConfigurationStrings = Settings.ConfigurationStrings;
@@ -75,35 +75,35 @@ void MainOpt::parse_json_file(std::string ConfigurationFile) {
 
   find_status_uri();
 
-  find_broker();
+  findBroker();
 }
 
-void MainOpt::find_main_poll_interval() {
+void MainOpt::findMainPollInterval() {
   if (auto x = find<int32_t>("main-poll-interval", JSONConfiguration)) {
     main_poll_interval = x.inner();
   }
 }
 
-void MainOpt::find_conversion_worker_queue_size() {
+void MainOpt::findConversionWorkerQueueSize() {
   if (auto x =
           find<size_t>("conversion-worker-queue-size", JSONConfiguration)) {
     ConversionWorkerQueueSize = x.inner();
   }
 }
 
-void MainOpt::find_conversion_threads() {
+void MainOpt::findConversionThreads() {
   if (auto x = find<size_t>("conversion-threads", JSONConfiguration)) {
     ConversionThreads = x.inner();
   }
 }
 
-void MainOpt::find_broker_config() {
+void MainOpt::findBrokerConfig() {
   if (auto x = find<std::string>("broker-config", JSONConfiguration)) {
     BrokerConfig = x.inner();
   }
 }
 
-void MainOpt::find_broker() {
+void MainOpt::findBroker() {
   if (auto x = find<std::string>("broker", JSONConfiguration)) {
     set_broker(x.inner());
   }
