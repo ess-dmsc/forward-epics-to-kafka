@@ -25,16 +25,17 @@ Converter::create(FlatBufs::SchemaRegistry const &schema_registry,
   std::map<std::string, int64_t> config_ints;
   std::map<std::string, std::string> config_strings;
 
-  extractConfig(schema, main_opt.JSONConfiguration, config_ints, config_strings);
+  extractConfig(schema, main_opt.JSONConfiguration, config_ints,
+                config_strings);
 
   conv->config(config_ints, config_strings);
   return ret;
 }
 
-void Converter::extractConfig(std::string &schema,
-                              nlohmann::json const &config,
-                              std::map<std::string, int64_t> &config_ints,
-                              std::map<std::string, std::string> &config_strings) {
+void Converter::extractConfig(
+    std::string &schema, nlohmann::json const &config,
+    std::map<std::string, int64_t> &config_ints,
+    std::map<std::string, std::string> &config_strings) {
   using nlohmann::json;
   if (config.is_object()) {
     if (auto x = find<json>("converters", config)) {
@@ -69,5 +70,5 @@ Converter::convert(FlatBufs::EpicsPVUpdate const &up) {
 std::map<std::string, double> Converter::stats() { return conv->stats(); }
 
 std::string Converter::schema_name() { return schema; }
-}
-}
+} // namespace ForwardEpicsToKafka
+} // namespace BrightnESS

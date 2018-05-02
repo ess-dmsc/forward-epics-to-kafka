@@ -118,13 +118,9 @@ void ConfigCB::handleCommandStopChannel(nlohmann::json const &Document) {
   }
 }
 
-void ConfigCB::handleCommandStopAll() {
-  main.streams.streams_clear();
-}
+void ConfigCB::handleCommandStopAll() { main.streams.streams_clear(); }
 
-void ConfigCB::handleCommandExit() {
-  main.stopForwarding();
-}
+void ConfigCB::handleCommandExit() { main.stopForwarding(); }
 
 void ConfigCB::handleCommand(std::string const &Msg) {
   using nlohmann::json;
@@ -364,12 +360,11 @@ void Main::pushConverterToStream(
   Stream->converter_add(*kafka_instance_set, ConverterShared, TopicURI);
 }
 
-void Main::extractConverterInfo(const nlohmann::json &JSON,
-                                std::string &Schema,
+void Main::extractConverterInfo(const nlohmann::json &JSON, std::string &Schema,
                                 std::string &Topic,
                                 std::string &ConverterName) {
-  Schema= find<std::string>("schema", JSON).inner();
-  Topic= find<std::string>("topic", JSON).inner();
+  Schema = find<std::string>("schema", JSON).inner();
+  Topic = find<std::string>("topic", JSON).inner();
   if (auto x = find<std::__cxx11::string>("name", JSON)) {
     ConverterName = x.inner();
   } else {
@@ -404,8 +399,8 @@ void Main::mappingAdd(nlohmann::json const &Mapping) {
 }
 
 void Main::extractMappingInfo(nlohmann::json const &Mapping,
-                              std::string & Channel,
-                              std::string & ChannelProviderType) {
+                              std::string &Channel,
+                              std::string &ChannelProviderType) {
   if (!Mapping.is_object()) {
     throw MappingAddException("Given Mapping is not a JSON object");
   }
@@ -443,5 +438,5 @@ void Main::stopForwarding() { raiseForwardingFlag(ForwardingRunState::STOP); }
 void Main::stopForwardingDueToSignal() {
   raiseForwardingFlag(ForwardingRunState::STOP_DUE_TO_SIGNAL);
 }
-}
-}
+} // namespace ForwardEpicsToKafka
+} // namespace BrightnESS

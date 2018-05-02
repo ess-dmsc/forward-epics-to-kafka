@@ -1,10 +1,10 @@
 #pragma once
 
+#include "Config.h"
 #include "ConversionWorker.h"
 #include "ForwarderInfo.h"
 #include "MainOpt.h"
 #include "Streams.h"
-#include "Config.h"
 #include <algorithm>
 #include <atomic>
 #include <list>
@@ -60,12 +60,9 @@ public:
   std::unique_lock<std::mutex> get_lock_converters();
 
   // Public for unit testing
-  void extractConverterInfo(const nlohmann::json &JSON,
-                            std::string &Schema,
-                            std::string &Topic,
-                            std::string &ConverterName);
-  void extractMappingInfo(nlohmann::json const &Mapping,
-                          std::string &Channel,
+  void extractConverterInfo(const nlohmann::json &JSON, std::string &Schema,
+                            std::string &Topic, std::string &ConverterName);
+  void extractMappingInfo(nlohmann::json const &Mapping, std::string &Channel,
                           std::string &ChannelProviderType);
 
 private:
@@ -117,5 +114,5 @@ private:
 
 extern std::atomic<uint64_t> g__total_msgs_to_kafka;
 extern std::atomic<uint64_t> g__total_bytes_to_kafka;
-}
-}
+} // namespace ForwardEpicsToKafka
+} // namespace BrightnESS
