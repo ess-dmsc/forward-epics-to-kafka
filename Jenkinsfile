@@ -182,7 +182,7 @@ def docker_coverage(image_key) {
             def codecov_upload_script = """
                 cd ${project}
                 pip install --user codecov
-                codecov -t ${TOKEN} --commit ${scm_vars.GIT_COMMIT}
+                python -m codecov -t ${TOKEN} --commit ${scm_vars.GIT_COMMIT}
                 """
             sh "docker exec ${container_name(image_key)} ${custom_sh} -c \"${codecov_upload_script}\""
         }
