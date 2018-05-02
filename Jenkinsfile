@@ -184,7 +184,7 @@ def docker_coverage(image_key) {
                 export WORKSPACE='.'
                 export JENKINS_URL=${JENKINS_URL}
                 pip install --user codecov
-                python -m codecov -t ${TOKEN} --commit ${scm_vars.GIT_COMMIT}
+                python -m codecov -t ${TOKEN} --commit ${scm_vars.GIT_COMMIT} -f ../build/coverage.info
                 """
             sh "docker exec ${container_name(image_key)} ${custom_sh} -c \"${codecov_upload_script}\""
         }
