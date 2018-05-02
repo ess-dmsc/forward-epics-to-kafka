@@ -370,7 +370,7 @@ void Main::extractConverterInfo(const nlohmann::json &JSON,
                                 std::string &ConverterName) {
   Schema= find<std::string>("schema", JSON).inner();
   Topic= find<std::string>("topic", JSON).inner();
-  if (auto x = find<std::__cxx11::string>("name", JSON)) {
+  if (auto x = find<std::string>("name", JSON)) {
     ConverterName = x.inner();
   } else {
     // Assign automatically generated name
