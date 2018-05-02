@@ -1,5 +1,4 @@
 #include "Main.h"
-#include "Config.h"
 #include "Converter.h"
 #include "ForwarderInfo.h"
 #include "Stream.h"
@@ -90,31 +89,12 @@ Main::~Main() {
   Kafka::InstanceSet::clear();
 }
 
-/// \brief Helper class to provide a callback for the Kafka command listener.
-class ConfigCB : public Config::Callback {
-public:
-  ConfigCB(Main &main);
-  // This is called from the same thread as the main watchdog below, because the
-  // code below calls the config poll which in turn calls this callback.
-  void operator()(std::string const &msg) override;
-  void handleParsedJSON(nlohmann::json const &Document);
-  void handleCommandAdd(nlohmann::json const &Document);
-  void handleCommandStopChannel(nlohmann::json const &Document);
-  void handleCommandStopAll(nlohmann::json const &Document);
-  void handleCommandExit(nlohmann::json const &Document);
-
-private:
-  Main &main;
-};
-
 ConfigCB::ConfigCB(Main &main) : main(main) {}
 
 void ConfigCB::operator()(std::string const &msg) {
-  using nlohmann::json;
   LOG(7, "Command received: {}", msg);
   try {
-    auto Document = json::parse(msg);
-    handleParsedJSON(Document);
+    handleCommand(msg);
   } catch (...) {
     LOG(3, "Command does not look like valid json: {}", msg);
   }
@@ -138,29 +118,35 @@ void ConfigCB::handleCommandStopChannel(nlohmann::json const &Document) {
   }
 }
 
-void ConfigCB::handleCommandStopAll(nlohmann::json const &Document) {
-  main.streams.streams_clear();
-}
+void ConfigCB::handleCommandStopAll() { main.streams.streams_clear(); }
 
-void ConfigCB::handleCommandExit(nlohmann::json const &Document) {
-  main.stopForwarding();
-}
+void ConfigCB::handleCommandExit() { main.stopForwarding(); }
 
-void ConfigCB::handleParsedJSON(nlohmann::json const &Document) {
-  if (auto CommandMaybe = find<std::string>("cmd", Document)) {
-    auto Command = CommandMaybe.inner();
-    if (Command == "add") {
-      handleCommandAdd(Document);
-    } else if (Command == "stop_channel") {
-      handleCommandStopChannel(Document);
-    } else if (Command == "stop_all") {
-      handleCommandStopAll(Document);
-    } else if (Command == "exit") {
-      handleCommandExit(Document);
-    } else {
-      LOG(6, "Can not understand command: {}", Command);
-    }
+void ConfigCB::handleCommand(std::string const &Msg) {
+  using nlohmann::json;
+  auto Document = json::parse(Msg);
+
+  std::string Command = findCommand(Document);
+
+  if (Command == "add") {
+    handleCommandAdd(Document);
+  } else if (Command == "stop_channel") {
+    handleCommandStopChannel(Document);
+  } else if (Command == "stop_all") {
+    handleCommandStopAll();
+  } else if (Command == "exit") {
+    handleCommandExit();
+  } else {
+    LOG(6, "Can not understand command: {}", Command);
   }
+}
+
+std::string ConfigCB::findCommand(nlohmann::json const &Document) {
+  if (auto CommandMaybe = find<std::string>("cmd", Document)) {
+    return CommandMaybe.inner();
+  }
+
+  return std::string();
 }
 
 int Main::conversion_workers_clear() {
@@ -325,15 +311,12 @@ void Main::pushConverterToStream(
     nlohmann::json const &JSON,
     std::shared_ptr<ForwardEpicsToKafka::Stream> &Stream) {
   using std::string;
-  string Schema = find<string>("schema", JSON).inner();
-  string Topic = find<string>("topic", JSON).inner();
-  string ConverterName;
-  if (auto x = find<string>("name", JSON)) {
-    ConverterName = x.inner();
-  } else {
-    // Assign automatically generated name
-    ConverterName = fmt::format("converter_{}", converter_ix++);
-  }
+
+  std::string Schema;
+  std::string Topic;
+  std::string ConverterName;
+  extractConverterInfo(JSON, Schema, Topic, ConverterName);
+
   auto r1 = main_opt.schema_registry.items().find(Schema);
   if (r1 == main_opt.schema_registry.items().end()) {
     throw MappingAddException(
@@ -377,24 +360,24 @@ void Main::pushConverterToStream(
   Stream->converter_add(*kafka_instance_set, ConverterShared, TopicURI);
 }
 
-void Main::mappingAdd(nlohmann::json const &Mapping) {
-  using std::string;
-  using nlohmann::json;
-  if (!Mapping.is_object()) {
-    throw MappingAddException("Given Mapping is not a JSON object");
+void Main::extractConverterInfo(const nlohmann::json &JSON, std::string &Schema,
+                                std::string &Topic,
+                                std::string &ConverterName) {
+  Schema = find<std::string>("schema", JSON).inner();
+  Topic = find<std::string>("topic", JSON).inner();
+  if (auto x = find<std::string>("name", JSON)) {
+    ConverterName = x.inner();
+  } else {
+    // Assign automatically generated name
+    ConverterName = fmt::format("converter_{}", converter_ix++);
   }
-  auto ChannelMaybe = find<string>("channel", Mapping);
-  if (!ChannelMaybe) {
-    throw MappingAddException("Can not find channel");
-  }
-  auto Channel = ChannelMaybe.inner();
+}
 
-  auto ChannelProviderTypeMaybe =
-      find<string>("channel_provider_type", Mapping);
-  if (!ChannelProviderTypeMaybe) {
-    throw MappingAddException("Can not find channel");
-  }
-  auto ChannelProviderType = ChannelProviderTypeMaybe.inner();
+void Main::mappingAdd(nlohmann::json const &Mapping) {
+  std::string Channel;
+  std::string ChannelProviderType;
+
+  extractMappingInfo(Mapping, Channel, ChannelProviderType);
 
   std::unique_lock<std::mutex> lock(streams_mutex);
   try {
@@ -404,7 +387,7 @@ void Main::mappingAdd(nlohmann::json const &Mapping) {
     std::throw_with_nested(MappingAddException("Can not add stream"));
   }
   auto Stream = streams.back();
-  if (auto x = find<json>("converter", Mapping)) {
+  if (auto x = find<nlohmann::json>("converter", Mapping)) {
     if (x.inner().is_object()) {
       pushConverterToStream(x.inner(), Stream);
     } else if (x.inner().is_array()) {
@@ -413,6 +396,27 @@ void Main::mappingAdd(nlohmann::json const &Mapping) {
       }
     }
   }
+}
+
+void Main::extractMappingInfo(nlohmann::json const &Mapping,
+                              std::string &Channel,
+                              std::string &ChannelProviderType) {
+  if (!Mapping.is_object()) {
+    throw MappingAddException("Given Mapping is not a JSON object");
+  }
+
+  auto ChannelMaybe = find<std::string>("channel", Mapping);
+  if (!ChannelMaybe) {
+    throw MappingAddException("Can not find channel");
+  }
+  Channel = ChannelMaybe.inner();
+
+  auto ChannelProviderTypeMaybe =
+      find<std::string>("channel_provider_type", Mapping);
+  if (!ChannelProviderTypeMaybe) {
+    throw MappingAddException("Can not find channel");
+  }
+  ChannelProviderType = ChannelProviderTypeMaybe.inner();
 }
 
 std::atomic<uint64_t> g__total_msgs_to_kafka{0};
@@ -434,5 +438,5 @@ void Main::stopForwarding() { raiseForwardingFlag(ForwardingRunState::STOP); }
 void Main::stopForwardingDueToSignal() {
   raiseForwardingFlag(ForwardingRunState::STOP_DUE_TO_SIGNAL);
 }
-}
-}
+} // namespace ForwardEpicsToKafka
+} // namespace BrightnESS
