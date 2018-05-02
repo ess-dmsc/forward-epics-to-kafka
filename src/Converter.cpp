@@ -39,7 +39,6 @@ void Converter::extractConfig(
   using nlohmann::json;
   if (config.is_object()) {
     if (auto x = find<json>("converters", config)) {
-      printf("Found converter(s)\n");
       auto const &Converters = x.inner();
       if (Converters.is_object()) {
         if (auto x = find<json>(schema, Converters)) {
