@@ -181,6 +181,8 @@ def docker_coverage(image_key) {
         withCredentials([string(credentialsId: 'forward-epics-to-kafka-codecov-token', variable: 'TOKEN')]) {
             def codecov_upload_script = """
                 cd ${project}
+                export WORKSPACE='.'
+                export JENKINS_URL=${JENKINS_URL}
                 pip install --user codecov
                 python -m codecov -t ${TOKEN} --commit ${scm_vars.GIT_COMMIT}
                 """
