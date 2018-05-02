@@ -179,7 +179,12 @@ def docker_coverage(image_key) {
         junit "build/${test_output}"
 
         withCredentials([string(credentialsId: 'forward-epics-to-kafka-codecov-token', variable: 'TOKEN')]) {
-            sh "pip install codecov && codecov -t ${TOKEN} --commit ${scm_vars.GIT_COMMIT}"
+            def codecov_upload_script = """
+                cd ${project}
+                pip install --user codecov
+                codecov -t ${TOKEN} --commit ${scm_vars.GIT_COMMIT}
+                """
+            sh "docker exec ${container_name(image_key)} ${custom_sh} -c \"${codecov_upload_script}\""
         }
     } catch (e) {
         failure_function(e, "Coverage step for (${container_name(image_key)}) failed")
