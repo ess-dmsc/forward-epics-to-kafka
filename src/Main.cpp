@@ -40,7 +40,7 @@ Main::Main(MainOpt &opt)
   finfo = std::make_shared<ForwarderInfo>(this);
   finfo->teamid = main_opt.teamid;
 
-  for (size_t i1 = 0; i1 < opt.ConversionThreads; ++i1) {
+  for (size_t i = 0; i < opt.ConversionThreads; ++i) {
     conversion_workers.emplace_back(make_unique<ConversionWorker>(
         &conversion_scheduler,
         static_cast<uint32_t>(opt.ConversionWorkerQueueSize)));
@@ -180,7 +180,7 @@ std::unique_lock<std::mutex> Main::get_lock_converters() {
 
 /// \brief Main program loop.
 ///
-/// Start conversion worker threads, poll for command sfrom Kafka.
+/// Start conversion worker threads, poll for commands from Kafka.
 /// When stop flag raised, clear all workers and streams.
 void Main::forward_epics_to_kafka() {
   using CLK = std::chrono::steady_clock;
@@ -229,7 +229,7 @@ void Main::forward_epics_to_kafka() {
   if (isStopDueToSignal(ForwardingRunFlag.load())) {
     LOG(6, "Forwarder stopping due to signal.");
   }
-  LOG(6, "Main::forward_epics_to_kafka   shutting down");
+  LOG(6, "Main::forward_epics_to_kafka shutting down");
   conversion_workers_clear();
   streams.streams_clear();
   LOG(6, "ForwardingStatus::STOPPED");
@@ -369,7 +369,7 @@ void Main::extractConverterInfo(const nlohmann::json &JSON, std::string &Schema,
     ConverterName = x.inner();
   } else {
     // Assign automatically generated name
-    ConverterName = fmt::format("converter_{}", converter_ix++);
+    ConverterName = fmt::format("converter_{}", converter_index++);
   }
 }
 

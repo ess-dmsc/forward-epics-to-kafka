@@ -18,7 +18,7 @@ namespace ForwardEpicsToKafka {
 
 class MappingAddException : public std::runtime_error {
 public:
-  MappingAddException(std::string what) : std::runtime_error(what) {}
+  explicit MappingAddException(std::string what) : std::runtime_error(what) {}
 };
 
 class Converter;
@@ -66,8 +66,6 @@ public:
                           std::string &ChannelProviderType);
 
 private:
-  int const init_pool_max = 64;
-  int const memory_release_grace_time = 45;
   MainOpt &main_opt;
   std::shared_ptr<ForwarderInfo> finfo;
   std::shared_ptr<Kafka::InstanceSet> kafka_instance_set;
@@ -81,7 +79,7 @@ private:
   friend class ConfigCB;
   friend class tests::Remote_T;
   friend class ConversionScheduler;
-  std::atomic<uint32_t> converter_ix{0};
+  std::atomic<uint32_t> converter_index{0};
   std::atomic<ForwardingStatus> forwarding_status{ForwardingStatus::NORMAL};
   std::unique_ptr<CURLReporter> curl;
   std::shared_ptr<KafkaW::Producer> status_producer;

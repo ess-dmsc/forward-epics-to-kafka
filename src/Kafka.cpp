@@ -45,8 +45,6 @@ static void prod_delivery_failed(rd_kafka_message_t const *msg) {
   if (auto x = msg->_private) {
     auto p = static_cast<KafkaW::Producer::Msg *>(x);
     p->deliveryError();
-    // TODO really delete or just re-use?
-    // but maybe we want to add information about the failure first?
     delete p;
   }
 }
