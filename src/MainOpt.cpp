@@ -197,7 +197,7 @@ std::pair<int, std::unique_ptr<MainOpt>> parse_opt(int argc, char **argv) {
   App.add_option("--graylog-logger-address", opt.GraylogLoggerAddress,
                  "Address for Graylog logging");
   App.add_option("--influx-url", opt.InfluxURI, "Address for Influx logging");
-  App.add_option("-i,--idle-pv-updates", opt.idle_ms, "number of milliseconds to update idle PVs. 0=Off");
+  App.add_option("--pv-update-period", opt.period_ms, "Forward all PVs with this period (ms). 0=Off", true);
   App.add_option("-v,--verbose", log_level, "Syslog logging level", true)
       ->check(CLI::Range(1, 7));
   addOption(App, "--broker-config", opt.BrokerConfig,

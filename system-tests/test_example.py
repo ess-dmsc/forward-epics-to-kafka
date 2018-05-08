@@ -125,6 +125,30 @@ def test_forwarder_sends_pv_updates_single_pv_double(docker_compose):
     cons.close()
 
 
+def test_check_idle_pv_updates(docker_compose):
+    """
+    Checks the forwarder pushes idle pv updates when flag is enabled.
+
+    TODO: start the forwarder with the command line flag --idle-pv-updates and then a certain timeout
+    TODO: check pvs are pushed periodically and check timestamp of kafka message
+    :param docker_compose: Test fixture
+    :return: none
+    """
+    data_topic = "TEST_forwarderData_send_idle_pv_updates"
+    pvs = ["SIM:Spd"]
+    prod = ProducerWrapper("localhost:9092", CONFIG_TOPIC, data_topic)
+    prod.add_config(pvs)
+    # Wait for config to be pushed
+    sleep(5)
+
+    cons = create_consumer()
+    cons.subscribe([CONFIG_TOPIC])
+    msg = poll_for_valid_message(cons)
+    check_json_config(loads(str(msg.value(), encoding="utf-8")), data_topic, pvs)
+
+    cons.close()
+
+
 def poll_for_valid_message(consumer):
     """
     Polls the subscribed topics by the consumer and checks the buffer is not empty or malformed.
