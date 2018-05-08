@@ -1,5 +1,4 @@
 #include "Kafka.h"
-#include "local_config.h"
 #include "logger.h"
 
 #include <algorithm>

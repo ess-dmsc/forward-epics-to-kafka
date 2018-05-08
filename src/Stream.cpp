@@ -2,7 +2,6 @@
 #include "Converter.h"
 #include "EpicsClient.h"
 #include "KafkaOutput.h"
-#include "epics-pvstr.h"
 #include "epics-to-fb.h"
 #include "helper.h"
 #include "logger.h"

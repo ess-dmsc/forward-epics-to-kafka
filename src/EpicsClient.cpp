@@ -10,7 +10,6 @@
 // EPICS 4 supports access via the channel access protocol as well,
 // and we need it because some hardware speaks EPICS base.
 #include "RangeSet.h"
-#include "epics-pvstr.h"
 #include "epics-to-fb.h"
 #include "logger.h"
 #include <pv/caProvider.h>
