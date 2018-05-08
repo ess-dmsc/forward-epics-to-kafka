@@ -25,6 +25,7 @@ struct MainOpt {
   std::string LogFilename;
   std::string ConfigurationFile;
   int main_poll_interval = 500;
+  int idle_ms = 0;
   uint64_t teamid = 0;
   std::vector<char> Hostname;
   FlatBufs::SchemaRegistry schema_registry;
