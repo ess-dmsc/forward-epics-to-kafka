@@ -7,9 +7,9 @@
 #include <thread>
 #include <vector>
 
-/// Read a file into vector as char buffer
+/// Read a file into a vector as char buffer.
 /// \param fname Filename to read.
-/// \return Vector of chars from file
+/// \return Vector of chars from file.
 std::vector<char> readFile(std::string fname) {
   std::vector<char> ret;
   std::ifstream ifs(fname, std::ios::binary | std::ios::ate);
