@@ -2,10 +2,12 @@
 
 #include "KafkaW/KafkaW.h"
 #include "SchemaRegistry.h"
+#include "configuration.h"
 #include "uri.h"
 #include <nlohmann/json.hpp>
 #include <string>
 #include <vector>
+#include <memory>
 
 namespace BrightnESS {
 namespace ForwardEpicsToKafka {
@@ -39,6 +41,8 @@ struct MainOpt {
   void findConversionThreads();
   void findConversionWorkerQueueSize();
   void findMainPollInterval();
+
+  std::unique_ptr<Configuration> Config;
 };
 
 std::pair<int, std::unique_ptr<MainOpt>> parse_opt(int argc, char **argv);

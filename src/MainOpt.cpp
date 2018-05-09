@@ -15,6 +15,7 @@
 #include <CLI/CLI.hpp>
 #include <fstream>
 #include <iostream>
+#include <streambuf>
 
 namespace BrightnESS {
 namespace ForwardEpicsToKafka {
@@ -98,15 +99,13 @@ void MainOpt::findConversionThreads() {
 }
 
 void MainOpt::findBrokerConfig() {
-  if (auto x = find<std::string>("broker-config", JSONConfiguration)) {
-    BrokerConfig = x.inner();
-  }
+  Config->extractBrokerConfig();
+  BrokerConfig = Config->BrokerConfig;
 }
 
 void MainOpt::findBroker() {
-  if (auto x = find<std::string>("broker", JSONConfiguration)) {
-    set_broker(x.inner());
-  }
+  Config->extractBrokers();
+  brokers = Config->Brokers;
 }
 
 void MainOpt::parse_document(const std::string &filepath) {
@@ -114,8 +113,13 @@ void MainOpt::parse_document(const std::string &filepath) {
   if (!ifs.is_open()) {
     LOG(3, "Could not open JSON file")
   }
-  JSONConfiguration = nlohmann::json();
-  ifs >> JSONConfiguration;
+
+  std::stringstream buffer;
+  buffer << ifs.rdbuf();
+
+  Config = ::make_unique<Configuration>(buffer.str());
+  JSONConfiguration = nlohmann::json::parse(buffer.str());
+
 
   if (JSONConfiguration.is_null()) {
     throw std::runtime_error("Can not parse configuration file as JSON");
