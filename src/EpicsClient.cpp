@@ -1,16 +1,13 @@
 #include "EpicsClient.h"
 #include <atomic>
-#include <chrono>
 #include <mutex>
 #include <pv/pvAccess.h>
 #include <pv/pvData.h>
-#include <sstream>
 // For epics::pvAccess::ClientFactory::start()
 #include <pv/clientFactory.h>
 // EPICS 4 supports access via the channel access protocol as well,
 // and we need it because some hardware speaks EPICS base.
 #include "RangeSet.h"
-#include "epics-pvstr.h"
 #include "epics-to-fb.h"
 #include "logger.h"
 #include <pv/caProvider.h>
@@ -36,7 +33,6 @@ using urlock = std::unique_lock<std::recursive_mutex>;
 #define STRINGIFY(x) STRINGIFY2(x)
 
 char const *channel_state_name(epics::pvAccess::Channel::ConnectionState x) {
-// Channel::ConnectionStateNames[cstate]
 #define DWTN1(N) DWTN2(N, STRINGIFY(N))
 #define DWTN2(N, S)                                                            \
   if (x == epics::pvAccess::Channel::ConnectionState::N) {                     \
@@ -135,12 +131,8 @@ EpicsClientFactoryInit::EpicsClientFactoryInit() {
   auto c = count++;
   if (c == 0) {
     CLOG(6, 6, "START  Epics factories");
-    if (true) {
-      ::epics::pvAccess::ClientFactory::start();
-    }
-    if (true) {
-      ::epics::pvAccess::ca::CAClientFactory::start();
-    }
+    ::epics::pvAccess::ClientFactory::start();
+    ::epics::pvAccess::ca::CAClientFactory::start();
   }
 }
 EpicsClientFactoryInit::~EpicsClientFactoryInit() {
@@ -155,12 +147,8 @@ EpicsClientFactoryInit::~EpicsClientFactoryInit() {
   }
   if (c == 0) {
     CLOG(7, 6, "STOP   Epics factories");
-    if (true) {
-      ::epics::pvAccess::ClientFactory::stop();
-    }
-    if (true) {
-      ::epics::pvAccess::ca::CAClientFactory::stop();
-    }
+    ::epics::pvAccess::ClientFactory::stop();
+    ::epics::pvAccess::ca::CAClientFactory::stop();
   }
 }
 
@@ -182,7 +170,6 @@ public:
   epics::pvAccess::Channel::shared_pointer channel;
   epics::pvData::Monitor::shared_pointer monitor;
   std::recursive_mutex mx;
-  int state = 0;
   uint64_t teamid = 0;
   uint64_t fwdix = 0;
   string channel_name;
@@ -304,7 +291,6 @@ void FwdMonitorRequester::monitorConnect(
 
 void FwdMonitorRequester::monitorEvent(
     ::epics::pvData::MonitorPtr const &monitor) {
-  // CLOG(7, 7, "FwdMonitorRequester::monitorEvent");
   std::vector<std::unique_ptr<FlatBufs::EpicsPVUpdate>> ups;
   while (true) {
     auto ele = monitor->poll();
@@ -313,15 +299,6 @@ void FwdMonitorRequester::monitorEvent(
     }
 
     uint64_t seq_data = 0;
-    if (false) {
-      if (auto x = ele->pvStructurePtr
-                       ->getSubField<epics::pvData::PVScalarValue<uint64_t>>(
-                           "seq")) {
-        seq_data = x->get();
-      }
-    }
-
-    // CLOG(7, 7, "monitorEvent seq {}", seq);
     static_assert(sizeof(uint64_t) == sizeof(std::chrono::nanoseconds::rep),
                   "Types not compatible");
     uint64_t ts = std::chrono::duration_cast<std::chrono::nanoseconds>(
@@ -337,14 +314,9 @@ void FwdMonitorRequester::monitorEvent(
         std::unique_ptr<FlatBufs::EpicsPVUpdate>(new FlatBufs::EpicsPVUpdate);
     auto &up = *up_;
     up.channel = channel_name;
-    // up.epics_pvstr->pvstr = ele->pvStructurePtr;
     up.epics_pvstr = epics::pvData::PVStructure::shared_pointer(
         new ::epics::pvData::PVStructure(ele->pvStructurePtr->getStructure()));
     up.epics_pvstr->copyUnchecked(*ele->pvStructurePtr);
-    //::epics::pvData::PVStructure s2(ele->pvStructurePtr->getStructure());
-    // s2.copy(*ele->pvStructurePtr);
-    // up.monitor = (void*)monitor.get();
-    // up.ele = (void*)ele_ptr;
     monitor->release(ele);
     up.seq_fwd = seq;
     up.seq_data = seq_data;
@@ -360,10 +332,6 @@ void FwdMonitorRequester::monitorEvent(
     auto x = epics_client_impl->emit(std::move(up));
     if (x != 0) {
       LOG(5, "error can not push update {}", seq_data);
-    } else {
-      if (false) {
-        seq_data_received.insert(seq_data);
-      }
     }
   }
 }

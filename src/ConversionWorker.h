@@ -38,7 +38,6 @@ private:
   ConversionScheduler *scheduler = nullptr;
 };
 
-// This will get heavily updated soon..
 class ConversionScheduler {
 public:
   ConversionScheduler(Main *main);

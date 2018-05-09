@@ -23,10 +23,6 @@ int KafkaOutput::emit(BrightnESS::FlatBufs::FlatbufferMessage::uptr fb) {
     ++g__total_msgs_to_kafka;
     g__total_bytes_to_kafka += m1.size;
   }
-  if (msg) {
-    // currently, we drop here.
-    // could think about retry or other forms of fail-over in the future.
-  }
   return x;
 }
 
