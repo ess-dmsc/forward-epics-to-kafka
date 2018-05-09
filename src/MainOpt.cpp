@@ -20,25 +20,17 @@
 namespace BrightnESS {
 namespace ForwardEpicsToKafka {
 
-MainOpt::MainOpt() {
+MainOpt::MainOpt() : Config(::make_unique<Configuration>()) {
   Hostname.resize(256);
   gethostname(Hostname.data(), Hostname.size());
   if (Hostname.back() != 0) {
     // likely an error
     Hostname.back() = 0;
   }
-  set_broker("localhost:9092");
 }
 
-void MainOpt::set_broker(std::string broker) {
-  brokers.clear();
-  auto a = split(broker, ",");
-  for (auto &x : a) {
-    uri::URI u1;
-    u1.require_host_slashes = false;
-    u1.parse(x);
-    brokers.push_back(u1);
-  }
+void MainOpt::set_broker(std::string& Broker) {
+  Config->setBrokers(Broker);
 }
 
 std::string MainOpt::brokers_as_comma_list() const {
@@ -69,10 +61,10 @@ void MainOpt::parse_json_file(std::string ConfigurationFile) {
   findConversionThreads();
   findConversionWorkerQueueSize();
   findMainPollInterval();
+  Config->extractKafkaBrokerSettings();
 
-  auto Settings = extractKafkaBrokerSettingsFromJSON(JSONConfiguration);
-  broker_opt.ConfigurationStrings = Settings.ConfigurationStrings;
-  broker_opt.ConfigurationIntegers = Settings.ConfigurationIntegers;
+  broker_opt.ConfigurationStrings = Config->BrokerSettings.ConfigurationStrings;
+  broker_opt.ConfigurationIntegers = Config->BrokerSettings.ConfigurationIntegers;
 
   find_status_uri();
 
@@ -80,22 +72,18 @@ void MainOpt::parse_json_file(std::string ConfigurationFile) {
 }
 
 void MainOpt::findMainPollInterval() {
-  if (auto x = find<int32_t>("main-poll-interval", JSONConfiguration)) {
-    main_poll_interval = x.inner();
-  }
+  Config->extractMainPollInterval();
+  main_poll_interval = Config->MainPollInterval;
 }
 
 void MainOpt::findConversionWorkerQueueSize() {
-  if (auto x =
-          find<size_t>("conversion-worker-queue-size", JSONConfiguration)) {
-    ConversionWorkerQueueSize = x.inner();
-  }
+  Config->extractConversionWorkerQueueSize();
+  ConversionWorkerQueueSize = Config->ConversionWorkerQueueSize;
 }
 
 void MainOpt::findConversionThreads() {
-  if (auto x = find<size_t>("conversion-threads", JSONConfiguration)) {
-    ConversionThreads = x.inner();
-  }
+  Config->extractConversionThreads();
+  ConversionThreads = Config->ConversionThreads;
 }
 
 void MainOpt::findBrokerConfig() {
@@ -117,7 +105,7 @@ void MainOpt::parse_document(const std::string &filepath) {
   std::stringstream buffer;
   buffer << ifs.rdbuf();
 
-  Config = ::make_unique<Configuration>(buffer.str());
+  Config->setJsonFromString(buffer.str());
   JSONConfiguration = nlohmann::json::parse(buffer.str());
 
 
@@ -127,49 +115,11 @@ void MainOpt::parse_document(const std::string &filepath) {
 }
 
 void MainOpt::find_status_uri() {
-  if (auto x = find<std::string>("status-uri", JSONConfiguration)) {
-    auto URIString = x.inner();
-    uri::URI URI;
-    URI.port = 9092;
-    URI.parse(URIString);
-    StatusReportURI = URI;
-  }
-}
-
-KafkaBrokerSettings
-extractKafkaBrokerSettingsFromJSON(nlohmann::json const &JSONConfiguration) {
-  KafkaBrokerSettings Settings;
-  using nlohmann::json;
-  if (auto KafkaMaybe = find<json>("kafka", JSONConfiguration)) {
-    auto Kafka = KafkaMaybe.inner();
-    if (auto BrokerMaybe = find<json>("broker", Kafka)) {
-      auto Broker = BrokerMaybe.inner();
-      for (auto Property = Broker.begin(); Property != Broker.end();
-           ++Property) {
-        auto const Key = Property.key();
-        if (Key.find("___") == 0) {
-          // Skip this property
-          continue;
-        }
-        if (Property.value().is_string()) {
-          auto Value = Property.value().get<std::string>();
-          LOG(6, "kafka broker config {}: {}", Key, Value);
-          Settings.ConfigurationStrings[Key] = Value;
-        } else if (Property.value().is_number()) {
-          auto Value = Property.value().get<int64_t>();
-          LOG(6, "kafka broker config {}: {}", Key, Value);
-          Settings.ConfigurationIntegers[Key] = Value;
-        } else {
-          LOG(3, "can not understand option: {}", Key);
-        }
-      }
-    }
-  }
-  return Settings;
+  Config->extractStatusUri();
+  StatusReportURI = Config->StatusReportURI;
 }
 
 /// Add a URI valued option to the given App.
-
 static void addOption(CLI::App &App, std::string const &Name, uri::URI &URIArg,
                       std::string const &Description, bool Defaulted = false) {
   CLI::callback_t Fun = [&URIArg](CLI::results_t Results) {

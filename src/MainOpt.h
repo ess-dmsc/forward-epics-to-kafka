@@ -14,7 +14,7 @@ namespace ForwardEpicsToKafka {
 
 struct MainOpt {
   MainOpt();
-  void set_broker(std::string broker);
+  void set_broker(std::string& Broker);
   std::string brokers_as_comma_list() const;
   uri::URI BrokerConfig{"//localhost:9092/forward_epics_to_kafka_commands"};
   uri::URI StatusReportURI;
@@ -47,12 +47,5 @@ struct MainOpt {
 
 std::pair<int, std::unique_ptr<MainOpt>> parse_opt(int argc, char **argv);
 
-struct KafkaBrokerSettings {
-  std::map<std::string, int64_t> ConfigurationIntegers;
-  std::map<std::string, std::string> ConfigurationStrings;
-};
-
-KafkaBrokerSettings
-extractKafkaBrokerSettingsFromJSON(nlohmann::json const &JSONConfiguration);
 }
 }

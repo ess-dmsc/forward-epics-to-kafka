@@ -22,43 +22,10 @@ Converter::create(FlatBufs::SchemaRegistry const &schema_registry,
     return ret;
   }
 
-  std::map<std::string, int64_t> config_ints;
-  std::map<std::string, std::string> config_strings;
+  main_opt.Config->extractGlobalConverters(schema);
+  conv->config(main_opt.Config->ConverterInts, main_opt.Config->ConverterStrings);
 
-  extractConfig(schema, main_opt.JSONConfiguration, config_ints,
-                config_strings);
-
-  conv->config(config_ints, config_strings);
   return ret;
-}
-
-void Converter::extractConfig(
-    std::string &schema, nlohmann::json const &config,
-    std::map<std::string, int64_t> &config_ints,
-    std::map<std::string, std::string> &config_strings) {
-  using nlohmann::json;
-  if (config.is_object()) {
-    if (auto x = find<json>("converters", config)) {
-      auto const &Converters = x.inner();
-      if (Converters.is_object()) {
-        if (auto x = find<json>(schema, Converters)) {
-          auto const &ConverterSchemaConfig = x.inner();
-          if (ConverterSchemaConfig.is_object()) {
-            for (auto SettingIt = ConverterSchemaConfig.begin();
-                 SettingIt != ConverterSchemaConfig.end(); ++SettingIt) {
-              if (SettingIt.value().is_number()) {
-                config_ints[SettingIt.key()] = SettingIt.value().get<int64_t>();
-              }
-              if (SettingIt.value().is_string()) {
-                config_strings[SettingIt.key()] =
-                    SettingIt.value().get<std::string>();
-              }
-            }
-          }
-        }
-      }
-    }
-  }
 }
 
 BrightnESS::FlatBufs::FlatbufferMessage::uptr
