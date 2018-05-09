@@ -53,7 +53,7 @@ ForwarderInfo.cpp
 EpicsClient.cpp
 helper.cpp
 logger.cpp
-        Kafka.cpp
+Kafka.cpp
 KafkaW/BrokerSettings.cpp
 KafkaW/Consumer.cpp
 KafkaW/KafkaW.cpp
@@ -70,7 +70,7 @@ FlatbufferMessage.cpp
 SchemaRegistry.cpp
 MakeFlatBufferFromPVStructure.cpp
 uri.cpp
-        json.cpp
+json.cpp
 Converter.cpp
 KafkaOutput.cpp
 Stream.cpp

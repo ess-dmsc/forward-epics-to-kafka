@@ -237,7 +237,7 @@ void Remote_T::simple_f142_via_config_message(
     string cmd_msg_fname, ConsumerVerifier &consumer_verifier) {
   LOG(3, "This test should complete within about 30 seconds.");
   // Make a sample configuration with two streams
-  auto msg = gulp(cmd_msg_fname);
+  auto msg = readFile(cmd_msg_fname);
   using nlohmann::json;
   auto Doc = json::parse(msg);
 
