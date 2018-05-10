@@ -7,7 +7,10 @@
 #include <thread>
 #include <vector>
 
-std::vector<char> gulp(std::string fname) {
+/// Read a file into a vector as char buffer.
+/// \param fname Filename to read.
+/// \return Vector of chars from file.
+std::vector<char> readFile(std::string fname) {
   std::vector<char> ret;
   std::ifstream ifs(fname, std::ios::binary | std::ios::ate);
   if (!ifs.good())

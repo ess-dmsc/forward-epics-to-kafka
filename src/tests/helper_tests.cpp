@@ -40,7 +40,7 @@ TEST(HelperTests, split_with_extended_ascii_token) {
 }
 
 TEST(HelperTests, gulp_returns_empty_vector_given_string) {
-  auto actual = gulp("1");
+  auto actual = readFile("1");
   ASSERT_TRUE(actual.empty());
 }
 
@@ -49,12 +49,12 @@ TEST(HelperTests, gulp_returns_correct_binary_when_file_is_read) {
   fs.write("hello", 5);
   fs.close();
   std::vector<char> expected = {'h', 'e', 'l', 'l', 'o'};
-  auto actual = gulp("./gulptest.txt");
+  auto actual = readFile("./gulptest.txt");
   ASSERT_EQ(expected, actual);
 }
 
 TEST(HelperTests, gulp_returns_empty_vector_when_empty_file_is_given) {
-  auto actual = gulp("");
+  auto actual = readFile("");
   ASSERT_TRUE(actual.empty());
 }
 
