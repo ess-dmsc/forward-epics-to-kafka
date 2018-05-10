@@ -84,44 +84,17 @@ int Stream::converter_add(Kafka::InstanceSet &kset, Converter::sptr conv,
 }
 
 int Stream::emit(std::unique_ptr<FlatBufs::EpicsPVUpdate> up) {
-  // CLOG(9, 7, "Stream::emit");
   if (!up) {
     CLOG(6, 1, "empty update?");
     // should never happen, ignore
     return 0;
   }
-  auto seq_data = up->seq_data;
-  if (true) {
-    for (int i1 = 0; i1 < 256; ++i1) {
-      auto x = emit_queue.push(up);
-      if (x == 0) {
-        break;
-      }
-      {
-        // CLOG(9, 1, "buffer full {} times", i1);
-        emit_queue.push_enlarge(up);
-        break;
-      }
-    }
-    if (up) {
-      // here we are, saying goodbye to a good buffer
-      // LOG(4, "loosing buffer {}", up->seq_data);
-      up.reset();
-      return 1;
-    }
-    // auto s1 = emit_queue.to_vec();
-    // LOG(9, "Queue {}\n{}", channel_info.channel_name, s1.data());
-  } else {
-    // Emit directly
-    // LOG(9, "Stream::emit  convs: {}", conversion_paths.size());
-    for (auto &cp : conversion_paths) {
-      cp->emit(std::move(up));
-    }
-  }
-  if (false) {
-    seq_data_emitted.insert(seq_data);
-  }
-  return 0;
+
+  emit_queue.push_enlarge(up);
+
+  // here we are, saying goodbye to a good buffer
+  up.reset();
+  return 1;
 }
 
 int32_t
@@ -137,9 +110,7 @@ Stream::fill_conversion_work(Ring<std::unique_ptr<ConversionWorkPacket>> &q2,
   uint32_t n3 = (std::min)(max, q2.capacity_unsafe() - q2.size_unsafe());
   uint32_t ncp = conversion_paths.size();
   std::vector<ConversionWorkPacket *> cwp_last(conversion_paths.size());
-  // LOG(8, "Stream::fill_conversion_work {}  {}  {}", n1, n2, n3);
   while (n0 < n2 && n3 - n1 >= ncp) {
-    // LOG(8, "Stream::fill_conversion_work  loop   {}  {}  {}", n1, n2, n3);
     auto e = q1.pop_unsafe();
     n0 += 1;
     if (e.first != 0) {

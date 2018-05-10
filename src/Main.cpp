@@ -185,6 +185,7 @@ void Main::forward_epics_to_kafka() {
   using CLK = std::chrono::steady_clock;
   using MS = std::chrono::milliseconds;
   auto Dt = MS(main_opt.main_poll_interval);
+  auto Period = MS(main_opt.periodMS);
   auto t_lf_last = CLK::now();
   auto t_status_last = CLK::now();
   ConfigCB config_cb(*this);
