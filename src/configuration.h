@@ -15,6 +15,18 @@ struct KafkaBrokerSettings {
   std::map<std::string, std::string> ConfigurationStrings;
 };
 
+struct ConverterSettings {
+  std::string Schema;
+  std::string Topic;
+  std::string Name;
+};
+
+struct StreamSettings {
+  std::string Name;
+  std::string EpicsProtocol;
+  std::vector<ConverterSettings> Converters;
+};
+
 class Configuration {
 public:
   Configuration() = default;
@@ -27,6 +39,7 @@ public:
   void extractStatusUri();
   void extractGlobalConverters(std::string &Schema);
   void extractKafkaBrokerSettings();
+  void extractStreamSettings();
   void setBrokers(std::string Brokers);
   uri::URI BrokerConfig{"//localhost:9092/forward_epics_to_kafka_commands"};
   std::vector<uri::URI> Brokers;
@@ -37,9 +50,15 @@ public:
   std::map<std::string, int64_t> ConverterInts;
   std::map<std::string, std::string> ConverterStrings;
   KafkaBrokerSettings BrokerSettings;
+  std::vector<StreamSettings> StreamsInfo;
+  std::atomic<uint32_t> ConverterIndex{0};
 
 private:
   nlohmann::json Json;
+  void extractMappingInfo(nlohmann::json const &Mapping,
+                                         std::string &Channel,
+                                         std::string &Protocol);
+  ConverterSettings extractConverterSettings(nlohmann::json const &Mapping);
 };
 }
 }

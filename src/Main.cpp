@@ -62,15 +62,15 @@ Main::Main(MainOpt &opt)
     config_listener.reset(new Config::Listener{bopt, main_opt.BrokerConfig});
   }
   using nlohmann::json;
-  if (auto Streams = find_array("streams", main_opt.JSONConfiguration)) {
-    for (auto const &Stream : Streams.inner()) {
-      try {
-        mappingAdd(Stream);
-      } catch (std::exception &e) {
-        LOG(4, "Could not add mapping: {}  {}", Stream.dump(), e.what());
-      }
+  std::cout << "Hello: " << main_opt.Config->StreamsInfo.size() << std::endl;
+  for (auto & Stream : main_opt.Config->StreamsInfo) {
+    try {
+      addMapping(Stream);
+    } catch (std::exception &e) {
+      LOG(4, "Could not add mapping: {}  {}", Stream.Name, e.what());
     }
   }
+
   curl = ::make_unique<CURLReporter>();
   if (!main_opt.StatusReportURI.host.empty()) {
     KafkaW::BrokerSettings BrokerSettings;
@@ -152,7 +152,7 @@ std::string ConfigCB::findCommand(nlohmann::json const &Document) {
 int Main::conversion_workers_clear() {
   CLOG(7, 1, "Main::conversion_workers_clear()  begin");
   std::unique_lock<std::mutex> lock(conversion_workers_mx);
-  if (conversion_workers.size() > 0) {
+  if (!conversion_workers.empty()) {
     for (auto &x : conversion_workers) {
       x->stop();
     }
@@ -163,7 +163,7 @@ int Main::conversion_workers_clear() {
 }
 
 int Main::converters_clear() {
-  if (conversion_workers.size() > 0) {
+  if (!conversion_workers.empty()) {
     std::unique_lock<std::mutex> lock(converters_mutex);
     conversion_workers.clear();
   }
@@ -308,6 +308,59 @@ void Main::report_stats(int dt) {
 }
 
 void Main::pushConverterToStream(
+    ConverterSettings const &ConverterInfo,
+    std::shared_ptr<ForwardEpicsToKafka::Stream> &Stream) {
+
+  // Check schema exists
+  auto r1 = main_opt.schema_registry.items().find(ConverterInfo.Schema);
+  if (r1 == main_opt.schema_registry.items().end()) {
+    throw MappingAddException(
+        fmt::format("Can not handle flatbuffer schema id {}", ConverterInfo.Schema));
+  }
+
+  uri::URI URI;
+  if (!main_opt.brokers.empty()) {
+    URI = main_opt.brokers[0];
+  }
+
+  uri::URI TopicURI;
+  if (!URI.host.empty()) {
+    TopicURI.host = URI.host;
+  }
+
+  if (URI.port != 0) {
+    TopicURI.port = URI.port;
+  }
+  TopicURI.parse(ConverterInfo.Topic);
+
+  Converter::sptr ConverterShared;
+  if (!ConverterInfo.Name.empty()) {
+    auto Lock = get_lock_converters();
+    auto ConverterIt = converters.find(ConverterInfo.Name);
+    if (ConverterIt != converters.end()) {
+      ConverterShared = ConverterIt->second.lock();
+      if (!ConverterShared) {
+        ConverterShared =
+            Converter::create(main_opt.schema_registry, ConverterInfo.Schema, main_opt);
+        converters[ConverterInfo.Name] = std::weak_ptr<Converter>(ConverterShared);
+      }
+    } else {
+      ConverterShared =
+          Converter::create(main_opt.schema_registry, ConverterInfo.Schema, main_opt);
+      converters[ConverterInfo.Name] = std::weak_ptr<Converter>(ConverterShared);
+    }
+  } else {
+    ConverterShared =
+        Converter::create(main_opt.schema_registry, ConverterInfo.Schema, main_opt);
+  }
+  if (!ConverterShared) {
+    throw MappingAddException("Can not create a converter");
+  }
+  Stream->converter_add(*kafka_instance_set, ConverterShared, TopicURI);
+
+}
+
+void Main::pushConverterToStream(
     nlohmann::json const &JSON,
     std::shared_ptr<ForwardEpicsToKafka::Stream> &Stream) {
   using std::string;
@@ -395,6 +448,22 @@ void Main::mappingAdd(nlohmann::json const &Mapping) {
         pushConverterToStream(ConverterSettings, Stream);
       }
     }
+  }
+}
+
+void Main::addMapping(StreamSettings const &StreamInfo) {
+  std::unique_lock<std::mutex> lock(streams_mutex);
+  try {
+    ChannelInfo ChannelInfo{StreamInfo.EpicsProtocol, StreamInfo.Name};
+    streams.add(std::make_shared<Stream>(finfo, ChannelInfo));
+  } catch (std::runtime_error &e) {
+    std::throw_with_nested(MappingAddException("Can not add stream"));
+  }
+
+  auto Stream = streams.back();
+
+  for(auto & Converter : StreamInfo.Converters) {
+    pushConverterToStream(Converter, Stream);
   }
 }
 

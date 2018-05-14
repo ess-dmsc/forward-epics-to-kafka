@@ -13,13 +13,13 @@ TEST(json_extraction_tests, no_converters_specified_has_no_side_effects) {
 
   std::string schema("f142");
 
-  BrightnESS::ForwardEpicsToKafka::MainOpt Main;
-  Main.Config->setJsonFromString(RawJson);
+  BrightnESS::ForwardEpicsToKafka::MainOpt MainOpt;
+  MainOpt.Config->setJsonFromString(RawJson);
 
-  Main.Config->extractGlobalConverters(schema);
+  MainOpt.Config->extractGlobalConverters(schema);
 
-  ASSERT_EQ(0u, Main.Config->ConverterInts.size());
-  ASSERT_EQ(0u, Main.Config->ConverterStrings.size());
+  ASSERT_EQ(0u, MainOpt.Config->ConverterInts.size());
+  ASSERT_EQ(0u, MainOpt.Config->ConverterStrings.size());
 }
 
 TEST(json_extraction_tests, ints_specified_in_converters_is_extracted) {
@@ -34,14 +34,14 @@ TEST(json_extraction_tests, ints_specified_in_converters_is_extracted) {
 
   std::string schema("f142");
 
-  BrightnESS::ForwardEpicsToKafka::MainOpt Main;
-  Main.Config->setJsonFromString(RawJson);
+  BrightnESS::ForwardEpicsToKafka::MainOpt MainOpt;
+  MainOpt.Config->setJsonFromString(RawJson);
 
-  Main.Config->extractGlobalConverters(schema);
+  MainOpt.Config->extractGlobalConverters(schema);
 
-  ASSERT_EQ(2u, Main.Config->ConverterInts.size());
-  ASSERT_EQ(123, Main.Config->ConverterInts["some_option1"]);
-  ASSERT_EQ(456, Main.Config->ConverterInts["some_option2"]);
+  ASSERT_EQ(2u, MainOpt.Config->ConverterInts.size());
+  ASSERT_EQ(123, MainOpt.Config->ConverterInts["some_option1"]);
+  ASSERT_EQ(456, MainOpt.Config->ConverterInts["some_option2"]);
 }
 
 TEST(json_extraction_tests, strings_specified_in_converters_is_extracted) {
@@ -56,14 +56,14 @@ TEST(json_extraction_tests, strings_specified_in_converters_is_extracted) {
 
   std::string schema("f142");
 
-  BrightnESS::ForwardEpicsToKafka::MainOpt Main;
-  Main.Config->setJsonFromString(RawJson);
+  BrightnESS::ForwardEpicsToKafka::MainOpt MainOpt;
+  MainOpt.Config->setJsonFromString(RawJson);
 
-  Main.Config->extractGlobalConverters(schema);
+  MainOpt.Config->extractGlobalConverters(schema);
 
-  ASSERT_EQ(2u, Main.Config->ConverterStrings.size());
-  ASSERT_EQ("hello", Main.Config->ConverterStrings["some_option1"]);
-  ASSERT_EQ("goodbye", Main.Config->ConverterStrings["some_option2"]);
+  ASSERT_EQ(2u, MainOpt.Config->ConverterStrings.size());
+  ASSERT_EQ("hello", MainOpt.Config->ConverterStrings["some_option1"]);
+  ASSERT_EQ("goodbye", MainOpt.Config->ConverterStrings["some_option2"]);
 }
 
 TEST(json_extraction_tests,
@@ -72,27 +72,27 @@ TEST(json_extraction_tests,
                         "  \"status-uri\": \"//kafkabroker:1234/status_topic\""
                         "}";
 
-  BrightnESS::ForwardEpicsToKafka::MainOpt Main;
-  Main.Config->setJsonFromString(RawJson);
+  BrightnESS::ForwardEpicsToKafka::MainOpt MainOpt;
+  MainOpt.Config->setJsonFromString(RawJson);
 
-  Main.find_status_uri();
+  MainOpt.find_status_uri();
 
-  ASSERT_EQ("kafkabroker", Main.StatusReportURI.host);
-  ASSERT_EQ(1234u, Main.StatusReportURI.port);
-  ASSERT_EQ("status_topic", Main.StatusReportURI.topic);
+  ASSERT_EQ("kafkabroker", MainOpt.StatusReportURI.host);
+  ASSERT_EQ(1234u, MainOpt.StatusReportURI.port);
+  ASSERT_EQ("status_topic", MainOpt.StatusReportURI.topic);
 }
 
 TEST(json_extraction_tests, no_status_uri_defined_gives_no_uri_port_or_topic) {
   std::string RawJson = "{}";
 
-  BrightnESS::ForwardEpicsToKafka::MainOpt Main;
-  Main.Config->setJsonFromString(RawJson);
+  BrightnESS::ForwardEpicsToKafka::MainOpt MainOpt;
+  MainOpt.Config->setJsonFromString(RawJson);
 
-  Main.find_status_uri();
+  MainOpt.find_status_uri();
 
-  ASSERT_EQ("", Main.StatusReportURI.host);
-  ASSERT_EQ(0u, Main.StatusReportURI.port);
-  ASSERT_EQ("", Main.StatusReportURI.topic);
+  ASSERT_EQ("", MainOpt.StatusReportURI.host);
+  ASSERT_EQ(0u, MainOpt.StatusReportURI.port);
+  ASSERT_EQ("", MainOpt.StatusReportURI.topic);
 }
 
 TEST(json_extraction_tests, setting_broker_sets_host_and_port) {
@@ -100,13 +100,13 @@ TEST(json_extraction_tests, setting_broker_sets_host_and_port) {
                         "  \"broker\": \"kafkabroker:1234\""
                         "}";
 
-  BrightnESS::ForwardEpicsToKafka::MainOpt Main;
-  Main.Config->setJsonFromString(RawJson);
+  BrightnESS::ForwardEpicsToKafka::MainOpt MainOpt;
+  MainOpt.Config->setJsonFromString(RawJson);
 
-  Main.findBroker();
+  MainOpt.findBroker();
 
-  ASSERT_EQ("kafkabroker", Main.brokers[0].host);
-  ASSERT_EQ(1234u, Main.brokers[0].port);
+  ASSERT_EQ("kafkabroker", MainOpt.brokers[0].host);
+  ASSERT_EQ(1234u, MainOpt.brokers[0].port);
 }
 
 TEST(json_extraction_tests,
@@ -115,39 +115,39 @@ TEST(json_extraction_tests,
                         "  \"broker\": \"kafkabroker1:1234, kafkabroker2:5678\""
                         "}";
 
-  BrightnESS::ForwardEpicsToKafka::MainOpt Main;
-  Main.Config->setJsonFromString(RawJson);
+  BrightnESS::ForwardEpicsToKafka::MainOpt MainOpt;
+  MainOpt.Config->setJsonFromString(RawJson);
 
-  Main.findBroker();
+  MainOpt.findBroker();
 
-  ASSERT_EQ(2u, Main.brokers.size());
-  ASSERT_EQ("kafkabroker1", Main.brokers[0].host);
-  ASSERT_EQ(1234u, Main.brokers[0].port);
-  ASSERT_EQ("kafkabroker2", Main.brokers[1].host);
-  ASSERT_EQ(5678u, Main.brokers[1].port);
+  ASSERT_EQ(2u, MainOpt.brokers.size());
+  ASSERT_EQ("kafkabroker1", MainOpt.brokers[0].host);
+  ASSERT_EQ(1234u, MainOpt.brokers[0].port);
+  ASSERT_EQ("kafkabroker2", MainOpt.brokers[1].host);
+  ASSERT_EQ(5678u, MainOpt.brokers[1].port);
 }
 
 TEST(json_extraction_tests, setting_no_brokers_sets_default_host_and_port) {
   std::string RawJson = "{}";
 
-  BrightnESS::ForwardEpicsToKafka::MainOpt Main;
-  Main.Config->setJsonFromString(RawJson);
+  BrightnESS::ForwardEpicsToKafka::MainOpt MainOpt;
+  MainOpt.Config->setJsonFromString(RawJson);
 
-  Main.findBroker();
+  MainOpt.findBroker();
 
-  ASSERT_EQ("localhost", Main.brokers[0].host);
-  ASSERT_EQ(9092u, Main.brokers[0].port);
+  ASSERT_EQ("localhost", MainOpt.brokers[0].host);
+  ASSERT_EQ(9092u, MainOpt.brokers[0].port);
 }
 
 TEST(json_extraction_tests, no_kafka_broker_settings_has_no_side_effects) {
   std::string RawJson = "{}";
 
-  BrightnESS::ForwardEpicsToKafka::MainOpt Main;
-  Main.Config->setJsonFromString(RawJson);
+  BrightnESS::ForwardEpicsToKafka::MainOpt MainOpt;
+  MainOpt.Config->setJsonFromString(RawJson);
 
-  Main.Config->extractKafkaBrokerSettings();
+  MainOpt.Config->extractKafkaBrokerSettings();
 
-  BrightnESS::ForwardEpicsToKafka::KafkaBrokerSettings Settings = Main.Config->BrokerSettings;
+  BrightnESS::ForwardEpicsToKafka::KafkaBrokerSettings Settings = MainOpt.Config->BrokerSettings;
 
   ASSERT_EQ(0u, Settings.ConfigurationIntegers.size());
   ASSERT_EQ(0u, Settings.ConfigurationStrings.size());
@@ -163,12 +163,12 @@ TEST(json_extraction_tests, ints_in_kafka_broker_settings_are_extracted) {
                         "  }"
                         "}";
 
-  BrightnESS::ForwardEpicsToKafka::MainOpt Main;
-  Main.Config->setJsonFromString(RawJson);
+  BrightnESS::ForwardEpicsToKafka::MainOpt MainOpt;
+  MainOpt.Config->setJsonFromString(RawJson);
 
-  Main.Config->extractKafkaBrokerSettings();
+  MainOpt.Config->extractKafkaBrokerSettings();
 
-  BrightnESS::ForwardEpicsToKafka::KafkaBrokerSettings Settings = Main.Config->BrokerSettings;
+  BrightnESS::ForwardEpicsToKafka::KafkaBrokerSettings Settings = MainOpt.Config->BrokerSettings;
 
   ASSERT_EQ(2u, Settings.ConfigurationIntegers.size());
   ASSERT_EQ(123, Settings.ConfigurationIntegers["some_option1"]);
@@ -185,12 +185,12 @@ TEST(json_extraction_tests, strings_in_kafka_broker_settings_are_extracted) {
                         "  }"
                         "}";
 
-  BrightnESS::ForwardEpicsToKafka::MainOpt Main;
-  Main.Config->setJsonFromString(RawJson);
+  BrightnESS::ForwardEpicsToKafka::MainOpt MainOpt;
+  MainOpt.Config->setJsonFromString(RawJson);
 
-  Main.Config->extractKafkaBrokerSettings();
+  MainOpt.Config->extractKafkaBrokerSettings();
 
-  BrightnESS::ForwardEpicsToKafka::KafkaBrokerSettings Settings = Main.Config->BrokerSettings;
+  BrightnESS::ForwardEpicsToKafka::KafkaBrokerSettings Settings = MainOpt.Config->BrokerSettings;
 
   ASSERT_EQ(2u, Settings.ConfigurationStrings.size());
   ASSERT_EQ("hello", Settings.ConfigurationStrings["some_option1"]);
@@ -201,14 +201,14 @@ TEST(json_extraction_tests,
      no_broker_config_settings_sets_default_host_port_and_topic) {
   std::string RawJson = "{}";
 
-  BrightnESS::ForwardEpicsToKafka::MainOpt Main;
-  Main.Config->setJsonFromString(RawJson);
+  BrightnESS::ForwardEpicsToKafka::MainOpt MainOpt;
+  MainOpt.Config->setJsonFromString(RawJson);
 
-  Main.findBrokerConfig();
+  MainOpt.findBrokerConfig();
 
-  ASSERT_EQ("localhost", Main.BrokerConfig.host);
-  ASSERT_EQ(9092u, Main.BrokerConfig.port);
-  ASSERT_EQ("forward_epics_to_kafka_commands", Main.BrokerConfig.topic);
+  ASSERT_EQ("localhost", MainOpt.BrokerConfig.host);
+  ASSERT_EQ(9092u, MainOpt.BrokerConfig.port);
+  ASSERT_EQ("forward_epics_to_kafka_commands", MainOpt.BrokerConfig.topic);
 }
 
 TEST(json_extraction_tests,
@@ -218,25 +218,25 @@ TEST(json_extraction_tests,
       "  \"broker-config\": \"//kafkabroker:1234/the_command_topic\""
       "}";
 
-  BrightnESS::ForwardEpicsToKafka::MainOpt Main;
-  Main.Config->setJsonFromString(RawJson);
+  BrightnESS::ForwardEpicsToKafka::MainOpt MainOpt;
+  MainOpt.Config->setJsonFromString(RawJson);
 
-  Main.findBrokerConfig();
+  MainOpt.findBrokerConfig();
 
-  ASSERT_EQ("kafkabroker", Main.BrokerConfig.host);
-  ASSERT_EQ(1234u, Main.BrokerConfig.port);
-  ASSERT_EQ("the_command_topic", Main.BrokerConfig.topic);
+  ASSERT_EQ("kafkabroker", MainOpt.BrokerConfig.host);
+  ASSERT_EQ(1234u, MainOpt.BrokerConfig.port);
+  ASSERT_EQ("the_command_topic", MainOpt.BrokerConfig.topic);
 }
 
 TEST(json_extraction_tests, no_conversion_threads_settings_sets_default) {
   std::string RawJson = "{}";
 
-  BrightnESS::ForwardEpicsToKafka::MainOpt Main;
-  Main.Config->setJsonFromString(RawJson);
+  BrightnESS::ForwardEpicsToKafka::MainOpt MainOpt;
+  MainOpt.Config->setJsonFromString(RawJson);
 
-  Main.findConversionThreads();
+  MainOpt.findConversionThreads();
 
-  ASSERT_EQ(1u, Main.ConversionThreads);
+  ASSERT_EQ(1u, MainOpt.ConversionThreads);
 }
 
 TEST(json_extraction_tests, extracting_conversion_threads_sets_value) {
@@ -244,23 +244,23 @@ TEST(json_extraction_tests, extracting_conversion_threads_sets_value) {
                         "  \"conversion-threads\": 3"
                         "}";
 
-  BrightnESS::ForwardEpicsToKafka::MainOpt Main;
-  Main.Config->setJsonFromString(RawJson);
+  BrightnESS::ForwardEpicsToKafka::MainOpt MainOpt;
+  MainOpt.Config->setJsonFromString(RawJson);
 
-  Main.findConversionThreads();
+  MainOpt.findConversionThreads();
 
-  ASSERT_EQ(3u, Main.ConversionThreads);
+  ASSERT_EQ(3u, MainOpt.ConversionThreads);
 }
 
 TEST(json_extraction_tests, no_conversion_worker_queue_size_sets_default) {
   std::string RawJson = "{}";
 
-  BrightnESS::ForwardEpicsToKafka::MainOpt Main;
-  Main.Config->setJsonFromString(RawJson);
+  BrightnESS::ForwardEpicsToKafka::MainOpt MainOpt;
+  MainOpt.Config->setJsonFromString(RawJson);
 
-  Main.findConversionWorkerQueueSize();
+  MainOpt.findConversionWorkerQueueSize();
 
-  ASSERT_EQ(1024u, Main.ConversionWorkerQueueSize);
+  ASSERT_EQ(1024u, MainOpt.ConversionWorkerQueueSize);
 }
 
 TEST(json_extraction_tests,
@@ -269,23 +269,23 @@ TEST(json_extraction_tests,
                         "  \"conversion-worker-queue-size\": 1234"
                         "}";
 
-  BrightnESS::ForwardEpicsToKafka::MainOpt Main;
-  Main.Config->setJsonFromString(RawJson);
+  BrightnESS::ForwardEpicsToKafka::MainOpt MainOpt;
+  MainOpt.Config->setJsonFromString(RawJson);
 
-  Main.findConversionWorkerQueueSize();
+  MainOpt.findConversionWorkerQueueSize();
 
-  ASSERT_EQ(1234u, Main.ConversionWorkerQueueSize);
+  ASSERT_EQ(1234u, MainOpt.ConversionWorkerQueueSize);
 }
 
 TEST(json_extraction_tests, no_main_poll_interval_sets_default) {
   std::string RawJson = "{}";
 
-  BrightnESS::ForwardEpicsToKafka::MainOpt Main;
-  Main.Config->setJsonFromString(RawJson);
+  BrightnESS::ForwardEpicsToKafka::MainOpt MainOpt;
+  MainOpt.Config->setJsonFromString(RawJson);
 
-  Main.findMainPollInterval();
+  MainOpt.findMainPollInterval();
 
-  ASSERT_EQ(500, Main.main_poll_interval);
+  ASSERT_EQ(500, MainOpt.main_poll_interval);
 }
 
 TEST(json_extraction_tests, extracting_main_poll_interval_sets_value) {
@@ -293,105 +293,180 @@ TEST(json_extraction_tests, extracting_main_poll_interval_sets_value) {
                         "  \"main-poll-interval\": 1234"
                         "}";
 
-  BrightnESS::ForwardEpicsToKafka::MainOpt Main;
-  Main.Config->setJsonFromString(RawJson);
+  BrightnESS::ForwardEpicsToKafka::MainOpt MainOpt;
+  MainOpt.Config->setJsonFromString(RawJson);
 
-  Main.findMainPollInterval();
+  MainOpt.findMainPollInterval();
 
-  ASSERT_EQ(1234, Main.main_poll_interval);
+  ASSERT_EQ(1234, MainOpt.main_poll_interval);
 }
 
 TEST(json_extraction_tests,
-     extracting_converter_info_gets_schema_topic_and_name) {
+     extracting_streams_setting_gets_channel_and_protocol) {
   std::string RawJson = "{"
-                        "  \"schema\": \"f142\", \"topic\": "
-                        "\"Kafka_topic_name\", \"name\": \"my_name\""
+                        "  \"streams\": ["
+                        "    {"
+                        "      \"channel\": \"my_channel_name\","
+                        "      \"channel_provider_type\": \"ca\""
+                        "    }"
+                        "  ]"
                         "}";
 
-  nlohmann::json Json = nlohmann::json::parse(RawJson);
   BrightnESS::ForwardEpicsToKafka::MainOpt MainOpt;
-  BrightnESS::ForwardEpicsToKafka::Main Main(MainOpt);
+  MainOpt.Config->setJsonFromString(RawJson);
+  MainOpt.Config->extractStreamSettings();
 
-  std::string Schema;
-  std::string Topic;
-  std::string Name;
-  Main.extractConverterInfo(Json, Schema, Topic, Name);
+  ASSERT_EQ(1u, MainOpt.Config->StreamsInfo.size());
 
-  ASSERT_EQ("f142", Schema);
-  ASSERT_EQ("Kafka_topic_name", Topic);
-  ASSERT_EQ("my_name", Name);
+  auto Settings = MainOpt.Config->StreamsInfo[0];
+
+  ASSERT_EQ("my_channel_name", Settings.Name);
+  ASSERT_EQ("ca", Settings.EpicsProtocol);
 }
 
-//TEST(json_extraction_tests,
-//     extracting_converter_info_with_no_name_gets_auto_named) {
-//  std::string RawJson =
-//      "{"
-//      "  \"schema\": \"f142\", \"topic\": \"Kafka_topic_name\""
-//      "}";
-//
-//  nlohmann::json Json = nlohmann::json::parse(RawJson);
-//  BrightnESS::ForwardEpicsToKafka::MainOpt MainOpt;
-//  BrightnESS::ForwardEpicsToKafka::Main Main(MainOpt);
-//
-//  std::string Schema;
-//  std::string Topic;
-//  std::string Name;
-//  Main.extractConverterInfo(Json, Schema, Topic, Name);
-//
-//  // Don't carry what the name is, but it must be something
-//  ASSERT_TRUE(!Name.empty());
-//}
-//
-//TEST(json_extraction_tests, extracting_converter_info_with_no_schema_throws) {
-//  std::string RawJson = "{"
-//                        "  \"topic\": \"Kafka_topic_name\""
-//                        "}";
-//
-//  nlohmann::json Json = nlohmann::json::parse(RawJson);
-//  BrightnESS::ForwardEpicsToKafka::MainOpt MainOpt;
-//  BrightnESS::ForwardEpicsToKafka::Main Main(MainOpt);
-//
-//  std::string Schema;
-//  std::string Topic;
-//  std::string Name;
-//
-//  ASSERT_ANY_THROW(Main.extractConverterInfo(Json, Schema, Topic, Name));
-//}
-//
-//TEST(json_extraction_tests, extracting_converter_info_with_no_topic_throws) {
-//  std::string RawJson = "{"
-//                        "  \"schema\": \"f142\""
-//                        "}";
-//
-//  nlohmann::json Json = nlohmann::json::parse(RawJson);
-//  BrightnESS::ForwardEpicsToKafka::MainOpt MainOpt;
-//  BrightnESS::ForwardEpicsToKafka::Main Main(MainOpt);
-//
-//  std::string Schema;
-//  std::string Topic;
-//  std::string Name;
-//
-//  ASSERT_ANY_THROW(Main.extractConverterInfo(Json, Schema, Topic, Name));
-//}
-//
-//TEST(json_extraction_tests, extracting_mapping_info_gets_channel_and_provider) {
-//  std::string RawJson = "{"
-//                        "  \"channel\": \"my_channel_name\","
-//                        "  \"channel_provider_type\": \"ca\""
-//                        "}";
-//
-//  nlohmann::json Json = nlohmann::json::parse(RawJson);
-//  BrightnESS::ForwardEpicsToKafka::MainOpt MainOpt;
-//  BrightnESS::ForwardEpicsToKafka::Main Main(MainOpt);
-//
-//  std::string Channel;
-//  std::string ProviderType;
-//  Main.extractMappingInfo(Json, Channel, ProviderType);
-//
-//  ASSERT_EQ("my_channel_name", Channel);
-//  ASSERT_EQ("ca", ProviderType);
-//}
-//
+TEST(json_extraction_tests,
+     extracting_multiple_streams_setting_gets_channel_and_protocol) {
+  std::string RawJson = "{"
+                        "  \"streams\": ["
+                        "    {"
+                        "      \"channel\": \"my_channel_name\","
+                        "      \"channel_provider_type\": \"ca\""
+                        "    },"
+                        "    {"
+                        "      \"channel\": \"my_channel_name_2\","
+                        "      \"channel_provider_type\": \"pva\""
+                        "    }"
+                        "  ]"
+                        "}";
+
+  BrightnESS::ForwardEpicsToKafka::MainOpt MainOpt;
+  MainOpt.Config->setJsonFromString(RawJson);
+  MainOpt.Config->extractStreamSettings();
+
+  ASSERT_EQ(2u, MainOpt.Config->StreamsInfo.size());
+
+  auto Settings = MainOpt.Config->StreamsInfo[0];
+  ASSERT_EQ("my_channel_name", Settings.Name);
+  ASSERT_EQ("ca", Settings.EpicsProtocol);
+
+  Settings = MainOpt.Config->StreamsInfo[1];
+  ASSERT_EQ("my_channel_name_2", Settings.Name);
+  ASSERT_EQ("pva", Settings.EpicsProtocol);
+}
+
+TEST(json_extraction_tests,
+     extracting_streams_setting_if_protocol_not_defined_use_default) {
+  std::string RawJson = "{"
+                        "  \"streams\": ["
+                        "    {"
+                        "      \"channel\": \"my_channel_name\""
+                        "    }"
+                        "  ]"
+                        "}";
+
+  BrightnESS::ForwardEpicsToKafka::MainOpt MainOpt;
+  MainOpt.Config->setJsonFromString(RawJson);
+  MainOpt.Config->extractStreamSettings();
+
+  ASSERT_EQ(1u, MainOpt.Config->StreamsInfo.size());
+
+  auto Settings = MainOpt.Config->StreamsInfo[0];
+
+  ASSERT_EQ("my_channel_name", Settings.Name);
+  ASSERT_EQ("pva", Settings.EpicsProtocol);
+}
+
+TEST(json_extraction_tests,
+     extracting_streams_setting_gets_converter_info) {
+
+  std::string RawJson = "{"
+                        "  \"streams\": ["
+                        "    {"
+                        "      \"channel\": \"my_channel_name\","
+                        "      \"channel_provider_type\": \"ca\","
+                        "      \"converter\": {"
+                        "        \"schema\": \"f142\", "
+                        "        \"topic\": \"Kafka_topic_name\", "
+                        "        \"name\": \"my_name\""
+                        "      }"
+                        "    }"
+                        "  ]"
+                        "}";
+
+  BrightnESS::ForwardEpicsToKafka::MainOpt MainOpt;
+  MainOpt.Config->setJsonFromString(RawJson);
+  MainOpt.Config->extractStreamSettings();
+
+  auto Settings = MainOpt.Config->StreamsInfo[0].Converters[0];
+
+  ASSERT_EQ("f142", Settings.Schema);
+  ASSERT_EQ("Kafka_topic_name", Settings.Topic);
+  ASSERT_EQ("my_name", Settings.Name);
+}
+
+TEST(json_extraction_tests,
+     extracting_converter_info_with_no_name_gets_auto_named) {
+  std::string RawJson = "{"
+                        "  \"streams\": ["
+                        "    {"
+                        "      \"channel\": \"my_channel_name\","
+                        "      \"channel_provider_type\": \"ca\","
+                        "      \"converter\": {"
+                        "        \"schema\": \"f142\", "
+                        "        \"topic\": \"Kafka_topic_name\""
+                        "      }"
+                        "    }"
+                        "  ]"
+                        "}";
+
+  BrightnESS::ForwardEpicsToKafka::MainOpt MainOpt;
+  MainOpt.Config->setJsonFromString(RawJson);
+  MainOpt.Config->extractStreamSettings();
+
+  auto Settings = MainOpt.Config->StreamsInfo[0].Converters[0];
+
+  // Don't care what the name is, but it must be something
+  ASSERT_TRUE(!Settings.Name.empty());
+}
+
+TEST(json_extraction_tests, extracting_converter_info_with_no_topic_throws) {
+  std::string RawJson = "{"
+                        "  \"streams\": ["
+                        "    {"
+                        "      \"channel\": \"my_channel_name\","
+                        "      \"channel_provider_type\": \"ca\","
+                        "      \"converter\": {"
+                        "        \"schema\": \"f142\""
+                        "      }"
+                        "    }"
+                        "  ]"
+                        "}";
+
+  BrightnESS::ForwardEpicsToKafka::MainOpt MainOpt;
+  MainOpt.Config->setJsonFromString(RawJson);
+
+  ASSERT_ANY_THROW(MainOpt.Config->extractStreamSettings(););
+}
+
+TEST(json_extraction_tests, extracting_converter_info_with_no_schema_throws) {
+  std::string RawJson = "{"
+                        "  \"streams\": ["
+                        "    {"
+                        "      \"channel\": \"my_channel_name\","
+                        "      \"channel_provider_type\": \"ca\","
+                        "      \"converter\": {"
+                        "        \"topic\": \"Kafka_topic_name\""
+                        "      }"
+                        "    }"
+                        "  ]"
+                        "}";
+
+  BrightnESS::ForwardEpicsToKafka::MainOpt MainOpt;
+  MainOpt.Config->setJsonFromString(RawJson);
+
+  ASSERT_ANY_THROW(MainOpt.Config->extractStreamSettings(););
+}
+
 //class ExtractCommandsTest : public ::testing::TestWithParam<const char *> {
 //  virtual void SetUp() { command = (*GetParam()); }
 //  virtual void TearDown() {}

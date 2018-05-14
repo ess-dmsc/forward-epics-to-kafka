@@ -62,6 +62,7 @@ void MainOpt::parse_json_file(std::string ConfigurationFile) {
   findConversionWorkerQueueSize();
   findMainPollInterval();
   Config->extractKafkaBrokerSettings();
+  Config->extractStreamSettings();
 
   broker_opt.ConfigurationStrings = Config->BrokerSettings.ConfigurationStrings;
   broker_opt.ConfigurationIntegers = Config->BrokerSettings.ConfigurationIntegers;

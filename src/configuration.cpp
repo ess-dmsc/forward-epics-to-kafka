@@ -2,6 +2,7 @@
 #include "helper.h"
 #include "json.h"
 #include "logger.h"
+#include "Main.h"
 #include <iostream>
 
 namespace BrightnESS {
@@ -20,8 +21,7 @@ void Configuration::extractBrokerConfig() {
 void Configuration::extractBrokers() {
   if (auto x = find<std::string>("broker", Json)) {
     setBrokers(x.inner());
-  }
-  else {
+  } else {
     // If not specified then use default
     setBrokers("localhost:9092");
   }
@@ -30,8 +30,7 @@ void Configuration::extractBrokers() {
 void Configuration::extractConversionThreads() {
   if (auto x = find<size_t>("conversion-threads", Json)) {
     ConversionThreads = x.inner();
-  }
-  else {
+  } else {
     // If not specified then use default
     ConversionThreads = 1;
   }
@@ -41,8 +40,7 @@ void Configuration::extractConversionWorkerQueueSize() {
   if (auto x =
       find<size_t>("conversion-worker-queue-size", Json)) {
     ConversionWorkerQueueSize = x.inner();
-  }
-  else {
+  } else {
     // If not specified then use default
     ConversionWorkerQueueSize = 1024;
   }
@@ -51,8 +49,7 @@ void Configuration::extractConversionWorkerQueueSize() {
 void Configuration::extractMainPollInterval() {
   if (auto x = find<int32_t>("main-poll-interval", Json)) {
     MainPollInterval = x.inner();
-  }
-  else {
+  } else {
     // If not specified then use default
     MainPollInterval = 500;
   }
@@ -135,5 +132,74 @@ void Configuration::extractKafkaBrokerSettings() {
   }
 }
 
+void Configuration::extractStreamSettings() {
+  using nlohmann::json;
+  if (auto StreamsMaybe = find<json>("streams", Json)) {
+    auto Streams = StreamsMaybe.inner();
+    if (Streams.is_array()) {
+      for (auto const &StreamJson : Streams) {
+        StreamSettings Settings;
+        // Find the basic information
+        extractMappingInfo(StreamJson, Settings.Name, Settings.EpicsProtocol);
+
+        // Find the converters, if present
+        if (auto x = find<nlohmann::json>("converter", StreamJson)) {
+          if (x.inner().is_object()) {
+            Settings.Converters.push_back(extractConverterSettings(x.inner()));
+          } else if (x.inner().is_array()) {
+            for (auto const &ConverterSettings : x.inner()) {
+              Settings.Converters.push_back(extractConverterSettings(ConverterSettings));
+            }
+          }
+        }
+
+        StreamsInfo.push_back(Settings);
+      }
+    }
+  }
+}
+
+void Configuration::extractMappingInfo(nlohmann::json const &Mapping,
+                              std::string &Channel,
+                              std::string &Protocol) {
+  if (!Mapping.is_object()) {
+    throw MappingAddException("Given Mapping is not a JSON object");
+  }
+
+  auto ChannelMaybe = find<std::string>("channel", Mapping);
+  if (!ChannelMaybe) {
+    throw MappingAddException("Can not find channel");
+  }
+  Channel = ChannelMaybe.inner();
+
+  auto ChannelProviderTypeMaybe =
+      find<std::string>("channel_provider_type", Mapping);
+  if (ChannelProviderTypeMaybe) {
+    Protocol = ChannelProviderTypeMaybe.inner();
+  }
+  else {
+    // Default is pva
+    Protocol = "pva";
+  }
+
+
+}
+
+ConverterSettings Configuration::extractConverterSettings(nlohmann::json const &Mapping) {
+  ConverterSettings Settings;
+  Settings.Schema = find<std::string>("schema", Mapping).inner();
+  Settings.Topic = find<std::string>("topic", Mapping).inner();
+  if (auto x = find<std::string>("name", Mapping)) {
+    Settings.Name = x.inner();
+  } else {
+    // Assign automatically generated name
+    Settings.Name = fmt::format("converter_{}", ConverterIndex++);
+  }
+
+  return Settings;
+}
+
 }
 }
+
+

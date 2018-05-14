@@ -50,6 +50,7 @@ public:
   ~Main();
   void forward_epics_to_kafka();
   void mappingAdd(nlohmann::json const &Mapping);
+  void addMapping(StreamSettings const &Stream);
   void stopForwarding();
   void stopForwardingDueToSignal();
   void report_status();
@@ -90,6 +91,9 @@ private:
   void
   pushConverterToStream(nlohmann::json const &JSON,
                         std::shared_ptr<ForwardEpicsToKafka::Stream> &Stream);
+  void pushConverterToStream(
+      ConverterSettings const &Converter,
+  std::shared_ptr<ForwardEpicsToKafka::Stream> &Stream);
 };
 
 /// \brief Helper class to provide a callback for the Kafka command listener.
