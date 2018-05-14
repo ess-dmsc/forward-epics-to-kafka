@@ -228,6 +228,22 @@ public:
   }
 };
 
+class MakeScalarString {
+public:
+  static Value_t convert(flatbuffers::FlatBufferBuilder *Builder,
+                         epics::pvData::PVScalar *PVScalarValue) {
+    auto PVScalarString =
+        static_cast<epics::pvData::PVScalarValue<std::string> *>(PVScalarValue);
+    std::string Value = PVScalarString->get();
+    auto FlatbufferedValueString =
+        Builder->CreateString(Value.data(), Value.size());
+    StringBuilder ValueBuilder(*Builder);
+    ValueBuilder.add_value(FlatbufferedValueString);
+    LOG(Sev::Critical, "DONE: {}", Value);
+    return {Value::String, ValueBuilder.Finish().Union()};
+  }
+};
+
 } // end namespace PVStructureToFlatBufferN
 
 Value_t make_Value_scalar(flatbuffers::FlatBufferBuilder &builder,
