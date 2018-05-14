@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <atomic>
 #include <nlohmann/json.hpp>
 #include "uri.h"
 
