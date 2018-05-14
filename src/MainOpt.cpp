@@ -10,7 +10,6 @@
 #include "blobs.h"
 #include "git_commit_current.h"
 #include "helper.h"
-#include "json.h"
 #include "logger.h"
 #include <CLI/CLI.hpp>
 #include <fstream>
@@ -20,7 +19,7 @@
 namespace BrightnESS {
 namespace ForwardEpicsToKafka {
 
-MainOpt::MainOpt() : Config(::make_unique<Configuration>()) {
+MainOpt::MainOpt() : Config(::make_unique<ConfigParser>()) {
   Hostname.resize(256);
   gethostname(Hostname.data(), Hostname.size());
   if (Hostname.back() != 0) {
@@ -57,44 +56,15 @@ void MainOpt::parse_json_file(std::string ConfigurationFile) {
   // command line.
   parse_document(ConfigurationFile);
 
-  findBrokerConfig();
-  findConversionThreads();
-  findConversionWorkerQueueSize();
-  findMainPollInterval();
-  Config->extractKafkaBrokerSettings();
-  Config->extractStreamSettings();
+  StatusReportURI = Config->Settings.StatusReportURI;
+  brokers = Config->Settings.Brokers;
+  BrokerConfig = Config->Settings.BrokerConfig;
+  ConversionThreads = Config->Settings.ConversionThreads;
+  ConversionWorkerQueueSize = Config->Settings.ConversionWorkerQueueSize;
+  main_poll_interval = Config->Settings.MainPollInterval;
 
-  broker_opt.ConfigurationStrings = Config->BrokerSettings.ConfigurationStrings;
-  broker_opt.ConfigurationIntegers = Config->BrokerSettings.ConfigurationIntegers;
-
-  find_status_uri();
-
-  findBroker();
-}
-
-void MainOpt::findMainPollInterval() {
-  Config->extractMainPollInterval();
-  main_poll_interval = Config->MainPollInterval;
-}
-
-void MainOpt::findConversionWorkerQueueSize() {
-  Config->extractConversionWorkerQueueSize();
-  ConversionWorkerQueueSize = Config->ConversionWorkerQueueSize;
-}
-
-void MainOpt::findConversionThreads() {
-  Config->extractConversionThreads();
-  ConversionThreads = Config->ConversionThreads;
-}
-
-void MainOpt::findBrokerConfig() {
-  Config->extractBrokerConfig();
-  BrokerConfig = Config->BrokerConfig;
-}
-
-void MainOpt::findBroker() {
-  Config->extractBrokers();
-  brokers = Config->Brokers;
+  broker_opt.ConfigurationStrings = Config->Settings.BrokerSettings.ConfigurationStrings;
+  broker_opt.ConfigurationIntegers = Config->Settings.BrokerSettings.ConfigurationIntegers;
 }
 
 void MainOpt::parse_document(const std::string &filepath) {
@@ -107,12 +77,9 @@ void MainOpt::parse_document(const std::string &filepath) {
   buffer << ifs.rdbuf();
 
   Config->setJsonFromString(buffer.str());
+  Config->extractConfiguration();
 }
 
-void MainOpt::find_status_uri() {
-  Config->extractStatusUri();
-  StatusReportURI = Config->StatusReportURI;
-}
 
 /// Add a URI valued option to the given App.
 static void addOption(CLI::App &App, std::string const &Name, uri::URI &URIArg,

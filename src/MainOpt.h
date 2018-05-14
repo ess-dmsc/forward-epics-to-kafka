@@ -2,7 +2,7 @@
 
 #include "KafkaW/KafkaW.h"
 #include "SchemaRegistry.h"
-#include "configuration.h"
+#include "ConfigParser.h"
 #include "uri.h"
 #include <nlohmann/json.hpp>
 #include <string>
@@ -33,15 +33,9 @@ struct MainOpt {
   void parse_json_file(std::string ConfigurationFile);
   KafkaW::BrokerSettings broker_opt;
   void init_logger();
-  void find_status_uri();
   void parse_document(const std::string &filepath);
-  void findBroker();
-  void findBrokerConfig();
-  void findConversionThreads();
-  void findConversionWorkerQueueSize();
-  void findMainPollInterval();
 
-  std::unique_ptr<Configuration> Config;
+  std::unique_ptr<ConfigParser> Config;
 };
 
 std::pair<int, std::unique_ptr<MainOpt>> parse_opt(int argc, char **argv);

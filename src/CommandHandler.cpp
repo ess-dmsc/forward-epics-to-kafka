@@ -3,7 +3,7 @@
 #include "helper.h"
 #include "json.h"
 #include "logger.h"
-#include "configuration.h"
+#include "ConfigParser.h"
 
 namespace BrightnESS {
 namespace ForwardEpicsToKafka {
@@ -20,11 +20,12 @@ void ConfigCB::operator()(std::string const &msg) {
 }
 
 void ConfigCB::handleCommandAdd(nlohmann::json const &Document) {
-  // Use instance of Configuration to extract stream info.
-  Configuration Config;
-  Config.extractStreamSettings();
+  // Use instance of ConfigParser to extract stream info.
+  ConfigParser Config;
+  Config.setJsonFromString(Document);
+  Config.extractConfiguration();
 
-  for (auto & Stream : Config.StreamsInfo) {
+  for (auto & Stream : Config.Settings.StreamsInfo) {
     main.addMapping(Stream);
   }
 }

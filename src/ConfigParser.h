@@ -28,31 +28,27 @@ struct StreamSettings {
   std::vector<ConverterSettings> Converters;
 };
 
-class Configuration {
-public:
-  Configuration() = default;
-  void setJsonFromString(std::string RawJson);
-  void extractBrokerConfig();
-  void extractBrokers();
-  void extractConversionThreads();
-  void extractConversionWorkerQueueSize();
-  void extractMainPollInterval();
-  void extractStatusUri();
-  void extractGlobalConverters(std::string &Schema);
-  void extractKafkaBrokerSettings();
-  void extractStreamSettings();
-  void setBrokers(std::string Brokers);
+struct ConfigSettings {
   uri::URI BrokerConfig{"//localhost:9092/forward_epics_to_kafka_commands"};
   std::vector<uri::URI> Brokers;
-  size_t ConversionThreads;
-  size_t ConversionWorkerQueueSize;
-  int32_t MainPollInterval;
+  size_t ConversionThreads{1};
+  size_t ConversionWorkerQueueSize{1024};
+  int32_t MainPollInterval{500};
   uri::URI StatusReportURI;
   std::map<std::string, int64_t> ConverterInts;
   std::map<std::string, std::string> ConverterStrings;
   KafkaBrokerSettings BrokerSettings;
   std::vector<StreamSettings> StreamsInfo;
-  std::atomic<uint32_t> ConverterIndex{0};
+};
+
+class ConfigParser {
+public:
+  ConfigParser() = default;
+  void setJsonFromString(std::string RawJson);
+  void extractConfiguration();
+  void extractGlobalConverters(std::string &Schema);
+  void setBrokers(std::string Brokers);
+  ConfigSettings Settings;
 
 private:
   nlohmann::json Json;
@@ -60,6 +56,15 @@ private:
                                          std::string &Channel,
                                          std::string &Protocol);
   ConverterSettings extractConverterSettings(nlohmann::json const &Mapping);
+  void extractBrokerConfig();
+  void extractBrokers();
+  void extractConversionThreads();
+  void extractConversionWorkerQueueSize();
+  void extractMainPollInterval();
+  void extractStatusUri();
+  void extractKafkaBrokerSettings();
+  void extractStreamSettings();
+  std::atomic<uint32_t> ConverterIndex{0};
 };
 }
 }

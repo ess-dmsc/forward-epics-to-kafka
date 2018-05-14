@@ -1,5 +1,4 @@
 #include "Converter.h"
-#include "json.h"
 #include "logger.h"
 
 namespace BrightnESS {
@@ -23,7 +22,7 @@ Converter::create(FlatBufs::SchemaRegistry const &schema_registry,
   }
 
   main_opt.Config->extractGlobalConverters(schema);
-  conv->config(main_opt.Config->ConverterInts, main_opt.Config->ConverterStrings);
+  conv->config(main_opt.Config->Settings.ConverterInts, main_opt.Config->Settings.ConverterStrings);
 
   return ret;
 }

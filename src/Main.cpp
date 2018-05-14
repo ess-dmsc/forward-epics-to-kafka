@@ -63,7 +63,7 @@ Main::Main(MainOpt &opt)
     config_listener.reset(new Config::Listener{bopt, main_opt.BrokerConfig});
   }
 
-  for (auto & Stream : main_opt.Config->StreamsInfo) {
+  for (auto & Stream : main_opt.Config->Settings.StreamsInfo) {
     try {
       addMapping(Stream);
     } catch (std::exception &e) {
