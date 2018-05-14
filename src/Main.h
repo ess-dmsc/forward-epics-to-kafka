@@ -46,10 +46,9 @@ enum class ForwardingRunState : int {
 
 class Main {
 public:
-  Main(MainOpt &opt);
+  explicit Main(MainOpt &opt);
   ~Main();
   void forward_epics_to_kafka();
-  void mappingAdd(nlohmann::json const &Mapping);
   void addMapping(StreamSettings const &Stream);
   void stopForwarding();
   void stopForwardingDueToSignal();
@@ -59,12 +58,6 @@ public:
   int converters_clear();
   std::unique_lock<std::mutex> get_lock_streams();
   std::unique_lock<std::mutex> get_lock_converters();
-
-  // Public for unit testing
-  void extractConverterInfo(const nlohmann::json &JSON, std::string &Schema,
-                            std::string &Topic, std::string &ConverterName);
-  void extractMappingInfo(nlohmann::json const &Mapping, std::string &Channel,
-                          std::string &ChannelProviderType);
 
 private:
   MainOpt &main_opt;
@@ -88,30 +81,9 @@ private:
   Streams streams;
   std::atomic<ForwardingRunState> ForwardingRunFlag{ForwardingRunState::RUN};
   void raiseForwardingFlag(ForwardingRunState ToBeRaised);
-  void
-  pushConverterToStream(nlohmann::json const &JSON,
-                        std::shared_ptr<ForwardEpicsToKafka::Stream> &Stream);
   void pushConverterToStream(
       ConverterSettings const &Converter,
-  std::shared_ptr<ForwardEpicsToKafka::Stream> &Stream);
-};
-
-/// \brief Helper class to provide a callback for the Kafka command listener.
-class ConfigCB : public Config::Callback {
-public:
-  ConfigCB(Main &main);
-  // This is called from the same thread as the main watchdog below, because the
-  // code below calls the config poll which in turn calls this callback.
-  void operator()(std::string const &msg) override;
-  void handleCommand(std::string const &Msg);
-  void handleCommandAdd(nlohmann::json const &Document);
-  void handleCommandStopChannel(nlohmann::json const &Document);
-  void handleCommandStopAll();
-  void handleCommandExit();
-  std::string findCommand(nlohmann::json const &Document);
-
-private:
-  Main &main;
+      std::shared_ptr<ForwardEpicsToKafka::Stream> &Stream);
 };
 
 extern std::atomic<uint64_t> g__total_msgs_to_kafka;

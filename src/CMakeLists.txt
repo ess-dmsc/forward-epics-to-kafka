@@ -83,7 +83,8 @@ schemas/f142/f142.cpp
 ${FMT_SRC}
 schemas/f143/f143.cpp
 ${CMAKE_CURRENT_BINARY_DIR}/git_commit_current.cpp
-)
+CommandHandler.h
+CommandHandler.cpp)
 
 set(tgt __objects)
 add_library(${tgt} OBJECT ${SOURCES})
