@@ -186,9 +186,12 @@ void Remote_T::simple_f142() {
   using nlohmann::json;
   using std::thread;
   using std::string;
-  auto Doc = json::parse("{\"channel\": \"forwarder_test_nt_array_double\", "
-                         "\"converter\": {\"schema\":\"f142\", "
-                         "\"topic\":\"tmp-test-f142\"}}");
+
+  std::string RawJson = "{\"channel\": \"forwarder_test_nt_array_double\", "
+                        "\"converter\": {\"schema\":\"f142\", "
+                        "\"topic\":\"tmp-test-f142\"}}";
+
+  auto Doc = json::parse(RawJson);
   KafkaW::BrokerSettings BrokerSettings;
   BrokerSettings.ConfigurationStrings["group.id"] = "forwarder-tests-123213ab";
   BrokerSettings.ConfigurationIntegers["receive.message.max.bytes"] = 25100100;
@@ -209,7 +212,11 @@ void Remote_T::simple_f142() {
   });
 
   // sleep_ms(500);
-  main.mappingAdd(Doc);
+  ConfigParser parser;
+  parser.setJsonFromString(RawJson);
+  parser.extractConfiguration();
+
+  main.addMapping(parser.Settings.StreamsInfo[0]);
 
   // Let it do its thing for a few seconds...
   sleep_ms(5000);
