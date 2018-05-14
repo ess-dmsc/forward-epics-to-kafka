@@ -10,7 +10,6 @@
 #include <list>
 #include <map>
 #include <mutex>
-#include <nlohmann/json.hpp>
 #include <stdexcept>
 
 namespace BrightnESS {
@@ -36,7 +35,7 @@ enum class ForwardingStatus : int32_t {
   STOPPED,
 };
 
-struct CURLReporter;
+class CURLReporter;
 
 enum class ForwardingRunState : int {
   RUN = 0,

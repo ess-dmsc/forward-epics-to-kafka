@@ -5,7 +5,6 @@
 #include "MakeFlatBufferFromPVStructure.h"
 #include "SchemaRegistry.h"
 #include <map>
-#include <nlohmann/json.hpp>
 #include <string>
 
 namespace BrightnESS {

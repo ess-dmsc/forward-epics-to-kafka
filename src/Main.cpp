@@ -3,7 +3,7 @@
 #include "ForwarderInfo.h"
 #include "Stream.h"
 #include "helper.h"
-#include "json.h"
+#include <nlohmann/json.hpp>
 #include "logger.h"
 #include "CommandHandler.h"
 #include <sys/types.h>

@@ -4,7 +4,6 @@
 #include "SchemaRegistry.h"
 #include "ConfigParser.h"
 #include "uri.h"
-#include <nlohmann/json.hpp>
 #include <string>
 #include <vector>
 #include <memory>
