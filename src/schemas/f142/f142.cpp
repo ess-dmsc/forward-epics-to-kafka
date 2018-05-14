@@ -276,6 +276,8 @@ Value_t make_Value_scalar(flatbuffers::FlatBufferBuilder &builder,
   case S::pvDouble:
     return Make_Scalar<double>::convert(&builder, field);
   case S::pvString:
+    return MakeScalarString::convert(&builder, field);
+  default:
     ++statistics.err_not_implemented_yet;
     break;
   }
