@@ -10,6 +10,10 @@ namespace ForwardEpicsToKafka {
 
 void Configuration::setJsonFromString(std::string RawJson) {
   Json = nlohmann::json::parse(RawJson);
+
+  if (Json.is_null()) {
+    throw std::runtime_error("Cannot parse configuration file as JSON");
+  }
 }
 
 void Configuration::extractBrokerConfig() {

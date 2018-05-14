@@ -30,7 +30,6 @@ struct MainOpt {
   uint64_t teamid = 0;
   std::vector<char> Hostname;
   FlatBufs::SchemaRegistry schema_registry;
-  nlohmann::json JSONConfiguration;
   void parse_json_file(std::string ConfigurationFile);
   KafkaW::BrokerSettings broker_opt;
   void init_logger();

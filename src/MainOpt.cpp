@@ -107,12 +107,6 @@ void MainOpt::parse_document(const std::string &filepath) {
   buffer << ifs.rdbuf();
 
   Config->setJsonFromString(buffer.str());
-  JSONConfiguration = nlohmann::json::parse(buffer.str());
-
-
-  if (JSONConfiguration.is_null()) {
-    throw std::runtime_error("Can not parse configuration file as JSON");
-  }
 }
 
 void MainOpt::find_status_uri() {

@@ -3,10 +3,21 @@
 #include "../MainOpt.h"
 #include "../configuration.h"
 #include "../helper.h"
+#include "../CommandHandler.h"
 #include <gtest/gtest.h>
 #include <iostream>
 #include <sstream>
 #include <string>
+
+TEST(json_extraction_tests, trying_to_parse_invalid_json_throws) {
+  std::string RawJson = "{"
+                        "  \"streams\": ["
+                        "    }"
+                        "  ]";
+
+  BrightnESS::ForwardEpicsToKafka::MainOpt MainOpt;
+  ASSERT_ANY_THROW(MainOpt.Config->setJsonFromString(RawJson));
+}
 
 TEST(json_extraction_tests, no_converters_specified_has_no_side_effects) {
   std::string RawJson = "{}";
@@ -467,32 +478,32 @@ TEST(json_extraction_tests, extracting_converter_info_with_no_schema_throws) {
   ASSERT_ANY_THROW(MainOpt.Config->extractStreamSettings(););
 }
 
-//class ExtractCommandsTest : public ::testing::TestWithParam<const char *> {
-//  virtual void SetUp() { command = (*GetParam()); }
-//  virtual void TearDown() {}
-//
-//protected:
-//  std::string command;
-//};
-//
-//TEST_P(ExtractCommandsTest, extracting_command_gets_command_name) {
-//  std::ostringstream os;
-//  os << "{"
-//     << "  \"cmd\": \"" << command << "\""
-//     << "}";
-//
-//  std::string RawJson = os.str();
-//
-//  nlohmann::json Json = nlohmann::json::parse(RawJson);
-//  BrightnESS::ForwardEpicsToKafka::MainOpt MainOpt;
-//  BrightnESS::ForwardEpicsToKafka::Main Main(MainOpt);
-//  BrightnESS::ForwardEpicsToKafka::ConfigCB config(Main);
-//
-//  auto Cmd = config.findCommand(Json);
-//
-//  ASSERT_EQ(command, Cmd);
-//}
-//
-//INSTANTIATE_TEST_CASE_P(InstantiationName, ExtractCommandsTest,
-//                        ::testing::Values("add", "stop_channel", "stop_all",
-//                                          "exit", "unknown_command"));
+class ExtractCommandsTest : public ::testing::TestWithParam<const char *> {
+  virtual void SetUp() { command = (*GetParam()); }
+  virtual void TearDown() {}
+
+protected:
+  std::string command;
+};
+
+TEST_P(ExtractCommandsTest, extracting_command_gets_command_name) {
+  std::ostringstream os;
+  os << "{"
+     << "  \"cmd\": \"" << command << "\""
+     << "}";
+
+  std::string RawJson = os.str();
+
+  nlohmann::json Json = nlohmann::json::parse(RawJson);
+  BrightnESS::ForwardEpicsToKafka::MainOpt MainOpt;
+  BrightnESS::ForwardEpicsToKafka::Main Main(MainOpt);
+  BrightnESS::ForwardEpicsToKafka::ConfigCB config(Main);
+
+  auto Cmd = config.findCommand(Json);
+
+  ASSERT_EQ(command, Cmd);
+}
+
+INSTANTIATE_TEST_CASE_P(InstantiationName, ExtractCommandsTest,
+                        ::testing::Values("add", "stop_channel", "stop_all",
+                                          "exit", "unknown_command"));
