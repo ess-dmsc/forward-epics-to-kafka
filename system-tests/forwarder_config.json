@@ -1,6 +1,6 @@
 {
   "broker": "//localhost:9092",
-  "broker-config": "//localhost:9092/TEST_forwarderConfig",
+  "broker-config": "//localhost:9092/TEST_forwarderConfig"
 //  "streams": [
 //    {
 //      "channel": "Epics_PV_name",

@@ -37,5 +37,7 @@ services:
       - kafka
       - ioc
     network_mode: "host"
+    volumes:
+      - ./system-tests/forwarder_config.json/file:/forwarder_config.json
     environment:
-      CONFIG_FILE: "//localhost:9092/TEST_forwarderConfig"
+      CONFIG_FILE: "forwarder_config.json"
