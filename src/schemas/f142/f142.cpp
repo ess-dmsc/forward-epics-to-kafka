@@ -239,7 +239,6 @@ public:
         Builder->CreateString(Value.data(), Value.size());
     StringBuilder ValueBuilder(*Builder);
     ValueBuilder.add_value(FlatbufferedValueString);
-    LOG(Sev::Critical, "DONE: {}", Value);
     return {Value::String, ValueBuilder.Finish().Union()};
   }
 };
