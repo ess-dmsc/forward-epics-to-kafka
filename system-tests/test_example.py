@@ -1,4 +1,4 @@
-from time import sleep
+﻿from time import sleep
 from helpers.producerwrapper import ProducerWrapper
 from confluent_kafka import Producer, Consumer
 from helpers.f142_logdata import LogData, Value, Int, Double
@@ -12,6 +12,24 @@ from json import loads
 
 BUILD_FORWARDER = False
 CONFIG_TOPIC = "TEST_forwarderConfig"
+
+def test_config_file_channel_created_correctly(docker_compose):
+    """
+    Test that the channel defined in the config file is created.
+
+    :param docker_compose: Test fixture
+    :return: none
+    """
+    # Change the PV value, so something is forwarded
+    change_pv_value("SIM:Phs", 10)
+    # Wait for PV to be updated
+    sleep(5)
+
+    cons = create_consumer()
+    cons.subscribe(['TEST_forwarderData_pv_from_config'])
+    first_msg = poll_for_valid_message(cons).value()
+
+    cons.close()
 
 
 def test_config_created_correctly(docker_compose):
@@ -100,13 +118,13 @@ def test_forwarder_sends_pv_updates_single_pv_double(docker_compose):
     prod = ProducerWrapper("localhost:9092", CONFIG_TOPIC, data_topic)
     prod.add_config(pvs)
     # Wait for config to be pushed
-    sleep(2)  
-    
+    sleep(2)
+
     cons = create_consumer()
     cons.subscribe([CONFIG_TOPIC])
     msg = poll_for_valid_message(cons)
     check_json_config(loads(str(msg.value(), encoding="utf-8")), data_topic, pvs)
-    
+
     # Update value
     change_pv_value("SIM:Spd", 5)
     # Wait for PV to be updated
