@@ -98,6 +98,10 @@ template <>
 struct BuilderType_to_Enum_Value<DoubleBuilder> : public Enum_Value_Base {
   static Value v() { return Value::Double; }
 };
+template <>
+struct BuilderType_to_Enum_Value<StringBuilder> : public Enum_Value_Base {
+  static Value v() { return Value::String; }
+};
 
 template <>
 struct BuilderType_to_Enum_Value<ArrayByteBuilder> : public Enum_Value_Base {
@@ -239,7 +243,8 @@ public:
         Builder->CreateString(Value.data(), Value.size());
     StringBuilder ValueBuilder(*Builder);
     ValueBuilder.add_value(FlatbufferedValueString);
-    return {Value::String, ValueBuilder.Finish().Union()};
+    return {BuilderType_to_Enum_Value<StringBuilder>::v(),
+            ValueBuilder.Finish().Union()};
   }
 };
 
