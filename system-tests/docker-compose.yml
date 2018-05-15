@@ -38,5 +38,4 @@ services:
       - ioc
     network_mode: "host"
     environment:
-      CONFIG_URI: "//localhost:9092/TEST_forwarderConfig"
-      KAFKA_BROKER: "localhost:9092"
+      CONFIG_FILE: "//localhost:9092/TEST_forwarderConfig"
