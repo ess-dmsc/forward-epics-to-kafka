@@ -1,11 +1,11 @@
 from time import sleep
 from helpers.producerwrapper import ProducerWrapper
 from confluent_kafka import Producer, Consumer
-from helpers.f142_logdata import LogData, Value, Int, Double
+from helpers.f142_logdata import LogData, Value, Int, Double, String
 import flatbuffers
 import uuid
 import time
-from epics import caput
+from epics import caput, caget
 import math
 from json import loads
 
@@ -122,6 +122,49 @@ def test_forwarder_sends_pv_updates_single_pv_double(docker_compose):
     log_data_second = LogData.LogData.GetRootAsLogData(second_msg, 0)
     check_message_pv_name_and_value_type(log_data_second, Value.Value.Double, b'SIM:Spd')
     check_double_value_and_equality(log_data_second, 5)
+    cons.close()
+
+
+def test_forwarder_sends_pv_updates_single_pv_string(docker_compose):
+    """
+    Test the forwarder pushes new PV value when the value is updated.
+
+    :param docker_compose: Test fixture
+    :return: none
+    """
+    data_topic = "TEST_forwarderData_string_pv_update"
+    write_PV_name = "SIM:CmdS"
+    read_PV_name = "SIM:CmdL"
+    pvs = [read_PV_name]
+
+    prod = ProducerWrapper("localhost:9092", CONFIG_TOPIC, data_topic)
+    prod.add_config(pvs)
+    # Wait for config to be pushed
+    sleep(2)
+
+    cons = create_consumer()
+    cons.subscribe([CONFIG_TOPIC])
+    config_msg = poll_for_valid_message(cons)
+
+    # Update value
+    stop_command = "stop"
+    change_pv_value(write_PV_name, stop_command)
+    # Wait for PV to be updated
+    sleep(5)
+    cons.subscribe([data_topic])
+
+    # Poll for message which should contain forwarded PV update
+    data_msg = poll_for_valid_message(cons).value()
+    log_data = LogData.LogData.GetRootAsLogData(data_msg, 0)
+    check_message_pv_name_and_value_type(log_data, Value.Value.String, read_PV_name.encode('utf-8'))
+    union_string = String.String()
+    union_string.Init(log_data.Value().Bytes, log_data.Value().Pos)
+    union_value = union_string.Value()
+    # Check expected PV update did occur
+    assert stop_command == caget(read_PV_name)
+    # Check PV update was forwarded
+    assert stop_command == union_value.decode('utf8')
+
     cons.close()
 
 
