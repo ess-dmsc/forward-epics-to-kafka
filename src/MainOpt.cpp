@@ -18,7 +18,7 @@
 namespace BrightnESS {
 namespace ForwardEpicsToKafka {
 
-MainOpt::MainOpt() : Config(::make_unique<ConfigParser>()) {
+MainOpt::MainOpt() {
   Hostname.resize(256);
   gethostname(Hostname.data(), Hostname.size());
   if (Hostname.back() != 0) {
@@ -28,13 +28,13 @@ MainOpt::MainOpt() : Config(::make_unique<ConfigParser>()) {
 }
 
 void MainOpt::set_broker(std::string &Broker) {
-  Config->setBrokers(Broker);
+  ConfigParser::setBrokers(Broker, MainSettings);
 }
 
 std::string MainOpt::brokers_as_comma_list() const {
   std::string s1;
   int i1 = 0;
-  for (auto &x : brokers) {
+  for (auto &x : MainSettings.Brokers) {
     if (i1) {
       s1 += ",";
     }
@@ -53,20 +53,20 @@ void MainOpt::parse_json_file(std::string ConfigurationFile) {
   // Parse the JSON configuration and extract parameters.
   // These parameters take precedence over what is given on the
   // command line.
-  parse_document(ConfigurationFile);
+  MainSettings = parse_document(ConfigurationFile);
 
-  StatusReportURI = Config->Settings.StatusReportURI;
-  brokers = Config->Settings.Brokers;
-  BrokerConfig = Config->Settings.BrokerConfig;
-  ConversionThreads = Config->Settings.ConversionThreads;
-  ConversionWorkerQueueSize = Config->Settings.ConversionWorkerQueueSize;
-  main_poll_interval = Config->Settings.MainPollInterval;
+  //StatusReportURI = Settings.StatusReportURI;
+  //brokers = Settings.Brokers;
+  //BrokerConfig = Settings.BrokerConfig;
+  //ConversionThreads = Settings.ConversionThreads;
+  //ConversionWorkerQueueSize = Settings.ConversionWorkerQueueSize;
+  //main_poll_interval = Settings.MainPollInterval;
 
-  broker_opt.ConfigurationStrings = Config->Settings.BrokerSettings.ConfigurationStrings;
-  broker_opt.ConfigurationIntegers = Config->Settings.BrokerSettings.ConfigurationIntegers;
+  broker_opt.ConfigurationStrings = MainSettings.BrokerSettings.ConfigurationStrings;
+  broker_opt.ConfigurationIntegers = MainSettings.BrokerSettings.ConfigurationIntegers;
 }
 
-void MainOpt::parse_document(const std::string &filepath) {
+ConfigSettings MainOpt::parse_document(const std::string &filepath) {
   std::ifstream ifs(filepath);
   if (!ifs.is_open()) {
     LOG(3, "Could not open JSON file")
@@ -75,8 +75,11 @@ void MainOpt::parse_document(const std::string &filepath) {
   std::stringstream buffer;
   buffer << ifs.rdbuf();
 
-  Config->setJsonFromString(buffer.str());
-  Config->extractConfiguration();
+  ConfigParser Config;
+  Config.setJsonFromString(buffer.str());
+  Config.extractConfiguration();
+
+  return Config.extractConfiguration();
 }
 
 /// Add a URI valued option to the given App.
@@ -113,10 +116,10 @@ std::pair<int, std::unique_ptr<MainOpt>> parse_opt(int argc, char **argv) {
   App.add_option("--influx-url", opt.InfluxURI, "Address for Influx logging");
   App.add_option("-v,--verbose", log_level, "Syslog logging level", true)
       ->check(CLI::Range(1, 7));
-  addOption(App, "--broker-config", opt.BrokerConfig,
+  addOption(App, "--broker-config", opt.MainSettings.BrokerConfig,
             "<//host[:port]/topic> Kafka host/topic to listen for commands on",
             true);
-  addOption(App, "--status-uri", opt.StatusReportURI,
+  addOption(App, "--status-uri", opt.MainSettings.StatusReportURI,
             "<//host[:port][/topic]> Kafka broker/topic to publish status "
             "updates on");
 

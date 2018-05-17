@@ -16,78 +16,81 @@ void ConfigParser::setJsonFromString(std::string RawJson) {
   }
 }
 
-void ConfigParser::extractConfiguration() {
-  extractBrokerConfig();
-  extractBrokers();
-  extractConversionThreads();
-  extractConversionWorkerQueueSize();
-  extractMainPollInterval();
-  extractStatusUri();
-  extractKafkaBrokerSettings();
-  extractStreamSettings();
+ConfigSettings ConfigParser::extractConfiguration() {
+  ConfigSettings Settings;
+
+  extractBrokerConfig(Settings);
+  extractBrokers(Settings);
+  extractConversionThreads(Settings);
+  extractConversionWorkerQueueSize(Settings);
+  extractMainPollInterval(Settings);
+  extractStatusUri(Settings);
+  extractKafkaBrokerSettings(Settings);
+  extractStreamSettings(Settings);
+  extractGlobalConverters(Settings);
+
+  return Settings;
 }
 
-void ConfigParser::extractBrokerConfig() {
+void ConfigParser::extractBrokerConfig(ConfigSettings &Settings) {
   if (auto x = find<std::string>("broker-config", Json)) {
     Settings.BrokerConfig = x.inner();
   }
 }
 
-void ConfigParser::extractBrokers() {
+void ConfigParser::extractBrokers(ConfigSettings &Settings) {
   if (auto x = find<std::string>("broker", Json)) {
-    setBrokers(x.inner());
+    setBrokers(x.inner(), Settings);
   } else {
     // If not specified then use default
-    setBrokers("localhost:9092");
+    setBrokers("localhost:9092", Settings);
   }
 }
 
-void ConfigParser::extractConversionThreads() {
+void ConfigParser::extractConversionThreads(ConfigSettings &Settings) {
   if (auto x = find<size_t>("conversion-threads", Json)) {
     Settings.ConversionThreads = x.inner();
   }
 }
 
-void ConfigParser::extractConversionWorkerQueueSize() {
+void ConfigParser::extractConversionWorkerQueueSize(ConfigSettings &Settings) {
   if (auto x =
       find<size_t>("conversion-worker-queue-size", Json)) {
     Settings.ConversionWorkerQueueSize = x.inner();
   }
 }
 
-void ConfigParser::extractMainPollInterval() {
+void ConfigParser::extractMainPollInterval(ConfigSettings &Settings) {
   if (auto x = find<int32_t>("main-poll-interval", Json)) {
     Settings.MainPollInterval = x.inner();
   }
 }
 
-void ConfigParser::extractGlobalConverters(std::string &Schema) {
+void ConfigParser::extractGlobalConverters(ConfigSettings &Settings) {
   using nlohmann::json;
 
   if (auto ConvertersMaybe = find<json>("converters", Json)) {
     auto const &Converters = ConvertersMaybe.inner();
     if (Converters.is_object()) {
-      if (auto SchemaMaybe = find<json>(Schema, Converters)) {
-        auto const &ConverterSchemaConfig = SchemaMaybe.inner();
-        if (ConverterSchemaConfig.is_object()) {
-          for (auto SettingIt = ConverterSchemaConfig.begin();
-               SettingIt != ConverterSchemaConfig.end(); ++SettingIt) {
-            if (SettingIt.value().is_number()) {
-              Settings.ConverterInts[SettingIt.key()] = SettingIt.value().get<int64_t>();
-            }
+      for (auto It = Converters.begin(); It != Converters.end(); ++It) {
+        KafkaBrokerSettings BrokerSettings;
+        for (auto SettingIt = It.value().begin(); SettingIt != It.value().end(); ++SettingIt) {
+          if (SettingIt.value().is_number()) {
+            BrokerSettings.ConfigurationIntegers[SettingIt.key()] = SettingIt.value().get<int64_t>();
+          }
 
-            if (SettingIt.value().is_string()) {
-              Settings.ConverterStrings[SettingIt.key()] =
-                  SettingIt.value().get<std::string>();
-            }
+          if (SettingIt.value().is_string()) {
+            BrokerSettings.ConfigurationStrings[SettingIt.key()] =
+                SettingIt.value().get<std::string>();
           }
         }
+        Settings.GlobalConverters[It.key()] = BrokerSettings;
       }
     }
   }
 }
 
-void ConfigParser::extractStatusUri() {
+void ConfigParser::extractStatusUri(ConfigSettings &Settings) {
   if (auto x = find<std::string>("status-uri", Json)) {
     auto URIString = x.inner();
     uri::URI URI;
@@ -97,7 +100,7 @@ void ConfigParser::extractStatusUri() {
   }
 }
 
-void ConfigParser::setBrokers(std::string Broker) {
+void ConfigParser::setBrokers(std::string Broker, ConfigSettings &Settings) {
   Settings.Brokers.clear();
   auto a = split(Broker, ",");
   for (auto &x : a) {
@@ -108,7 +111,7 @@ void ConfigParser::setBrokers(std::string Broker) {
   }
 }
 
-void ConfigParser::extractKafkaBrokerSettings() {
+void ConfigParser::extractKafkaBrokerSettings(ConfigSettings &Settings) {
   using nlohmann::json;
 
   if (auto KafkaMaybe = find<json>("kafka", Json)) {
@@ -138,7 +141,7 @@ void ConfigParser::extractKafkaBrokerSettings() {
   }
 }
 
-void ConfigParser::extractStreamSettings() {
+void ConfigParser::extractStreamSettings(ConfigSettings &Settings) {
   using nlohmann::json;
   if (auto StreamsMaybe = find<json>("streams", Json)) {
     auto Streams = StreamsMaybe.inner();

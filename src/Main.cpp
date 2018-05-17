@@ -40,18 +40,18 @@ Main::Main(MainOpt &opt)
   finfo = std::make_shared<ForwarderInfo>(this);
   finfo->teamid = main_opt.teamid;
 
-  for (size_t i = 0; i < opt.ConversionThreads; ++i) {
+  for (size_t i = 0; i < opt.MainSettings.ConversionThreads; ++i) {
     conversion_workers.emplace_back(make_unique<ConversionWorker>(
         &conversion_scheduler,
-        static_cast<uint32_t>(opt.ConversionWorkerQueueSize)));
+        static_cast<uint32_t>(opt.MainSettings.ConversionWorkerQueueSize)));
   }
 
   bool use_config = true;
-  if (main_opt.BrokerConfig.topic.empty()) {
+  if (main_opt.MainSettings.BrokerConfig.topic.empty()) {
     LOG(3, "Name for configuration topic is empty");
     use_config = false;
   }
-  if (main_opt.BrokerConfig.host.empty()) {
+  if (main_opt.MainSettings.BrokerConfig.host.empty()) {
     LOG(3, "Host for configuration topic broker is empty");
     use_config = false;
   }
@@ -59,10 +59,10 @@ Main::Main(MainOpt &opt)
     KafkaW::BrokerSettings bopt;
     bopt.ConfigurationStrings["group.id"] =
         fmt::format("forwarder-command-listener--pid{}", getpid());
-    config_listener.reset(new Config::Listener{bopt, main_opt.BrokerConfig});
+    config_listener.reset(new Config::Listener{bopt, main_opt.MainSettings.BrokerConfig});
   }
 
-  for (auto &Stream : main_opt.Config->Settings.StreamsInfo) {
+  for (auto &Stream : main_opt.MainSettings.StreamsInfo) {
     try {
       addMapping(Stream);
     } catch (std::exception &e) {
@@ -71,12 +71,12 @@ Main::Main(MainOpt &opt)
   }
 
   curl = ::make_unique<CURLReporter>();
-  if (!main_opt.StatusReportURI.host.empty()) {
+  if (!main_opt.MainSettings.StatusReportURI.host.empty()) {
     KafkaW::BrokerSettings BrokerSettings;
-    BrokerSettings.Address = main_opt.StatusReportURI.host_port;
+    BrokerSettings.Address = main_opt.MainSettings.StatusReportURI.host_port;
     status_producer = std::make_shared<KafkaW::Producer>(BrokerSettings);
     status_producer_topic = ::make_unique<KafkaW::ProducerTopic>(
-        status_producer, main_opt.StatusReportURI.topic);
+        status_producer, main_opt.MainSettings.StatusReportURI.topic);
   }
 }
 
@@ -124,7 +124,7 @@ std::unique_lock<std::mutex> Main::get_lock_converters() {
 void Main::forward_epics_to_kafka() {
   using CLK = std::chrono::steady_clock;
   using MS = std::chrono::milliseconds;
-  auto Dt = MS(main_opt.main_poll_interval);
+  auto Dt = MS(main_opt.MainSettings.MainPollInterval);
   auto t_lf_last = CLK::now();
   auto t_status_last = CLK::now();
   ConfigCB config_cb(*this);
@@ -258,8 +258,8 @@ void Main::pushConverterToStream(
   }
 
   uri::URI URI;
-  if (!main_opt.brokers.empty()) {
-    URI = main_opt.brokers[0];
+  if (!main_opt.MainSettings.Brokers.empty()) {
+    URI = main_opt.MainSettings.Brokers[0];
   }
 
   uri::URI TopicURI;

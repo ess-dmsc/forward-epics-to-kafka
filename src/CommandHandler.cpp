@@ -23,9 +23,9 @@ void ConfigCB::handleCommandAdd(nlohmann::json const &Document) {
   // Use instance of ConfigParser to extract stream info.
   ConfigParser Config;
   Config.setJsonFromString(Document.dump());
-  Config.extractConfiguration();
+  auto Settings = Config.extractConfiguration();
 
-  for (auto &Stream : Config.Settings.StreamsInfo) {
+  for (auto &Stream : Settings.StreamsInfo) {
     main.addMapping(Stream);
   }
 }

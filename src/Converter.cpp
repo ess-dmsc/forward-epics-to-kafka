@@ -21,8 +21,11 @@ Converter::create(FlatBufs::SchemaRegistry const &schema_registry,
     return ret;
   }
 
-  main_opt.Config->extractGlobalConverters(schema);
-  conv->config(main_opt.Config->Settings.ConverterInts, main_opt.Config->Settings.ConverterStrings);
+  auto It = main_opt.MainSettings.GlobalConverters.find(schema);
+  if (It != main_opt.MainSettings.GlobalConverters.end()) {
+    auto GlobalConv = main_opt.MainSettings.GlobalConverters.at(schema);
+    conv->config(GlobalConv.ConfigurationIntegers, GlobalConv.ConfigurationStrings);
+  }
 
   return ret;
 }

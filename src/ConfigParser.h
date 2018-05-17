@@ -35,20 +35,17 @@ struct ConfigSettings {
   size_t ConversionWorkerQueueSize{1024};
   int32_t MainPollInterval{500};
   uri::URI StatusReportURI;
-  std::map<std::string, int64_t> ConverterInts;
-  std::map<std::string, std::string> ConverterStrings;
   KafkaBrokerSettings BrokerSettings;
   std::vector<StreamSettings> StreamsInfo;
+  std::map<std::string, KafkaBrokerSettings> GlobalConverters;
 };
 
 class ConfigParser {
 public:
   ConfigParser() = default;
   void setJsonFromString(std::string RawJson);
-  void extractConfiguration();
-  void extractGlobalConverters(std::string &Schema);
-  void setBrokers(std::string Brokers);
-  ConfigSettings Settings;
+  ConfigSettings extractConfiguration();
+  static void setBrokers(std::string Brokers, ConfigSettings &Settings);
 
 private:
   nlohmann::json Json;
@@ -56,14 +53,15 @@ private:
                           std::string &Channel,
                           std::string &Protocol);
   ConverterSettings extractConverterSettings(nlohmann::json const &Mapping);
-  void extractBrokerConfig();
-  void extractBrokers();
-  void extractConversionThreads();
-  void extractConversionWorkerQueueSize();
-  void extractMainPollInterval();
-  void extractStatusUri();
-  void extractKafkaBrokerSettings();
-  void extractStreamSettings();
+  void extractBrokerConfig(ConfigSettings &Settings);
+  void extractBrokers(ConfigSettings &Settings);
+  void extractConversionThreads(ConfigSettings &Settings);
+  void extractConversionWorkerQueueSize(ConfigSettings &Settings);
+  void extractMainPollInterval(ConfigSettings &Settings);
+  void extractStatusUri(ConfigSettings &Settings);
+  void extractKafkaBrokerSettings(ConfigSettings &Settings);
+  void extractStreamSettings(ConfigSettings &Settings);
+  void extractGlobalConverters(ConfigSettings &Settings);
   std::atomic<uint32_t> ConverterIndex{0};
 };
 }

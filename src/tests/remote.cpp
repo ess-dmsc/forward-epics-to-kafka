@@ -133,8 +133,8 @@ int ConsumerVerifierDefaultCreate::create(deque<uptr<Consumer>> &consumers,
                           &Channel](json const &Converter) {
           auto Topic = find<string>("topic", Converter).inner();
           uri::URI TopicURI(Topic);
-          TopicURI.host = Tests::main_opt->brokers.at(0).host;
-          TopicURI.port = Tests::main_opt->brokers.at(0).port;
+          TopicURI.host = Tests::main_opt->MainSettings.Brokers.at(0).host;
+          TopicURI.port = Tests::main_opt->MainSettings.Brokers.at(0).port;
           LOG(7, "broker: {}  topic: {}  channel: {}", TopicURI.host_port,
               TopicURI.topic, Channel);
           BrokerSettings.Address = TopicURI.host_port;
@@ -214,9 +214,9 @@ void Remote_T::simple_f142() {
   // sleep_ms(500);
   ConfigParser parser;
   parser.setJsonFromString(RawJson);
-  parser.extractConfiguration();
+  auto Settings = parser.extractConfiguration();
 
-  main.addMapping(parser.Settings.StreamsInfo[0]);
+  main.addMapping(Settings.StreamsInfo[0]);
 
   // Let it do its thing for a few seconds...
   sleep_ms(5000);
@@ -289,9 +289,9 @@ void Remote_T::simple_f142_via_config_message(
 
   {
     KafkaW::BrokerSettings BrokerSettings;
-    BrokerSettings.Address = Tests::main_opt->BrokerConfig.host_port;
+    BrokerSettings.Address = Tests::main_opt->MainSettings.BrokerConfig.host_port;
     auto pr = std::make_shared<KafkaW::Producer>(BrokerSettings);
-    KafkaW::ProducerTopic pt(pr, Tests::main_opt->BrokerConfig.topic);
+    KafkaW::ProducerTopic pt(pr, Tests::main_opt->MainSettings.BrokerConfig.topic);
     pt.produce((KafkaW::uchar *)msg.data(), msg.size());
   }
   LOG(7, "CONFIG has been sent out...");
@@ -302,9 +302,9 @@ void Remote_T::simple_f142_via_config_message(
   {
     auto Msg = string(R"""({"cmd": "exit"})""");
     KafkaW::BrokerSettings BrokerSettings;
-    BrokerSettings.Address = Tests::main_opt->BrokerConfig.host_port;
+    BrokerSettings.Address = Tests::main_opt->MainSettings.BrokerConfig.host_port;
     auto pr = std::make_shared<KafkaW::Producer>(BrokerSettings);
-    KafkaW::ProducerTopic pt(pr, Tests::main_opt->BrokerConfig.topic);
+    KafkaW::ProducerTopic pt(pr, Tests::main_opt->MainSettings.BrokerConfig.topic);
     pt.produce((KafkaW::uchar *)Msg.data(), Msg.size());
   }
 
