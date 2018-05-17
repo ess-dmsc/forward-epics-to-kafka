@@ -11,7 +11,7 @@ std::unique_ptr<T> make_unique(TX &&... tx) {
   return std::unique_ptr<T>(new T(std::forward<TX>(tx)...));
 }
 
-std::vector<char> gulp(std::string fname);
+std::vector<char> readFile(std::string fname);
 
 std::vector<char> binary_to_hex(char const *data, int len);
 

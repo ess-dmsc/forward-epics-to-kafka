@@ -44,13 +44,10 @@ int ConversionWorker::run() {
   auto Dt = MS(100);
   auto t1 = CLK::now();
   while (do_run) {
-    // CLOG(7, 4, "ConversionWorker  {}  RUNLOOP", id);
     auto qs = queue.size();
     if (qs == 0) {
       auto qf = queue.capacity() - qs;
       scheduler->fill(queue, qf, id);
-      // auto s1 = queue.to_vec();
-      // LOG(7, "got {} new packets:\n{}", n1, s1.data());
     }
     while (true) {
       auto p = queue.pop();
@@ -87,11 +84,7 @@ int ConversionScheduler::fill(
   }
   auto sid0 = sid;
   while (nfc < nfm) {
-    auto track_seq_data = [&](uint64_t seq_data) {
-      if (false) {
-        seq_data_enqueued.insert(seq_data);
-      }
-    };
+    auto track_seq_data = [&](uint64_t seq_data) {};
     auto n1 = main->streams[sid]->fill_conversion_work(queue, nfm - nfc,
                                                        track_seq_data);
     if (n1 > 0) {

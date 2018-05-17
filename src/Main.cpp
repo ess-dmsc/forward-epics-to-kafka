@@ -1,6 +1,5 @@
 #include "Main.h"
 #include "Converter.h"
-#include "ForwarderInfo.h"
 #include "Stream.h"
 #include "helper.h"
 #include <nlohmann/json.hpp>

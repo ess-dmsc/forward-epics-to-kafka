@@ -7,7 +7,6 @@
 #include <unistd.h>
 #endif
 #include "SchemaRegistry.h"
-#include "blobs.h"
 #include "git_commit_current.h"
 #include "helper.h"
 #include "logger.h"
