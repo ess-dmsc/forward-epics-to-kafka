@@ -140,6 +140,7 @@ Please note also that you need to have an EPICS PV running:
 - Normative Types Array Int32, name: `forwarder_test_nt_array_int32`
 and they need to update during the runtime of the test.
 
+#### [Running System tests (link)](https://github.com/ess-dmsc/forward-epics-to-kafka/blob/master/system-tests/README.md)
 
 
 ## Performance
