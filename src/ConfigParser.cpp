@@ -166,8 +166,8 @@ void ConfigParser::extractStreamSettings() {
 }
 
 void ConfigParser::extractMappingInfo(nlohmann::json const &Mapping,
-                              std::string &Channel,
-                              std::string &Protocol) {
+                                      std::string &Channel,
+                                      std::string &Protocol) {
   if (!Mapping.is_object()) {
     throw MappingAddException("Given Mapping is not a JSON object");
   }
@@ -182,12 +182,10 @@ void ConfigParser::extractMappingInfo(nlohmann::json const &Mapping,
       find<std::string>("channel_provider_type", Mapping);
   if (ChannelProviderTypeMaybe) {
     Protocol = ChannelProviderTypeMaybe.inner();
-  }
-  else {
+  } else {
     // Default is pva
     Protocol = "pva";
   }
-
 
 }
 

@@ -25,7 +25,7 @@ void ConfigCB::handleCommandAdd(nlohmann::json const &Document) {
   Config.setJsonFromString(Document.dump());
   Config.extractConfiguration();
 
-  for (auto & Stream : Config.Settings.StreamsInfo) {
+  for (auto &Stream : Config.Settings.StreamsInfo) {
     main.addMapping(Stream);
   }
 }
@@ -69,4 +69,3 @@ std::string ConfigCB::findCommand(nlohmann::json const &Document) {
 
 }
 }
-

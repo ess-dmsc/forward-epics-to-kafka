@@ -53,8 +53,8 @@ public:
 private:
   nlohmann::json Json;
   void extractMappingInfo(nlohmann::json const &Mapping,
-                                         std::string &Channel,
-                                         std::string &Protocol);
+                          std::string &Channel,
+                          std::string &Protocol);
   ConverterSettings extractConverterSettings(nlohmann::json const &Mapping);
   void extractBrokerConfig();
   void extractBrokers();

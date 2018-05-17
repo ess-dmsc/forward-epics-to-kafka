@@ -28,7 +28,7 @@ MainOpt::MainOpt() : Config(::make_unique<ConfigParser>()) {
   }
 }
 
-void MainOpt::set_broker(std::string& Broker) {
+void MainOpt::set_broker(std::string &Broker) {
   Config->setBrokers(Broker);
 }
 
@@ -80,7 +80,6 @@ void MainOpt::parse_document(const std::string &filepath) {
   Config->extractConfiguration();
 }
 
-
 /// Add a URI valued option to the given App.
 static void addOption(CLI::App &App, std::string const &Name, uri::URI &URIArg,
                       std::string const &Description, bool Defaulted = false) {
@@ -92,7 +91,7 @@ static void addOption(CLI::App &App, std::string const &Name, uri::URI &URIArg,
   Opt->set_custom_option("URI", 1);
   if (Defaulted) {
     Opt->set_default_str(std::string("//") + URIArg.host_port + "/" +
-                         URIArg.topic);
+        URIArg.topic);
   }
 }
 

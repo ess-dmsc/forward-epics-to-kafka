@@ -53,7 +53,7 @@ ForwarderInfo.cpp
 EpicsClient.cpp
 helper.cpp
 logger.cpp
-        ConfigParser.cpp
+ConfigParser.cpp
 Kafka.cpp
 KafkaW/BrokerSettings.cpp
 KafkaW/Consumer.cpp

@@ -20,7 +20,7 @@ namespace ForwardEpicsToKafka {
 
 static bool isStopDueToSignal(ForwardingRunState Flag) {
   return static_cast<int>(Flag) &
-         static_cast<int>(ForwardingRunState::STOP_DUE_TO_SIGNAL);
+      static_cast<int>(ForwardingRunState::STOP_DUE_TO_SIGNAL);
 }
 
 // Little helper
@@ -63,7 +63,7 @@ Main::Main(MainOpt &opt)
     config_listener.reset(new Config::Listener{bopt, main_opt.BrokerConfig});
   }
 
-  for (auto & Stream : main_opt.Config->Settings.StreamsInfo) {
+  for (auto &Stream : main_opt.Config->Settings.StreamsInfo) {
     try {
       addMapping(Stream);
     } catch (std::exception &e) {
@@ -186,7 +186,7 @@ void Main::report_status() {
   Status["streams"] = Streams;
   auto StatusString = Status.dump();
   LOG(0, "status: {}", StatusString);
-  status_producer_topic->produce((KafkaW::uchar *)StatusString.c_str(),
+  status_producer_topic->produce((KafkaW::uchar *) StatusString.c_str(),
                                  StatusString.size());
 }
 
@@ -311,7 +311,7 @@ void Main::addMapping(StreamSettings const &StreamInfo) {
 
   auto Stream = streams.back();
 
-  for(auto & Converter : StreamInfo.Converters) {
+  for (auto &Converter : StreamInfo.Converters) {
     pushConverterToStream(Converter, Stream);
   }
 }
