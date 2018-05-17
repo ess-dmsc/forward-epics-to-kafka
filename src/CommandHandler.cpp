@@ -22,7 +22,7 @@ void ConfigCB::operator()(std::string const &msg) {
 void ConfigCB::handleCommandAdd(nlohmann::json const &Document) {
   // Use instance of ConfigParser to extract stream info.
   ConfigParser Config;
-  Config.setJsonFromString(Document);
+  Config.setJsonFromString(Document.dump());
   Config.extractConfiguration();
 
   for (auto & Stream : Config.Settings.StreamsInfo) {

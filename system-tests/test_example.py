@@ -1,4 +1,4 @@
-﻿from time import sleep
+﻿﻿from time import sleep
 from helpers.producerwrapper import ProducerWrapper
 from confluent_kafka import Producer, Consumer
 from helpers.f142_logdata import LogData, Value, Int, Double
@@ -12,6 +12,7 @@ from json import loads
 
 BUILD_FORWARDER = False
 CONFIG_TOPIC = "TEST_forwarderConfig"
+
 
 def test_config_file_channel_created_correctly(docker_compose):
     """
@@ -27,7 +28,18 @@ def test_config_file_channel_created_correctly(docker_compose):
 
     cons = create_consumer()
     cons.subscribe(['TEST_forwarderData_pv_from_config'])
+
+    # Check the initial value is forwarded
     first_msg = poll_for_valid_message(cons).value()
+    log_data_first = LogData.LogData.GetRootAsLogData(first_msg, 0)
+    check_message_pv_name_and_value_type(log_data_first, Value.Value.Double, b'SIM:Phs')
+    check_double_value_and_equality(log_data_first, 0)
+
+    # Check the new value is forwarded
+    second_msg = poll_for_valid_message(cons).value()
+    log_data_second = LogData.LogData.GetRootAsLogData(second_msg, 0)
+    check_message_pv_name_and_value_type(log_data_second, Value.Value.Double, b'SIM:Phs')
+    check_double_value_and_equality(log_data_second, 10)
 
     cons.close()
 

@@ -1,4 +1,4 @@
-﻿version: '2'
+﻿﻿version: '2'
 
 services:
   kafka:
@@ -38,6 +38,6 @@ services:
       - ioc
     network_mode: "host"
     volumes:
-      - ./system-tests/forwarder_config.json:/forwarder_config.json
+      - ./forwarder_config.json:/forwarder_config.json
     environment:
       CONFIG_FILE: "/forwarder_config.json"

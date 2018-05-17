@@ -6,4 +6,4 @@ source /forwarder/activate_run.sh
 
 echo "Launching forwarder"
 
-/forwarder/forward-epics-to-kafka --config-file ${CONFIG_FILE:="forwarder_config.json"}
+/forwarder/forward-epics-to-kafka --config-file=${CONFIG_FILE:="forwarder_config.json"}
