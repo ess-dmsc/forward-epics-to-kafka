@@ -1,5 +1,4 @@
-﻿﻿from time import sleep
-from helpers.producerwrapper import ProducerWrapper
+﻿from helpers.producerwrapper import ProducerWrapper
 from confluent_kafka import Producer, Consumer
 from helpers.f142_logdata import LogData, Value, Int, Double
 import flatbuffers
@@ -8,6 +7,7 @@ import time
 from epics import caput
 import math
 from json import loads
+from time import sleep
 
 
 BUILD_FORWARDER = False
