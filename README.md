@@ -329,17 +329,9 @@ Example:
 }
 ```
 
+## Features Requests
+Feel free to create a GitHub issue if you have a feature request or, even better, implement it
+yourself on a branch and create a pull request!
 
-
-## Features Coming Soon
-
-- Configure options for threading (number of workers, queue lengths, ...)
-- More dynamic scheduling of work
-- Dynamically load converter plugins from shared objects
-
-
-## For the future
-
-Please send any feature requests you have (dominik.werder@psi.ch).
-
-- Optionally read from (the future) configuration service
+## Contributing
+See CONTRIBUTING.md
