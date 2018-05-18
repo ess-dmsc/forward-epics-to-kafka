@@ -64,7 +64,6 @@ public:
   void error_in_epics();
 
 private:
-  std::string channel_name;
   std::shared_ptr<ForwarderInfo> finfo;
   std::unique_ptr<EpicsClient_impl> impl;
   Stream *stream = nullptr;

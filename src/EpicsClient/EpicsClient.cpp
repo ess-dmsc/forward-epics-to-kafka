@@ -48,10 +48,13 @@ char const *channel_state_name(epics::pvAccess::Channel::ConnectionState x) {
 #define RLOCK() urlock lock(mx);
 
 std::atomic<int> EpicsClientFactoryInit::count{0};
+
 std::mutex EpicsClientFactoryInit::mxl;
+
 std::unique_ptr<EpicsClientFactoryInit> EpicsClientFactoryInit::factory_init() {
   return std::unique_ptr<EpicsClientFactoryInit>(new EpicsClientFactoryInit);
 }
+
 EpicsClientFactoryInit::EpicsClientFactoryInit() {
   CLOG(7, 7, "EpicsClientFactoryInit");
   ulock lock(mxl);
@@ -62,6 +65,7 @@ EpicsClientFactoryInit::EpicsClientFactoryInit() {
     ::epics::pvAccess::ca::CAClientFactory::start();
   }
 }
+
 EpicsClientFactoryInit::~EpicsClientFactoryInit() {
   CLOG(7, 7, "~EpicsClientFactoryInit");
   ulock lock(mxl);
