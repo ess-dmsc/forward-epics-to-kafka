@@ -45,7 +45,7 @@ public:
   ConfigParser() = default;
   void setJsonFromString(std::string RawJson);
   ConfigSettings extractConfiguration();
-  static void setBrokers(std::string Brokers, ConfigSettings &Settings);
+  static void setBrokers(std::string const & Brokers, ConfigSettings &Settings);
 
 private:
   nlohmann::json Json;

@@ -73,7 +73,7 @@ void ConfigParser::extractGlobalConverters(ConfigSettings &Settings) {
     auto const &Converters = ConvertersMaybe.inner();
     if (Converters.is_object()) {
       for (auto It = Converters.begin(); It != Converters.end(); ++It) {
-        KafkaBrokerSettings BrokerSettings;
+        KafkaBrokerSettings BrokerSettings{};
         for (auto SettingIt = It.value().begin(); SettingIt != It.value().end(); ++SettingIt) {
           if (SettingIt.value().is_number()) {
             BrokerSettings.ConfigurationIntegers[SettingIt.key()] = SettingIt.value().get<int64_t>();
@@ -100,7 +100,7 @@ void ConfigParser::extractStatusUri(ConfigSettings &Settings) {
   }
 }
 
-void ConfigParser::setBrokers(std::string Broker, ConfigSettings &Settings) {
+void ConfigParser::setBrokers(std::string const & Broker, ConfigSettings &Settings) {
   Settings.Brokers.clear();
   auto a = split(Broker, ",");
   for (auto &x : a) {
