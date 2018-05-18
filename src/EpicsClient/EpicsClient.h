@@ -16,8 +16,6 @@ namespace EpicsClient {
 using std::array;
 using std::vector;
 
-using epics::pvAccess::Channel;
-
 class FwdMonitorRequester;
 
 char const *channel_state_name(epics::pvAccess::Channel::ConnectionState x);

@@ -11,7 +11,7 @@ namespace ForwardEpicsToKafka {
 namespace EpicsClient {
 
 FwdMonitorRequester::FwdMonitorRequester(EpicsClient_impl *epics_client_impl,
-                                         std::string channel_name)
+                                         const std::string &channel_name)
     : channel_name(channel_name), epics_client_impl(epics_client_impl) {
   static std::atomic<uint32_t> __id{0};
   auto id = __id++;

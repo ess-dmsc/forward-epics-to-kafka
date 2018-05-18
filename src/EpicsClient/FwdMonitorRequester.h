@@ -10,7 +10,7 @@ class EpicsClient_impl;
 class FwdMonitorRequester : public ::epics::pvData::MonitorRequester {
 public:
   FwdMonitorRequester(EpicsClient_impl *epics_client_impl,
-                      std::string channel_name);
+                      const std::string &channel_name);
   ~FwdMonitorRequester();
   std::string getRequesterName() override;
   void message(std::string const &msg,
