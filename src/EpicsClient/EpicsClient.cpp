@@ -49,19 +49,6 @@ char const *channel_state_name(epics::pvAccess::Channel::ConnectionState x) {
 // Testing alternative
 #define RLOCK() urlock lock(mx);
 
-class EpicsClient_impl;
-
-class ActionOnChannel {
-public:
-  ActionOnChannel(EpicsClient_impl *epics_client_impl)
-      : epics_client_impl(epics_client_impl) {}
-  virtual void
-  operator()(epics::pvAccess::Channel::shared_pointer const &channel) {
-    LOG(2, "[EMPTY ACTION]");
-  };
-  EpicsClient_impl *epics_client_impl;
-};
-
 std::atomic<int> EpicsClientFactoryInit::count{0};
 std::mutex EpicsClientFactoryInit::mxl;
 std::unique_ptr<EpicsClientFactoryInit> EpicsClientFactoryInit::factory_init() {

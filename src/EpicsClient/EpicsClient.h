@@ -21,12 +21,6 @@ using epics::pvAccess::Channel;
 class FwdMonitorRequester;
 
 char const *channel_state_name(epics::pvAccess::Channel::ConnectionState x);
-std::string
-channel_info(epics::pvAccess::Channel::shared_pointer const &channel) {
-  std::ostringstream ss;
-  channel->printInfo(ss);
-  return ss.str();
-}
 
 struct EpicsClientFactoryInit {
   EpicsClientFactoryInit();

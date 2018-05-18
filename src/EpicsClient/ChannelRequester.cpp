@@ -10,6 +10,13 @@ namespace EpicsClient {
 
 using epics::pvAccess::Channel;
 
+static std::string
+channelInfo(epics::pvAccess::Channel::shared_pointer const &channel) {
+  std::ostringstream ss;
+  channel->printInfo(ss);
+  return ss.str();
+}
+
 ChannelRequester::ChannelRequester(EpicsClient_impl *epics_client_impl)
     : epics_client_impl(epics_client_impl) {}
 
@@ -64,7 +71,7 @@ void ChannelRequester::channelStateChange(
     CLOG(7, 7, "Epics channel connected");
     if (log_level >= 9) {
       LOG(9, "ChannelRequester::channelStateChange  channelinfo: {}",
-          channel_info(channel));
+          channelInfo(channel));
     }
     epics_client_impl->monitoring_start();
   } else if (cstate == Channel::DISCONNECTED) {
