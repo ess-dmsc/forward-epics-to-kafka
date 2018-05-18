@@ -50,7 +50,9 @@ set(SOURCES
 MainOpt.cpp
 Main.cpp
 ForwarderInfo.cpp
-EpicsClient.cpp
+EpicsClient/EpicsClient.cpp
+EpicsClient/ChannelRequester.cpp
+EpicsClient/FwdMonitorRequester.cpp
 helper.cpp
 logger.cpp
 Kafka.cpp
