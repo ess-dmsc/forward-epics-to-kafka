@@ -5,9 +5,9 @@
 #include <array>
 #include <atomic>
 #include <memory>
+#include <pv/pvAccess.h>
 #include <string>
 #include <vector>
-#include <pv/pvAccess.h>
 
 namespace BrightnESS {
 namespace ForwardEpicsToKafka {
@@ -21,7 +21,8 @@ using epics::pvAccess::Channel;
 class FwdMonitorRequester;
 
 char const *channel_state_name(epics::pvAccess::Channel::ConnectionState x);
-std::string channel_info(epics::pvAccess::Channel::shared_pointer const &channel) {
+std::string
+channel_info(epics::pvAccess::Channel::shared_pointer const &channel) {
   std::ostringstream ss;
   channel->printInfo(ss);
   return ss.str();
@@ -34,7 +35,6 @@ struct EpicsClientFactoryInit {
   static std::atomic<int> count;
   static std::mutex mxl;
 };
-
 
 class EpicsClient_impl {
 public:
@@ -64,7 +64,8 @@ public:
 class EpicsClient {
 public:
   EpicsClient(Stream *stream, std::shared_ptr<ForwarderInfo> finfo,
-              std::string epics_channel_provider_type, std::string channel_name);
+              std::string epics_channel_provider_type,
+              std::string channel_name);
   ~EpicsClient();
   int emit(std::unique_ptr<FlatBufs::EpicsPVUpdate> up);
   int stop();
@@ -76,8 +77,6 @@ private:
   std::unique_ptr<EpicsClient_impl> impl;
   Stream *stream = nullptr;
 };
-
-
 }
 }
 }

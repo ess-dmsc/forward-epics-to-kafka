@@ -62,8 +62,6 @@ public:
   EpicsClient_impl *epics_client_impl;
 };
 
-
-
 std::atomic<int> EpicsClientFactoryInit::count{0};
 std::mutex EpicsClientFactoryInit::mxl;
 std::unique_ptr<EpicsClientFactoryInit> EpicsClientFactoryInit::factory_init() {
@@ -95,7 +93,6 @@ EpicsClientFactoryInit::~EpicsClientFactoryInit() {
     ::epics::pvAccess::ca::CAClientFactory::stop();
   }
 }
-
 
 EpicsClient_impl::EpicsClient_impl(EpicsClient *epics_client)
     : epics_client(epics_client) {}
