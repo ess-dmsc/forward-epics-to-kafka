@@ -1,4 +1,5 @@
 #include <pv/pvAccess.h>
+#include <pv/pvData.h>
 #include <string>
 
 namespace BrightnESS {

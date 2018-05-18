@@ -1,8 +1,6 @@
 #include "ChannelRequester.h"
 #include "EpicsClient.h"
 #include "logger.h"
-#include <pv/pvAccess.h>
-#include <pv/pvData.h>
 
 namespace BrightnESS {
 namespace ForwardEpicsToKafka {

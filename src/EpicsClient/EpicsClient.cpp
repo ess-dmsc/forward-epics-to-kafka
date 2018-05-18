@@ -3,8 +3,6 @@
 #include "FwdMonitorRequester.h"
 #include <atomic>
 #include <mutex>
-#include <pv/pvAccess.h>
-#include <pv/pvData.h>
 // For epics::pvAccess::ClientFactory::start()
 #include <pv/clientFactory.h>
 // EPICS 4 supports access via the channel access protocol as well,
