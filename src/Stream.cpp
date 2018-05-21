@@ -39,7 +39,7 @@ int ConversionPath::emit(std::unique_ptr<FlatBufs::EpicsPVUpdate> up) {
 }
 
 static uint16_t _fmt(std::unique_ptr<FlatBufs::EpicsPVUpdate> &x) {
-  return (uint16_t) (((uint64_t) x.get()) >> 0);
+  return (uint16_t)(((uint64_t)x.get()) >> 0);
 }
 
 nlohmann::json ConversionPath::status_json() const {
@@ -52,8 +52,7 @@ nlohmann::json ConversionPath::status_json() const {
   return Document;
 }
 
-Stream::Stream(ChannelInfo channel_info)
-    : channel_info_(channel_info) {
+Stream::Stream(ChannelInfo channel_info) : channel_info_(channel_info) {
   emit_queue.formatter = _fmt;
   try {
     auto x = new EpicsClient::EpicsClientMonitor(
@@ -188,7 +187,5 @@ nlohmann::json Stream::status_json() {
   Document["converters"] = Converters;
   return Document;
 }
-
 }
 }
-

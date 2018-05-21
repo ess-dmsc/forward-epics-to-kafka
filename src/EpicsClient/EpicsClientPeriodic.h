@@ -9,11 +9,11 @@ class Stream;
 class EpicsClientPeriodic {
 public:
   Stream *stream = nullptr;
-  EpicsClientPeriodic(Stream *stream,
-                      std::string epics_channel_provider_type,
+  EpicsClientPeriodic(Stream *stream, std::string epics_channel_provider_type,
                       std::string channel_name);
+
 private:
-//  epics::pvaClient::PvaClientGet;
+  //  epics::pvaClient::PvaClientGet;
 };
 }
 }

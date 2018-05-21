@@ -13,7 +13,7 @@ public:
 };
 
 std::shared_ptr<MockStream> createStream(std::string provider_type,
-                                     std::string channel_name) {
+                                         std::string channel_name) {
   ChannelInfo ci{provider_type, channel_name};
   return std::make_shared<MockStream>(ci, true);
 }

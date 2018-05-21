@@ -1,6 +1,6 @@
 #pragma once
-#include "EpicsClientInterface.h"
 #include "EpicsClientFactory.h"
+#include "EpicsClientInterface.h"
 #include "Stream.h"
 #include <array>
 #include <atomic>
@@ -49,8 +49,7 @@ public:
 ///\brief Epics client implementation which monitors for PV updates.
 class EpicsClientMonitor : public EpicsClientInterface {
 public:
-  EpicsClientMonitor(Stream *stream,
-                     std::string epics_channel_provider_type,
+  EpicsClientMonitor(Stream *stream, std::string epics_channel_provider_type,
                      std::string channel_name);
   ~EpicsClientMonitor() override;
   int emit(std::unique_ptr<FlatBufs::EpicsPVUpdate> up) override;
@@ -61,7 +60,6 @@ private:
   std::unique_ptr<EpicsClientMonitor_impl> impl;
   Stream *stream = nullptr;
 };
-
 }
 }
 }

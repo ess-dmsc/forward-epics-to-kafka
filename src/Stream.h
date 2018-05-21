@@ -6,13 +6,13 @@
 #include "Ring.h"
 #include "SchemaRegistry.h"
 #include "uri.h"
+#include <EpicsClient/EpicsClientInterface.h>
 #include <array>
 #include <atomic>
 #include <memory>
 #include <nlohmann/json.hpp>
 #include <string>
 #include <vector>
-#include <EpicsClient/EpicsClientInterface.h>
 
 namespace BrightnESS {
 namespace ForwardEpicsToKafka {
@@ -65,10 +65,11 @@ public:
   nlohmann::json status_json();
   using mutex = std::mutex;
   using ulock = std::unique_lock<mutex>;
+
 protected:
   // This constructor is to enable unit-testing.
   // Not to be used outside of testing.
-  explicit Stream(ChannelInfo ci, bool test) : channel_info_(ci) {};
+  explicit Stream(ChannelInfo ci, bool test) : channel_info_(ci){};
 
 private:
   /// Each Epics update is converted by each Converter in the list
@@ -80,6 +81,5 @@ private:
   std::atomic<int> status_{0};
   RangeSet<uint64_t> seq_data_emitted;
 };
-
 }
 }

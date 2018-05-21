@@ -21,12 +21,11 @@ using epics::pvData::PVStructure;
 
 using urlock = std::unique_lock<std::recursive_mutex>;
 
-
 // Testing alternative
 #define RLOCK() urlock lock(mx);
 
-
-EpicsClientMonitor_impl::EpicsClientMonitor_impl(EpicsClientMonitor *epics_client)
+EpicsClientMonitor_impl::EpicsClientMonitor_impl(
+    EpicsClientMonitor *epics_client)
     : epics_client(epics_client) {}
 
 int EpicsClientMonitor_impl::init(std::string epics_channel_provider_type) {
@@ -97,7 +96,9 @@ int EpicsClientMonitor_impl::monitoring_start() {
   return 0;
 }
 
-EpicsClientMonitor_impl::~EpicsClientMonitor_impl() { CLOG(7, 7, "EpicsClientMonitor_implor_impl"); }
+EpicsClientMonitor_impl::~EpicsClientMonitor_impl() {
+  CLOG(7, 7, "EpicsClientMonitor_implor_impl");
+}
 
 int EpicsClientMonitor_impl::emit(std::unique_ptr<FlatBufs::EpicsPVUpdate> up) {
 #if TEST_PROVOKE_ERROR == 1
@@ -110,7 +111,8 @@ int EpicsClientMonitor_impl::emit(std::unique_ptr<FlatBufs::EpicsPVUpdate> up) {
   return epics_client->emit(std::move(up));
 }
 
-void EpicsClientMonitor_impl::monitor_requester_error(FwdMonitorRequester *ptr) {
+void EpicsClientMonitor_impl::monitor_requester_error(
+    FwdMonitorRequester *ptr) {
   LOG(4, "monitor_requester_error()");
   epics_client->error_in_epics();
 }
@@ -126,8 +128,8 @@ void EpicsClientMonitor_impl::error_channel_requester() {
 }
 
 EpicsClientMonitor::EpicsClientMonitor(Stream *stream,
-                         std::string epics_channel_provider_type,
-                         std::string channel_name)
+                                       std::string epics_channel_provider_type,
+                                       std::string channel_name)
     : stream(stream) {
   impl.reset(new EpicsClientMonitor_impl(this));
   CLOG(7, 7, "channel_name: {}", channel_name);
@@ -138,7 +140,9 @@ EpicsClientMonitor::EpicsClientMonitor(Stream *stream,
   }
 }
 
-EpicsClientMonitor::~EpicsClientMonitor() { CLOG(7, 6, "EpicsClientMonitorMonitor"); }
+EpicsClientMonitor::~EpicsClientMonitor() {
+  CLOG(7, 6, "EpicsClientMonitorMonitor");
+}
 
 int EpicsClientMonitor::stop() { return impl->stop(); }
 

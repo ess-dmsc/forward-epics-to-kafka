@@ -1,6 +1,6 @@
 #pragma once
-#include <memory>
 #include "epics-to-fb.h"
+#include <memory>
 
 namespace BrightnESS {
 namespace ForwardEpicsToKafka {
@@ -16,7 +16,6 @@ public:
   virtual int stop() = 0;
   virtual void error_in_epics() = 0;
 };
-
 }
 }
 }

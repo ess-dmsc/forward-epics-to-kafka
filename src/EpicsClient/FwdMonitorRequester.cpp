@@ -10,8 +10,8 @@ namespace BrightnESS {
 namespace ForwardEpicsToKafka {
 namespace EpicsClient {
 
-FwdMonitorRequester::FwdMonitorRequester(EpicsClientMonitor_impl *epics_client_impl,
-                                         const std::string &channel_name)
+FwdMonitorRequester::FwdMonitorRequester(
+    EpicsClientMonitor_impl *epics_client_impl, const std::string &channel_name)
     : channel_name(channel_name), epics_client_impl(epics_client_impl) {
   static std::atomic<uint32_t> __id{0};
   auto id = __id++;
