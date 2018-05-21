@@ -22,7 +22,7 @@ class ForwarderInfo;
 struct ConversionWorkPacket;
 
 namespace EpicsClient {
-class EpicsClient;
+class EpicsClientMonitor;
 }
 
 struct ChannelInfo {
@@ -81,7 +81,7 @@ private:
   std::shared_ptr<ForwarderInfo> finfo;
   ChannelInfo channel_info_;
   std::vector<std::unique_ptr<ConversionPath>> conversion_paths;
-  std::unique_ptr<EpicsClient::EpicsClient> epics_client;
+  std::unique_ptr<EpicsClient::EpicsClientMonitor> epics_client;
   Ring<std::unique_ptr<FlatBufs::EpicsPVUpdate>> emit_queue;
   std::atomic<int> status_{0};
   RangeSet<uint64_t> seq_data_emitted;

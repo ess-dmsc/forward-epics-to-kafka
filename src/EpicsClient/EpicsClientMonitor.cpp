@@ -1,16 +1,13 @@
-#include "EpicsClient.h"
+#include "EpicsClientMonitor.h"
 #include "ChannelRequester.h"
 #include "FwdMonitorRequester.h"
 #include <atomic>
 #include <mutex>
-// For epics::pvAccess::ClientFactory::start()
-#include <pv/clientFactory.h>
 // EPICS 4 supports access via the channel access protocol as well,
 // and we need it because some hardware speaks EPICS base.
 #include "RangeSet.h"
 #include "epics-to-fb.h"
 #include "logger.h"
-#include <pv/caProvider.h>
 #ifdef _MSC_VER
 #include <iso646.h>
 #endif
@@ -22,71 +19,17 @@ namespace EpicsClient {
 
 using epics::pvData::PVStructure;
 
-using std::mutex;
-using ulock = std::unique_lock<mutex>;
 using urlock = std::unique_lock<std::recursive_mutex>;
 
-#define STRINGIFY2(x) #x
-#define STRINGIFY(x) STRINGIFY2(x)
-
-char const *channel_state_name(epics::pvAccess::Channel::ConnectionState x) {
-#define DWTN1(N) DWTN2(N, STRINGIFY(N))
-#define DWTN2(N, S)                                                            \
-  if (x == epics::pvAccess::Channel::ConnectionState::N) {                     \
-    return S;                                                                  \
-  }
-  DWTN1(NEVER_CONNECTED);
-  DWTN1(CONNECTED);
-  DWTN1(DISCONNECTED);
-  DWTN1(DESTROYED);
-#undef DWTN1
-#undef DWTN2
-  return "[unknown]";
-}
 
 // Testing alternative
 #define RLOCK() urlock lock(mx);
 
-std::atomic<int> EpicsClientFactoryInit::count{0};
 
-std::mutex EpicsClientFactoryInit::mxl;
-
-std::unique_ptr<EpicsClientFactoryInit> EpicsClientFactoryInit::factory_init() {
-  return std::unique_ptr<EpicsClientFactoryInit>(new EpicsClientFactoryInit);
-}
-
-EpicsClientFactoryInit::EpicsClientFactoryInit() {
-  CLOG(7, 7, "EpicsClientFactoryInit");
-  ulock lock(mxl);
-  auto c = count++;
-  if (c == 0) {
-    CLOG(6, 6, "START  Epics factories");
-    ::epics::pvAccess::ClientFactory::start();
-    ::epics::pvAccess::ca::CAClientFactory::start();
-  }
-}
-
-EpicsClientFactoryInit::~EpicsClientFactoryInit() {
-  CLOG(7, 7, "~EpicsClientFactoryInit");
-  ulock lock(mxl);
-  auto c = --count;
-  if (c < 0) {
-    LOG(0, "Reference count {} is not consistent, should never happen, but "
-           "ignoring for now.",
-        c);
-    c = 0;
-  }
-  if (c == 0) {
-    CLOG(7, 6, "STOP   Epics factories");
-    ::epics::pvAccess::ClientFactory::stop();
-    ::epics::pvAccess::ca::CAClientFactory::stop();
-  }
-}
-
-EpicsClient_impl::EpicsClient_impl(EpicsClient *epics_client)
+EpicsClientMonitor_impl::EpicsClientMonitor_impl(EpicsClientMonitor *epics_client)
     : epics_client(epics_client) {}
 
-int EpicsClient_impl::init(std::string epics_channel_provider_type) {
+int EpicsClientMonitor_impl::init(std::string epics_channel_provider_type) {
   factory_init = EpicsClientFactoryInit::factory_init();
   {
     RLOCK();
@@ -102,7 +45,7 @@ int EpicsClient_impl::init(std::string epics_channel_provider_type) {
   return 0;
 }
 
-int EpicsClient_impl::stop() {
+int EpicsClientMonitor_impl::stop() {
   RLOCK();
   if (monitor) {
     monitor->stop();
@@ -116,7 +59,7 @@ int EpicsClient_impl::stop() {
   return 0;
 }
 
-int EpicsClient_impl::monitoring_stop() {
+int EpicsClientMonitor_impl::monitoring_stop() {
   RLOCK();
   LOG(7, "monitoring_stop");
   if (monitor) {
@@ -128,7 +71,7 @@ int EpicsClient_impl::monitoring_stop() {
   return 0;
 }
 
-int EpicsClient_impl::monitoring_start() {
+int EpicsClientMonitor_impl::monitoring_start() {
   RLOCK();
   if (!channel) {
     LOG(7, "monitoring_start:  want to start but we have no channel");
@@ -154,9 +97,9 @@ int EpicsClient_impl::monitoring_start() {
   return 0;
 }
 
-EpicsClient_impl::~EpicsClient_impl() { CLOG(7, 7, "~EpicsClient_impl"); }
+EpicsClientMonitor_impl::~EpicsClientMonitor_impl() { CLOG(7, 7, "EpicsClientMonitor_implor_impl"); }
 
-int EpicsClient_impl::emit(std::unique_ptr<FlatBufs::EpicsPVUpdate> up) {
+int EpicsClientMonitor_impl::emit(std::unique_ptr<FlatBufs::EpicsPVUpdate> up) {
 #if TEST_PROVOKE_ERROR == 1
   static std::atomic<int> c1{0};
   if (c1 > 10) {
@@ -167,26 +110,26 @@ int EpicsClient_impl::emit(std::unique_ptr<FlatBufs::EpicsPVUpdate> up) {
   return epics_client->emit(std::move(up));
 }
 
-void EpicsClient_impl::monitor_requester_error(FwdMonitorRequester *ptr) {
+void EpicsClientMonitor_impl::monitor_requester_error(FwdMonitorRequester *ptr) {
   LOG(4, "monitor_requester_error()");
   epics_client->error_in_epics();
 }
 
-int EpicsClient_impl::channel_destroyed() {
+int EpicsClientMonitor_impl::channel_destroyed() {
   LOG(4, "channel_destroyed()");
   monitoring_stop();
   return 0;
 }
 
-void EpicsClient_impl::error_channel_requester() {
+void EpicsClientMonitor_impl::error_channel_requester() {
   LOG(4, "error_channel_requester()");
 }
 
-EpicsClient::EpicsClient(Stream *stream, std::shared_ptr<ForwarderInfo> finfo,
+EpicsClientMonitor::EpicsClientMonitor(Stream *stream, std::shared_ptr<ForwarderInfo> finfo,
                          std::string epics_channel_provider_type,
                          std::string channel_name)
     : finfo(finfo), stream(stream) {
-  impl.reset(new EpicsClient_impl(this));
+  impl.reset(new EpicsClientMonitor_impl(this));
   if (finfo->teamid != 0) {
     channel_name =
         fmt::format("{}__teamid_{:016x}", channel_name, finfo->teamid);
@@ -200,15 +143,15 @@ EpicsClient::EpicsClient(Stream *stream, std::shared_ptr<ForwarderInfo> finfo,
   }
 }
 
-EpicsClient::~EpicsClient() { CLOG(7, 6, "~EpicsClient"); }
+EpicsClientMonitor::~EpicsClientMonitor() { CLOG(7, 6, "EpicsClientMonitorMonitor"); }
 
-int EpicsClient::stop() { return impl->stop(); }
+int EpicsClientMonitor::stop() { return impl->stop(); }
 
-int EpicsClient::emit(std::unique_ptr<FlatBufs::EpicsPVUpdate> up) {
+int EpicsClientMonitor::emit(std::unique_ptr<FlatBufs::EpicsPVUpdate> up) {
   return stream->emit(std::move(up));
 }
 
-void EpicsClient::error_in_epics() { stream->error_in_epics(); }
+void EpicsClientMonitor::error_in_epics() { stream->error_in_epics(); }
 }
 }
 }

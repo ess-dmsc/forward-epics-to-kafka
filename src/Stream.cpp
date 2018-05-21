@@ -1,6 +1,6 @@
 #include "Stream.h"
 #include "Converter.h"
-#include "EpicsClient/EpicsClient.h"
+#include "EpicsClient/EpicsClientMonitor.h"
 #include "KafkaOutput.h"
 #include "epics-to-fb.h"
 #include "helper.h"
@@ -56,7 +56,7 @@ Stream::Stream(std::shared_ptr<ForwarderInfo> finfo, ChannelInfo channel_info)
     : finfo(finfo), channel_info_(channel_info) {
   emit_queue.formatter = _fmt;
   try {
-    auto x = new EpicsClient::EpicsClient(
+    auto x = new EpicsClient::EpicsClientMonitor(
         this, finfo, channel_info.provider_type, channel_info.channel_name);
     epics_client.reset(x);
   } catch (std::runtime_error &e) {

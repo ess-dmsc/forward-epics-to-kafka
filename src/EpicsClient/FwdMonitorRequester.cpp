@@ -1,5 +1,5 @@
 #include "FwdMonitorRequester.h"
-#include "EpicsClient.h"
+#include "EpicsClientMonitor.h"
 #include "epics-to-fb.h"
 #include "logger.h"
 #include <atomic>
@@ -10,7 +10,7 @@ namespace BrightnESS {
 namespace ForwardEpicsToKafka {
 namespace EpicsClient {
 
-FwdMonitorRequester::FwdMonitorRequester(EpicsClient_impl *epics_client_impl,
+FwdMonitorRequester::FwdMonitorRequester(EpicsClientMonitor_impl *epics_client_impl,
                                          const std::string &channel_name)
     : channel_name(channel_name), epics_client_impl(epics_client_impl) {
   static std::atomic<uint32_t> __id{0};

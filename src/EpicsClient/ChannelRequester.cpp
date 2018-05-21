@@ -1,5 +1,5 @@
 #include "ChannelRequester.h"
-#include "EpicsClient.h"
+#include "EpicsClientMonitor.h"
 #include "logger.h"
 
 namespace BrightnESS {
@@ -8,6 +8,24 @@ namespace EpicsClient {
 
 using epics::pvAccess::Channel;
 
+#define STRINGIFY2(x) #x
+#define STRINGIFY(x) STRINGIFY2(x)
+
+char const *channel_state_name(epics::pvAccess::Channel::ConnectionState x) {
+#define DWTN1(N) DWTN2(N, STRINGIFY(N))
+#define DWTN2(N, S)                                                            \
+  if (x == epics::pvAccess::Channel::ConnectionState::N) {                     \
+    return S;                                                                  \
+  }
+  DWTN1(NEVER_CONNECTED);
+  DWTN1(CONNECTED);
+  DWTN1(DISCONNECTED);
+  DWTN1(DESTROYED);
+#undef DWTN1
+#undef DWTN2
+  return "[unknown]";
+}
+
 static std::string
 channelInfo(epics::pvAccess::Channel::shared_pointer const &channel) {
   std::ostringstream ss;
@@ -15,7 +33,7 @@ channelInfo(epics::pvAccess::Channel::shared_pointer const &channel) {
   return ss.str();
 }
 
-ChannelRequester::ChannelRequester(EpicsClient_impl *epics_client_impl)
+ChannelRequester::ChannelRequester(EpicsClientMonitor_impl *epics_client_impl)
     : epics_client_impl(epics_client_impl) {}
 
 std::string ChannelRequester::getRequesterName() { return "ChannelRequester"; }
