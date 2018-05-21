@@ -405,7 +405,6 @@ public:
       // Was only interesting for forwarder testing
       fwdinfo_1_tBuilder bf(*builder);
       fb->seq = up.seq_fwd;
-      fb->fwdix = up.fwdix;
       uint64_t seq_data = 0;
       if (auto x = pvstr->getSubField<epics::pvData::PVScalarValue<uint64_t>>(
               "seq")) {
@@ -420,8 +419,6 @@ public:
       bf.add_seq_fwd(up.seq_fwd);
       bf.add_ts_data(ts_data);
       bf.add_ts_fwd(up.ts_epics_monitor);
-      bf.add_fwdix(up.fwdix);
-      bf.add_teamid(up.teamid);
       fwdinfo = bf.Finish().Union();
 #ifdef TRACK_SEQ_DATA
       seqs.insert(seq_data);

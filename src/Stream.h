@@ -52,7 +52,7 @@ Represents a stream from an EPICS PV through a Converter into a KafkaOutput.
 */
 class Stream {
 public:
-  Stream(std::shared_ptr<ForwarderInfo> finfo, ChannelInfo channel_info);
+  explicit Stream(ChannelInfo channel_info);
   Stream(Stream &&) = delete;
   ~Stream();
   int converter_add(Kafka::InstanceSet &kset, std::shared_ptr<Converter> conv,
@@ -69,11 +69,10 @@ public:
   nlohmann::json status_json();
   using mutex = std::mutex;
   using ulock = std::unique_lock<mutex>;
-
 protected:
   // This constructor is to enable unit-testing.
   // Not to be used outside of testing.
-  explicit Stream(ChannelInfo channel_info);
+  explicit Stream(ChannelInfo ci, bool test) : channel_info_(ci) {};
 
 private:
   /// Each Epics update is converted by each Converter in the list

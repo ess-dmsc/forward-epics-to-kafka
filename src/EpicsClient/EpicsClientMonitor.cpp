@@ -125,18 +125,13 @@ void EpicsClientMonitor_impl::error_channel_requester() {
   LOG(4, "error_channel_requester()");
 }
 
-EpicsClientMonitor::EpicsClientMonitor(Stream *stream, std::shared_ptr<ForwarderInfo> finfo,
+EpicsClientMonitor::EpicsClientMonitor(Stream *stream,
                          std::string epics_channel_provider_type,
                          std::string channel_name)
-    : finfo(finfo), stream(stream) {
+    : stream(stream) {
   impl.reset(new EpicsClientMonitor_impl(this));
-  if (finfo->teamid != 0) {
-    channel_name =
-        fmt::format("{}__teamid_{:016x}", channel_name, finfo->teamid);
-  }
   CLOG(7, 7, "channel_name: {}", channel_name);
   impl->channel_name = channel_name;
-  impl->teamid = finfo->teamid;
   if (impl->init(epics_channel_provider_type) != 0) {
     impl.reset();
     throw std::runtime_error("could not initialize");

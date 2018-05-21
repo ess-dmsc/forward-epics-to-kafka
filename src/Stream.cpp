@@ -39,7 +39,7 @@ int ConversionPath::emit(std::unique_ptr<FlatBufs::EpicsPVUpdate> up) {
 }
 
 static uint16_t _fmt(std::unique_ptr<FlatBufs::EpicsPVUpdate> &x) {
-  return (uint16_t)(((uint64_t)x.get()) >> 0);
+  return (uint16_t) (((uint64_t) x.get()) >> 0);
 }
 
 nlohmann::json ConversionPath::status_json() const {
@@ -52,19 +52,17 @@ nlohmann::json ConversionPath::status_json() const {
   return Document;
 }
 
-Stream::Stream(std::shared_ptr<ForwarderInfo> finfo, ChannelInfo channel_info)
-    : finfo(finfo), channel_info_(channel_info) {
+Stream::Stream(ChannelInfo channel_info)
+    : channel_info_(channel_info) {
   emit_queue.formatter = _fmt;
   try {
     auto x = new EpicsClient::EpicsClientMonitor(
-        this, finfo, channel_info.provider_type, channel_info.channel_name);
+        this, channel_info.provider_type, channel_info.channel_name);
     epics_client.reset(x);
   } catch (std::runtime_error &e) {
     throw std::runtime_error("can not construct Stream");
   }
 }
-
-Stream::Stream(ChannelInfo channel_info) : channel_info_(channel_info){};
 
 Stream::~Stream() {
   CLOG(7, 2, "~Stream");
@@ -190,5 +188,7 @@ nlohmann::json Stream::status_json() {
   Document["converters"] = Converters;
   return Document;
 }
+
 }
 }
+

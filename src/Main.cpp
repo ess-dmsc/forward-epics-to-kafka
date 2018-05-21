@@ -36,8 +36,6 @@ Main::Main(MainOpt &opt)
     : main_opt(opt),
       kafka_instance_set(Kafka::InstanceSet::Set(make_broker_opt(opt))),
       conversion_scheduler(this) {
-  finfo = std::make_shared<ForwarderInfo>(this);
-  finfo->teamid = main_opt.teamid;
 
   for (size_t i = 0; i < opt.ConversionThreads; ++i) {
     conversion_workers.emplace_back(make_unique<ConversionWorker>(
@@ -382,7 +380,7 @@ void Main::mappingAdd(nlohmann::json const &Mapping) {
   std::unique_lock<std::mutex> lock(streams_mutex);
   try {
     ChannelInfo ChannelInfo{ChannelProviderType, Channel};
-    streams.add(std::make_shared<Stream>(finfo, ChannelInfo));
+    streams.add(std::make_shared<Stream>(ChannelInfo));
   } catch (std::runtime_error &e) {
     std::throw_with_nested(MappingAddException("Can not add stream"));
   }

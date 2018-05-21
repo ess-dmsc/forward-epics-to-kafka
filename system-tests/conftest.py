@@ -35,7 +35,7 @@ def docker_compose(request):
     :type request: _pytest.python.FixtureRequest
     """
     print("Started preparing test environment...", flush=True)
-    build = False
+    build = True
 
     # Options must be given as long form
     options = {"--no-deps": False,

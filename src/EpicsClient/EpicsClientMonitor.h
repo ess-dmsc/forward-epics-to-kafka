@@ -1,7 +1,6 @@
 #pragma once
 #include "EpicsClient.h"
 #include "EpicsClientFactory.h"
-#include "ForwarderInfo.h"
 #include "Stream.h"
 #include <array>
 #include <atomic>
@@ -40,8 +39,6 @@ public:
   epics::pvAccess::Channel::shared_pointer channel;
   epics::pvData::Monitor::shared_pointer monitor;
   std::recursive_mutex mx;
-  uint64_t teamid = 0;
-  uint64_t fwdix = 0;
   std::string channel_name;
   EpicsClientMonitor *epics_client = nullptr;
   std::unique_ptr<EpicsClientFactoryInit> factory_init;
@@ -51,16 +48,15 @@ public:
 ///\brief Epics client implementation which monitors for PV updates.
 class EpicsClientMonitor : EpicsClient {
 public:
-  EpicsClientMonitor(Stream *stream, std::shared_ptr<ForwarderInfo> finfo,
+  EpicsClientMonitor(Stream *stream,
                      std::string epics_channel_provider_type,
                      std::string channel_name);
-  ~EpicsClientMonitor();
-  int emit(std::unique_ptr<FlatBufs::EpicsPVUpdate> up);
-  int stop();
-  void error_in_epics();
+  ~EpicsClientMonitor() override;
+  int emit(std::unique_ptr<FlatBufs::EpicsPVUpdate> up) override;
+  int stop() override;
+  void error_in_epics() override;
 
 private:
-  std::shared_ptr<ForwarderInfo> finfo;
   std::unique_ptr<EpicsClientMonitor_impl> impl;
   Stream *stream = nullptr;
 };

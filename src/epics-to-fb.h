@@ -24,8 +24,6 @@ struct EpicsPVUpdate {
   uint64_t seq_fwd;
   /// Timestamp when monitorEvent() was called
   uint64_t ts_epics_monitor;
-  uint32_t fwdix;
-  uint64_t teamid = 0;
 };
 }
 }

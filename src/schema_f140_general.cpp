@@ -271,7 +271,7 @@ public:
     b.add_n(n);
     b.add_v_type(vF.type);
     auto fi = FlatBufs::f140_general::fwdinfo_t(up.seq_data, ts_data,
-                                                up.ts_epics_monitor, up.fwdix);
+                                                up.ts_epics_monitor, 0);
     b.add_fwdinfo(&fi);
     FinishPVBuffer(*builder, b.Finish());
     return fb;

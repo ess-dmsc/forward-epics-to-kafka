@@ -84,8 +84,6 @@ void FwdMonitorRequester::monitorEvent(
     up.seq_fwd = seq;
     up.seq_data = seq_data;
     up.ts_epics_monitor = ts;
-    up.fwdix = epics_client_impl->fwdix;
-    up.teamid = epics_client_impl->teamid;
     ups.push_back(std::move(up_));
     seq += 1;
   }
