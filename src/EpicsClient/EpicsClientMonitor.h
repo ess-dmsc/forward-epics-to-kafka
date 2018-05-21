@@ -1,5 +1,5 @@
 #pragma once
-#include "EpicsClient.h"
+#include "EpicsClientInterface.h"
 #include "EpicsClientFactory.h"
 #include "Stream.h"
 #include <array>
@@ -18,6 +18,7 @@ using std::array;
 using std::vector;
 
 class FwdMonitorRequester;
+class EpicsClientMonitor;
 
 ///\class EpicsClientMonitor_impl
 ///\brief Implementation for EPICS client monitor.
@@ -46,7 +47,7 @@ public:
 
 ///\class EpicsClientMonitor
 ///\brief Epics client implementation which monitors for PV updates.
-class EpicsClientMonitor : EpicsClient {
+class EpicsClientMonitor : public EpicsClientInterface {
 public:
   EpicsClientMonitor(Stream *stream,
                      std::string epics_channel_provider_type,
@@ -60,6 +61,7 @@ private:
   std::unique_ptr<EpicsClientMonitor_impl> impl;
   Stream *stream = nullptr;
 };
+
 }
 }
 }

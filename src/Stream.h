@@ -12,18 +12,14 @@
 #include <nlohmann/json.hpp>
 #include <string>
 #include <vector>
+#include <EpicsClient/EpicsClientInterface.h>
 
 namespace BrightnESS {
 namespace ForwardEpicsToKafka {
 
 class Converter;
 class KafkaOutput;
-class ForwarderInfo;
 struct ConversionWorkPacket;
-
-namespace EpicsClient {
-class EpicsClientMonitor;
-}
 
 struct ChannelInfo {
   std::string provider_type;
@@ -77,13 +73,13 @@ protected:
 private:
   /// Each Epics update is converted by each Converter in the list
   // std::vector<std::shared_ptr<Converter>> converters;
-  std::shared_ptr<ForwarderInfo> finfo;
   ChannelInfo channel_info_;
   std::vector<std::unique_ptr<ConversionPath>> conversion_paths;
-  std::unique_ptr<EpicsClient::EpicsClientMonitor> epics_client;
+  std::unique_ptr<EpicsClient::EpicsClientInterface> epics_client;
   Ring<std::unique_ptr<FlatBufs::EpicsPVUpdate>> emit_queue;
   std::atomic<int> status_{0};
   RangeSet<uint64_t> seq_data_emitted;
 };
+
 }
 }

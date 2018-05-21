@@ -45,49 +45,80 @@ if (CURL_FOUND)
 	list(APPEND compile_defs_common "HAVE_CURL=1")
 endif()
 
+set(INCLUDES
+    EpicsClient/ChannelRequester.h
+    EpicsClient/EpicsClientMonitor.h
+    EpicsClient/EpicsClientFactory.h
+    EpicsClient/EpicsClientPeriodic.h
+    EpicsClient/FwdMonitorRequester.h
+    EpicsClient/EpicsClientInterface.h
+    Config.h
+    ConversionWorker.h
+    Converter.h
+    CURLReporter.h
+    epics-to-fb.h
+    FlatbufferMessage.h
+    FlatbufferMessageSlice.h
+    MakeFlatBufferFromPVStructure.h
+    git_commit_current.h
+    helper.h
+    json.h
+    Kafka.h
+    KafkaOutput.h
+    logger.h
+    Main.h
+    MainOpt.h
+    RangeSet.h
+    Ring.h
+    SchemaRegistry.h
+    Stream.h
+    Streams.h
+    tools.h
+    uri.h
+)
 
 set(SOURCES
-MainOpt.cpp
-Main.cpp
-        EpicsClient/EpicsClientMonitor.cpp
-EpicsClient/ChannelRequester.cpp
-EpicsClient/FwdMonitorRequester.cpp
-EpicsClient/EpicsClientFactory.cpp
-EpicsClient/EpicsClientPeriodic.cpp
-helper.cpp
-logger.cpp
-Kafka.cpp
-KafkaW/BrokerSettings.cpp
-KafkaW/Consumer.cpp
-KafkaW/KafkaW.cpp
-KafkaW/Msg.cpp
-KafkaW/PollStatus.cpp
-KafkaW/Producer.cpp
-KafkaW/ProducerTopic.cpp
-KafkaW/TopicSettings.cpp
-Ring.cpp
-ConversionWorker.cpp
-epics-to-fb.cpp
-Config.cpp
-FlatbufferMessage.cpp
-SchemaRegistry.cpp
-MakeFlatBufferFromPVStructure.cpp
-uri.cpp
-json.cpp
-Converter.cpp
-KafkaOutput.cpp
-Stream.cpp
-Streams.cpp
-schema_f140_general.cpp
-schema_f141_epics_nt.cpp
-schemas/f142/f142.cpp
-${FMT_SRC}
-schemas/f143/f143.cpp
-${CMAKE_CURRENT_BINARY_DIR}/git_commit_current.cpp
+    MainOpt.cpp
+    Main.cpp
+    EpicsClient/EpicsClientMonitor.cpp
+    EpicsClient/ChannelRequester.cpp
+    EpicsClient/FwdMonitorRequester.cpp
+    EpicsClient/EpicsClientFactory.cpp
+    EpicsClient/EpicsClientPeriodic.cpp
+    helper.cpp
+    logger.cpp
+    Kafka.cpp
+    KafkaW/BrokerSettings.cpp
+    KafkaW/Consumer.cpp
+    KafkaW/KafkaW.cpp
+    KafkaW/Msg.cpp
+    KafkaW/PollStatus.cpp
+    KafkaW/Producer.cpp
+    KafkaW/ProducerTopic.cpp
+    KafkaW/TopicSettings.cpp
+    Ring.cpp
+    ConversionWorker.cpp
+    epics-to-fb.cpp
+    Config.cpp
+    FlatbufferMessage.cpp
+    SchemaRegistry.cpp
+    MakeFlatBufferFromPVStructure.cpp
+    uri.cpp
+    json.cpp
+    Converter.cpp
+    KafkaOutput.cpp
+    Stream.cpp
+    Streams.cpp
+    schema_f140_general.cpp
+    schema_f141_epics_nt.cpp
+    schemas/f142/f142.cpp
+    ${FMT_SRC}
+    schemas/f143/f143.cpp
+    ${CMAKE_CURRENT_BINARY_DIR}/git_commit_current.cpp
 )
 
 set(tgt __objects)
-add_library(${tgt} OBJECT ${SOURCES})
+add_library(${tgt} OBJECT ${SOURCES} ${INCLUDES})
 target_include_directories(${tgt} PRIVATE ${path_include_common})
 target_include_directories(${tgt} SYSTEM PRIVATE ${path_include_common_suppressed_warnings})
 
