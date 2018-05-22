@@ -16,6 +16,7 @@ TEST(json_extraction_tests, not_parsing_a_config_file_gives_defaults) {
 
   ASSERT_EQ(1u, MainOpt.MainSettings.ConversionThreads);
 }
+
 TEST(json_extraction_tests, trying_to_parse_invalid_json_throws) {
   std::string RawJson = "{"
                         "  \"streams\": ["
@@ -511,33 +512,3 @@ TEST(json_extraction_tests, extracting_converter_info_with_no_schema_throws) {
 
   ASSERT_ANY_THROW(Config.extractConfiguration());
 }
-
-class ExtractCommandsTest : public ::testing::TestWithParam<const char *> {
-  virtual void SetUp() { command = (*GetParam()); }
-  virtual void TearDown() {}
-
-protected:
-  std::string command;
-};
-
-TEST_P(ExtractCommandsTest, extracting_command_gets_command_name) {
-  std::ostringstream os;
-  os << "{"
-     << "  \"cmd\": \"" << command << "\""
-     << "}";
-
-  std::string RawJson = os.str();
-
-  nlohmann::json Json = nlohmann::json::parse(RawJson);
-  BrightnESS::ForwardEpicsToKafka::MainOpt MainOpt;
-  BrightnESS::ForwardEpicsToKafka::Main Main(MainOpt);
-  BrightnESS::ForwardEpicsToKafka::ConfigCB config(Main);
-
-  auto Cmd = config.findCommand(Json);
-
-  ASSERT_EQ(command, Cmd);
-}
-
-INSTANTIATE_TEST_CASE_P(InstantiationName, ExtractCommandsTest,
-                        ::testing::Values("add", "stop_channel", "stop_all",
-                                          "exit", "unknown_command"));

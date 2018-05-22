@@ -14,8 +14,10 @@ void ConfigCB::operator()(std::string const &msg) {
   LOG(7, "Command received: {}", msg);
   try {
     handleCommand(msg);
+  } catch (nlohmann::json::parse_error const &e) {
+    LOG(3, "Could not parse command. Command was {}. Exception was: {}", msg, e.what());
   } catch (...) {
-    LOG(3, "Command does not look like valid json: {}", msg);
+    LOG(3, "Could not handle command: {}", msg);
   }
 }
 
