@@ -177,10 +177,16 @@ many events at a time.
 forward-epics-to-kafka --help
 ```
 
-The forwarder will listen to the Kafka topic given on the command line for
-commands.  Configuration updates are JSON messages.  For example:
+### Commands
 
-Example which adds 2 EPICS PVs via `pva` (default) and a third EPICS variable
+The forwarder will listen to the Kafka topic given on the command line for
+commands.  Configuration updates are JSON messages.
+
+#### Add
+
+Adds PVs to be forwarded to Kafka.
+
+This example adds 2 EPICS PVs via `pva` (default) and a third EPICS variable
 using `ca` Channel Access:
 
 ```
@@ -214,16 +220,35 @@ using `ca` Channel Access:
 ```
 
 The `topic` in the above stream configuration can contain the Kafka broker
-hostname like `//<host>[:port]/<topic>` otherwise the default boker given in
-the configuration file or on the command line is used.
+hostname like `//<host>[:port]/<topic>` otherwise the default broker given in
+the configuration file or at the command line is used.
 
+#### Stop channel
 
-Exit the forwarder:
+Stops a PV being forwarded to Kafka.
+
+```
+{
+  "cmd": "stop_channel",
+  "channel": "<EPICS PV name>"
+}
+```
+
+#### Stop all
+
+Stops all PVs from being forwarded to Kafka.
+
+```
+{"cmd": "stop_all"}
+```
+
+#### Exit
+
+Exits the forwarder.
 
 ```
 {"cmd": "exit"}
 ```
-
 
 ### Using a configuration file
 
@@ -279,6 +304,7 @@ Given are the defaults.
 
 
 ### Forwarding a PV through Multiple Converters
+
 If you pass an array of converters instead, the EPICS PV will be forwarded
 through multiple converters:
 ```
@@ -302,8 +328,6 @@ but you probably want to add it to `CMakeLists.txt`.
 There will be support for dynamic loading of shared objects also soon.
 Beware that converter instances are used from different threads.  If the
 converter instance has state, it must take care of thread safety itself.
-
-
 
 ## Share Converter Instance between Channels
 
