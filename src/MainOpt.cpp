@@ -55,13 +55,6 @@ void MainOpt::parse_json_file(std::string ConfigurationFile) {
   // command line.
   MainSettings = parse_document(ConfigurationFile);
 
-  //StatusReportURI = Settings.StatusReportURI;
-  //brokers = Settings.Brokers;
-  //BrokerConfig = Settings.BrokerConfig;
-  //ConversionThreads = Settings.ConversionThreads;
-  //ConversionWorkerQueueSize = Settings.ConversionWorkerQueueSize;
-  //main_poll_interval = Settings.MainPollInterval;
-
   broker_opt.ConfigurationStrings = MainSettings.BrokerSettings.ConfigurationStrings;
   broker_opt.ConfigurationIntegers = MainSettings.BrokerSettings.ConfigurationIntegers;
 }
