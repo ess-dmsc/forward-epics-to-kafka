@@ -1,6 +1,6 @@
 #include "Stream.h"
 #include "Converter.h"
-#include "EpicsClient.h"
+#include "EpicsClient/EpicsClient.h"
 #include "KafkaOutput.h"
 #include "epics-to-fb.h"
 #include "helper.h"
