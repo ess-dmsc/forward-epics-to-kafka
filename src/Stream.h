@@ -48,7 +48,7 @@ Represents a stream from an EPICS PV through a Converter into a KafkaOutput.
 */
 class Stream {
 public:
-  explicit Stream(ChannelInfo channel_info);
+  explicit Stream(ChannelInfo channel_info, std::unique_ptr<EpicsClient::EpicsClientInterface> client, std::unique_ptr<Ring<std::unique_ptr<FlatBufs::EpicsPVUpdate>>> ring);
   Stream(Stream &&) = delete;
   ~Stream();
   int converter_add(Kafka::InstanceSet &kset, std::shared_ptr<Converter> conv,
@@ -58,7 +58,6 @@ public:
   fill_conversion_work(Ring<std::unique_ptr<ConversionWorkPacket>> &queue,
                        uint32_t max, std::function<void(uint64_t)> on_seq_data);
   int stop();
-  void error_in_epics();
   int status();
   ChannelInfo const &channel_info() const;
   size_t emit_queue_size();
@@ -77,7 +76,7 @@ private:
   ChannelInfo channel_info_;
   std::vector<std::unique_ptr<ConversionPath>> conversion_paths;
   std::unique_ptr<EpicsClient::EpicsClientInterface> epics_client;
-  Ring<std::unique_ptr<FlatBufs::EpicsPVUpdate>> emit_queue;
+  std::unique_ptr<Ring<std::unique_ptr<FlatBufs::EpicsPVUpdate>>> emit_queue;
   std::atomic<int> status_{0};
   RangeSet<uint64_t> seq_data_emitted;
 };

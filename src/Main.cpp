@@ -10,6 +10,7 @@
 #define getpid _getpid
 #else
 #include <unistd.h>
+#include <EpicsClient/EpicsClientMonitor.h>
 #endif
 #include "CURLReporter.h"
 
@@ -372,6 +373,7 @@ void Main::extractConverterInfo(const nlohmann::json &JSON, std::string &Schema,
 }
 
 void Main::mappingAdd(nlohmann::json const &Mapping) {
+  using EpicsClient::EpicsClientMonitor;
   std::string Channel;
   std::string ChannelProviderType;
 
@@ -380,7 +382,10 @@ void Main::mappingAdd(nlohmann::json const &Mapping) {
   std::unique_lock<std::mutex> lock(streams_mutex);
   try {
     ChannelInfo ChannelInfo{ChannelProviderType, Channel};
-    streams.add(std::make_shared<Stream>(ChannelInfo));
+    auto ring = std::unique_ptr<Ring<std::unique_ptr<FlatBufs::EpicsPVUpdate>>>(new Ring<std::unique_ptr<FlatBufs::EpicsPVUpdate>>());
+    auto client = std::unique_ptr<EpicsClientMonitor>(new EpicsClientMonitor(ChannelProviderType, Channel, ring.get()));
+    auto stream = std::make_shared<Stream>(ChannelInfo, client, std::move(ring));
+    streams.add(stream);
   } catch (std::runtime_error &e) {
     std::throw_with_nested(MappingAddException("Can not add stream"));
   }

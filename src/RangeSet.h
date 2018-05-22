@@ -12,12 +12,6 @@ public:
   Range(T a, T b) : a(a), b(b) {}
   T a;
   T b;
-  bool check_consistent() {
-    if (a > b) {
-      throw std::runtime_error("not consistent");
-    }
-  }
-  std::string to_s() const { return fmt::format("<Range {:3} {:3}>", a, b); }
 };
 
 template <typename T>
@@ -42,17 +36,6 @@ template <typename T> Range<T> merge(Range<T> const &a, Range<T> const &b) {
     throw std::runtime_error("expect a < b");
   }
   return Range<T>(a.a, std::max(a.b, b.b));
-}
-
-template <typename T> inline void minmax(T *mm, T const &x) {
-  T &min = mm[0];
-  T &max = mm[1];
-  if (min == -1 || x < min) {
-    min = x;
-  }
-  if (max == -1 || x > max) {
-    max = x;
-  }
 }
 
 /// A set of continuous inclusive ranges.

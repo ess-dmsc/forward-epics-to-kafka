@@ -52,15 +52,8 @@ nlohmann::json ConversionPath::status_json() const {
   return Document;
 }
 
-Stream::Stream(ChannelInfo channel_info) : channel_info_(channel_info) {
-  emit_queue.formatter = _fmt;
-  try {
-    auto x = new EpicsClient::EpicsClientMonitor(
-        this, channel_info.provider_type, channel_info.channel_name);
-    epics_client.reset(x);
-  } catch (std::runtime_error &e) {
-    throw std::runtime_error("can not construct Stream");
-  }
+Stream::Stream(ChannelInfo channel_info, std::unique_ptr<EpicsClient::EpicsClientInterface> client, std::unique_ptr<Ring<std::unique_ptr<FlatBufs::EpicsPVUpdate>>> ring) : channel_info_(channel_info), epics_client(std::move(client), emit_queue(std::move(ring))) {
+  emit_queue->formatter = _fmt;
 }
 
 Stream::~Stream() {
@@ -87,7 +80,7 @@ int Stream::emit(std::unique_ptr<FlatBufs::EpicsPVUpdate> up) {
     return 0;
   }
 
-  emit_queue.push_enlarge(up);
+  emit_queue->push_enlarge(up);
 
   // here we are, saying goodbye to a good buffer
   up.reset();
@@ -98,17 +91,16 @@ int32_t
 Stream::fill_conversion_work(Ring<std::unique_ptr<ConversionWorkPacket>> &q2,
                              uint32_t max,
                              std::function<void(uint64_t)> on_seq_data) {
-  auto &q1 = emit_queue;
   uint32_t n0 = 0;
   uint32_t n1 = 0;
-  ulock l1(q1.mx);
+  ulock l1(emit_queue->mx);
   ulock l2(q2.mx);
-  uint32_t n2 = q1.size_unsafe();
+  uint32_t n2 = emit_queue->size_unsafe();
   uint32_t n3 = (std::min)(max, q2.capacity_unsafe() - q2.size_unsafe());
   uint32_t ncp = conversion_paths.size();
   std::vector<ConversionWorkPacket *> cwp_last(conversion_paths.size());
   while (n0 < n2 && n3 - n1 >= ncp) {
-    auto e = q1.pop_unsafe();
+    auto e = emit_queue->pop_unsafe();
     n0 += 1;
     if (e.first != 0) {
       CLOG(6, 1, "empty? should not happen");
@@ -158,13 +150,12 @@ int Stream::stop() {
   return 0;
 }
 
-void Stream::error_in_epics() { status_ = -1; }
 
-int Stream::status() { return status_; }
+int Stream::status() { return epics_client->status(); }
 
 ChannelInfo const &Stream::channel_info() const { return channel_info_; }
 
-size_t Stream::emit_queue_size() { return emit_queue.size(); }
+size_t Stream::emit_queue_size() { return emit_queue->size(); }
 
 nlohmann::json Stream::status_json() {
   using nlohmann::json;

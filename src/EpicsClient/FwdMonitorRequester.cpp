@@ -11,8 +11,8 @@ namespace ForwardEpicsToKafka {
 namespace EpicsClient {
 
 FwdMonitorRequester::FwdMonitorRequester(
-    EpicsClientMonitor_impl *epics_client_impl, const std::string &channel_name)
-    : channel_name(channel_name), epics_client_impl(epics_client_impl) {
+    EpicsClientMonitor *epicsClientMonitor, const std::string &channel_name)
+    : channel_name(channel_name), epics_client(epicsClientMonitor) {
   static std::atomic<uint32_t> __id{0};
   auto id = __id++;
   name = fmt::format("FwdMonitorRequester-{}", id);
@@ -41,7 +41,7 @@ void FwdMonitorRequester::monitorConnect(
     // Docs does not say anything about whether we are responsible for any
     // handling of the monitor if non-null?
     CLOG(3, 2, "monitorConnect is != success for {}", name);
-    epics_client_impl->monitor_requester_error(this);
+    epics_client->error_in_epics();
   } else {
     if (status.isOK()) {
       CLOG(7, 7, "success and OK");
@@ -90,7 +90,7 @@ void FwdMonitorRequester::monitorEvent(
   for (auto &up : ups) {
     up->epics_pvstr->setImmutable();
     auto seq_data = up->seq_data;
-    auto x = epics_client_impl->emit(std::move(up));
+    auto x = epics_client->emit(std::move(up));
     if (x != 0) {
       LOG(5, "error can not push update {}", seq_data);
     }

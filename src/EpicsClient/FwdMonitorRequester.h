@@ -5,11 +5,11 @@ namespace BrightnESS {
 namespace ForwardEpicsToKafka {
 namespace EpicsClient {
 
-class EpicsClientMonitor_impl;
+class EpicsClientMonitor;
 
 class FwdMonitorRequester : public ::epics::pvData::MonitorRequester {
 public:
-  FwdMonitorRequester(EpicsClientMonitor_impl *epics_client_impl,
+  FwdMonitorRequester(EpicsClientMonitor *epicsClientMonitor,
                       const std::string &channel_name);
   ~FwdMonitorRequester();
   std::string getRequesterName() override;
@@ -28,7 +28,7 @@ private:
   std::string name;
   std::string channel_name;
   uint64_t seq = 0;
-  EpicsClientMonitor_impl *epics_client_impl = nullptr;
+  EpicsClientMonitor *epics_client = nullptr;
   RangeSet<uint64_t> seq_data_received;
 };
 }

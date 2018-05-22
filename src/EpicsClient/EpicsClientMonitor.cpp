@@ -87,7 +87,7 @@ int EpicsClientMonitor_impl::monitoring_start() {
   if (monitor) {
     monitoring_stop();
   }
-  monitor_requester.reset(new FwdMonitorRequester(this, channel_name));
+  monitor_requester.reset(new FwdMonitorRequester(epics_client, channel_name));
   monitor = channel->createMonitor(monitor_requester, pvreq);
   if (!monitor) {
     CLOG(3, 1, "could not create EPICS monitor instance");
@@ -111,12 +111,6 @@ int EpicsClientMonitor_impl::emit(std::unique_ptr<FlatBufs::EpicsPVUpdate> up) {
   return epics_client->emit(std::move(up));
 }
 
-void EpicsClientMonitor_impl::monitor_requester_error(
-    FwdMonitorRequester *ptr) {
-  LOG(4, "monitor_requester_error()");
-  epics_client->error_in_epics();
-}
-
 int EpicsClientMonitor_impl::channel_destroyed() {
   LOG(4, "channel_destroyed()");
   monitoring_stop();
@@ -127,10 +121,9 @@ void EpicsClientMonitor_impl::error_channel_requester() {
   LOG(4, "error_channel_requester()");
 }
 
-EpicsClientMonitor::EpicsClientMonitor(Stream *stream,
-                                       std::string epics_channel_provider_type,
-                                       std::string channel_name)
-    : stream(stream) {
+EpicsClientMonitor::EpicsClientMonitor(std::string epics_channel_provider_type,
+                                       std::string channel_name, Ring<std::unique_ptr<FlatBufs::EpicsPVUpdate>>* ring)
+    : emit_queue(ring) {
   impl.reset(new EpicsClientMonitor_impl(this));
   CLOG(7, 7, "channel_name: {}", channel_name);
   impl->channel_name = channel_name;
@@ -147,10 +140,20 @@ EpicsClientMonitor::~EpicsClientMonitor() {
 int EpicsClientMonitor::stop() { return impl->stop(); }
 
 int EpicsClientMonitor::emit(std::unique_ptr<FlatBufs::EpicsPVUpdate> up) {
-  return stream->emit(std::move(up));
+  if (!up) {
+    CLOG(6, 1, "empty update?");
+    // should never happen, ignore
+    return 0;
+  }
+
+  emit_queue->push_enlarge(up);
+
+  // here we are, saying goodbye to a good buffer
+  up.reset();
+  return 1;
 }
 
-void EpicsClientMonitor::error_in_epics() { stream->error_in_epics(); }
+void EpicsClientMonitor::error_in_epics() { _status = -1;}
 }
 }
 }
