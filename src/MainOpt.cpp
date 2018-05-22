@@ -55,8 +55,10 @@ void MainOpt::parse_json_file(std::string ConfigurationFile) {
   // command line.
   MainSettings = parse_document(ConfigurationFile);
 
-  broker_opt.ConfigurationStrings = MainSettings.BrokerSettings.ConfigurationStrings;
-  broker_opt.ConfigurationIntegers = MainSettings.BrokerSettings.ConfigurationIntegers;
+  broker_opt.ConfigurationStrings =
+      MainSettings.BrokerSettings.ConfigurationStrings;
+  broker_opt.ConfigurationIntegers =
+      MainSettings.BrokerSettings.ConfigurationIntegers;
 }
 
 ConfigSettings MainOpt::parse_document(const std::string &filepath) {
@@ -86,7 +88,7 @@ static void addOption(CLI::App &App, std::string const &Name, uri::URI &URIArg,
   Opt->set_custom_option("URI", 1);
   if (Defaulted) {
     Opt->set_default_str(std::string("//") + URIArg.host_port + "/" +
-        URIArg.topic);
+                         URIArg.topic);
   }
 }
 
@@ -153,5 +155,5 @@ void MainOpt::init_logger() {
     fwd_graylog_logger_enable(GraylogLoggerAddress);
   }
 }
-}
-}
+} // namespace ForwardEpicsToKafka
+} // namespace BrightnESS
