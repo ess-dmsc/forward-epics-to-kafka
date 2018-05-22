@@ -48,27 +48,25 @@ Represents a stream from an EPICS PV through a Converter into a KafkaOutput.
 */
 class Stream {
 public:
-  explicit Stream(ChannelInfo channel_info, std::unique_ptr<EpicsClient::EpicsClientInterface> client, std::unique_ptr<Ring<std::unique_ptr<FlatBufs::EpicsPVUpdate>>> ring);
+  explicit Stream(
+      ChannelInfo channel_info,
+      std::unique_ptr<EpicsClient::EpicsClientInterface> client,
+      std::shared_ptr<Ring<std::unique_ptr<FlatBufs::EpicsPVUpdate>>> ring);
   Stream(Stream &&) = delete;
   ~Stream();
   int converter_add(Kafka::InstanceSet &kset, std::shared_ptr<Converter> conv,
                     uri::URI uri_kafka_output);
-  int emit(std::unique_ptr<FlatBufs::EpicsPVUpdate> up);
   int32_t
   fill_conversion_work(Ring<std::unique_ptr<ConversionWorkPacket>> &queue,
                        uint32_t max, std::function<void(uint64_t)> on_seq_data);
   int stop();
   int status();
+  void error_in_epics();
   ChannelInfo const &channel_info() const;
   size_t emit_queue_size();
   nlohmann::json status_json();
   using mutex = std::mutex;
   using ulock = std::unique_lock<mutex>;
-
-protected:
-  // This constructor is to enable unit-testing.
-  // Not to be used outside of testing.
-  explicit Stream(ChannelInfo ci, bool test) : channel_info_(ci){};
 
 private:
   /// Each Epics update is converted by each Converter in the list
@@ -76,8 +74,7 @@ private:
   ChannelInfo channel_info_;
   std::vector<std::unique_ptr<ConversionPath>> conversion_paths;
   std::unique_ptr<EpicsClient::EpicsClientInterface> epics_client;
-  std::unique_ptr<Ring<std::unique_ptr<FlatBufs::EpicsPVUpdate>>> emit_queue;
-  std::atomic<int> status_{0};
+  std::shared_ptr<Ring<std::unique_ptr<FlatBufs::EpicsPVUpdate>>> emit_queue;
   RangeSet<uint64_t> seq_data_emitted;
 };
 }

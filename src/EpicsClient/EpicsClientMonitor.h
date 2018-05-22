@@ -48,18 +48,19 @@ public:
 ///\brief Epics client implementation which monitors for PV updates.
 class EpicsClientMonitor : public EpicsClientInterface {
 public:
-  EpicsClientMonitor(std::string epics_channel_provider_type,
-                     std::string channel_name, Ring<std::unique_ptr<FlatBufs::EpicsPVUpdate>> *ring);
+  EpicsClientMonitor(
+      std::string epics_channel_provider_type, std::string channel_name,
+      std::shared_ptr<Ring<std::unique_ptr<FlatBufs::EpicsPVUpdate>>> ring);
   ~EpicsClientMonitor() override;
   int emit(std::unique_ptr<FlatBufs::EpicsPVUpdate> up) override;
   int stop() override;
   void error_in_epics() override;
-  int status() override { return _status; };
+  int status() override { return status_; };
 
 private:
   std::unique_ptr<EpicsClientMonitor_impl> impl;
-  Ring<std::unique_ptr<FlatBufs::EpicsPVUpdate>> *emit_queue = nullptr;
-  int _status;
+  std::shared_ptr<Ring<std::unique_ptr<FlatBufs::EpicsPVUpdate>>> emit_queue;
+  std::atomic<int> status_{0};
 };
 }
 }

@@ -52,7 +52,12 @@ nlohmann::json ConversionPath::status_json() const {
   return Document;
 }
 
-Stream::Stream(ChannelInfo channel_info, std::unique_ptr<EpicsClient::EpicsClientInterface> client, std::unique_ptr<Ring<std::unique_ptr<FlatBufs::EpicsPVUpdate>>> ring) : channel_info_(channel_info), epics_client(std::move(client), emit_queue(std::move(ring))) {
+Stream::Stream(
+    ChannelInfo channel_info,
+    std::unique_ptr<EpicsClient::EpicsClientInterface> client,
+    std::shared_ptr<Ring<std::unique_ptr<FlatBufs::EpicsPVUpdate>>> ring)
+    : channel_info_(channel_info), epics_client(std::move(client)),
+      emit_queue(std::move(ring)) {
   emit_queue->formatter = _fmt;
 }
 
@@ -73,18 +78,8 @@ int Stream::converter_add(Kafka::InstanceSet &kset, Converter::sptr conv,
   return 0;
 }
 
-int Stream::emit(std::unique_ptr<FlatBufs::EpicsPVUpdate> up) {
-  if (!up) {
-    CLOG(6, 1, "empty update?");
-    // should never happen, ignore
-    return 0;
-  }
-
-  emit_queue->push_enlarge(up);
-
-  // here we are, saying goodbye to a good buffer
-  up.reset();
-  return 1;
+void Stream::error_in_epics() {
+  epics_client->error_in_epics();
 }
 
 int32_t
@@ -149,7 +144,6 @@ int Stream::stop() {
   }
   return 0;
 }
-
 
 int Stream::status() { return epics_client->status(); }
 

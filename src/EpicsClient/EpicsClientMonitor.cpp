@@ -121,9 +121,10 @@ void EpicsClientMonitor_impl::error_channel_requester() {
   LOG(4, "error_channel_requester()");
 }
 
-EpicsClientMonitor::EpicsClientMonitor(std::string epics_channel_provider_type,
-                                       std::string channel_name, Ring<std::unique_ptr<FlatBufs::EpicsPVUpdate>>* ring)
-    : emit_queue(ring) {
+EpicsClientMonitor::EpicsClientMonitor(
+    std::string epics_channel_provider_type, std::string channel_name,
+    std::shared_ptr<Ring<std::unique_ptr<FlatBufs::EpicsPVUpdate>>> ring)
+    : emit_queue(std::move(ring)) {
   impl.reset(new EpicsClientMonitor_impl(this));
   CLOG(7, 7, "channel_name: {}", channel_name);
   impl->channel_name = channel_name;
@@ -153,7 +154,7 @@ int EpicsClientMonitor::emit(std::unique_ptr<FlatBufs::EpicsPVUpdate> up) {
   return 1;
 }
 
-void EpicsClientMonitor::error_in_epics() { _status = -1;}
+void EpicsClientMonitor::error_in_epics() { status_ = -1; }
 }
 }
 }
