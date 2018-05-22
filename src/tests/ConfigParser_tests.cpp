@@ -10,13 +10,13 @@
 #include <sstream>
 #include <string>
 
-TEST(json_extraction_tests, not_parsing_a_config_file_gives_defaults) {
+TEST(config_parser_tests, not_parsing_a_config_file_gives_defaults) {
   BrightnESS::ForwardEpicsToKafka::MainOpt MainOpt;
 
   ASSERT_EQ(1u, MainOpt.MainSettings.ConversionThreads);
 }
 
-TEST(json_extraction_tests, trying_to_parse_invalid_json_throws) {
+TEST(config_parser_tests, trying_to_parse_invalid_json_throws) {
   std::string RawJson = "{"
                         "  \"streams\": ["
                         "    }"
@@ -26,7 +26,7 @@ TEST(json_extraction_tests, trying_to_parse_invalid_json_throws) {
   ASSERT_ANY_THROW(Config.setJsonFromString(RawJson));
 }
 
-TEST(json_extraction_tests, no_converters_specified_has_no_side_effects) {
+TEST(config_parser_tests, no_converters_specified_has_no_side_effects) {
   std::string RawJson = "{}";
 
   BrightnESS::ForwardEpicsToKafka::ConfigParser Config;
@@ -38,7 +38,7 @@ TEST(json_extraction_tests, no_converters_specified_has_no_side_effects) {
   ASSERT_EQ(0u, Settings.GlobalConverters.size());
 }
 
-TEST(json_extraction_tests, ints_specified_in_converters_are_extracted) {
+TEST(config_parser_tests, ints_specified_in_converters_are_extracted) {
   std::string RawJson = "{"
                         "  \"converters\": {"
                         "    \"f142\": { "
@@ -62,7 +62,7 @@ TEST(json_extraction_tests, ints_specified_in_converters_are_extracted) {
   ASSERT_EQ(456, f142.ConfigurationIntegers["some_option2"]);
 }
 
-TEST(json_extraction_tests, strings_specified_in_converters_are_extracted) {
+TEST(config_parser_tests, strings_specified_in_converters_are_extracted) {
   std::string RawJson = "{"
                         "  \"converters\": {"
                         "    \"f142\": { "
@@ -86,7 +86,7 @@ TEST(json_extraction_tests, strings_specified_in_converters_are_extracted) {
   ASSERT_EQ("goodbye", f142.ConfigurationStrings["some_option2"]);
 }
 
-TEST(json_extraction_tests,
+TEST(config_parser_tests,
      values_specified_in_multiple_converters_are_extracted) {
   std::string RawJson = "{"
                         "  \"converters\": {"
@@ -122,7 +122,7 @@ TEST(json_extraction_tests,
   ASSERT_EQ(456, f143.ConfigurationIntegers["some_option4"]);
 }
 
-TEST(json_extraction_tests,
+TEST(config_parser_tests,
      extracting_status_uri_gives_correct_uri_port_and_topic) {
   std::string RawJson = "{"
                         "  \"status-uri\": \"//kafkabroker:1234/status_topic\""
@@ -139,7 +139,7 @@ TEST(json_extraction_tests,
   ASSERT_EQ("status_topic", Settings.StatusReportURI.topic);
 }
 
-TEST(json_extraction_tests, no_status_uri_defined_gives_no_uri_port_or_topic) {
+TEST(config_parser_tests, no_status_uri_defined_gives_no_uri_port_or_topic) {
   std::string RawJson = "{}";
 
   BrightnESS::ForwardEpicsToKafka::ConfigParser Config;
@@ -153,7 +153,7 @@ TEST(json_extraction_tests, no_status_uri_defined_gives_no_uri_port_or_topic) {
   ASSERT_EQ("", Settings.StatusReportURI.topic);
 }
 
-TEST(json_extraction_tests, setting_broker_sets_host_and_port) {
+TEST(config_parser_tests, setting_broker_sets_host_and_port) {
   std::string RawJson = "{"
                         "  \"broker\": \"kafkabroker:1234\""
                         "}";
@@ -168,7 +168,7 @@ TEST(json_extraction_tests, setting_broker_sets_host_and_port) {
   ASSERT_EQ(1234u, Settings.Brokers[0].port);
 }
 
-TEST(json_extraction_tests,
+TEST(config_parser_tests,
      setting_multiple_brokers_sets_multiple_hosts_and_ports) {
   std::string RawJson = "{"
                         "  \"broker\": \"kafkabroker1:1234, kafkabroker2:5678\""
@@ -187,7 +187,7 @@ TEST(json_extraction_tests,
   ASSERT_EQ(5678u, Settings.Brokers[1].port);
 }
 
-TEST(json_extraction_tests, setting_no_brokers_sets_default_host_and_port) {
+TEST(config_parser_tests, setting_no_brokers_sets_default_host_and_port) {
   std::string RawJson = "{}";
 
   BrightnESS::ForwardEpicsToKafka::ConfigParser Config;
@@ -200,7 +200,7 @@ TEST(json_extraction_tests, setting_no_brokers_sets_default_host_and_port) {
   ASSERT_EQ(9092u, Settings.Brokers[0].port);
 }
 
-TEST(json_extraction_tests, no_kafka_broker_settings_has_no_side_effects) {
+TEST(config_parser_tests, no_kafka_broker_settings_has_no_side_effects) {
   std::string RawJson = "{}";
 
   BrightnESS::ForwardEpicsToKafka::ConfigParser Config;
@@ -213,7 +213,7 @@ TEST(json_extraction_tests, no_kafka_broker_settings_has_no_side_effects) {
   ASSERT_EQ(0u, Settings.BrokerSettings.ConfigurationStrings.size());
 }
 
-TEST(json_extraction_tests, ints_in_kafka_broker_settings_are_extracted) {
+TEST(config_parser_tests, ints_in_kafka_broker_settings_are_extracted) {
   std::string RawJson = "{"
                         "  \"kafka\": {"
                         "    \"broker\": { "
@@ -234,7 +234,7 @@ TEST(json_extraction_tests, ints_in_kafka_broker_settings_are_extracted) {
   ASSERT_EQ(456, Settings.BrokerSettings.ConfigurationIntegers["some_option2"]);
 }
 
-TEST(json_extraction_tests, strings_in_kafka_broker_settings_are_extracted) {
+TEST(config_parser_tests, strings_in_kafka_broker_settings_are_extracted) {
   std::string RawJson = "{"
                         "  \"kafka\": {"
                         "    \"broker\": { "
@@ -257,7 +257,7 @@ TEST(json_extraction_tests, strings_in_kafka_broker_settings_are_extracted) {
             Settings.BrokerSettings.ConfigurationStrings["some_option2"]);
 }
 
-TEST(json_extraction_tests,
+TEST(config_parser_tests,
      no_broker_config_settings_sets_default_host_port_and_topic) {
   std::string RawJson = "{}";
 
@@ -272,7 +272,7 @@ TEST(json_extraction_tests,
   ASSERT_EQ("forward_epics_to_kafka_commands", Settings.BrokerConfig.topic);
 }
 
-TEST(json_extraction_tests,
+TEST(config_parser_tests,
      extracting_broker_config_settings_sets_host_port_and_topic) {
   std::string RawJson =
       "{"
@@ -290,7 +290,7 @@ TEST(json_extraction_tests,
   ASSERT_EQ("the_command_topic", Settings.BrokerConfig.topic);
 }
 
-TEST(json_extraction_tests, no_conversion_threads_settings_sets_default) {
+TEST(config_parser_tests, no_conversion_threads_settings_sets_default) {
   std::string RawJson = "{}";
 
   BrightnESS::ForwardEpicsToKafka::ConfigParser Config;
@@ -302,7 +302,7 @@ TEST(json_extraction_tests, no_conversion_threads_settings_sets_default) {
   ASSERT_EQ(1u, Settings.ConversionThreads);
 }
 
-TEST(json_extraction_tests, extracting_conversion_threads_sets_value) {
+TEST(config_parser_tests, extracting_conversion_threads_sets_value) {
   std::string RawJson = "{"
                         "  \"conversion-threads\": 3"
                         "}";
@@ -316,7 +316,7 @@ TEST(json_extraction_tests, extracting_conversion_threads_sets_value) {
   ASSERT_EQ(3u, Settings.ConversionThreads);
 }
 
-TEST(json_extraction_tests, no_conversion_worker_queue_size_sets_default) {
+TEST(config_parser_tests, no_conversion_worker_queue_size_sets_default) {
   std::string RawJson = "{}";
 
   BrightnESS::ForwardEpicsToKafka::ConfigParser Config;
@@ -328,8 +328,7 @@ TEST(json_extraction_tests, no_conversion_worker_queue_size_sets_default) {
   ASSERT_EQ(1024u, Settings.ConversionWorkerQueueSize);
 }
 
-TEST(json_extraction_tests,
-     extracting_conversion_worker_queue_size_sets_value) {
+TEST(config_parser_tests, extracting_conversion_worker_queue_size_sets_value) {
   std::string RawJson = "{"
                         "  \"conversion-worker-queue-size\": 1234"
                         "}";
@@ -343,7 +342,7 @@ TEST(json_extraction_tests,
   ASSERT_EQ(1234u, Settings.ConversionWorkerQueueSize);
 }
 
-TEST(json_extraction_tests, no_main_poll_interval_sets_default) {
+TEST(config_parser_tests, no_main_poll_interval_sets_default) {
   std::string RawJson = "{}";
 
   BrightnESS::ForwardEpicsToKafka::ConfigParser Config;
@@ -355,7 +354,7 @@ TEST(json_extraction_tests, no_main_poll_interval_sets_default) {
   ASSERT_EQ(500, Settings.MainPollInterval);
 }
 
-TEST(json_extraction_tests, extracting_main_poll_interval_sets_value) {
+TEST(config_parser_tests, extracting_main_poll_interval_sets_value) {
   std::string RawJson = "{"
                         "  \"main-poll-interval\": 1234"
                         "}";
@@ -369,7 +368,7 @@ TEST(json_extraction_tests, extracting_main_poll_interval_sets_value) {
   ASSERT_EQ(1234, Settings.MainPollInterval);
 }
 
-TEST(json_extraction_tests,
+TEST(config_parser_tests,
      extracting_streams_setting_gets_channel_and_protocol) {
   std::string RawJson = "{"
                         "  \"streams\": ["
@@ -393,7 +392,7 @@ TEST(json_extraction_tests,
   ASSERT_EQ("ca", Converter.EpicsProtocol);
 }
 
-TEST(json_extraction_tests,
+TEST(config_parser_tests,
      extracting_multiple_streams_setting_gets_channel_and_protocol) {
   std::string RawJson = "{"
                         "  \"streams\": ["
@@ -424,7 +423,7 @@ TEST(json_extraction_tests,
   ASSERT_EQ("pva", Converter.EpicsProtocol);
 }
 
-TEST(json_extraction_tests,
+TEST(config_parser_tests,
      extracting_streams_setting_if_protocol_not_defined_use_default) {
   std::string RawJson = "{"
                         "  \"streams\": ["
@@ -447,7 +446,7 @@ TEST(json_extraction_tests,
   ASSERT_EQ("pva", Converter.EpicsProtocol);
 }
 
-TEST(json_extraction_tests, extracting_streams_setting_gets_converter_info) {
+TEST(config_parser_tests, extracting_streams_setting_gets_converter_info) {
 
   std::string RawJson = "{"
                         "  \"streams\": ["
@@ -475,7 +474,7 @@ TEST(json_extraction_tests, extracting_streams_setting_gets_converter_info) {
   ASSERT_EQ("my_name", Converter.Name);
 }
 
-TEST(json_extraction_tests,
+TEST(config_parser_tests,
      extracting_converter_info_with_no_name_gets_auto_named) {
   std::string RawJson = "{"
                         "  \"streams\": ["
@@ -501,7 +500,7 @@ TEST(json_extraction_tests,
   ASSERT_TRUE(!Converter.Name.empty());
 }
 
-TEST(json_extraction_tests, extracting_converter_info_with_no_topic_throws) {
+TEST(config_parser_tests, extracting_converter_info_with_no_topic_throws) {
   std::string RawJson = "{"
                         "  \"streams\": ["
                         "    {"
@@ -520,7 +519,7 @@ TEST(json_extraction_tests, extracting_converter_info_with_no_topic_throws) {
   ASSERT_ANY_THROW(Config.extractConfiguration());
 }
 
-TEST(json_extraction_tests, extracting_converter_info_with_no_schema_throws) {
+TEST(config_parser_tests, extracting_converter_info_with_no_schema_throws) {
   std::string RawJson = "{"
                         "  \"streams\": ["
                         "    {"

@@ -57,6 +57,8 @@ public:
   int converters_clear();
   std::unique_lock<std::mutex> get_lock_streams();
   std::unique_lock<std::mutex> get_lock_converters();
+  // Public for unit tests
+  Streams streams;
 
 private:
   MainOpt &main_opt;
@@ -76,7 +78,6 @@ private:
   std::unique_ptr<CURLReporter> curl;
   std::shared_ptr<KafkaW::Producer> status_producer;
   std::unique_ptr<KafkaW::ProducerTopic> status_producer_topic;
-  Streams streams;
   std::atomic<ForwardingRunState> ForwardingRunFlag{ForwardingRunState::RUN};
   void raiseForwardingFlag(ForwardingRunState ToBeRaised);
   void
