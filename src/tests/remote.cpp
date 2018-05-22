@@ -21,13 +21,13 @@ namespace BrightnESS {
 namespace ForwardEpicsToKafka {
 namespace tests {
 
-using std::string;
-using std::vector;
-using std::deque;
-using std::thread;
-using std::mutex;
-using std::unique_lock;
 using std::condition_variable;
+using std::deque;
+using std::mutex;
+using std::string;
+using std::thread;
+using std::unique_lock;
+using std::vector;
 using MS = std::chrono::milliseconds;
 template <typename T> using uptr = std::unique_ptr<T>;
 
@@ -184,8 +184,8 @@ void Remote_T::requirements() {
 
 void Remote_T::simple_f142() {
   using nlohmann::json;
-  using std::thread;
   using std::string;
+  using std::thread;
 
   std::string RawJson = "{\"channel\": \"forwarder_test_nt_array_double\", "
                         "\"converter\": {\"schema\":\"f142\", "
@@ -289,9 +289,11 @@ void Remote_T::simple_f142_via_config_message(
 
   {
     KafkaW::BrokerSettings BrokerSettings;
-    BrokerSettings.Address = Tests::main_opt->MainSettings.BrokerConfig.host_port;
+    BrokerSettings.Address =
+        Tests::main_opt->MainSettings.BrokerConfig.host_port;
     auto pr = std::make_shared<KafkaW::Producer>(BrokerSettings);
-    KafkaW::ProducerTopic pt(pr, Tests::main_opt->MainSettings.BrokerConfig.topic);
+    KafkaW::ProducerTopic pt(pr,
+                             Tests::main_opt->MainSettings.BrokerConfig.topic);
     pt.produce((KafkaW::uchar *)msg.data(), msg.size());
   }
   LOG(7, "CONFIG has been sent out...");
@@ -302,9 +304,11 @@ void Remote_T::simple_f142_via_config_message(
   {
     auto Msg = string(R"""({"cmd": "exit"})""");
     KafkaW::BrokerSettings BrokerSettings;
-    BrokerSettings.Address = Tests::main_opt->MainSettings.BrokerConfig.host_port;
+    BrokerSettings.Address =
+        Tests::main_opt->MainSettings.BrokerConfig.host_port;
     auto pr = std::make_shared<KafkaW::Producer>(BrokerSettings);
-    KafkaW::ProducerTopic pt(pr, Tests::main_opt->MainSettings.BrokerConfig.topic);
+    KafkaW::ProducerTopic pt(pr,
+                             Tests::main_opt->MainSettings.BrokerConfig.topic);
     pt.produce((KafkaW::uchar *)Msg.data(), Msg.size());
   }
 
@@ -421,6 +425,6 @@ TEST_F(Remote_T, different_brokers) {
   Remote_T::simple_f142_via_config_message(
       "tests/msg-add-different-brokers.json", cv);
 }
-}
-}
-}
+} // namespace tests
+} // namespace ForwardEpicsToKafka
+} // namespace BrightnESS
