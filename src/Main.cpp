@@ -1,10 +1,10 @@
 #include "Main.h"
+#include "CommandHandler.h"
 #include "Converter.h"
 #include "Stream.h"
 #include "helper.h"
-#include <nlohmann/json.hpp>
 #include "logger.h"
-#include "CommandHandler.h"
+#include <nlohmann/json.hpp>
 #include <sys/types.h>
 #ifdef _MSC_VER
 #include "process.h"
@@ -19,7 +19,7 @@ namespace ForwardEpicsToKafka {
 
 static bool isStopDueToSignal(ForwardingRunState Flag) {
   return static_cast<int>(Flag) &
-      static_cast<int>(ForwardingRunState::STOP_DUE_TO_SIGNAL);
+         static_cast<int>(ForwardingRunState::STOP_DUE_TO_SIGNAL);
 }
 
 // Little helper
@@ -59,7 +59,8 @@ Main::Main(MainOpt &opt)
     KafkaW::BrokerSettings bopt;
     bopt.ConfigurationStrings["group.id"] =
         fmt::format("forwarder-command-listener--pid{}", getpid());
-    config_listener.reset(new Config::Listener{bopt, main_opt.MainSettings.BrokerConfig});
+    config_listener.reset(
+        new Config::Listener{bopt, main_opt.MainSettings.BrokerConfig});
   }
 
   for (auto &Stream : main_opt.MainSettings.StreamsInfo) {
@@ -185,7 +186,7 @@ void Main::report_status() {
   Status["streams"] = Streams;
   auto StatusString = Status.dump();
   LOG(0, "status: {}", StatusString);
-  status_producer_topic->produce((KafkaW::uchar *) StatusString.c_str(),
+  status_producer_topic->produce((KafkaW::uchar *)StatusString.c_str(),
                                  StatusString.size());
 }
 
@@ -253,8 +254,8 @@ void Main::pushConverterToStream(
   // Check schema exists
   auto r1 = main_opt.schema_registry.items().find(ConverterInfo.Schema);
   if (r1 == main_opt.schema_registry.items().end()) {
-    throw MappingAddException(
-        fmt::format("Cannot handle flatbuffer schema id {}", ConverterInfo.Schema));
+    throw MappingAddException(fmt::format(
+        "Cannot handle flatbuffer schema id {}", ConverterInfo.Schema));
   }
 
   uri::URI URI;
@@ -279,24 +280,25 @@ void Main::pushConverterToStream(
     if (ConverterIt != converters.end()) {
       ConverterShared = ConverterIt->second.lock();
       if (!ConverterShared) {
-        ConverterShared =
-            Converter::create(main_opt.schema_registry, ConverterInfo.Schema, main_opt);
-        converters[ConverterInfo.Name] = std::weak_ptr<Converter>(ConverterShared);
+        ConverterShared = Converter::create(main_opt.schema_registry,
+                                            ConverterInfo.Schema, main_opt);
+        converters[ConverterInfo.Name] =
+            std::weak_ptr<Converter>(ConverterShared);
       }
     } else {
-      ConverterShared =
-          Converter::create(main_opt.schema_registry, ConverterInfo.Schema, main_opt);
-      converters[ConverterInfo.Name] = std::weak_ptr<Converter>(ConverterShared);
+      ConverterShared = Converter::create(main_opt.schema_registry,
+                                          ConverterInfo.Schema, main_opt);
+      converters[ConverterInfo.Name] =
+          std::weak_ptr<Converter>(ConverterShared);
     }
   } else {
-    ConverterShared =
-        Converter::create(main_opt.schema_registry, ConverterInfo.Schema, main_opt);
+    ConverterShared = Converter::create(main_opt.schema_registry,
+                                        ConverterInfo.Schema, main_opt);
   }
   if (!ConverterShared) {
     throw MappingAddException("Cannot create a converter");
   }
   Stream->converter_add(*kafka_instance_set, ConverterShared, TopicURI);
-
 }
 
 void Main::addMapping(StreamSettings const &StreamInfo) {

@@ -1,12 +1,12 @@
 #pragma once
 
+#include "ConfigParser.h"
 #include "KafkaW/KafkaW.h"
 #include "SchemaRegistry.h"
-#include "ConfigParser.h"
 #include "uri.h"
+#include <memory>
 #include <string>
 #include <vector>
-#include <memory>
 
 namespace BrightnESS {
 namespace ForwardEpicsToKafka {
@@ -27,12 +27,12 @@ struct MainOpt {
   MainOpt();
   void set_broker(std::string &Broker);
   void init_logger();
+
 private:
   ConfigSettings parse_document(const std::string &filepath);
-
 };
 
 std::pair<int, std::unique_ptr<MainOpt>> parse_opt(int argc, char **argv);
 
-}
-}
+} // namespace ForwardEpicsToKafka
+} // namespace BrightnESS

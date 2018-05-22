@@ -1,8 +1,8 @@
 #include "ConfigParser.h"
+#include "Main.h"
 #include "helper.h"
 #include "json.h"
 #include "logger.h"
-#include "Main.h"
 #include <iostream>
 
 namespace BrightnESS {
@@ -54,8 +54,7 @@ void ConfigParser::extractConversionThreads(ConfigSettings &Settings) {
 }
 
 void ConfigParser::extractConversionWorkerQueueSize(ConfigSettings &Settings) {
-  if (auto x =
-      find<size_t>("conversion-worker-queue-size", Json)) {
+  if (auto x = find<size_t>("conversion-worker-queue-size", Json)) {
     Settings.ConversionWorkerQueueSize = x.inner();
   }
 }
@@ -74,9 +73,11 @@ void ConfigParser::extractGlobalConverters(ConfigSettings &Settings) {
     if (Converters.is_object()) {
       for (auto It = Converters.begin(); It != Converters.end(); ++It) {
         KafkaBrokerSettings BrokerSettings{};
-        for (auto SettingIt = It.value().begin(); SettingIt != It.value().end(); ++SettingIt) {
+        for (auto SettingIt = It.value().begin(); SettingIt != It.value().end();
+             ++SettingIt) {
           if (SettingIt.value().is_number()) {
-            BrokerSettings.ConfigurationIntegers[SettingIt.key()] = SettingIt.value().get<int64_t>();
+            BrokerSettings.ConfigurationIntegers[SettingIt.key()] =
+                SettingIt.value().get<int64_t>();
           }
 
           if (SettingIt.value().is_string()) {
@@ -100,7 +101,8 @@ void ConfigParser::extractStatusUri(ConfigSettings &Settings) {
   }
 }
 
-void ConfigParser::setBrokers(std::string const & Broker, ConfigSettings &Settings) {
+void ConfigParser::setBrokers(std::string const &Broker,
+                              ConfigSettings &Settings) {
   Settings.Brokers.clear();
   auto a = split(Broker, ",");
   for (auto &x : a) {
@@ -157,7 +159,8 @@ void ConfigParser::extractStreamSettings(ConfigSettings &Settings) {
             Stream.Converters.push_back(extractConverterSettings(x.inner()));
           } else if (x.inner().is_array()) {
             for (auto const &ConverterSettings : x.inner()) {
-              Stream.Converters.push_back(extractConverterSettings(ConverterSettings));
+              Stream.Converters.push_back(
+                  extractConverterSettings(ConverterSettings));
             }
           }
         }
@@ -189,10 +192,10 @@ void ConfigParser::extractMappingInfo(nlohmann::json const &Mapping,
     // Default is pva
     Protocol = "pva";
   }
-
 }
 
-ConverterSettings ConfigParser::extractConverterSettings(nlohmann::json const &Mapping) {
+ConverterSettings
+ConfigParser::extractConverterSettings(nlohmann::json const &Mapping) {
   ConverterSettings Settings;
   Settings.Schema = find<std::string>("schema", Mapping).inner();
   Settings.Topic = find<std::string>("topic", Mapping).inner();
@@ -206,7 +209,5 @@ ConverterSettings ConfigParser::extractConverterSettings(nlohmann::json const &M
   return Settings;
 }
 
-}
-}
-
-
+} // namespace ForwardEpicsToKafka
+} // namespace BrightnESS

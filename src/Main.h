@@ -79,9 +79,9 @@ private:
   Streams streams;
   std::atomic<ForwardingRunState> ForwardingRunFlag{ForwardingRunState::RUN};
   void raiseForwardingFlag(ForwardingRunState ToBeRaised);
-  void pushConverterToStream(
-      ConverterSettings const &Converter,
-      std::shared_ptr<ForwardEpicsToKafka::Stream> &Stream);
+  void
+  pushConverterToStream(ConverterSettings const &Converter,
+                        std::shared_ptr<ForwardEpicsToKafka::Stream> &Stream);
 };
 
 extern std::atomic<uint64_t> g__total_msgs_to_kafka;

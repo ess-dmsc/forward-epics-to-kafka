@@ -1,9 +1,9 @@
 #include "CommandHandler.h"
-#include <nlohmann/json.hpp>
+#include "ConfigParser.h"
 #include "helper.h"
 #include "json.h"
 #include "logger.h"
-#include "ConfigParser.h"
+#include <nlohmann/json.hpp>
 
 namespace BrightnESS {
 namespace ForwardEpicsToKafka {
@@ -15,7 +15,8 @@ void ConfigCB::operator()(std::string const &msg) {
   try {
     handleCommand(msg);
   } catch (nlohmann::json::parse_error const &e) {
-    LOG(3, "Could not parse command. Command was {}. Exception was: {}", msg, e.what());
+    LOG(3, "Could not parse command. Command was {}. Exception was: {}", msg,
+        e.what());
   } catch (...) {
     LOG(3, "Could not handle command: {}", msg);
   }
@@ -69,5 +70,5 @@ std::string ConfigCB::findCommand(nlohmann::json const &Document) {
   return std::string();
 }
 
-}
-}
+} // namespace ForwardEpicsToKafka
+} // namespace BrightnESS

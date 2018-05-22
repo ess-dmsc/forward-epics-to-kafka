@@ -1,6 +1,6 @@
 #pragma once
-#include "Main.h"
 #include "Config.h"
+#include "Main.h"
 #include <string>
 
 namespace BrightnESS {
@@ -24,5 +24,5 @@ private:
   Main &main;
 };
 
-}
-}
+} // namespace ForwardEpicsToKafka
+} // namespace BrightnESS

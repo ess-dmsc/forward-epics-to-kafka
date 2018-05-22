@@ -1,21 +1,21 @@
+#include "ConfigParser.h"
+#include "Main.h"
+#include "MainOpt.h"
+#include "logger.h"
 #include <atomic>
 #include <csignal>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <fmt/format.h>
 #include <mutex>
 #include <string>
 #include <thread>
 #include <vector>
-#include "Main.h"
-#include "MainOpt.h"
-#include "ConfigParser.h"
-#include "logger.h"
-#include <fmt/format.h>
 
 namespace BrightnESS {
 namespace ForwardEpicsToKafka {}
-}
+} // namespace BrightnESS
 
 static void handleSignal(int Signal);
 

@@ -1,12 +1,12 @@
 #pragma once
 
+#include "uri.h"
+#include <atomic>
 #include <deque>
+#include <map>
+#include <nlohmann/json.hpp>
 #include <string>
 #include <vector>
-#include <map>
-#include <atomic>
-#include <nlohmann/json.hpp>
-#include "uri.h"
 
 namespace BrightnESS {
 namespace ForwardEpicsToKafka {
@@ -45,12 +45,11 @@ public:
   ConfigParser() = default;
   void setJsonFromString(std::string RawJson);
   ConfigSettings extractConfiguration();
-  static void setBrokers(std::string const & Brokers, ConfigSettings &Settings);
+  static void setBrokers(std::string const &Brokers, ConfigSettings &Settings);
 
 private:
   nlohmann::json Json;
-  void extractMappingInfo(nlohmann::json const &Mapping,
-                          std::string &Channel,
+  void extractMappingInfo(nlohmann::json const &Mapping, std::string &Channel,
                           std::string &Protocol);
   ConverterSettings extractConverterSettings(nlohmann::json const &Mapping);
   void extractBrokerConfig(ConfigSettings &Settings);
@@ -64,5 +63,5 @@ private:
   void extractGlobalConverters(ConfigSettings &Settings);
   std::atomic<uint32_t> ConverterIndex{0};
 };
-}
-}
+} // namespace ForwardEpicsToKafka
+} // namespace BrightnESS
