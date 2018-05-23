@@ -5,6 +5,7 @@
 #include <gtest/gtest.h>
 #include <nlohmann/json.hpp>
 
+
 TEST(command_handler_tests, add_command_adds_stream_correctly) {
   std::string RawJson = "{"
                         "  \"cmd\": \"add\","
@@ -20,7 +21,7 @@ TEST(command_handler_tests, add_command_adds_stream_correctly) {
   BrightnESS::ForwardEpicsToKafka::Main Main(MainOpt);
   BrightnESS::ForwardEpicsToKafka::ConfigCB Config(Main);
 
-  Config.handleCommand(RawJson);
+  Config(RawJson);
 
   ASSERT_EQ(1u, Main.streams.size());
   ASSERT_EQ("my_channel_name", Main.streams[0]->channel_info().channel_name);
@@ -46,7 +47,7 @@ TEST(command_handler_tests, add_command_adds_multiple_streams_correctly) {
   BrightnESS::ForwardEpicsToKafka::Main Main(MainOpt);
   BrightnESS::ForwardEpicsToKafka::ConfigCB Config(Main);
 
-  Config.handleCommand(RawJson);
+  Config(RawJson);
 
   ASSERT_EQ(2u, Main.streams.size());
   ASSERT_EQ("my_channel_name", Main.streams[0]->channel_info().channel_name);
@@ -74,13 +75,13 @@ TEST(command_handler_tests, stop_all_command_removes_all_streams_correctly) {
   BrightnESS::ForwardEpicsToKafka::Main Main(MainOpt);
   BrightnESS::ForwardEpicsToKafka::ConfigCB Config(Main);
 
-  Config.handleCommand(AddJson);
+  Config(AddJson);
 
   std::string RemoveJson = "{"
                            " \"cmd\": \"stop_all\""
                            "}";
 
-  Config.handleCommand(RemoveJson);
+  Config(RemoveJson);
 
   ASSERT_EQ(0u, Main.streams.size());
 }
@@ -100,14 +101,14 @@ TEST(command_handler_tests, stop_command_removes_stream_correctly) {
   BrightnESS::ForwardEpicsToKafka::Main Main(MainOpt);
   BrightnESS::ForwardEpicsToKafka::ConfigCB Config(Main);
 
-  Config.handleCommand(AddJson);
+  Config(AddJson);
 
   std::string RemoveJson = "{"
                            " \"cmd\": \"stop_channel\","
                            " \"channel\": \"my_channel_name\""
                            "}";
 
-  Config.handleCommand(RemoveJson);
+  Config(RemoveJson);
 
   ASSERT_EQ(0u, Main.streams.size());
 }

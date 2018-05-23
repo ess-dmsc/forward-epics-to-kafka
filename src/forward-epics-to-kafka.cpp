@@ -2,6 +2,7 @@
 #include "Main.h"
 #include "MainOpt.h"
 #include "logger.h"
+#include "Streams.h"
 #include <atomic>
 #include <csignal>
 #include <cstdio>
@@ -63,6 +64,7 @@ int main(int argc, char **argv) {
   }
 
   auto Main = std::make_shared<BrightnESS::ForwardEpicsToKafka::Main>(opt);
+
   try {
     SignalHandler SignalHandlerInstance(Main);
     Main->forward_epics_to_kafka();

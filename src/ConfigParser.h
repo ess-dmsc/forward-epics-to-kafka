@@ -11,23 +11,27 @@
 namespace BrightnESS {
 namespace ForwardEpicsToKafka {
 
+/// Holder for the Kafka brokers settings defined in the configuration file.
 struct KafkaBrokerSettings {
   std::map<std::string, int64_t> ConfigurationIntegers;
   std::map<std::string, std::string> ConfigurationStrings;
 };
 
+/// Holder for the converter settings defined in the configuration file.
 struct ConverterSettings {
   std::string Schema;
   std::string Topic;
   std::string Name;
 };
 
+/// Holder for the stream settings defined in the configuration file.
 struct StreamSettings {
   std::string Name;
   std::string EpicsProtocol;
   std::vector<ConverterSettings> Converters;
 };
 
+/// Holder for the configuration settings defined in the configuration file.
 struct ConfigSettings {
   uri::URI BrokerConfig{"//localhost:9092/forward_epics_to_kafka_commands"};
   std::vector<uri::URI> Brokers;
@@ -40,11 +44,26 @@ struct ConfigSettings {
   std::map<std::string, KafkaBrokerSettings> GlobalConverters;
 };
 
+/// Class responsible for parsing the JSON configuration information.
 class ConfigParser {
 public:
+  /// Constructor.
   ConfigParser() = default;
+
+  /// Set the JSON string to be parsed.
+  ///
+  /// \param RawJson The JSON to be parsed.
   void setJsonFromString(std::string RawJson);
+
+  /// Extract the configuration information from the JSON.
+  ///
+  /// \return The extracted settings.
   ConfigSettings extractConfiguration();
+
+  /// Set the brokers in the supplied settings.
+  ///
+  /// \param Brokers The raw brokers information, e.g. "localhost:9092"
+  /// \param Settings The settings to write the brokers to.
   static void setBrokers(std::string const &Brokers, ConfigSettings &Settings);
 
 private:
