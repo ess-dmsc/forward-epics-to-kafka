@@ -41,4 +41,6 @@ services:
     volumes:
       - ./forwarder_config.json:/forwarder_config.json
     environment:
+      CONFIG_URI: "//localhost:9092/TEST_forwarderConfig"
+      KAFKA_BROKER: "localhost:9092"
       CONFIG_FILE: "/forwarder_config.json"
