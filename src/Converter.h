@@ -18,7 +18,7 @@ public:
                      std::string schema, MainOpt const &main_opt);
   FlatBufs::FlatbufferMessage::uptr convert(FlatBufs::EpicsPVUpdate const &up);
   std::map<std::string, double> stats();
-  std::string schema_name();
+  std::string schema_name() const;
 
 private:
   std::string schema;

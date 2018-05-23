@@ -101,10 +101,10 @@ void ConfigParser::extractStatusUri(ConfigSettings &Settings) {
   }
 }
 
-void ConfigParser::setBrokers(std::string const &Broker,
+void ConfigParser::setBrokers(std::string const &Brokers,
                               ConfigSettings &Settings) {
   Settings.Brokers.clear();
-  auto a = split(Broker, ",");
+  auto a = split(Brokers, ",");
   for (auto &x : a) {
     uri::URI u1;
     u1.require_host_slashes = false;

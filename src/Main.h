@@ -48,11 +48,11 @@ public:
   explicit Main(MainOpt &opt);
   ~Main();
   void forward_epics_to_kafka();
-  void addMapping(StreamSettings const &Stream);
+  void addMapping(StreamSettings const &StreamInfo);
   void stopForwarding();
   void stopForwardingDueToSignal();
   void report_status();
-  void report_stats(int started_in_current_round);
+  void report_stats(int dt);
   int conversion_workers_clear();
   int converters_clear();
   std::unique_lock<std::mutex> get_lock_streams();
@@ -81,7 +81,7 @@ private:
   std::atomic<ForwardingRunState> ForwardingRunFlag{ForwardingRunState::RUN};
   void raiseForwardingFlag(ForwardingRunState ToBeRaised);
   void
-  pushConverterToStream(ConverterSettings const &Converter,
+  pushConverterToStream(ConverterSettings const &ConverterInfo,
                         std::shared_ptr<ForwardEpicsToKafka::Stream> &Stream);
 };
 
