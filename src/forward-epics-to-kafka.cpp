@@ -1,8 +1,8 @@
 #include "ConfigParser.h"
 #include "Main.h"
 #include "MainOpt.h"
-#include "logger.h"
 #include "Streams.h"
+#include "logger.h"
 #include <atomic>
 #include <csignal>
 #include <cstdio>

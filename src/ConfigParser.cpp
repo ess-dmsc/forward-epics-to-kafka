@@ -178,15 +178,14 @@ void ConfigParser::extractMappingInfo(nlohmann::json const &Mapping,
     throw MappingAddException("Given Mapping is not a JSON object");
   }
 
-  auto ChannelMaybe = find<std::string>("channel", Mapping);
-  if (!ChannelMaybe) {
-    throw MappingAddException("Can not find channel");
+  if (auto ChannelMaybe = find<std::string>("channel", Mapping)) {
+    Channel = ChannelMaybe.inner();
+  } else {
+    throw MappingAddException("Cannot find channel");
   }
-  Channel = ChannelMaybe.inner();
 
-  auto ChannelProviderTypeMaybe =
-      find<std::string>("channel_provider_type", Mapping);
-  if (ChannelProviderTypeMaybe) {
+  if (auto ChannelProviderTypeMaybe =
+      find<std::string>("channel_provider_type", Mapping)) {
     Protocol = ChannelProviderTypeMaybe.inner();
   } else {
     // Default is pva
@@ -197,8 +196,19 @@ void ConfigParser::extractMappingInfo(nlohmann::json const &Mapping,
 ConverterSettings
 ConfigParser::extractConverterSettings(nlohmann::json const &Mapping) {
   ConverterSettings Settings;
-  Settings.Schema = find<std::string>("schema", Mapping).inner();
-  Settings.Topic = find<std::string>("topic", Mapping).inner();
+
+  if (auto SchemaMaybe = find<std::string>("schema", Mapping)) {
+    Settings.Schema = SchemaMaybe.inner();
+  } else {
+    throw MappingAddException("Cannot find schema");
+  }
+
+  if (auto TopicMaybe = find<std::string>("topic", Mapping)) {
+    Settings.Topic = TopicMaybe.inner();
+  } else {
+    throw MappingAddException("Cannot find topic");
+  }
+
   if (auto x = find<std::string>("name", Mapping)) {
     Settings.Name = x.inner();
   } else {

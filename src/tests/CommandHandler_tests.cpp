@@ -5,7 +5,6 @@
 #include <gtest/gtest.h>
 #include <nlohmann/json.hpp>
 
-
 TEST(command_handler_tests, add_command_adds_stream_correctly) {
   std::string RawJson = "{"
                         "  \"cmd\": \"add\","
