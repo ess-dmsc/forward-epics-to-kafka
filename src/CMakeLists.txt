@@ -98,7 +98,6 @@ set(SOURCES
     KafkaW/TopicSettings.cpp
     Ring.cpp
     ConversionWorker.cpp
-    epics-to-fb.cpp
     Config.cpp
     FlatbufferMessage.cpp
     SchemaRegistry.cpp
