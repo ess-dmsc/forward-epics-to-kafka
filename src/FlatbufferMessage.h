@@ -29,14 +29,15 @@ public:
   using uptr = std::unique_ptr<FlatbufferMessage>;
 
   /// Gives a standard FlatBufferBuilder.
-  FlatbufferMessage(): builder(new flatbuffers::FlatBufferBuilder()) {};
+  FlatbufferMessage() : builder(new flatbuffers::FlatBufferBuilder()){};
 
   /// \brief FlatBufferBuilder with initial_size in bytes.
   /// \param initial_size Initial size of the FlatBufferBuilder in bytes.
-  FlatbufferMessage(uint32_t initial_size) : builder(new flatbuffers::FlatBufferBuilder(initial_size)){};
+  FlatbufferMessage(uint32_t initial_size)
+      : builder(new flatbuffers::FlatBufferBuilder(initial_size)){};
 
   /// \brief Your chance to implement your own memory recycling.
-  ~FlatbufferMessage() override {};
+  ~FlatbufferMessage() override{};
 
   FlatbufferMessage(FlatbufferMessage const &) = delete;
   FlatbufferMessageSlice message();
