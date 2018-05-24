@@ -25,8 +25,6 @@ public:
       epics::pvAccess::Channel::ConnectionState connectionState) override;
 
 private:
-  epics::pvData::MonitorRequester::shared_pointer monitor_requester;
-  epics::pvData::MonitorPtr monitor;
   EpicsClientMonitor_impl *epics_client_impl = nullptr;
 };
 }

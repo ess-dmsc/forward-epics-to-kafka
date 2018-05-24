@@ -404,7 +404,6 @@ public:
     if (true) {
       // Was only interesting for forwarder testing
       fwdinfo_1_tBuilder bf(*builder);
-      fb->seq = up.seq_fwd;
       uint64_t seq_data = 0;
       if (auto x = pvstr->getSubField<epics::pvData::PVScalarValue<uint64_t>>(
               "seq")) {

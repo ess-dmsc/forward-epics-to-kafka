@@ -8,6 +8,8 @@ namespace ForwardEpicsToKafka {
 namespace EpicsClient {
 class Stream;
 
+///\class EpicsClientPeriodic
+///\brief epics client wrapper responsible for periodically checking PV values
 class EpicsClientPeriodic : public EpicsClient::EpicsClientInterface {
 public:
   Stream *stream = nullptr;
@@ -21,11 +23,8 @@ public:
   int status() override { return 1; };
 
 private:
-  //  epics::pvAccess::Channel::shared_pointer channel;
   std::shared_ptr<Ring<std::unique_ptr<FlatBufs::EpicsPVUpdate>>> emit_queue;
   std::string channel_name;
-
-  //  epics::pvaClient::PvaClientGet;
 };
 }
 }

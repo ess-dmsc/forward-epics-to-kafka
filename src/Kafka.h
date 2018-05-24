@@ -14,7 +14,6 @@ Simple load balance over the available producers.
 #include <thread>
 #include <vector>
 
-#include "tools.h"
 #include "uri.h"
 
 #include "FlatbufferMessage.h"

@@ -186,6 +186,7 @@ void Main::forward_epics_to_kafka() {
   using CLK = std::chrono::steady_clock;
   using MS = std::chrono::milliseconds;
   auto Dt = MS(main_opt.main_poll_interval);
+  auto PeriodMS = MS(main_opt.periodMS);
   auto t_lf_last = CLK::now();
   auto t_status_last = CLK::now();
   ConfigCB config_cb(*this);
@@ -374,9 +375,6 @@ void Main::extractConverterInfo(const nlohmann::json &JSON, std::string &Schema,
 }
 
 void Main::mappingAdd(nlohmann::json const &Mapping) {
-  using EpicsClient::EpicsClientMonitor;
-  using EpicsClient::EpicsClientInterface;
-  using EpicsClient::EpicsClientPeriodic;
   std::string Channel;
   std::string ChannelProviderType;
 
@@ -387,16 +385,17 @@ void Main::mappingAdd(nlohmann::json const &Mapping) {
     ChannelInfo ChannelInfo{ChannelProviderType, Channel};
     auto ring =
         std::make_shared<Ring<std::unique_ptr<FlatBufs::EpicsPVUpdate>>>();
-    auto client = std::unique_ptr<EpicsClientInterface>(
-        new EpicsClientMonitor(ChannelProviderType, Channel, ring));
+    auto client = std::unique_ptr<EpicsClient::EpicsClientInterface>(
+        new EpicsClient::EpicsClientMonitor(ChannelProviderType, Channel,
+                                            ring));
     auto stream =
         std::make_shared<Stream>(ChannelInfo, std::move(client), ring);
     streams.add(stream);
     if (main_opt.periodMS > 0) {
       auto periodicRing =
           std::make_shared<Ring<std::unique_ptr<FlatBufs::EpicsPVUpdate>>>();
-      auto periodicClient =
-          std::unique_ptr<EpicsClientInterface>(new EpicsClientPeriodic(
+      auto periodicClient = std::unique_ptr<EpicsClient::EpicsClientInterface>(
+          new EpicsClient::EpicsClientPeriodic(
               main_opt.periodMS, ChannelProviderType, Channel, periodicRing));
       auto periodicStream = std::make_shared<Stream>(
           ChannelInfo, std::move(periodicClient), periodicRing);

@@ -74,8 +74,8 @@ set(INCLUDES
     SchemaRegistry.h
     Stream.h
     Streams.h
-    tools.h
     uri.h
+    PeriodicPVPoller.h
 )
 
 set(SOURCES
