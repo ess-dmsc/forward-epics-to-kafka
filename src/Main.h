@@ -3,8 +3,8 @@
 #include "Config.h"
 #include "ConversionWorker.h"
 #include "MainOpt.h"
-#include "Streams.h"
 #include "PeriodicPVPoller.h"
+#include "Streams.h"
 #include <algorithm>
 #include <atomic>
 #include <list>
