@@ -1,6 +1,6 @@
 #include "FwdMonitorRequester.h"
 #include "EpicsClientMonitor.h"
-#include "epics-to-fb.h"
+#include "EpicsPVUpdate.h"
 #include "logger.h"
 #include <atomic>
 #include <pv/pvAccess.h>
@@ -10,8 +10,8 @@ namespace BrightnESS {
 namespace ForwardEpicsToKafka {
 namespace EpicsClient {
 
-FwdMonitorRequester::FwdMonitorRequester(
-    EpicsClientMonitor *epicsClientMonitor, const std::string &channel_name)
+FwdMonitorRequester::FwdMonitorRequester(EpicsClientMonitor *epicsClientMonitor,
+                                         const std::string &channel_name)
     : channel_name(channel_name), epics_client(epicsClientMonitor) {
   static std::atomic<uint32_t> __id{0};
   auto id = __id++;

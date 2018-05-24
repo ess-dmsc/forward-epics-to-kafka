@@ -11,6 +11,7 @@
 #else
 #include <EpicsClient/EpicsClientInterface.h>
 #include <EpicsClient/EpicsClientMonitor.h>
+#include <EpicsClient/EpicsClientPeriodic.h>
 #include <unistd.h>
 #endif
 #include "CURLReporter.h"
@@ -185,7 +186,6 @@ void Main::forward_epics_to_kafka() {
   using CLK = std::chrono::steady_clock;
   using MS = std::chrono::milliseconds;
   auto Dt = MS(main_opt.main_poll_interval);
-  auto Period = MS(main_opt.periodMS);
   auto t_lf_last = CLK::now();
   auto t_status_last = CLK::now();
   ConfigCB config_cb(*this);
@@ -376,6 +376,7 @@ void Main::extractConverterInfo(const nlohmann::json &JSON, std::string &Schema,
 void Main::mappingAdd(nlohmann::json const &Mapping) {
   using EpicsClient::EpicsClientMonitor;
   using EpicsClient::EpicsClientInterface;
+  using EpicsClient::EpicsClientPeriodic;
   std::string Channel;
   std::string ChannelProviderType;
 
@@ -391,6 +392,17 @@ void Main::mappingAdd(nlohmann::json const &Mapping) {
     auto stream =
         std::make_shared<Stream>(ChannelInfo, std::move(client), ring);
     streams.add(stream);
+    if (main_opt.periodMS > 0) {
+      auto periodicRing =
+          std::make_shared<Ring<std::unique_ptr<FlatBufs::EpicsPVUpdate>>>();
+      auto periodicClient =
+          std::unique_ptr<EpicsClientInterface>(new EpicsClientPeriodic(
+              main_opt.periodMS, ChannelProviderType, Channel, periodicRing));
+      auto periodicStream = std::make_shared<Stream>(
+          ChannelInfo, std::move(periodicClient), periodicRing);
+      streams.add(periodicStream);
+    }
+
   } catch (std::runtime_error &e) {
     std::throw_with_nested(MappingAddException("Can not add stream"));
   }

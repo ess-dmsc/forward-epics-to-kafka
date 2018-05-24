@@ -5,8 +5,8 @@
 #include <mutex>
 // EPICS 4 supports access via the channel access protocol as well,
 // and we need it because some hardware speaks EPICS base.
+#include "EpicsPVUpdate.h"
 #include "RangeSet.h"
-#include "epics-to-fb.h"
 #include "logger.h"
 #ifdef _MSC_VER
 #include <iso646.h>
@@ -146,7 +146,6 @@ int EpicsClientMonitor::emit(std::unique_ptr<FlatBufs::EpicsPVUpdate> up) {
     // should never happen, ignore
     return 0;
   }
-
   emit_queue->push_enlarge(up);
 
   // here we are, saying goodbye to a good buffer

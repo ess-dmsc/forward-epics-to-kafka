@@ -1,8 +1,8 @@
 #include "Stream.h"
 #include "Converter.h"
 #include "EpicsClient/EpicsClientMonitor.h"
+#include "EpicsPVUpdate.h"
 #include "KafkaOutput.h"
-#include "epics-to-fb.h"
 #include "helper.h"
 #include "logger.h"
 
@@ -78,9 +78,7 @@ int Stream::converter_add(Kafka::InstanceSet &kset, Converter::sptr conv,
   return 0;
 }
 
-void Stream::error_in_epics() {
-  epics_client->error_in_epics();
-}
+void Stream::error_in_epics() { epics_client->error_in_epics(); }
 
 int32_t
 Stream::fill_conversion_work(Ring<std::unique_ptr<ConversionWorkPacket>> &q2,

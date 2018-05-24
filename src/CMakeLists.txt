@@ -28,6 +28,7 @@ ${EPICSV4_INCLUDE_DIRS}
 
 set(libraries_common
 ${path_library_epics_ca}
+${path_library_epics_pvaClient}
 ${path_library_epics_pvData}
 ${path_library_epics_pvAccess}
 ${path_library_epics_NT}
@@ -56,7 +57,7 @@ set(INCLUDES
     ConversionWorker.h
     Converter.h
     CURLReporter.h
-    epics-to-fb.h
+    EpicsPVUpdate.h
     FlatbufferMessage.h
     FlatbufferMessageSlice.h
     MakeFlatBufferFromPVStructure.h

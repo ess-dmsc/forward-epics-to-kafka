@@ -1,5 +1,5 @@
 #pragma once
-#include "epics-to-fb.h"
+#include "EpicsPVUpdate.h"
 #include <memory>
 
 namespace BrightnESS {

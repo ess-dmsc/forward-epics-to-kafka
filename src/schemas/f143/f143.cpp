@@ -1,7 +1,7 @@
 #include "../../SchemaRegistry.h"
-#include "../../epics-to-fb.h"
 #include "../../helper.h"
 #include "../../logger.h"
+#include "EpicsPVUpdate.h"
 #include "schemas/f143_structure_generated.h"
 
 namespace BrightnESS {

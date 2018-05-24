@@ -102,6 +102,18 @@ ${epicsv4_dir}/pvDatabaseCPP/lib/${epics_arch}
 ${epicsv4_dir}/pvDatabaseCPP/${epics_pvDatabase_version}/${epics_base_version}/lib/${epics_arch}
 )
 
+find_path(path_include_epics_pvaClient NAMES pv/pvaClient.h HINTS
+		${epicsv4_dir}/pvaClient/include
+		${epicsv4_dir}/pvaClientCPP/${epics_pvDatabase_version}/${epics_base_version}/include
+		)
+
+find_library(path_library_epics_pvaClient NAMES pvaClient pvaClientCPP HINTS
+		${epicsv4_dir}/pvaClientCPP/lib/${epics_arch}
+		${epicsv4_dir}/pvaClientCPP/${epics_pvDatabase_version}/${epics_base_version}/lib/${epics_arch}
+		)
+
+
+
 find_path(path_include_epics_NT NAMES pv/nt.h HINTS
 ${epicsv4_dir}/normativeTypesCPP/include
 ${epicsv4_dir}/normativeTypesCPP/${epics_normativeTypes_version}/${epics_base_version}/include
@@ -120,6 +132,8 @@ message(STATUS "path_include_epics_pvAccess   ${path_include_epics_pvAccess}")
 message(STATUS "path_library_epics_pvAccess   ${path_library_epics_pvAccess}")
 message(STATUS "path_include_epics_pvDatabase ${path_include_epics_pvDatabase}")
 message(STATUS "path_library_epics_pvDatabase ${path_library_epics_pvDatabase}")
+message(STATUS "path_include_epics_pvDatabase ${path_include_epics_pvaClient}")
+message(STATUS "path_library_epics_pvDatabase ${path_library_epics_pvaClient}")
 message(STATUS "path_include_epics_NT         ${path_include_epics_NT}")
 message(STATUS "path_library_epics_NT         ${path_library_epics_NT}")
 
