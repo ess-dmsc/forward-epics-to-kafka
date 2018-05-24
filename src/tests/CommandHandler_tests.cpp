@@ -6,15 +6,15 @@
 #include <nlohmann/json.hpp>
 
 TEST(command_handler_tests, add_command_adds_stream_correctly) {
-  std::string RawJson = "{"
-                        "  \"cmd\": \"add\","
-                        "  \"streams\": ["
-                        "    {"
-                        "      \"channel\": \"my_channel_name\","
-                        "      \"channel_provider_type\": \"ca\""
-                        "    }"
-                        "  ]"
-                        "}";
+  std::string RawJson = R"({
+                            "cmd": "add",
+                            "streams": [
+                              {
+                                "channel": "my_channel_name",
+                                "channel_provider_type": "ca"
+                              }
+                            ]
+                           })";
 
   BrightnESS::ForwardEpicsToKafka::MainOpt MainOpt;
   BrightnESS::ForwardEpicsToKafka::Main Main(MainOpt);
@@ -28,19 +28,19 @@ TEST(command_handler_tests, add_command_adds_stream_correctly) {
 }
 
 TEST(command_handler_tests, add_command_adds_multiple_streams_correctly) {
-  std::string RawJson = "{"
-                        "  \"cmd\": \"add\","
-                        "  \"streams\": ["
-                        "    {"
-                        "      \"channel\": \"my_channel_name\","
-                        "      \"channel_provider_type\": \"ca\""
-                        "    },"
-                        "    {"
-                        "      \"channel\": \"my_channel_name_2\","
-                        "      \"channel_provider_type\": \"pva\""
-                        "    }"
-                        "  ]"
-                        "}";
+  std::string RawJson = R"({
+                            "cmd": "add",
+                            "streams": [
+                              {
+                              "channel": "my_channel_name",
+                              "channel_provider_type": "ca"
+                              },
+                              {
+                                "channel": "my_channel_name_2",
+                                "channel_provider_type": "pva"
+                              }
+                            ]
+                           })";
 
   BrightnESS::ForwardEpicsToKafka::MainOpt MainOpt;
   BrightnESS::ForwardEpicsToKafka::Main Main(MainOpt);
@@ -56,19 +56,19 @@ TEST(command_handler_tests, add_command_adds_multiple_streams_correctly) {
 }
 
 TEST(command_handler_tests, stop_all_command_removes_all_streams_correctly) {
-  std::string AddJson = "{"
-                        "  \"cmd\": \"add\","
-                        "  \"streams\": ["
-                        "    {"
-                        "      \"channel\": \"my_channel_name\","
-                        "      \"channel_provider_type\": \"ca\""
-                        "    },"
-                        "    {"
-                        "      \"channel\": \"my_channel_name_2\","
-                        "      \"channel_provider_type\": \"pva\""
-                        "    }"
-                        "  ]"
-                        "}";
+  std::string AddJson = R"({
+                            "cmd": "add",
+                            "streams": [
+                              {
+                                "channel": "my_channel_name",
+                                "channel_provider_type": "ca"
+                              },
+                              {
+                                "channel": "my_channel_name_2",
+                                "channel_provider_type": "pva"
+                              }
+                            ]
+                           })";
 
   BrightnESS::ForwardEpicsToKafka::MainOpt MainOpt;
   BrightnESS::ForwardEpicsToKafka::Main Main(MainOpt);
@@ -76,9 +76,9 @@ TEST(command_handler_tests, stop_all_command_removes_all_streams_correctly) {
 
   Config(AddJson);
 
-  std::string RemoveJson = "{"
-                           " \"cmd\": \"stop_all\""
-                           "}";
+  std::string RemoveJson = R"({
+                               "cmd": "stop_all"
+                              })";
 
   Config(RemoveJson);
 
@@ -86,15 +86,15 @@ TEST(command_handler_tests, stop_all_command_removes_all_streams_correctly) {
 }
 
 TEST(command_handler_tests, stop_command_removes_stream_correctly) {
-  std::string AddJson = "{"
-                        "  \"cmd\": \"add\","
-                        "  \"streams\": ["
-                        "    {"
-                        "      \"channel\": \"my_channel_name\","
-                        "      \"channel_provider_type\": \"ca\""
-                        "    }"
-                        "  ]"
-                        "}";
+  std::string AddJson = R"({
+                            "cmd": "add",
+                            "streams": [
+                              {
+                                "channel": "my_channel_name",
+                                "channel_provider_type": "ca"
+                              }
+                            ]
+                           })";
 
   BrightnESS::ForwardEpicsToKafka::MainOpt MainOpt;
   BrightnESS::ForwardEpicsToKafka::Main Main(MainOpt);
@@ -102,10 +102,10 @@ TEST(command_handler_tests, stop_command_removes_stream_correctly) {
 
   Config(AddJson);
 
-  std::string RemoveJson = "{"
-                           " \"cmd\": \"stop_channel\","
-                           " \"channel\": \"my_channel_name\""
-                           "}";
+  std::string RemoveJson = R"({
+                               "cmd": "stop_channel",
+                               "channel": "my_channel_name"
+                              })";
 
   Config(RemoveJson);
 
