@@ -386,8 +386,8 @@ void Main::mappingAdd(nlohmann::json const &Mapping) {
     auto ring =
         std::make_shared<Ring<std::unique_ptr<FlatBufs::EpicsPVUpdate>>>();
     auto client = std::unique_ptr<EpicsClient::EpicsClientInterface>(
-        new EpicsClient::EpicsClientMonitor(ChannelProviderType, Channel,
-                                            ring));
+        new BrightnESS::ForwardEpicsToKafka::EpicsClient::EpicsClientMonitor(
+            ChannelProviderType, Channel, ring));
     auto stream =
         std::make_shared<Stream>(ChannelInfo, std::move(client), ring);
     streams.add(stream);
