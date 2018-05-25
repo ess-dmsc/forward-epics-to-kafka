@@ -10,7 +10,6 @@
 #include <list>
 #include <map>
 #include <mutex>
-#include <nlohmann/json.hpp>
 #include <stdexcept>
 
 namespace BrightnESS {
@@ -36,7 +35,7 @@ enum class ForwardingStatus : int32_t {
   STOPPED,
 };
 
-struct CURLReporter;
+class CURLReporter;
 
 enum class ForwardingRunState : int {
   RUN = 0,
@@ -44,26 +43,22 @@ enum class ForwardingRunState : int {
   STOP_DUE_TO_SIGNAL = 2,
 };
 
-class Main {
+class Forwarder {
 public:
-  Main(MainOpt &opt);
-  ~Main();
+  explicit Forwarder(MainOpt &opt);
+  ~Forwarder();
   void forward_epics_to_kafka();
-  void mappingAdd(nlohmann::json const &Mapping);
+  void addMapping(StreamSettings const &StreamInfo);
   void stopForwarding();
   void stopForwardingDueToSignal();
   void report_status();
-  void report_stats(int started_in_current_round);
+  void report_stats(int dt);
   int conversion_workers_clear();
   int converters_clear();
   std::unique_lock<std::mutex> get_lock_streams();
   std::unique_lock<std::mutex> get_lock_converters();
-
-  // Public for unit testing
-  void extractConverterInfo(const nlohmann::json &JSON, std::string &Schema,
-                            std::string &Topic, std::string &ConverterName);
-  void extractMappingInfo(nlohmann::json const &Mapping, std::string &Channel,
-                          std::string &ChannelProviderType);
+  // Public for unit tests
+  Streams streams;
 
 private:
   MainOpt &main_opt;
@@ -79,35 +74,15 @@ private:
   friend class ConfigCB;
   friend class tests::Remote_T;
   friend class ConversionScheduler;
-  std::atomic<uint32_t> converter_index{0};
   std::atomic<ForwardingStatus> forwarding_status{ForwardingStatus::NORMAL};
   std::unique_ptr<CURLReporter> curl;
   std::shared_ptr<KafkaW::Producer> status_producer;
   std::unique_ptr<KafkaW::ProducerTopic> status_producer_topic;
-  Streams streams;
   std::atomic<ForwardingRunState> ForwardingRunFlag{ForwardingRunState::RUN};
   void raiseForwardingFlag(ForwardingRunState ToBeRaised);
   void
-  pushConverterToStream(nlohmann::json const &JSON,
+  pushConverterToStream(ConverterSettings const &ConverterInfo,
                         std::shared_ptr<ForwardEpicsToKafka::Stream> &Stream);
-};
-
-/// \brief Helper class to provide a callback for the Kafka command listener.
-class ConfigCB : public Config::Callback {
-public:
-  ConfigCB(Main &main);
-  // This is called from the same thread as the main watchdog below, because the
-  // code below calls the config poll which in turn calls this callback.
-  void operator()(std::string const &msg) override;
-  void handleCommand(std::string const &Msg);
-  void handleCommandAdd(nlohmann::json const &Document);
-  void handleCommandStopChannel(nlohmann::json const &Document);
-  void handleCommandStopAll();
-  void handleCommandExit();
-  std::string findCommand(nlohmann::json const &Document);
-
-private:
-  Main &main;
 };
 
 extern std::atomic<uint64_t> g__total_msgs_to_kafka;

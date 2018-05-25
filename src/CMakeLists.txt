@@ -12,7 +12,6 @@ find_package(GraylogLogger)
 find_package(StaticData COMPONENTS "schema-config-global.json")
 find_package(GitCommitExtract)
 
-
 set(path_include_common
 ${FMT_INCLUDE_DIR}
 ${RDKAFKA_INCLUDE_DIR}
@@ -23,8 +22,9 @@ ${PROJECT_BINARY_DIR}/src
 )
 
 set(path_include_common_suppressed_warnings
-${EPICSV4_INCLUDE_DIRS}
-)
+        ${EPICSV4_INCLUDE_DIRS}
+        )
+
 
 set(libraries_common
 ${path_library_epics_ca}
@@ -39,6 +39,8 @@ if (UNIX)
   list(APPEND libraries_common pthread)
 endif()
 
+
+
 set(compile_defs_common "")
 
 if (CURL_FOUND)
@@ -48,11 +50,11 @@ endif()
 
 set(SOURCES
 MainOpt.cpp
-Main.cpp
+        Forwarder.cpp
 ForwarderInfo.cpp
-EpicsClient.cpp
 helper.cpp
 logger.cpp
+ConfigParser.cpp
 Kafka.cpp
 KafkaW/BrokerSettings.cpp
 KafkaW/Consumer.cpp
@@ -62,6 +64,9 @@ KafkaW/PollStatus.cpp
 KafkaW/Producer.cpp
 KafkaW/ProducerTopic.cpp
 KafkaW/TopicSettings.cpp
+EpicsClient/ChannelRequester.cpp
+EpicsClient/FwdMonitorRequester.cpp
+EpicsClient/EpicsClient.cpp
 Ring.cpp
 ConversionWorker.cpp
 epics-to-fb.cpp
@@ -75,13 +80,12 @@ Converter.cpp
 KafkaOutput.cpp
 Stream.cpp
 Streams.cpp
-schema_f140_general.cpp
-schema_f141_epics_nt.cpp
 schemas/f142/f142.cpp
 ${FMT_SRC}
 schemas/f143/f143.cpp
 ${CMAKE_CURRENT_BINARY_DIR}/git_commit_current.cpp
-)
+CommandHandler.h
+CommandHandler.cpp)
 
 set(tgt __objects)
 add_library(${tgt} OBJECT ${SOURCES})
@@ -101,7 +105,7 @@ target_compile_definitions(${tgt} PRIVATE ${compile_defs_common})
 
 set(tgt forward-epics-to-kafka)
 add_executable(${tgt}
-forward-epics-to-kafka.cpp
+        Main.cpp
 $<TARGET_OBJECTS:__objects>
 )
 

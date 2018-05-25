@@ -1,5 +1,0 @@
-{
-	"broker": "//localhost:9092",
-	"conversion-threads": 1,
-	"conversion-worker-queue-size": 256
-}

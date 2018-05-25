@@ -1,5 +1,4 @@
-from time import sleep
-from helpers.producerwrapper import ProducerWrapper
+﻿from helpers.producerwrapper import ProducerWrapper
 from confluent_kafka import Producer, Consumer
 from helpers.f142_logdata import LogData, Value, Int, Double, String
 import flatbuffers
@@ -8,10 +7,41 @@ import time
 from epics import caput, caget
 import math
 from json import loads
+from time import sleep
 
 
 BUILD_FORWARDER = False
 CONFIG_TOPIC = "TEST_forwarderConfig"
+
+
+def test_config_file_channel_created_correctly(docker_compose):
+    """
+    Test that the channel defined in the config file is created.
+
+    :param docker_compose: Test fixture
+    :return: none
+    """
+    # Change the PV value, so something is forwarded
+    change_pv_value("SIM:Phs", 10)
+    # Wait for PV to be updated
+    sleep(5)
+
+    cons = create_consumer()
+    cons.subscribe(['TEST_forwarderData_pv_from_config'])
+
+    # Check the initial value is forwarded
+    first_msg = poll_for_valid_message(cons).value()
+    log_data_first = LogData.LogData.GetRootAsLogData(first_msg, 0)
+    check_message_pv_name_and_value_type(log_data_first, Value.Value.Double, b'SIM:Phs')
+    check_double_value_and_equality(log_data_first, 0)
+
+    # Check the new value is forwarded
+    second_msg = poll_for_valid_message(cons).value()
+    log_data_second = LogData.LogData.GetRootAsLogData(second_msg, 0)
+    check_message_pv_name_and_value_type(log_data_second, Value.Value.Double, b'SIM:Phs')
+    check_double_value_and_equality(log_data_second, 10)
+
+    cons.close()
 
 
 def test_config_created_correctly(docker_compose):
@@ -100,13 +130,13 @@ def test_forwarder_sends_pv_updates_single_pv_double(docker_compose):
     prod = ProducerWrapper("localhost:9092", CONFIG_TOPIC, data_topic)
     prod.add_config(pvs)
     # Wait for config to be pushed
-    sleep(2)  
-    
+    sleep(2)
+
     cons = create_consumer()
     cons.subscribe([CONFIG_TOPIC])
     msg = poll_for_valid_message(cons)
     check_json_config(loads(str(msg.value(), encoding="utf-8")), data_topic, pvs)
-    
+
     # Update value
     change_pv_value("SIM:Spd", 5)
     # Wait for PV to be updated

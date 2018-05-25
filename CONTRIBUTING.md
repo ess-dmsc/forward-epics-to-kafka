@@ -1,7 +1,7 @@
 # Contributing
 
-We use `clang-format` v3.9 LLVM default style as discussed in the group.  Due
-to availability of `clang-format` on the different systems that we use in
+We use `clang-format` v3.9 LLVM default style.
+Due to availability of `clang-format` on the different systems that we use for
 development, we decided on this lowest common denominator.
 
 The `.clang-format` is just a `-dump-config` of the default LLVM style from
@@ -10,7 +10,7 @@ The `.clang-format` is just a `-dump-config` of the default LLVM style from
 
 ## Branching
 
-- Branch your feature off from 'master'
+- Create a feature branch from 'master'
 
 - Before creating pull requests, rebase your feature branch
 

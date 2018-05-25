@@ -17,3 +17,4 @@ virtualrunenv
 FlatBuffers:shared=True
 gtest:shared=True
 librdkafka:shared=True
+
