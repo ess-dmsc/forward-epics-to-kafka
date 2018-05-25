@@ -56,10 +56,10 @@ TEST(config_parser_tests, ints_specified_in_converters_are_extracted) {
 
   ASSERT_EQ(1u, Settings.GlobalConverters.size());
 
-  auto &f142 = Settings.GlobalConverters["f142"];
+  auto &f142 = Settings.GlobalConverters.at("f142");
   ASSERT_EQ(2u, f142.ConfigurationIntegers.size());
-  ASSERT_EQ(123, f142.ConfigurationIntegers["some_option1"]);
-  ASSERT_EQ(456, f142.ConfigurationIntegers["some_option2"]);
+  ASSERT_EQ(123, f142.ConfigurationIntegers.at("some_option1"));
+  ASSERT_EQ(456, f142.ConfigurationIntegers.at("some_option2"));
 }
 
 TEST(config_parser_tests, strings_specified_in_converters_are_extracted) {
@@ -80,10 +80,10 @@ TEST(config_parser_tests, strings_specified_in_converters_are_extracted) {
 
   ASSERT_EQ(1u, Settings.GlobalConverters.size());
 
-  auto &f142 = Settings.GlobalConverters["f142"];
+  auto &f142 = Settings.GlobalConverters.at("f142");
   ASSERT_EQ(2u, f142.ConfigurationStrings.size());
-  ASSERT_EQ("hello", f142.ConfigurationStrings["some_option1"]);
-  ASSERT_EQ("goodbye", f142.ConfigurationStrings["some_option2"]);
+  ASSERT_EQ("hello", f142.ConfigurationStrings.at("some_option1"));
+  ASSERT_EQ("goodbye", f142.ConfigurationStrings.at("some_option2"));
 }
 
 TEST(config_parser_tests,
@@ -109,17 +109,17 @@ TEST(config_parser_tests,
 
   ASSERT_EQ(2u, Settings.GlobalConverters.size());
 
-  auto &f142 = Settings.GlobalConverters["f142"];
+  auto &f142 = Settings.GlobalConverters.at("f142");
   ASSERT_EQ(1u, f142.ConfigurationIntegers.size());
   ASSERT_EQ(1u, f142.ConfigurationStrings.size());
-  ASSERT_EQ(123, f142.ConfigurationIntegers["some_option1"]);
-  ASSERT_EQ("goodbye", f142.ConfigurationStrings["some_option2"]);
+  ASSERT_EQ(123, f142.ConfigurationIntegers.at("some_option1"));
+  ASSERT_EQ("goodbye", f142.ConfigurationStrings.at("some_option2"));
 
-  auto &f143 = Settings.GlobalConverters["f143"];
+  auto &f143 = Settings.GlobalConverters.at("f143");
   ASSERT_EQ(1u, f143.ConfigurationIntegers.size());
   ASSERT_EQ(1u, f142.ConfigurationStrings.size());
-  ASSERT_EQ("hello", f143.ConfigurationStrings["some_option3"]);
-  ASSERT_EQ(456, f143.ConfigurationIntegers["some_option4"]);
+  ASSERT_EQ("hello", f143.ConfigurationStrings.at("some_option3"));
+  ASSERT_EQ(456, f143.ConfigurationIntegers.at("some_option4"));
 }
 
 TEST(config_parser_tests,
@@ -164,8 +164,8 @@ TEST(config_parser_tests, setting_broker_sets_host_and_port) {
   BrightnESS::ForwardEpicsToKafka::ConfigSettings Settings =
       Config.extractConfiguration();
 
-  ASSERT_EQ("kafkabroker", Settings.Brokers[0].host);
-  ASSERT_EQ(1234u, Settings.Brokers[0].port);
+  ASSERT_EQ("kafkabroker", Settings.Brokers.at(0).host);
+  ASSERT_EQ(1234u, Settings.Brokers.at(0).port);
 }
 
 TEST(config_parser_tests,
@@ -181,10 +181,10 @@ TEST(config_parser_tests,
       Config.extractConfiguration();
 
   ASSERT_EQ(2u, Settings.Brokers.size());
-  ASSERT_EQ("kafkabroker1", Settings.Brokers[0].host);
-  ASSERT_EQ(1234u, Settings.Brokers[0].port);
-  ASSERT_EQ("kafkabroker2", Settings.Brokers[1].host);
-  ASSERT_EQ(5678u, Settings.Brokers[1].port);
+  ASSERT_EQ("kafkabroker1", Settings.Brokers.at(0).host);
+  ASSERT_EQ(1234u, Settings.Brokers.at(0).port);
+  ASSERT_EQ("kafkabroker2", Settings.Brokers.at(1).host);
+  ASSERT_EQ(5678u, Settings.Brokers.at(1).port);
 }
 
 TEST(config_parser_tests, setting_no_brokers_sets_default_host_and_port) {
@@ -196,8 +196,8 @@ TEST(config_parser_tests, setting_no_brokers_sets_default_host_and_port) {
   BrightnESS::ForwardEpicsToKafka::ConfigSettings Settings =
       Config.extractConfiguration();
 
-  ASSERT_EQ("localhost", Settings.Brokers[0].host);
-  ASSERT_EQ(9092u, Settings.Brokers[0].port);
+  ASSERT_EQ("localhost", Settings.Brokers.at(0).host);
+  ASSERT_EQ(9092u, Settings.Brokers.at(0).port);
 }
 
 TEST(config_parser_tests, no_kafka_broker_settings_has_no_side_effects) {
@@ -230,8 +230,8 @@ TEST(config_parser_tests, ints_in_kafka_broker_settings_are_extracted) {
       Config.extractConfiguration();
 
   ASSERT_EQ(2u, Settings.BrokerSettings.ConfigurationIntegers.size());
-  ASSERT_EQ(123, Settings.BrokerSettings.ConfigurationIntegers["some_option1"]);
-  ASSERT_EQ(456, Settings.BrokerSettings.ConfigurationIntegers["some_option2"]);
+  ASSERT_EQ(123, Settings.BrokerSettings.ConfigurationIntegers.at("some_option1"));
+  ASSERT_EQ(456, Settings.BrokerSettings.ConfigurationIntegers.at("some_option2"));
 }
 
 TEST(config_parser_tests, strings_in_kafka_broker_settings_are_extracted) {
@@ -252,9 +252,9 @@ TEST(config_parser_tests, strings_in_kafka_broker_settings_are_extracted) {
 
   ASSERT_EQ(2u, Settings.BrokerSettings.ConfigurationStrings.size());
   ASSERT_EQ("hello",
-            Settings.BrokerSettings.ConfigurationStrings["some_option1"]);
+            Settings.BrokerSettings.ConfigurationStrings.at("some_option1"));
   ASSERT_EQ("goodbye",
-            Settings.BrokerSettings.ConfigurationStrings["some_option2"]);
+            Settings.BrokerSettings.ConfigurationStrings.at("some_option2"));
 }
 
 TEST(config_parser_tests,
@@ -385,7 +385,7 @@ TEST(config_parser_tests,
 
   ASSERT_EQ(1u, Settings.StreamsInfo.size());
 
-  auto Converter = Settings.StreamsInfo[0];
+  auto Converter = Settings.StreamsInfo.at(0);
 
   ASSERT_EQ("my_channel_name", Converter.Name);
   ASSERT_EQ("ca", Converter.EpicsProtocol);
@@ -413,11 +413,11 @@ TEST(config_parser_tests,
 
   ASSERT_EQ(2u, Settings.StreamsInfo.size());
 
-  auto Converter = Settings.StreamsInfo[0];
+  auto Converter = Settings.StreamsInfo.at(0);
   ASSERT_EQ("my_channel_name", Converter.Name);
   ASSERT_EQ("ca", Converter.EpicsProtocol);
 
-  Converter = Settings.StreamsInfo[1];
+  Converter = Settings.StreamsInfo.at(1);
   ASSERT_EQ("my_channel_name_2", Converter.Name);
   ASSERT_EQ("pva", Converter.EpicsProtocol);
 }
@@ -439,7 +439,7 @@ TEST(config_parser_tests,
 
   ASSERT_EQ(1u, Settings.StreamsInfo.size());
 
-  auto Converter = Settings.StreamsInfo[0];
+  auto Converter = Settings.StreamsInfo.at(0);
 
   ASSERT_EQ("my_channel_name", Converter.Name);
   ASSERT_EQ("pva", Converter.EpicsProtocol);
@@ -466,7 +466,7 @@ TEST(config_parser_tests, extracting_streams_setting_gets_converter_info) {
   BrightnESS::ForwardEpicsToKafka::ConfigSettings Settings =
       Config.extractConfiguration();
 
-  auto Converter = Settings.StreamsInfo[0].Converters[0];
+  auto Converter = Settings.StreamsInfo.at(0).Converters.at(0);
 
   ASSERT_EQ("f142", Converter.Schema);
   ASSERT_EQ("Kafka_topic_name", Converter.Topic);
@@ -493,7 +493,7 @@ TEST(config_parser_tests,
   BrightnESS::ForwardEpicsToKafka::ConfigSettings Settings =
       Config.extractConfiguration();
 
-  auto Converter = Settings.StreamsInfo[0].Converters[0];
+  auto Converter = Settings.StreamsInfo.at(0).Converters.at(0);
 
   // Don't care what the name is, but it must be something
   ASSERT_TRUE(!Converter.Name.empty());
