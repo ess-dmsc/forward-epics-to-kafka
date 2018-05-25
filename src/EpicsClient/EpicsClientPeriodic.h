@@ -9,7 +9,6 @@ struct ChannelInfo;
 namespace EpicsClient {
 class Stream;
 
-
 ///\class EpicsClientPeriodic
 ///\brief epics client wrapper responsible for periodically checking PV values
 class EpicsClientPeriodic : public EpicsClient::EpicsClientInterface {
