@@ -1,5 +1,5 @@
 #include "Config.h"
-#include "Main.h"
+#include "Forwarder.h"
 #include "MainOpt.h"
 #include "helper.h"
 #include "json.h"
@@ -200,7 +200,7 @@ void Remote_T::simple_f142() {
   consumer.source_name = Doc["channel"].get<string>();
   thread thr_consumer([&consumer] { consumer.run(); });
 
-  BrightnESS::ForwardEpicsToKafka::Main main(*Tests::main_opt);
+  BrightnESS::ForwardEpicsToKafka::Forwarder main(*Tests::main_opt);
   thread thr_forwarder([&main] {
     try {
       main.forward_epics_to_kafka();
@@ -266,8 +266,8 @@ void Remote_T::simple_f142_via_config_message(
     }
   }
 
-  std::unique_ptr<BrightnESS::ForwardEpicsToKafka::Main> main(
-      new BrightnESS::ForwardEpicsToKafka::Main(*Tests::main_opt));
+  std::unique_ptr<BrightnESS::ForwardEpicsToKafka::Forwarder> main(
+      new BrightnESS::ForwardEpicsToKafka::Forwarder(*Tests::main_opt));
   thread thr_forwarder([&main] {
     try {
       main->forward_epics_to_kafka();

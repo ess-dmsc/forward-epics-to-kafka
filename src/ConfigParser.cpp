@@ -1,5 +1,5 @@
 #include "ConfigParser.h"
-#include "Main.h"
+#include "Forwarder.h"
 #include "helper.h"
 #include "json.h"
 #include "logger.h"

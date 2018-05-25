@@ -50,7 +50,7 @@ endif()
 
 set(SOURCES
 MainOpt.cpp
-Main.cpp
+        Forwarder.cpp
 ForwarderInfo.cpp
 helper.cpp
 logger.cpp
@@ -107,7 +107,7 @@ target_compile_definitions(${tgt} PRIVATE ${compile_defs_common})
 
 set(tgt forward-epics-to-kafka)
 add_executable(${tgt}
-forward-epics-to-kafka.cpp
+        Main.cpp
 $<TARGET_OBJECTS:__objects>
 )
 

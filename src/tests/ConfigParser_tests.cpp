@@ -1,7 +1,7 @@
 #include "../CommandHandler.h"
 #include "../Config.h"
 #include "../Converter.h"
-#include "../Main.h"
+#include "Forwarder.h"
 #include "../MainOpt.h"
 #include "../helper.h"
 #include "ConfigParser.h"

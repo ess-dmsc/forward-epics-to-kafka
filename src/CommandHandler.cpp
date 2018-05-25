@@ -8,7 +8,7 @@
 namespace BrightnESS {
 namespace ForwardEpicsToKafka {
 
-ConfigCB::ConfigCB(Main &main) : main(main) {}
+ConfigCB::ConfigCB(Forwarder &main) : main(main) {}
 
 void ConfigCB::operator()(std::string const &msg) {
   LOG(7, "Command received: {}", msg);

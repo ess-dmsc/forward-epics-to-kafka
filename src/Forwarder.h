@@ -43,10 +43,10 @@ enum class ForwardingRunState : int {
   STOP_DUE_TO_SIGNAL = 2,
 };
 
-class Main {
+class Forwarder {
 public:
-  explicit Main(MainOpt &opt);
-  ~Main();
+  explicit Forwarder(MainOpt &opt);
+  ~Forwarder();
   void forward_epics_to_kafka();
   void addMapping(StreamSettings const &StreamInfo);
   void stopForwarding();

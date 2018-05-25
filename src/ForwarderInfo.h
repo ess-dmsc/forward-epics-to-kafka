@@ -5,20 +5,20 @@
 namespace BrightnESS {
 namespace ForwardEpicsToKafka {
 
-class Main;
+class Forwarder;
 
 /**
 Only for internal testing.
 */
 class ForwarderInfo {
 public:
-  ForwarderInfo(Main *main);
+  ForwarderInfo(Forwarder *main);
   ~ForwarderInfo();
   uint64_t fwdix = 0;
   uint64_t teamid = 0;
 
 private:
-  Main *main = nullptr;
+  Forwarder *main = nullptr;
 };
 }
 }

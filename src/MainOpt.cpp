@@ -97,7 +97,7 @@ std::pair<int, std::unique_ptr<MainOpt>> parse_opt(int argc, char **argv) {
   auto &opt = *ret.second;
   CLI::App App{
       fmt::format("forward-epics-to-kafka-0.1.0 {:.7} (ESS, BrightnESS)\n"
-                  "  Contact: dominik.werder@psi.ch\n\n",
+                  "  https://github.com/ess-dmsc/forward-epics-to-kafka\n\n",
                   GIT_COMMIT)};
   std::string BrokerDataDefault;
   App.add_option("--config-file", opt.ConfigurationFile,

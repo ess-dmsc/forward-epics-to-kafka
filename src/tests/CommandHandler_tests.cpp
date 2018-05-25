@@ -1,6 +1,6 @@
 #include "../CommandHandler.h"
 #include "../ConfigParser.h"
-#include "../Main.h"
+#include "Forwarder.h"
 #include "../MainOpt.h"
 #include <gtest/gtest.h>
 #include <nlohmann/json.hpp>
@@ -17,7 +17,7 @@ TEST(command_handler_tests, add_command_adds_stream_correctly) {
                            })";
 
   BrightnESS::ForwardEpicsToKafka::MainOpt MainOpt;
-  BrightnESS::ForwardEpicsToKafka::Main Main(MainOpt);
+  BrightnESS::ForwardEpicsToKafka::Forwarder Main(MainOpt);
   BrightnESS::ForwardEpicsToKafka::ConfigCB Config(Main);
 
   Config(RawJson);
@@ -43,7 +43,7 @@ TEST(command_handler_tests, add_command_adds_multiple_streams_correctly) {
                            })";
 
   BrightnESS::ForwardEpicsToKafka::MainOpt MainOpt;
-  BrightnESS::ForwardEpicsToKafka::Main Main(MainOpt);
+  BrightnESS::ForwardEpicsToKafka::Forwarder Main(MainOpt);
   BrightnESS::ForwardEpicsToKafka::ConfigCB Config(Main);
 
   Config(RawJson);
@@ -71,7 +71,7 @@ TEST(command_handler_tests, stop_all_command_removes_all_streams_correctly) {
                            })";
 
   BrightnESS::ForwardEpicsToKafka::MainOpt MainOpt;
-  BrightnESS::ForwardEpicsToKafka::Main Main(MainOpt);
+  BrightnESS::ForwardEpicsToKafka::Forwarder Main(MainOpt);
   BrightnESS::ForwardEpicsToKafka::ConfigCB Config(Main);
 
   Config(AddJson);
@@ -97,7 +97,7 @@ TEST(command_handler_tests, stop_command_removes_stream_correctly) {
                            })";
 
   BrightnESS::ForwardEpicsToKafka::MainOpt MainOpt;
-  BrightnESS::ForwardEpicsToKafka::Main Main(MainOpt);
+  BrightnESS::ForwardEpicsToKafka::Forwarder Main(MainOpt);
   BrightnESS::ForwardEpicsToKafka::ConfigCB Config(Main);
 
   Config(AddJson);
@@ -130,7 +130,7 @@ TEST_P(ExtractCommandsTest, extracting_command_gets_command_name) {
 
   nlohmann::json Json = nlohmann::json::parse(RawJson);
   BrightnESS::ForwardEpicsToKafka::MainOpt MainOpt;
-  BrightnESS::ForwardEpicsToKafka::Main Main(MainOpt);
+  BrightnESS::ForwardEpicsToKafka::Forwarder Main(MainOpt);
   BrightnESS::ForwardEpicsToKafka::ConfigCB config(Main);
 
   auto Cmd = config.findCommand(Json);

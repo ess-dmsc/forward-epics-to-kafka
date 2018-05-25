@@ -60,7 +60,7 @@ public:
   /// \return The extracted settings.
   ConfigSettings extractConfiguration();
 
-  /// Set the brokers in the supplied settings.
+  /// Set the broker(s) where the forwarded data will be written.
   ///
   /// \param Brokers The raw brokers information, e.g. "localhost:9092"
   /// \param Settings The settings to write the brokers to.

@@ -1,6 +1,6 @@
 #pragma once
 #include "Config.h"
-#include "Main.h"
+#include "Forwarder.h"
 #include <string>
 
 namespace BrightnESS {
@@ -12,17 +12,21 @@ public:
   /// Constructor.
   ///
   /// \param main The owning class which is manipulated from the callback.
-  explicit ConfigCB(Main &main);
+  explicit ConfigCB(Forwarder &main);
 
-  /// The callback.
+  /// The callback entry-point.
   ///
   /// \param msg The message to handle.
   void operator()(std::string const &msg) override;
 
+  /// Extract the command type from the message. 
+  ///
+  /// \param Document The JSON message.
+  /// \return The command name.
   std::string findCommand(nlohmann::json const &Document);
 
 private:
-  Main &main;
+  Forwarder &main;
   void handleCommand(std::string const &Msg);
   void handleCommandAdd(nlohmann::json const &Document);
   void handleCommandStopChannel(nlohmann::json const &Document);
