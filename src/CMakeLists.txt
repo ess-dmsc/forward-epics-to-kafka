@@ -64,9 +64,9 @@ KafkaW/PollStatus.cpp
 KafkaW/Producer.cpp
 KafkaW/ProducerTopic.cpp
 KafkaW/TopicSettings.cpp
-        EpicsClient/ChannelRequester.cpp
-        EpicsClient/FwdMonitorRequester.cpp
-        EpicsClient/EpicsClient.cpp
+EpicsClient/ChannelRequester.cpp
+EpicsClient/FwdMonitorRequester.cpp
+EpicsClient/EpicsClient.cpp
 Ring.cpp
 ConversionWorker.cpp
 epics-to-fb.cpp
@@ -80,8 +80,6 @@ Converter.cpp
 KafkaOutput.cpp
 Stream.cpp
 Streams.cpp
-schema_f140_general.cpp
-schema_f141_epics_nt.cpp
 schemas/f142/f142.cpp
 ${FMT_SRC}
 schemas/f143/f143.cpp
