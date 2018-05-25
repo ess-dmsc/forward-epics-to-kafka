@@ -1,4 +1,5 @@
 #include "EpicsClientPeriodic.h"
+#include <Stream.h>
 #include <chrono>
 #include <pv/pvaClient.h>
 
@@ -7,24 +8,21 @@ namespace ForwardEpicsToKafka {
 namespace EpicsClient {
 
 EpicsClientPeriodic::EpicsClientPeriodic(
-    int period, std::string channelName,
-    std::string epics_channel_provider_type,
+    ChannelInfo &channelInfo,
     std::shared_ptr<Ring<std::unique_ptr<FlatBufs::EpicsPVUpdate>>> ring)
-    : emit_queue(std::move(ring)), channel_name(channelName) {
-  using MS = std::chrono::milliseconds;
-  auto periodMS = MS(period);
+    : emit_queue(std::move(ring)), channel_name(channelInfo.channel_name) {
   while (true) {
     ::epics::pvaClient::PvaClientPtr pva =
         ::epics::pvaClient::PvaClient::get("pva ca");
     auto pvStructure =
-        pva->channel(channelName, epics_channel_provider_type, 2.0)
+        pva->channel(channelInfo.channel_name, channelInfo.provider_type, 2.0)
             ->get()
             ->getData()
             ->getPVStructure();
     auto up_ =
         std::unique_ptr<FlatBufs::EpicsPVUpdate>(new FlatBufs::EpicsPVUpdate{});
     auto &up = *up_;
-    up.channel = channelName;
+    up.channel = channelInfo.channel_name;
     up.seq_data = 0;
     up.seq_fwd = 0;
     up.epics_pvstr = pvStructure;

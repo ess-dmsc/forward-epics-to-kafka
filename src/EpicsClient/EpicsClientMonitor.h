@@ -49,7 +49,7 @@ public:
 class EpicsClientMonitor : public EpicsClientInterface {
 public:
   EpicsClientMonitor(
-      std::string epics_channel_provider_type, std::string channel_name,
+      ChannelInfo &channelInfo,
       std::shared_ptr<Ring<std::unique_ptr<FlatBufs::EpicsPVUpdate>>> ring);
   ~EpicsClientMonitor() override;
   int emit(std::unique_ptr<FlatBufs::EpicsPVUpdate> up) override;

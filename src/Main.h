@@ -66,6 +66,7 @@ public:
                           std::string &ChannelProviderType);
 
 private:
+  void addStream();
   MainOpt &main_opt;
   std::shared_ptr<Kafka::InstanceSet> kafka_instance_set;
   std::unique_ptr<PeriodicPVPoller> PVPoller;
@@ -90,6 +91,8 @@ private:
   void
   pushConverterToStream(nlohmann::json const &JSON,
                         std::shared_ptr<ForwardEpicsToKafka::Stream> &Stream);
+  template <typename T>
+  std::shared_ptr<Stream> createStream(ChannelInfo &ChannelInfo) const;
 };
 
 /// \brief Helper class to provide a callback for the Kafka command listener.

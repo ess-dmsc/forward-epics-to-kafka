@@ -4,6 +4,7 @@ namespace BrightnESS {
 namespace ForwardEpicsToKafka {
 
 class PeriodicPVPoller {
+public:
   PeriodicPVPoller(std::chrono::milliseconds interval)
       : interval_ms(interval){};
 

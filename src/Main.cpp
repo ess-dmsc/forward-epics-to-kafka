@@ -39,6 +39,7 @@ Main::Main(MainOpt &opt)
     : main_opt(opt),
       kafka_instance_set(Kafka::InstanceSet::Set(make_broker_opt(opt))),
       conversion_scheduler(this) {
+  using MS = std::chrono::milliseconds;
 
   for (size_t i = 0; i < opt.ConversionThreads; ++i) {
     conversion_workers.emplace_back(make_unique<ConversionWorker>(
@@ -78,6 +79,10 @@ Main::Main(MainOpt &opt)
     status_producer = std::make_shared<KafkaW::Producer>(BrokerSettings);
     status_producer_topic = ::make_unique<KafkaW::ProducerTopic>(
         status_producer, main_opt.StatusReportURI.topic);
+  }
+  if (main_opt.periodMS > 0) {
+    auto period = MS(main_opt.periodMS);
+    PVPoller = std::unique_ptr<PeriodicPVPoller>(new PeriodicPVPoller(period));
   }
 }
 
@@ -186,7 +191,6 @@ void Main::forward_epics_to_kafka() {
   using CLK = std::chrono::steady_clock;
   using MS = std::chrono::milliseconds;
   auto Dt = MS(main_opt.main_poll_interval);
-  auto PeriodMS = MS(main_opt.periodMS);
   auto t_lf_last = CLK::now();
   auto t_status_last = CLK::now();
   ConfigCB config_cb(*this);
@@ -195,6 +199,9 @@ void Main::forward_epics_to_kafka() {
     for (auto &x : conversion_workers) {
       x->start();
     }
+  }
+  if (PVPoller) {
+    PVPoller->start();
   }
   while (ForwardingRunFlag.load() == ForwardingRunState::RUN) {
     auto do_stats = false;
@@ -383,25 +390,12 @@ void Main::mappingAdd(nlohmann::json const &Mapping) {
   std::unique_lock<std::mutex> lock(streams_mutex);
   try {
     ChannelInfo ChannelInfo{ChannelProviderType, Channel};
-    auto ring =
-        std::make_shared<Ring<std::unique_ptr<FlatBufs::EpicsPVUpdate>>>();
-    auto client = std::unique_ptr<EpicsClient::EpicsClientInterface>(
-        new BrightnESS::ForwardEpicsToKafka::EpicsClient::EpicsClientMonitor(
-            ChannelProviderType, Channel, ring));
-    auto stream =
-        std::make_shared<Stream>(ChannelInfo, std::move(client), ring);
-    streams.add(stream);
-    if (main_opt.periodMS > 0) {
-      auto periodicRing =
-          std::make_shared<Ring<std::unique_ptr<FlatBufs::EpicsPVUpdate>>>();
-      auto periodicClient = std::unique_ptr<EpicsClient::EpicsClientInterface>(
-          new EpicsClient::EpicsClientPeriodic(
-              main_opt.periodMS, ChannelProviderType, Channel, periodicRing));
-      auto periodicStream = std::make_shared<Stream>(
-          ChannelInfo, std::move(periodicClient), periodicRing);
-      streams.add(periodicStream);
-    }
-
+    std::shared_ptr<Stream> MonitorStream =
+        createStream<EpicsClient::EpicsClientMonitor>(ChannelInfo);
+    streams.add(MonitorStream);
+    std::shared_ptr<Stream> PeriodicStream =
+        createStream<EpicsClient::EpicsClientPeriodic>(ChannelInfo);
+    streams.add(PeriodicStream);
   } catch (std::runtime_error &e) {
     std::throw_with_nested(MappingAddException("Can not add stream"));
   }
@@ -415,6 +409,16 @@ void Main::mappingAdd(nlohmann::json const &Mapping) {
       }
     }
   }
+}
+
+template <typename T>
+std::shared_ptr<Stream> Main::createStream(ChannelInfo &ChannelInfo) const {
+  auto ring =
+      std::make_shared<Ring<std::unique_ptr<FlatBufs::EpicsPVUpdate>>>();
+  auto client = std::unique_ptr<EpicsClient::EpicsClientInterface>(
+      new T(ChannelInfo, ring));
+  auto stream = std::make_shared<Stream>(ChannelInfo, move(client), ring);
+  return stream;
 }
 
 void Main::extractMappingInfo(nlohmann::json const &Mapping,
@@ -457,5 +461,6 @@ void Main::stopForwarding() { raiseForwardingFlag(ForwardingRunState::STOP); }
 void Main::stopForwardingDueToSignal() {
   raiseForwardingFlag(ForwardingRunState::STOP_DUE_TO_SIGNAL);
 }
+void Main::addStream() {}
 } // namespace ForwardEpicsToKafka
 } // namespace BrightnESS

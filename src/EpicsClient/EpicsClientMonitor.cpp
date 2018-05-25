@@ -122,13 +122,13 @@ void EpicsClientMonitor_impl::error_channel_requester() {
 }
 
 EpicsClientMonitor::EpicsClientMonitor(
-    std::string epics_channel_provider_type, std::string channel_name,
+    ChannelInfo &channelInfo,
     std::shared_ptr<Ring<std::unique_ptr<FlatBufs::EpicsPVUpdate>>> ring)
     : emit_queue(std::move(ring)) {
   impl.reset(new EpicsClientMonitor_impl(this));
-  CLOG(7, 7, "channel_name: {}", channel_name);
-  impl->channel_name = channel_name;
-  if (impl->init(epics_channel_provider_type) != 0) {
+  CLOG(7, 7, "channel_name: {}", channelInfo.channel_name);
+  impl->channel_name = channelInfo.channel_name;
+  if (impl->init(channelInfo.provider_type) != 0) {
     impl.reset();
     throw std::runtime_error("could not initialize");
   }
