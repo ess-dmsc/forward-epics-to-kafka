@@ -10,7 +10,6 @@ import math
 from json import loads
 
 
-BUILD_FORWARDER = False
 CONFIG_TOPIC = "TEST_forwarderConfig"
 
 

@@ -13,6 +13,9 @@ EpicsClientPeriodic::EpicsClientPeriodic(
     : emit_queue(std::move(ring)), ChannelName(channelInfo.channel_name),
       ProviderType(channelInfo.provider_type) {}
 
+///\fn emit
+///\param up the epics PV update containing the PV structure
+///\brief calls push_enlarge on the ring buffer to push a pv update object
 int EpicsClientPeriodic::emit(
     std::unique_ptr<BrightnESS::FlatBufs::EpicsPVUpdate> up) {
   if (!up) {
@@ -27,6 +30,8 @@ int EpicsClientPeriodic::emit(
   return 1;
 }
 
+///\fn PollPVCallback
+///\brief checks for pv value, constructs the pv update object and emits it to the ring buffer
 void EpicsClientPeriodic::PollPVCallback() {
   ::epics::pvaClient::PvaClientPtr pva =
       ::epics::pvaClient::PvaClient::get("pva ca");

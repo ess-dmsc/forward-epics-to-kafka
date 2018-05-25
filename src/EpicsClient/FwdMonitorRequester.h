@@ -7,6 +7,8 @@ namespace EpicsClient {
 
 class EpicsClientMonitor;
 
+///\class FwdMonitorRequester
+///\brief an implementation of an internal epics monitor loop
 class FwdMonitorRequester : public ::epics::pvData::MonitorRequester {
 public:
   FwdMonitorRequester(EpicsClientMonitor *epicsClientMonitor,
