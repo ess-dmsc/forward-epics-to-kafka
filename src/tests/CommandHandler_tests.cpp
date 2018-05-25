@@ -1,7 +1,7 @@
 #include "../CommandHandler.h"
 #include "../ConfigParser.h"
-#include "Forwarder.h"
 #include "../MainOpt.h"
+#include "Forwarder.h"
 #include <gtest/gtest.h>
 #include <nlohmann/json.hpp>
 

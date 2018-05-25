@@ -331,7 +331,9 @@ void Forwarder::raiseForwardingFlag(ForwardingRunState ToBeRaised) {
   }
 }
 
-void Forwarder::stopForwarding() { raiseForwardingFlag(ForwardingRunState::STOP); }
+void Forwarder::stopForwarding() {
+  raiseForwardingFlag(ForwardingRunState::STOP);
+}
 
 void Forwarder::stopForwardingDueToSignal() {
   raiseForwardingFlag(ForwardingRunState::STOP_DUE_TO_SIGNAL);

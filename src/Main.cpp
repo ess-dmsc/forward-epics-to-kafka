@@ -26,7 +26,8 @@ static std::atomic<SignalHandler *> g__SignalHandler;
 
 class SignalHandler {
 public:
-  SignalHandler(std::shared_ptr<BrightnESS::ForwardEpicsToKafka::Forwarder> MainPtr_)
+  SignalHandler(
+      std::shared_ptr<BrightnESS::ForwardEpicsToKafka::Forwarder> MainPtr_)
       : MainPtr(MainPtr_) {
     g__SignalHandler.store(this);
     std::signal(SIGINT, handleSignal);

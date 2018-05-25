@@ -1,10 +1,10 @@
 #include "../CommandHandler.h"
 #include "../Config.h"
 #include "../Converter.h"
-#include "Forwarder.h"
 #include "../MainOpt.h"
 #include "../helper.h"
 #include "ConfigParser.h"
+#include "Forwarder.h"
 #include <gtest/gtest.h>
 #include <iostream>
 #include <sstream>
@@ -230,8 +230,10 @@ TEST(config_parser_tests, ints_in_kafka_broker_settings_are_extracted) {
       Config.extractConfiguration();
 
   ASSERT_EQ(2u, Settings.BrokerSettings.ConfigurationIntegers.size());
-  ASSERT_EQ(123, Settings.BrokerSettings.ConfigurationIntegers.at("some_option1"));
-  ASSERT_EQ(456, Settings.BrokerSettings.ConfigurationIntegers.at("some_option2"));
+  ASSERT_EQ(123,
+            Settings.BrokerSettings.ConfigurationIntegers.at("some_option1"));
+  ASSERT_EQ(456,
+            Settings.BrokerSettings.ConfigurationIntegers.at("some_option2"));
 }
 
 TEST(config_parser_tests, strings_in_kafka_broker_settings_are_extracted) {

@@ -19,7 +19,7 @@ public:
   /// \param msg The message to handle.
   void operator()(std::string const &msg) override;
 
-  /// Extract the command type from the message. 
+  /// Extract the command type from the message.
   ///
   /// \param Document The JSON message.
   /// \return The command name.
