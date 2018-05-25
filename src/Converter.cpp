@@ -1,5 +1,4 @@
 #include "Converter.h"
-#include "json.h"
 #include "logger.h"
 
 namespace BrightnESS {
@@ -22,43 +21,14 @@ Converter::create(FlatBufs::SchemaRegistry const &schema_registry,
     return ret;
   }
 
-  std::map<std::string, int64_t> config_ints;
-  std::map<std::string, std::string> config_strings;
-
-  extractConfig(schema, main_opt.JSONConfiguration, config_ints,
-                config_strings);
-
-  conv->config(config_ints, config_strings);
-  return ret;
-}
-
-void Converter::extractConfig(
-    std::string &schema, nlohmann::json const &config,
-    std::map<std::string, int64_t> &config_ints,
-    std::map<std::string, std::string> &config_strings) {
-  using nlohmann::json;
-  if (config.is_object()) {
-    if (auto x = find<json>("converters", config)) {
-      auto const &Converters = x.inner();
-      if (Converters.is_object()) {
-        if (auto x = find<json>(schema, Converters)) {
-          auto const &ConverterSchemaConfig = x.inner();
-          if (ConverterSchemaConfig.is_object()) {
-            for (auto SettingIt = ConverterSchemaConfig.begin();
-                 SettingIt != ConverterSchemaConfig.end(); ++SettingIt) {
-              if (SettingIt.value().is_number()) {
-                config_ints[SettingIt.key()] = SettingIt.value().get<int64_t>();
-              }
-              if (SettingIt.value().is_string()) {
-                config_strings[SettingIt.key()] =
-                    SettingIt.value().get<std::string>();
-              }
-            }
-          }
-        }
-      }
-    }
+  auto It = main_opt.MainSettings.GlobalConverters.find(schema);
+  if (It != main_opt.MainSettings.GlobalConverters.end()) {
+    auto GlobalConv = main_opt.MainSettings.GlobalConverters.at(schema);
+    conv->config(GlobalConv.ConfigurationIntegers,
+                 GlobalConv.ConfigurationStrings);
   }
+
+  return ret;
 }
 
 BrightnESS::FlatBufs::FlatbufferMessage::uptr
@@ -68,6 +38,6 @@ Converter::convert(FlatBufs::EpicsPVUpdate const &up) {
 
 std::map<std::string, double> Converter::stats() { return conv->stats(); }
 
-std::string Converter::schema_name() { return schema; }
+std::string Converter::schema_name() const { return schema; }
 } // namespace ForwardEpicsToKafka
 } // namespace BrightnESS

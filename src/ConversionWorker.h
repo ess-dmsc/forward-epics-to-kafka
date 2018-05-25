@@ -10,7 +10,7 @@
 namespace BrightnESS {
 namespace ForwardEpicsToKafka {
 
-class Main;
+class Forwarder;
 class ConversionScheduler;
 class ConversionPath;
 class Stream;
@@ -40,13 +40,13 @@ private:
 
 class ConversionScheduler {
 public:
-  ConversionScheduler(Main *main);
+  ConversionScheduler(Forwarder *main);
   ~ConversionScheduler();
   int fill(Ring<std::unique_ptr<ConversionWorkPacket>> &queue, uint32_t nfm,
            uint32_t wid);
 
 private:
-  Main *main = nullptr;
+  Forwarder *main = nullptr;
   size_t sid = 0;
   std::mutex mx;
   RangeSet<uint64_t> seq_data_enqueued;

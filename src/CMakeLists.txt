@@ -50,10 +50,11 @@ endif()
 
 set(SOURCES
 MainOpt.cpp
-Main.cpp
+        Forwarder.cpp
 ForwarderInfo.cpp
 helper.cpp
 logger.cpp
+ConfigParser.cpp
 Kafka.cpp
 KafkaW/BrokerSettings.cpp
 KafkaW/Consumer.cpp
@@ -83,7 +84,8 @@ schemas/f142/f142.cpp
 ${FMT_SRC}
 schemas/f143/f143.cpp
 ${CMAKE_CURRENT_BINARY_DIR}/git_commit_current.cpp
-)
+CommandHandler.h
+CommandHandler.cpp)
 
 set(tgt __objects)
 add_library(${tgt} OBJECT ${SOURCES})
@@ -103,7 +105,7 @@ target_compile_definitions(${tgt} PRIVATE ${compile_defs_common})
 
 set(tgt forward-epics-to-kafka)
 add_executable(${tgt}
-forward-epics-to-kafka.cpp
+        Main.cpp
 $<TARGET_OBJECTS:__objects>
 )
 

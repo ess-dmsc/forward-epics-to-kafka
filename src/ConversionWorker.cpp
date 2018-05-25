@@ -1,5 +1,5 @@
 #include "ConversionWorker.h"
-#include "Main.h"
+#include "Forwarder.h"
 #include "logger.h"
 #include <chrono>
 #include <thread>
@@ -68,7 +68,7 @@ int ConversionWorker::run() {
 
 std::atomic<uint32_t> ConversionWorker::s_id{0};
 
-ConversionScheduler::ConversionScheduler(Main *main) : main(main) {}
+ConversionScheduler::ConversionScheduler(Forwarder *main) : main(main) {}
 
 int ConversionScheduler::fill(
     Ring<std::unique_ptr<ConversionWorkPacket>> &queue, uint32_t const nfm,

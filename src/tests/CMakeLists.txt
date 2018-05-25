@@ -6,8 +6,9 @@ set(sources
         helper_tests.cpp
     uri_tests.cpp
     json_tests.cpp
-    json_extraction_tests.cpp
+    ConfigParser_tests.cpp
     streams_tests.cpp
+    CommandHandler_tests.cpp
     $<TARGET_OBJECTS:__objects>
 )
 add_executable(${tgt} ${sources})

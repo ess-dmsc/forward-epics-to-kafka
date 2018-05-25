@@ -1,5 +1,5 @@
 #include "KafkaOutput.h"
-#include "Main.h"
+#include "Forwarder.h"
 #include "logger.h"
 
 namespace BrightnESS {

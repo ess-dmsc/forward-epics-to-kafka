@@ -5,7 +5,6 @@
 #include "MakeFlatBufferFromPVStructure.h"
 #include "SchemaRegistry.h"
 #include <map>
-#include <nlohmann/json.hpp>
 #include <string>
 
 namespace BrightnESS {
@@ -19,10 +18,7 @@ public:
                      std::string schema, MainOpt const &main_opt);
   FlatBufs::FlatbufferMessage::uptr convert(FlatBufs::EpicsPVUpdate const &up);
   std::map<std::string, double> stats();
-  std::string schema_name();
-  static void extractConfig(std::string &schema, nlohmann::json const &config,
-                            std::map<std::string, int64_t> &config_ints,
-                            std::map<std::string, std::string> &config_strings);
+  std::string schema_name() const;
 
 private:
   std::string schema;

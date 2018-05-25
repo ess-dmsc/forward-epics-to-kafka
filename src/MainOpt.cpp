@@ -9,11 +9,11 @@
 #include "SchemaRegistry.h"
 #include "git_commit_current.h"
 #include "helper.h"
-#include "json.h"
 #include "logger.h"
 #include <CLI/CLI.hpp>
 #include <fstream>
 #include <iostream>
+#include <streambuf>
 
 namespace BrightnESS {
 namespace ForwardEpicsToKafka {
@@ -25,24 +25,16 @@ MainOpt::MainOpt() {
     // likely an error
     Hostname.back() = 0;
   }
-  set_broker("localhost:9092");
 }
 
-void MainOpt::set_broker(std::string broker) {
-  brokers.clear();
-  auto a = split(broker, ",");
-  for (auto &x : a) {
-    uri::URI u1;
-    u1.require_host_slashes = false;
-    u1.parse(x);
-    brokers.push_back(u1);
-  }
+void MainOpt::set_broker(std::string &Broker) {
+  ConfigParser::setBrokers(Broker, MainSettings);
 }
 
 std::string MainOpt::brokers_as_comma_list() const {
   std::string s1;
   int i1 = 0;
-  for (auto &x : brokers) {
+  for (auto &x : MainSettings.Brokers) {
     if (i1) {
       s1 += ",";
     }
@@ -61,110 +53,31 @@ void MainOpt::parse_json_file(std::string ConfigurationFile) {
   // Parse the JSON configuration and extract parameters.
   // These parameters take precedence over what is given on the
   // command line.
-  parse_document(ConfigurationFile);
+  MainSettings = parse_document(ConfigurationFile);
 
-  findBrokerConfig();
-  findConversionThreads();
-  findConversionWorkerQueueSize();
-  findMainPollInterval();
-
-  auto Settings = extractKafkaBrokerSettingsFromJSON(JSONConfiguration);
-  broker_opt.ConfigurationStrings = Settings.ConfigurationStrings;
-  broker_opt.ConfigurationIntegers = Settings.ConfigurationIntegers;
-
-  find_status_uri();
-
-  findBroker();
+  broker_opt.ConfigurationStrings =
+      MainSettings.BrokerSettings.ConfigurationStrings;
+  broker_opt.ConfigurationIntegers =
+      MainSettings.BrokerSettings.ConfigurationIntegers;
 }
 
-void MainOpt::findMainPollInterval() {
-  if (auto x = find<int32_t>("main-poll-interval", JSONConfiguration)) {
-    main_poll_interval = x.inner();
-  }
-}
-
-void MainOpt::findConversionWorkerQueueSize() {
-  if (auto x =
-          find<size_t>("conversion-worker-queue-size", JSONConfiguration)) {
-    ConversionWorkerQueueSize = x.inner();
-  }
-}
-
-void MainOpt::findConversionThreads() {
-  if (auto x = find<size_t>("conversion-threads", JSONConfiguration)) {
-    ConversionThreads = x.inner();
-  }
-}
-
-void MainOpt::findBrokerConfig() {
-  if (auto x = find<std::string>("broker-config", JSONConfiguration)) {
-    BrokerConfig = x.inner();
-  }
-}
-
-void MainOpt::findBroker() {
-  if (auto x = find<std::string>("broker", JSONConfiguration)) {
-    set_broker(x.inner());
-  }
-}
-
-void MainOpt::parse_document(const std::string &filepath) {
+ConfigSettings MainOpt::parse_document(const std::string &filepath) {
   std::ifstream ifs(filepath);
   if (!ifs.is_open()) {
     LOG(3, "Could not open JSON file")
   }
-  JSONConfiguration = nlohmann::json();
-  ifs >> JSONConfiguration;
 
-  if (JSONConfiguration.is_null()) {
-    throw std::runtime_error("Can not parse configuration file as JSON");
-  }
-}
+  std::stringstream buffer;
+  buffer << ifs.rdbuf();
 
-void MainOpt::find_status_uri() {
-  if (auto x = find<std::string>("status-uri", JSONConfiguration)) {
-    auto URIString = x.inner();
-    uri::URI URI;
-    URI.port = 9092;
-    URI.parse(URIString);
-    StatusReportURI = URI;
-  }
-}
+  ConfigParser Config;
+  Config.setJsonFromString(buffer.str());
+  Config.extractConfiguration();
 
-KafkaBrokerSettings
-extractKafkaBrokerSettingsFromJSON(nlohmann::json const &JSONConfiguration) {
-  KafkaBrokerSettings Settings;
-  using nlohmann::json;
-  if (auto KafkaMaybe = find<json>("kafka", JSONConfiguration)) {
-    auto Kafka = KafkaMaybe.inner();
-    if (auto BrokerMaybe = find<json>("broker", Kafka)) {
-      auto Broker = BrokerMaybe.inner();
-      for (auto Property = Broker.begin(); Property != Broker.end();
-           ++Property) {
-        auto const Key = Property.key();
-        if (Key.find("___") == 0) {
-          // Skip this property
-          continue;
-        }
-        if (Property.value().is_string()) {
-          auto Value = Property.value().get<std::string>();
-          LOG(6, "kafka broker config {}: {}", Key, Value);
-          Settings.ConfigurationStrings[Key] = Value;
-        } else if (Property.value().is_number()) {
-          auto Value = Property.value().get<int64_t>();
-          LOG(6, "kafka broker config {}: {}", Key, Value);
-          Settings.ConfigurationIntegers[Key] = Value;
-        } else {
-          LOG(3, "can not understand option: {}", Key);
-        }
-      }
-    }
-  }
-  return Settings;
+  return Config.extractConfiguration();
 }
 
 /// Add a URI valued option to the given App.
-
 static void addOption(CLI::App &App, std::string const &Name, uri::URI &URIArg,
                       std::string const &Description, bool Defaulted = false) {
   CLI::callback_t Fun = [&URIArg](CLI::results_t Results) {
@@ -184,7 +97,7 @@ std::pair<int, std::unique_ptr<MainOpt>> parse_opt(int argc, char **argv) {
   auto &opt = *ret.second;
   CLI::App App{
       fmt::format("forward-epics-to-kafka-0.1.0 {:.7} (ESS, BrightnESS)\n"
-                  "  Contact: dominik.werder@psi.ch\n\n",
+                  "  https://github.com/ess-dmsc/forward-epics-to-kafka\n\n",
                   GIT_COMMIT)};
   std::string BrokerDataDefault;
   App.add_option("--config-file", opt.ConfigurationFile,
@@ -198,10 +111,10 @@ std::pair<int, std::unique_ptr<MainOpt>> parse_opt(int argc, char **argv) {
   App.add_option("--influx-url", opt.InfluxURI, "Address for Influx logging");
   App.add_option("-v,--verbose", log_level, "Syslog logging level", true)
       ->check(CLI::Range(1, 7));
-  addOption(App, "--broker-config", opt.BrokerConfig,
+  addOption(App, "--broker-config", opt.MainSettings.BrokerConfig,
             "<//host[:port]/topic> Kafka host/topic to listen for commands on",
             true);
-  addOption(App, "--status-uri", opt.StatusReportURI,
+  addOption(App, "--status-uri", opt.MainSettings.StatusReportURI,
             "<//host[:port][/topic]> Kafka broker/topic to publish status "
             "updates on");
 
@@ -242,5 +155,5 @@ void MainOpt::init_logger() {
     fwd_graylog_logger_enable(GraylogLoggerAddress);
   }
 }
-}
-}
+} // namespace ForwardEpicsToKafka
+} // namespace BrightnESS
