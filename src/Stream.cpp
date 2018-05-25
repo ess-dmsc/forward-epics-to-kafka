@@ -54,7 +54,7 @@ nlohmann::json ConversionPath::status_json() const {
 
 Stream::Stream(
     ChannelInfo channel_info,
-    std::unique_ptr<EpicsClient::EpicsClientInterface> client,
+    std::shared_ptr<EpicsClient::EpicsClientInterface> client,
     std::shared_ptr<Ring<std::unique_ptr<FlatBufs::EpicsPVUpdate>>> ring)
     : channel_info_(channel_info), epics_client(std::move(client)),
       emit_queue(std::move(ring)) {

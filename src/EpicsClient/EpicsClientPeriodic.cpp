@@ -10,30 +10,8 @@ namespace EpicsClient {
 EpicsClientPeriodic::EpicsClientPeriodic(
     ChannelInfo &channelInfo,
     std::shared_ptr<Ring<std::unique_ptr<FlatBufs::EpicsPVUpdate>>> ring)
-    : emit_queue(std::move(ring)), channel_name(channelInfo.channel_name) {
-  while (true) {
-    ::epics::pvaClient::PvaClientPtr pva =
-        ::epics::pvaClient::PvaClient::get("pva ca");
-    auto pvStructure =
-        pva->channel(channelInfo.channel_name, channelInfo.provider_type, 2.0)
-            ->get()
-            ->getData()
-            ->getPVStructure();
-    auto up_ =
-        std::unique_ptr<FlatBufs::EpicsPVUpdate>(new FlatBufs::EpicsPVUpdate{});
-    auto &up = *up_;
-    up.channel = channelInfo.channel_name;
-    up.seq_data = 0;
-    up.seq_fwd = 0;
-    up.epics_pvstr = pvStructure;
-    up.ts_epics_monitor = static_cast<uint64_t>(
-        std::chrono::duration_cast<std::chrono::nanoseconds>(
-            std::chrono::system_clock::now().time_since_epoch())
-            .count());
-    emit(std::move(up_));
-    break; // TODO: remove this when we find out how to manage this class
-  }
-}
+    : emit_queue(std::move(ring)), ChannelName(channelInfo.channel_name),
+      ProviderType(channelInfo.provider_type) {}
 
 int EpicsClientPeriodic::emit(
     std::unique_ptr<BrightnESS::FlatBufs::EpicsPVUpdate> up) {
@@ -47,6 +25,27 @@ int EpicsClientPeriodic::emit(
   // here we are, saying goodbye to a good buffer
   up.reset();
   return 1;
+}
+
+void EpicsClientPeriodic::PollPVCallback() {
+  ::epics::pvaClient::PvaClientPtr pva =
+      ::epics::pvaClient::PvaClient::get("pva ca");
+  auto pvStructure = pva->channel(ChannelName, ProviderType, 2.0)
+                         ->get()
+                         ->getData()
+                         ->getPVStructure();
+  auto up_ =
+      std::unique_ptr<FlatBufs::EpicsPVUpdate>(new FlatBufs::EpicsPVUpdate{});
+  auto &up = *up_;
+  up.channel = ChannelName;
+  up.seq_data = 0;
+  up.seq_fwd = 0;
+  up.epics_pvstr = pvStructure;
+  up.ts_epics_monitor = static_cast<uint64_t>(
+      std::chrono::duration_cast<std::chrono::nanoseconds>(
+          std::chrono::system_clock::now().time_since_epoch())
+          .count());
+  emit(std::move(up_));
 }
 }
 }

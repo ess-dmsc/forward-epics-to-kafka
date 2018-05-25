@@ -14,17 +14,19 @@ class Stream;
 class EpicsClientPeriodic : public EpicsClient::EpicsClientInterface {
 public:
   Stream *stream = nullptr;
-  EpicsClientPeriodic(
+  explicit EpicsClientPeriodic(
       ChannelInfo &channelInfo,
       std::shared_ptr<Ring<std::unique_ptr<FlatBufs::EpicsPVUpdate>>> ring);
   int emit(std::unique_ptr<FlatBufs::EpicsPVUpdate> up) override;
   int stop() override { return 1; };
   void error_in_epics() override{};
   int status() override { return 1; };
+  void PollPVCallback();
 
 private:
   std::shared_ptr<Ring<std::unique_ptr<FlatBufs::EpicsPVUpdate>>> emit_queue;
-  std::string channel_name;
+  std::string ChannelName;
+  std::string ProviderType;
 };
 }
 }

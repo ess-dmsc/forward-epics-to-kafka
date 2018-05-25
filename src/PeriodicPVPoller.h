@@ -3,28 +3,41 @@
 namespace BrightnESS {
 namespace ForwardEpicsToKafka {
 
+using CallbackFunction = std::function<void()>;
+
 class PeriodicPVPoller {
 public:
-  PeriodicPVPoller(std::chrono::milliseconds interval)
-      : interval_ms(interval){};
+  PeriodicPVPoller(std::chrono::milliseconds interval) : IntervalMS(interval){};
 
   void start() {
-    running = true;
-    thr = std::thread([=]() {
-      while (running) {
-        std::this_thread::sleep_for(interval_ms);
-        // do/call something here
+    Running = true;
+    Thr = std::thread([=]() {
+      while (Running) {
+        std::this_thread::sleep_for(IntervalMS);
+        {
+          std::lock_guard<std::mutex> lock(CallbacksMutex);
+          for (CallbackFunction Callback : Callbacks) {
+            Callback();
+          }
+        }
       }
     });
-    thr.join();
+    Thr.join();
   };
 
-  void stop() { running = false; };
+  void stop() { Running = false; };
+
+  void addCallback(CallbackFunction callback) {
+    std::lock_guard<std::mutex> lock(CallbacksMutex);
+    Callbacks.push_back(callback);
+  }
 
 private:
-  bool running = false;
-  std::thread thr;
-  std::chrono::milliseconds interval_ms;
+  std::vector<CallbackFunction> Callbacks;
+  bool Running = false;
+  std::thread Thr;
+  std::chrono::milliseconds IntervalMS;
+  std::mutex CallbacksMutex;
 };
 }
 }

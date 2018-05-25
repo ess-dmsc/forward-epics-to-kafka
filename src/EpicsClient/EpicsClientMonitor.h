@@ -48,7 +48,7 @@ public:
 ///\brief Epics client implementation which monitors for PV updates.
 class EpicsClientMonitor : public EpicsClientInterface {
 public:
-  EpicsClientMonitor(
+  explicit EpicsClientMonitor(
       ChannelInfo &channelInfo,
       std::shared_ptr<Ring<std::unique_ptr<FlatBufs::EpicsPVUpdate>>> ring);
   ~EpicsClientMonitor() override;

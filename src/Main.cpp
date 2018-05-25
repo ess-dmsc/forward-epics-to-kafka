@@ -390,12 +390,11 @@ void Main::mappingAdd(nlohmann::json const &Mapping) {
   std::unique_lock<std::mutex> lock(streams_mutex);
   try {
     ChannelInfo ChannelInfo{ChannelProviderType, Channel};
-    std::shared_ptr<Stream> MonitorStream =
-        createStream<EpicsClient::EpicsClientMonitor>(ChannelInfo);
-    streams.add(MonitorStream);
-    std::shared_ptr<Stream> PeriodicStream =
-        createStream<EpicsClient::EpicsClientPeriodic>(ChannelInfo);
-    streams.add(PeriodicStream);
+    addStream<EpicsClient::EpicsClientMonitor>(ChannelInfo);
+
+    std::shared_ptr<EpicsClient::EpicsClientPeriodic> PeriodicClient =
+        addStream<EpicsClient::EpicsClientPeriodic>(ChannelInfo);
+    PVPoller->addCallback([&]() { PeriodicClient->PollPVCallback(); });
   } catch (std::runtime_error &e) {
     std::throw_with_nested(MappingAddException("Can not add stream"));
   }
@@ -412,13 +411,16 @@ void Main::mappingAdd(nlohmann::json const &Mapping) {
 }
 
 template <typename T>
-std::shared_ptr<Stream> Main::createStream(ChannelInfo &ChannelInfo) const {
-  auto ring =
+std::shared_ptr<T> Main::addStream(ChannelInfo &ChannelInfo) {
+  auto PVUpdateRing =
       std::make_shared<Ring<std::unique_ptr<FlatBufs::EpicsPVUpdate>>>();
-  auto client = std::unique_ptr<EpicsClient::EpicsClientInterface>(
-      new T(ChannelInfo, ring));
-  auto stream = std::make_shared<Stream>(ChannelInfo, move(client), ring);
-  return stream;
+  auto client = std::make_shared<T>(ChannelInfo, PVUpdateRing);
+  auto EpicsClientInterfacePtr =
+      std::static_pointer_cast<EpicsClient::EpicsClientInterface>(client);
+  auto stream = std::make_shared<Stream>(ChannelInfo, EpicsClientInterfacePtr,
+                                         PVUpdateRing);
+  streams.add(stream);
+  return client;
 }
 
 void Main::extractMappingInfo(nlohmann::json const &Mapping,
@@ -461,6 +463,5 @@ void Main::stopForwarding() { raiseForwardingFlag(ForwardingRunState::STOP); }
 void Main::stopForwardingDueToSignal() {
   raiseForwardingFlag(ForwardingRunState::STOP_DUE_TO_SIGNAL);
 }
-void Main::addStream() {}
 } // namespace ForwardEpicsToKafka
 } // namespace BrightnESS

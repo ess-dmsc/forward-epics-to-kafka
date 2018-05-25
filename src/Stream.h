@@ -50,7 +50,7 @@ class Stream {
 public:
   explicit Stream(
       ChannelInfo channel_info,
-      std::unique_ptr<EpicsClient::EpicsClientInterface> client,
+      std::shared_ptr<EpicsClient::EpicsClientInterface> client,
       std::shared_ptr<Ring<std::unique_ptr<FlatBufs::EpicsPVUpdate>>> ring);
   Stream(Stream &&) = delete;
   ~Stream();
@@ -73,7 +73,7 @@ private:
   // std::vector<std::shared_ptr<Converter>> converters;
   ChannelInfo channel_info_;
   std::vector<std::unique_ptr<ConversionPath>> conversion_paths;
-  std::unique_ptr<EpicsClient::EpicsClientInterface> epics_client;
+  std::shared_ptr<EpicsClient::EpicsClientInterface> epics_client;
   std::shared_ptr<Ring<std::unique_ptr<FlatBufs::EpicsPVUpdate>>> emit_queue;
   RangeSet<uint64_t> seq_data_emitted;
 };
