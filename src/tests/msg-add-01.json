@@ -1,9 +1,0 @@
-{
-	"cmd": "add",
-	"streams": [
-		{
-			"channel": "forwarder_test_nt_array_double",
-			"converter": { "schema": "f142", "topic": "tmp-test-f142-double" }
-		}
-	]
-}

@@ -12,7 +12,6 @@ find_package(GraylogLogger)
 find_package(StaticData COMPONENTS "schema-config-global.json")
 find_package(GitCommitExtract)
 
-
 set(path_include_common
 ${FMT_INCLUDE_DIR}
 ${RDKAFKA_INCLUDE_DIR}
@@ -23,8 +22,9 @@ ${PROJECT_BINARY_DIR}/src
 )
 
 set(path_include_common_suppressed_warnings
-${EPICSV4_INCLUDE_DIRS}
-)
+        ${EPICSV4_INCLUDE_DIRS}
+        )
+
 
 set(libraries_common
 ${path_library_epics_ca}
@@ -39,6 +39,8 @@ ${CURL_LIBRARIES}
 if (UNIX)
   list(APPEND libraries_common pthread)
 endif()
+
+
 
 set(compile_defs_common "")
 
