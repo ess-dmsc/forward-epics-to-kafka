@@ -11,7 +11,8 @@ class Stream;
 
 ///\class EpicsClientPeriodic
 ///\brief epics client wrapper responsible for periodically checking PV values
-/// this class is responsible for checking the pv values then passing them via callback functions
+/// this class is responsible for checking the pv values then passing them via
+/// callback functions
 /// each pv will have at least one of these epics client wrappers.
 class EpicsClientPeriodic : public EpicsClient::EpicsClientInterface {
 public:

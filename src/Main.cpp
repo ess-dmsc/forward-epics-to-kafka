@@ -62,6 +62,10 @@ Main::Main(MainOpt &opt)
         fmt::format("forwarder-command-listener--pid{}", getpid());
     config_listener.reset(new Config::Listener{bopt, main_opt.BrokerConfig});
   }
+  if (main_opt.periodMS > 0) {
+    auto period = MS(main_opt.periodMS);
+    PVPoller = std::unique_ptr<PeriodicPVPoller>(new PeriodicPVPoller(period));
+  }
   using nlohmann::json;
   if (auto Streams = find_array("streams", main_opt.JSONConfiguration)) {
     for (auto const &Stream : Streams.inner()) {
@@ -79,10 +83,6 @@ Main::Main(MainOpt &opt)
     status_producer = std::make_shared<KafkaW::Producer>(BrokerSettings);
     status_producer_topic = ::make_unique<KafkaW::ProducerTopic>(
         status_producer, main_opt.StatusReportURI.topic);
-  }
-  if (main_opt.periodMS > 0) {
-    auto period = MS(main_opt.periodMS);
-    PVPoller = std::unique_ptr<PeriodicPVPoller>(new PeriodicPVPoller(period));
   }
 }
 
@@ -200,7 +200,7 @@ void Main::forward_epics_to_kafka() {
       x->start();
     }
   }
-  if (PVPoller) {
+  if (PVPoller != nullptr) {
     PVPoller->start();
   }
   while (ForwardingRunFlag.load() == ForwardingRunState::RUN) {
@@ -240,8 +240,8 @@ void Main::forward_epics_to_kafka() {
   LOG(6, "Main::forward_epics_to_kafka shutting down");
   conversion_workers_clear();
   streams.streams_clear();
-  LOG(6, "ForwardingStatus::STOPPED");
-  forwarding_status.store(ForwardingStatus::STOPPED);
+  PVPoller->stop();
+  ForwardingRunFlag.store(ForwardingRunState::STOPPED);
 }
 
 void Main::report_status() {
@@ -391,10 +391,11 @@ void Main::mappingAdd(nlohmann::json const &Mapping) {
   try {
     ChannelInfo ChannelInfo{ChannelProviderType, Channel};
     addStream<EpicsClient::EpicsClientMonitor>(ChannelInfo);
-
-    std::shared_ptr<EpicsClient::EpicsClientPeriodic> PeriodicClient =
-        addStream<EpicsClient::EpicsClientPeriodic>(ChannelInfo);
-    PVPoller->addCallback([&]() { PeriodicClient->PollPVCallback(); });
+    if (PVPoller != nullptr) {
+      std::shared_ptr<EpicsClient::EpicsClientPeriodic> PeriodicClient =
+          addStream<EpicsClient::EpicsClientPeriodic>(ChannelInfo);
+      PVPoller->addCallback([&]() { PeriodicClient->PollPVCallback(); });
+    }
   } catch (std::runtime_error &e) {
     std::throw_with_nested(MappingAddException("Can not add stream"));
   }

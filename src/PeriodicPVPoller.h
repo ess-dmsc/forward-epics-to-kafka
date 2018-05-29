@@ -43,7 +43,7 @@ public:
 
   ///\fn addCallback
   ///\brief adds a callback to the vector of callbacks for the timer loop to
-  ///call
+  /// call
   ///\param Callback the Callback function to add to the Callbacks vector
   void addCallback(CallbackFunction Callback) {
     std::lock_guard<std::mutex> lock(CallbacksMutex);

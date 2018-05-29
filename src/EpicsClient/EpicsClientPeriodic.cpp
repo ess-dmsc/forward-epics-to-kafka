@@ -31,7 +31,8 @@ int EpicsClientPeriodic::emit(
 }
 
 ///\fn PollPVCallback
-///\brief checks for pv value, constructs the pv update object and emits it to the ring buffer
+///\brief checks for pv value, constructs the pv update object and emits it to
+/// the ring buffer
 void EpicsClientPeriodic::PollPVCallback() {
   ::epics::pvaClient::PvaClientPtr pva =
       ::epics::pvaClient::PvaClient::get("pva ca");

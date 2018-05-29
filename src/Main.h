@@ -31,17 +31,13 @@ namespace Config {
 class Listener;
 }
 
-enum class ForwardingStatus : int32_t {
-  NORMAL,
-  STOPPED,
-};
-
 struct CURLReporter;
 
 enum class ForwardingRunState : int {
   RUN = 0,
   STOP = 1,
   STOP_DUE_TO_SIGNAL = 2,
+  STOPPED = 3
 };
 
 class Main {
@@ -80,7 +76,6 @@ private:
   friend class tests::Remote_T;
   friend class ConversionScheduler;
   std::atomic<uint32_t> converter_index{0};
-  std::atomic<ForwardingStatus> forwarding_status{ForwardingStatus::NORMAL};
   std::unique_ptr<CURLReporter> curl;
   std::shared_ptr<KafkaW::Producer> status_producer;
   std::unique_ptr<KafkaW::ProducerTopic> status_producer_topic;
