@@ -34,7 +34,7 @@ public:
   ConversionPath(ConversionPath &&x);
   ConversionPath(std::shared_ptr<Converter>, std::unique_ptr<KafkaOutput>);
   ~ConversionPath();
-  int emit(std::unique_ptr<FlatBufs::EpicsPVUpdate> up);
+  int emit(std::shared_ptr<FlatBufs::EpicsPVUpdate> up);
   std::atomic<uint32_t> transit{0};
   nlohmann::json status_json() const;
 
@@ -51,7 +51,7 @@ public:
   explicit Stream(
       ChannelInfo channel_info,
       std::shared_ptr<EpicsClient::EpicsClientInterface> client,
-      std::shared_ptr<Ring<std::unique_ptr<FlatBufs::EpicsPVUpdate>>> ring);
+      std::shared_ptr<Ring<std::shared_ptr<FlatBufs::EpicsPVUpdate>>> ring);
   Stream(Stream &&) = delete;
   ~Stream();
   int converter_add(Kafka::InstanceSet &kset, std::shared_ptr<Converter> conv,
@@ -74,7 +74,7 @@ private:
   ChannelInfo channel_info_;
   std::vector<std::unique_ptr<ConversionPath>> conversion_paths;
   std::shared_ptr<EpicsClient::EpicsClientInterface> epics_client;
-  std::shared_ptr<Ring<std::unique_ptr<FlatBufs::EpicsPVUpdate>>> emit_queue;
+  std::shared_ptr<Ring<std::shared_ptr<FlatBufs::EpicsPVUpdate>>> emit_queue;
   RangeSet<uint64_t> seq_data_emitted;
 };
 }

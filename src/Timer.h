@@ -9,12 +9,12 @@ using CallbackFunction = std::function<void()>;
 ///\class PeriodicPVPoller
 ///\brief Timer for the periodic updates.
 /// Calls the callback from polling epics.
-class PeriodicPVPoller {
+class Timer {
 public:
-  explicit PeriodicPVPoller(std::chrono::milliseconds Interval)
+  explicit Timer(std::chrono::milliseconds Interval)
       : Running(false), IntervalMS(Interval){};
 
-  static void pollingLoop(PeriodicPVPoller *ThisPoller) {
+  static void pollingLoop(Timer *ThisPoller) {
     while (ThisPoller->Running) {
       std::this_thread::sleep_for(ThisPoller->IntervalMS);
       {

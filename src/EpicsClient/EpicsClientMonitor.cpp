@@ -100,7 +100,7 @@ EpicsClientMonitor_impl::~EpicsClientMonitor_impl() {
   CLOG(7, 7, "EpicsClientMonitor_implor_impl");
 }
 
-int EpicsClientMonitor_impl::emit(std::unique_ptr<FlatBufs::EpicsPVUpdate> up) {
+int EpicsClientMonitor_impl::emit(std::shared_ptr<FlatBufs::EpicsPVUpdate> up) {
 #if TEST_PROVOKE_ERROR == 1
   static std::atomic<int> c1{0};
   if (c1 > 10) {
@@ -123,8 +123,8 @@ void EpicsClientMonitor_impl::error_channel_requester() {
 
 EpicsClientMonitor::EpicsClientMonitor(
     ChannelInfo &channelInfo,
-    std::shared_ptr<Ring<std::unique_ptr<FlatBufs::EpicsPVUpdate>>> ring)
-    : emit_queue(std::move(ring)) {
+    std::shared_ptr<Ring<std::shared_ptr<FlatBufs::EpicsPVUpdate>>> ring)
+    : emit_queue(ring) {
   impl.reset(new EpicsClientMonitor_impl(this));
   CLOG(7, 7, "channel_name: {}", channelInfo.channel_name);
   impl->channel_name = channelInfo.channel_name;
@@ -140,7 +140,7 @@ EpicsClientMonitor::~EpicsClientMonitor() {
 
 int EpicsClientMonitor::stop() { return impl->stop(); }
 
-int EpicsClientMonitor::emit(std::unique_ptr<FlatBufs::EpicsPVUpdate> up) {
+int EpicsClientMonitor::emit(std::shared_ptr<FlatBufs::EpicsPVUpdate> up) {
   if (!up) {
     CLOG(6, 1, "empty update?");
     // should never happen, ignore

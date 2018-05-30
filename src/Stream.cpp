@@ -28,7 +28,7 @@ ConversionPath::~ConversionPath() {
   }
 }
 
-int ConversionPath::emit(std::unique_ptr<FlatBufs::EpicsPVUpdate> up) {
+int ConversionPath::emit(std::shared_ptr<FlatBufs::EpicsPVUpdate> up) {
   auto fb = converter->convert(*up);
   if (fb == nullptr) {
     CLOG(6, 1, "empty converted flat buffer");
@@ -38,7 +38,7 @@ int ConversionPath::emit(std::unique_ptr<FlatBufs::EpicsPVUpdate> up) {
   return 0;
 }
 
-static uint16_t _fmt(std::unique_ptr<FlatBufs::EpicsPVUpdate> &x) {
+static uint16_t _fmt(std::shared_ptr<FlatBufs::EpicsPVUpdate> &x) {
   return (uint16_t)(((uint64_t)x.get()) >> 0);
 }
 
@@ -55,9 +55,9 @@ nlohmann::json ConversionPath::status_json() const {
 Stream::Stream(
     ChannelInfo channel_info,
     std::shared_ptr<EpicsClient::EpicsClientInterface> client,
-    std::shared_ptr<Ring<std::unique_ptr<FlatBufs::EpicsPVUpdate>>> ring)
+    std::shared_ptr<Ring<std::shared_ptr<FlatBufs::EpicsPVUpdate>>> ring)
     : channel_info_(channel_info), epics_client(std::move(client)),
-      emit_queue(std::move(ring)) {
+      emit_queue(ring) {
   emit_queue->formatter = _fmt;
 }
 
@@ -115,7 +115,7 @@ Stream::fill_conversion_work(Ring<std::unique_ptr<ConversionWorkPacket>> &q2,
         // more common case
         p->up = std::move(e.second);
       } else {
-        p->up = std::unique_ptr<FlatBufs::EpicsPVUpdate>(
+        p->up = std::shared_ptr<FlatBufs::EpicsPVUpdate>(
             new FlatBufs::EpicsPVUpdate(*e.second));
       }
       auto x = q2.push_unsafe(p);

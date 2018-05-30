@@ -9,9 +9,9 @@
 #include "process.h"
 #define getpid _getpid
 #else
+#include <EpicsClient/CacheForPeriodicUpdate.h>
 #include <EpicsClient/EpicsClientInterface.h>
 #include <EpicsClient/EpicsClientMonitor.h>
-#include <EpicsClient/EpicsClientPeriodic.h>
 #include <unistd.h>
 #endif
 #include "CURLReporter.h"
@@ -64,7 +64,7 @@ Main::Main(MainOpt &opt)
   }
   if (main_opt.periodMS > 0) {
     auto period = MS(main_opt.periodMS);
-    PVPoller = std::unique_ptr<PeriodicPVPoller>(new PeriodicPVPoller(period));
+    PVPoller = std::unique_ptr<Timer>(new Timer(period));
   }
   using nlohmann::json;
   if (auto Streams = find_array("streams", main_opt.JSONConfiguration)) {
@@ -391,11 +391,6 @@ void Main::mappingAdd(nlohmann::json const &Mapping) {
   try {
     ChannelInfo ChannelInfo{ChannelProviderType, Channel};
     addStream<EpicsClient::EpicsClientMonitor>(ChannelInfo);
-    if (PVPoller != nullptr) {
-      std::shared_ptr<EpicsClient::EpicsClientPeriodic> PeriodicClient =
-          addStream<EpicsClient::EpicsClientPeriodic>(ChannelInfo);
-      PVPoller->addCallback([&]() { PeriodicClient->PollPVCallback(); });
-    }
   } catch (std::runtime_error &e) {
     std::throw_with_nested(MappingAddException("Can not add stream"));
   }
@@ -414,7 +409,7 @@ void Main::mappingAdd(nlohmann::json const &Mapping) {
 template <typename T>
 std::shared_ptr<T> Main::addStream(ChannelInfo &ChannelInfo) {
   auto PVUpdateRing =
-      std::make_shared<Ring<std::unique_ptr<FlatBufs::EpicsPVUpdate>>>();
+      std::make_shared<Ring<std::shared_ptr<FlatBufs::EpicsPVUpdate>>>();
   auto client = std::make_shared<T>(ChannelInfo, PVUpdateRing);
   auto EpicsClientInterfacePtr =
       std::static_pointer_cast<EpicsClient::EpicsClientInterface>(client);

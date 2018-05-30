@@ -31,7 +31,7 @@ public:
   int monitoring_stop();
   int channel_destroyed();
   int stop();
-  int emit(std::unique_ptr<FlatBufs::EpicsPVUpdate>);
+  int emit(std::shared_ptr<FlatBufs::EpicsPVUpdate>);
   void error_channel_requester();
   epics::pvData::MonitorRequester::shared_pointer monitor_requester;
   epics::pvAccess::ChannelProvider::shared_pointer provider;
@@ -50,16 +50,16 @@ class EpicsClientMonitor : public EpicsClientInterface {
 public:
   explicit EpicsClientMonitor(
       ChannelInfo &channelInfo,
-      std::shared_ptr<Ring<std::unique_ptr<FlatBufs::EpicsPVUpdate>>> ring);
+      std::shared_ptr<Ring<std::shared_ptr<FlatBufs::EpicsPVUpdate>>> ring);
   ~EpicsClientMonitor() override;
-  int emit(std::unique_ptr<FlatBufs::EpicsPVUpdate> up) override;
+  int emit(std::shared_ptr<FlatBufs::EpicsPVUpdate> up) override;
   int stop() override;
   void error_in_epics() override;
   int status() override { return status_; };
 
 private:
   std::unique_ptr<EpicsClientMonitor_impl> impl;
-  std::shared_ptr<Ring<std::unique_ptr<FlatBufs::EpicsPVUpdate>>> emit_queue;
+  std::shared_ptr<Ring<std::shared_ptr<FlatBufs::EpicsPVUpdate>>> emit_queue;
   std::atomic<int> status_{0};
 };
 }

@@ -245,7 +245,7 @@ template <typename TP> typename Ring<TP>::ulock Ring<TP>::lock() {
   return ulock(mx);
 }
 
-template class Ring<std::unique_ptr<FlatBufs::EpicsPVUpdate>>;
+template class Ring<std::shared_ptr<FlatBufs::EpicsPVUpdate>>;
 template class Ring<std::unique_ptr<ConversionWorkPacket>>;
 }
 }

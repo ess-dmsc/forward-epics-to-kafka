@@ -52,7 +52,7 @@ set(INCLUDES
     EpicsClient/ChannelRequester.h
     EpicsClient/EpicsClientMonitor.h
     EpicsClient/EpicsClientFactory.h
-    EpicsClient/EpicsClientPeriodic.h
+        EpicsClient/CacheForPeriodicUpdate.h
     EpicsClient/FwdMonitorRequester.h
     EpicsClient/EpicsClientInterface.h
     Config.h
@@ -77,7 +77,7 @@ set(INCLUDES
     Stream.h
     Streams.h
     uri.h
-    PeriodicPVPoller.h
+        Timer.h
 )
 
 set(SOURCES
@@ -87,7 +87,7 @@ set(SOURCES
     EpicsClient/ChannelRequester.cpp
     EpicsClient/FwdMonitorRequester.cpp
     EpicsClient/EpicsClientFactory.cpp
-    EpicsClient/EpicsClientPeriodic.cpp
+        EpicsClient/CacheForPeriodicUpdate.cpp
     helper.cpp
     logger.cpp
     Kafka.cpp

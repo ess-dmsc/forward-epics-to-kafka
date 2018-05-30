@@ -3,6 +3,7 @@
 #include "EpicsPVUpdate.h"
 #include "logger.h"
 #include <atomic>
+#include <memory>
 #include <pv/pvAccess.h>
 #include <pv/pvData.h>
 
@@ -54,7 +55,7 @@ void FwdMonitorRequester::monitorConnect(
 
 void FwdMonitorRequester::monitorEvent(
     ::epics::pvData::MonitorPtr const &monitor) {
-  std::vector<std::unique_ptr<FlatBufs::EpicsPVUpdate>> ups;
+  std::vector<std::shared_ptr<FlatBufs::EpicsPVUpdate>> ups;
   while (true) {
     auto ele = monitor->poll();
     if (!ele) {
@@ -73,24 +74,22 @@ void FwdMonitorRequester::monitorEvent(
     // Structure.
     // Does that mean that we never get a scalar here directly??
 
-    auto up_ =
-        std::unique_ptr<FlatBufs::EpicsPVUpdate>(new FlatBufs::EpicsPVUpdate);
-    auto &up = *up_;
-    up.channel = channel_name;
-    up.epics_pvstr = epics::pvData::PVStructure::shared_pointer(
+    auto up = std::make_shared<FlatBufs::EpicsPVUpdate>();
+    up->channel = channel_name;
+    up->epics_pvstr = epics::pvData::PVStructure::shared_pointer(
         new ::epics::pvData::PVStructure(ele->pvStructurePtr->getStructure()));
-    up.epics_pvstr->copyUnchecked(*ele->pvStructurePtr);
+    up->epics_pvstr->copyUnchecked(*ele->pvStructurePtr);
     monitor->release(ele);
-    up.seq_fwd = seq;
-    up.seq_data = seq_data;
-    up.ts_epics_monitor = ts;
-    ups.push_back(std::move(up_));
+    up->seq_fwd = seq;
+    up->seq_data = seq_data;
+    up->ts_epics_monitor = ts;
+    ups.push_back(up);
     seq += 1;
   }
   for (auto &up : ups) {
     up->epics_pvstr->setImmutable();
     auto seq_data = up->seq_data;
-    auto x = epics_client->emit(std::move(up));
+    auto x = epics_client->emit(up);
     if (x != 0) {
       LOG(5, "error can not push update {}", seq_data);
     }
