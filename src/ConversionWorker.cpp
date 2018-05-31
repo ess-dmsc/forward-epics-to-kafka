@@ -4,8 +4,7 @@
 #include <chrono>
 #include <thread>
 
-namespace BrightnESS {
-namespace ForwardEpicsToKafka {
+namespace Forwarder {
 
 ConversionWorkPacket::~ConversionWorkPacket() {
   if (stream) {
@@ -104,6 +103,5 @@ int ConversionScheduler::fill(
 ConversionScheduler::~ConversionScheduler() {
   LOG(6, "~ConversionScheduler  seq_data_enqueued {}",
       seq_data_enqueued.to_string());
-}
 }
 }

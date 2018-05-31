@@ -1,8 +1,7 @@
 #include "Kafka.h"
 #include "logger.h"
 
-namespace BrightnESS {
-namespace ForwardEpicsToKafka {
+namespace Forwarder {
 namespace Kafka {
 
 static std::mutex mx;
@@ -86,7 +85,6 @@ std::vector<KafkaW::ProducerStats> InstanceSet::stats_all() {
     ret.push_back(m.second->Stats);
   }
   return ret;
-}
 }
 }
 }

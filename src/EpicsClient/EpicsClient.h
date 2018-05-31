@@ -9,8 +9,7 @@
 #include <string>
 #include <vector>
 
-namespace BrightnESS {
-namespace ForwardEpicsToKafka {
+namespace Forwarder {
 namespace EpicsClient {
 
 using std::array;
@@ -70,4 +69,4 @@ private:
 };
 }
 }
-}
+

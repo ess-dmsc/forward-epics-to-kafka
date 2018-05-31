@@ -7,8 +7,7 @@
 #include <mutex>
 #include <thread>
 
-namespace BrightnESS {
-namespace ForwardEpicsToKafka {
+namespace Forwarder {
 
 class Forwarder;
 class ConversionScheduler;
@@ -51,5 +50,4 @@ private:
   std::mutex mx;
   RangeSet<uint64_t> seq_data_enqueued;
 };
-}
 }

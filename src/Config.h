@@ -8,8 +8,7 @@
 #include <string>
 #include <vector>
 
-namespace BrightnESS {
-namespace ForwardEpicsToKafka {
+namespace Forwarder {
 
 class Remote_T;
 
@@ -35,8 +34,8 @@ public:
 
 private:
   std::unique_ptr<Listener_impl> impl;
-  friend class ForwardEpicsToKafka::Remote_T;
+  friend class Remote_T;
 };
 }
 }
-}
+

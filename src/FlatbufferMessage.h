@@ -6,7 +6,6 @@
 #include <memory>
 #include <utility>
 
-namespace BrightnESS {
 namespace FlatBufs {
 
 /// Forward declarations for friending.
@@ -45,5 +44,4 @@ private:
 };
 
 void inspect(FlatbufferMessage const &fb);
-}
 }

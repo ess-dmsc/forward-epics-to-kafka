@@ -1,6 +1,5 @@
 #include "MakeFlatBufferFromPVStructure.h"
 
-namespace BrightnESS {
 namespace FlatBufs {
 
 MakeFlatBufferFromPVStructure::~MakeFlatBufferFromPVStructure() {}
@@ -11,6 +10,5 @@ void MakeFlatBufferFromPVStructure::config(
 
 std::map<std::string, double> MakeFlatBufferFromPVStructure::stats() {
   return {};
-}
 }
 }

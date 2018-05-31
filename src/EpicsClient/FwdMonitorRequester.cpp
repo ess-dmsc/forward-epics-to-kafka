@@ -6,8 +6,7 @@
 #include <pv/pvAccess.h>
 #include <pv/pvData.h>
 
-namespace BrightnESS {
-namespace ForwardEpicsToKafka {
+namespace Forwarder {
 namespace EpicsClient {
 
 FwdMonitorRequester::FwdMonitorRequester(EpicsClient_impl *epics_client_impl,
@@ -101,7 +100,6 @@ void FwdMonitorRequester::monitorEvent(
 
 void FwdMonitorRequester::unlisten(epics::pvData::MonitorPtr const &monitor) {
   CLOG(7, 1, "FwdMonitorRequester::unlisten  {}", name);
-}
 }
 }
 }

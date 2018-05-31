@@ -14,8 +14,7 @@
 #endif
 #include "CURLReporter.h"
 
-namespace BrightnESS {
-namespace ForwardEpicsToKafka {
+namespace Forwarder {
 
 static bool isStopDueToSignal(ForwardingRunState Flag) {
   return static_cast<int>(Flag) &
@@ -249,7 +248,7 @@ void Forwarder::report_stats(int dt) {
 
 void Forwarder::pushConverterToStream(
     ConverterSettings const &ConverterInfo,
-    std::shared_ptr<ForwardEpicsToKafka::Stream> &Stream) {
+    std::shared_ptr<Stream> &Stream) {
 
   // Check schema exists
   auto r1 = main_opt.schema_registry.items().find(ConverterInfo.Schema);
@@ -338,5 +337,4 @@ void Forwarder::stopForwarding() {
 void Forwarder::stopForwardingDueToSignal() {
   raiseForwardingFlag(ForwardingRunState::STOP_DUE_TO_SIGNAL);
 }
-} // namespace ForwardEpicsToKafka
-} // namespace BrightnESS
+} // namespace Forwarder

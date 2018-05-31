@@ -5,8 +5,7 @@
 #include "logger.h"
 #include <iostream>
 
-namespace BrightnESS {
-namespace ForwardEpicsToKafka {
+namespace Forwarder {
 
 void ConfigParser::setJsonFromString(std::string RawJson) {
   Json = nlohmann::json::parse(RawJson);
@@ -219,5 +218,4 @@ ConfigParser::extractConverterSettings(nlohmann::json const &Mapping) {
   return Settings;
 }
 
-} // namespace ForwardEpicsToKafka
-} // namespace BrightnESS
+} // namespace Forwarder

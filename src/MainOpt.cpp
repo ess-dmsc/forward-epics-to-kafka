@@ -15,8 +15,7 @@
 #include <iostream>
 #include <streambuf>
 
-namespace BrightnESS {
-namespace ForwardEpicsToKafka {
+namespace Forwarder {
 
 MainOpt::MainOpt() {
   Hostname.resize(256);
@@ -155,5 +154,4 @@ void MainOpt::init_logger() {
     fwd_graylog_logger_enable(GraylogLoggerAddress);
   }
 }
-} // namespace ForwardEpicsToKafka
-} // namespace BrightnESS
+} // namespace Forwarder

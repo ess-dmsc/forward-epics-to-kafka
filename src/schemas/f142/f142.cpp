@@ -13,7 +13,6 @@
 #include <pv/pvEnumerated.h>
 #include <set>
 
-namespace BrightnESS {
 namespace FlatBufs {
 namespace f142 {
 
@@ -390,10 +389,10 @@ public:
 
   ~Converter() override { LOG(3, "~Converter"); }
 
-  BrightnESS::FlatBufs::FlatbufferMessage::uptr
+  FlatBufs::FlatbufferMessage::uptr
   convert(EpicsPVUpdate const &up) override {
     auto &pvstr = up.epics_pvstr;
-    auto fb = make_unique<BrightnESS::FlatBufs::FlatbufferMessage>();
+    auto fb = make_unique<FlatBufs::FlatbufferMessage>();
 
     auto builder = fb->builder.get();
     // this is the field type ID string: up.pvstr->getStructure()->getID()
@@ -487,7 +486,7 @@ public:
 /// This class is purely for testing
 class ConverterTestNamed : public MakeFlatBufferFromPVStructure {
 public:
-  BrightnESS::FlatBufs::FlatbufferMessage::uptr
+  FlatBufs::FlatbufferMessage::uptr
   convert(EpicsPVUpdate const &up) override {
     auto &pvstr = up.epics_pvstr;
 
@@ -510,7 +509,7 @@ public:
       }
     }
 
-    auto fb = make_unique<BrightnESS::FlatBufs::FlatbufferMessage>();
+    auto fb = make_unique<FlatBufs::FlatbufferMessage>();
     auto builder = fb->builder.get();
     using uchar = unsigned char;
     static_assert(sizeof(uchar) == 1, "");
@@ -561,4 +560,3 @@ FlatBufs::SchemaRegistry::Registrar<Info>
                                           Info::ptr(new InfoNamedConverter));
 } // namespace f142
 } // namespace FlatBufs
-} // namespace BrightnESS

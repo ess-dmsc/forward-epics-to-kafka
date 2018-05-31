@@ -1,8 +1,7 @@
 #pragma once
 #include "RangeSet.h"
 #include <pv/monitor.h>
-namespace BrightnESS {
-namespace ForwardEpicsToKafka {
+namespace Forwarder {
 namespace EpicsClient {
 
 class EpicsClient_impl;
@@ -31,6 +30,5 @@ private:
   EpicsClient_impl *epics_client_impl = nullptr;
   RangeSet<uint64_t> seq_data_received;
 };
-}
 }
 }

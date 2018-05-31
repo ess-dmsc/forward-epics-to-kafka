@@ -12,8 +12,7 @@
 #include <iso646.h>
 #endif
 
-namespace BrightnESS {
-namespace ForwardEpicsToKafka {
+namespace Forwarder {
 namespace EpicsClient {
 
 using epics::pvData::PVStructure;
@@ -205,6 +204,5 @@ int EpicsClient::emit(std::unique_ptr<FlatBufs::EpicsPVUpdate> up) {
 }
 
 void EpicsClient::error_in_epics() { stream->error_in_epics(); }
-}
 }
 }

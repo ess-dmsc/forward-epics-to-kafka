@@ -4,7 +4,6 @@
 #include "../../logger.h"
 #include "schemas/f143_structure_generated.h"
 
-namespace BrightnESS {
 namespace FlatBufs {
 namespace f143 {
 
@@ -262,11 +261,11 @@ V_t Field(flatbuffers::FlatBufferBuilder &builder,
 
 class Converter : public MakeFlatBufferFromPVStructure {
 public:
-  BrightnESS::FlatBufs::FlatbufferMessage::uptr
+  FlatBufs::FlatbufferMessage::uptr
   convert(EpicsPVUpdate const &up) override {
     // Passing initial size:
     auto &pvstr = up.epics_pvstr;
-    auto fb = make_unique<BrightnESS::FlatBufs::FlatbufferMessage>();
+    auto fb = make_unique<FlatBufs::FlatbufferMessage>();
     auto builder = fb->builder.get();
 
     flatbuffers::Offset<void> fwdinfo = 0;
@@ -345,4 +344,4 @@ FlatBufs::SchemaRegistry::Registrar<Info> g_registrar_info("f143",
                                                            Info::ptr(new Info));
 }
 }
-}
+

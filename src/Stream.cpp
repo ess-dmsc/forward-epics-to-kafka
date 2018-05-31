@@ -6,8 +6,7 @@
 #include "helper.h"
 #include "logger.h"
 
-namespace BrightnESS {
-namespace ForwardEpicsToKafka {
+namespace Forwarder {
 
 ConversionPath::ConversionPath(ConversionPath &&x)
     : converter(std::move(x.converter)),
@@ -218,6 +217,5 @@ nlohmann::json Stream::status_json() {
   }
   Document["converters"] = Converters;
   return Document;
-}
 }
 }

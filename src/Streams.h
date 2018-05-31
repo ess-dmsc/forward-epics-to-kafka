@@ -6,8 +6,7 @@
 #include <string>
 #include <vector>
 
-namespace BrightnESS {
-namespace ForwardEpicsToKafka {
+namespace Forwarder {
 
 class Stream;
 
@@ -26,6 +25,5 @@ public:
   std::shared_ptr<Stream> operator[](size_t s) { return streams.at(s); };
   const std::vector<std::shared_ptr<Stream>> &get_streams();
 };
-}
 }
 #endif // FORWARD_EPICS_TO_KAFKA_STREAMS_H

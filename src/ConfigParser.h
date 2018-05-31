@@ -8,8 +8,7 @@
 #include <string>
 #include <vector>
 
-namespace BrightnESS {
-namespace ForwardEpicsToKafka {
+namespace Forwarder {
 
 /// Holder for the Kafka brokers settings defined in the configuration file.
 struct KafkaBrokerSettings {
@@ -82,5 +81,4 @@ private:
   void extractGlobalConverters(ConfigSettings &Settings);
   std::atomic<uint32_t> ConverterIndex{0};
 };
-} // namespace ForwardEpicsToKafka
-} // namespace BrightnESS
+} // namespace Forwarder

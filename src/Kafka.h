@@ -21,8 +21,7 @@ Simple load balance over the available producers.
 #include "KafkaW/KafkaW.h"
 #include <librdkafka/rdkafka.h>
 
-namespace BrightnESS {
-namespace ForwardEpicsToKafka {
+namespace Forwarder {
 namespace Kafka {
 
 template <typename T> using sptr = std::shared_ptr<T>;
@@ -43,6 +42,5 @@ private:
   std::mutex mx_producers_by_host;
   std::map<std::string, std::shared_ptr<KafkaW::Producer>> producers_by_host;
 };
-}
 }
 }

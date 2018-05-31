@@ -13,8 +13,7 @@
 #include <string>
 #include <vector>
 
-namespace BrightnESS {
-namespace ForwardEpicsToKafka {
+namespace Forwarder {
 
 class Converter;
 class KafkaOutput;
@@ -86,5 +85,4 @@ private:
   std::atomic<int> status_{0};
   RangeSet<uint64_t> seq_data_emitted;
 };
-}
 }

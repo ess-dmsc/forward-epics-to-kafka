@@ -1,8 +1,7 @@
 #include "Converter.h"
 #include "logger.h"
 
-namespace BrightnESS {
-namespace ForwardEpicsToKafka {
+namespace Forwarder {
 
 Converter::sptr
 Converter::create(FlatBufs::SchemaRegistry const &schema_registry,
@@ -31,7 +30,7 @@ Converter::create(FlatBufs::SchemaRegistry const &schema_registry,
   return ret;
 }
 
-BrightnESS::FlatBufs::FlatbufferMessage::uptr
+FlatBufs::FlatbufferMessage::uptr
 Converter::convert(FlatBufs::EpicsPVUpdate const &up) {
   return conv->convert(up);
 }
@@ -39,5 +38,4 @@ Converter::convert(FlatBufs::EpicsPVUpdate const &up) {
 std::map<std::string, double> Converter::stats() { return conv->stats(); }
 
 std::string Converter::schema_name() const { return schema; }
-} // namespace ForwardEpicsToKafka
-} // namespace BrightnESS
+} // namespace Forwarder

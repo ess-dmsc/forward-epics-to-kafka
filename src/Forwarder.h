@@ -12,8 +12,7 @@
 #include <mutex>
 #include <stdexcept>
 
-namespace BrightnESS {
-namespace ForwardEpicsToKafka {
+namespace Forwarder {
 
 class MappingAddException : public std::runtime_error {
 public:
@@ -82,10 +81,9 @@ private:
   void raiseForwardingFlag(ForwardingRunState ToBeRaised);
   void
   pushConverterToStream(ConverterSettings const &ConverterInfo,
-                        std::shared_ptr<ForwardEpicsToKafka::Stream> &Stream);
+                        std::shared_ptr<Stream> &Stream);
 };
 
 extern std::atomic<uint64_t> g__total_msgs_to_kafka;
 extern std::atomic<uint64_t> g__total_bytes_to_kafka;
-} // namespace ForwardEpicsToKafka
-} // namespace BrightnESS
+} // namespace Forwarder

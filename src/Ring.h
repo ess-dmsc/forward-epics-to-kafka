@@ -8,8 +8,7 @@
 #include <string>
 #include <vector>
 
-namespace BrightnESS {
-namespace ForwardEpicsToKafka {
+namespace Forwarder {
 
 class Stream;
 
@@ -49,5 +48,4 @@ private:
 
 public:
 };
-}
 }

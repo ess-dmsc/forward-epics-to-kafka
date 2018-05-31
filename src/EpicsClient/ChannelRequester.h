@@ -2,8 +2,7 @@
 #include <pv/pvData.h>
 #include <string>
 
-namespace BrightnESS {
-namespace ForwardEpicsToKafka {
+namespace Forwarder {
 namespace EpicsClient {
 
 class EpicsClient_impl;
@@ -27,6 +26,5 @@ private:
   epics::pvData::MonitorPtr monitor;
   EpicsClient_impl *epics_client_impl = nullptr;
 };
-}
 }
 }

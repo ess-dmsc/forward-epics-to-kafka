@@ -11,7 +11,7 @@
 #include <string>
 
 TEST(config_parser_tests, not_parsing_a_config_file_gives_defaults) {
-  BrightnESS::ForwardEpicsToKafka::MainOpt MainOpt;
+  Forwarder::MainOpt MainOpt;
 
   ASSERT_EQ(1u, MainOpt.MainSettings.ConversionThreads);
 }
@@ -22,17 +22,17 @@ TEST(config_parser_tests, trying_to_parse_invalid_json_throws) {
                              }
                            ])";
 
-  BrightnESS::ForwardEpicsToKafka::ConfigParser Config;
+  Forwarder::ConfigParser Config;
   ASSERT_ANY_THROW(Config.setJsonFromString(RawJson));
 }
 
 TEST(config_parser_tests, no_converters_specified_has_no_side_effects) {
   std::string RawJson = "{}";
 
-  BrightnESS::ForwardEpicsToKafka::ConfigParser Config;
+  Forwarder::ConfigParser Config;
   Config.setJsonFromString(RawJson);
 
-  BrightnESS::ForwardEpicsToKafka::ConfigSettings Settings =
+  Forwarder::ConfigSettings Settings =
       Config.extractConfiguration();
 
   ASSERT_EQ(0u, Settings.GlobalConverters.size());
@@ -48,10 +48,10 @@ TEST(config_parser_tests, ints_specified_in_converters_are_extracted) {
                             }
                            })";
 
-  BrightnESS::ForwardEpicsToKafka::ConfigParser Config;
+  Forwarder::ConfigParser Config;
   Config.setJsonFromString(RawJson);
 
-  BrightnESS::ForwardEpicsToKafka::ConfigSettings Settings =
+  Forwarder::ConfigSettings Settings =
       Config.extractConfiguration();
 
   ASSERT_EQ(1u, Settings.GlobalConverters.size());
@@ -72,10 +72,10 @@ TEST(config_parser_tests, strings_specified_in_converters_are_extracted) {
                             }
                            })";
 
-  BrightnESS::ForwardEpicsToKafka::ConfigParser Config;
+  Forwarder::ConfigParser Config;
   Config.setJsonFromString(RawJson);
 
-  BrightnESS::ForwardEpicsToKafka::ConfigSettings Settings =
+  Forwarder::ConfigSettings Settings =
       Config.extractConfiguration();
 
   ASSERT_EQ(1u, Settings.GlobalConverters.size());
@@ -101,10 +101,10 @@ TEST(config_parser_tests,
                             }
                            })";
 
-  BrightnESS::ForwardEpicsToKafka::ConfigParser Config;
+  Forwarder::ConfigParser Config;
   Config.setJsonFromString(RawJson);
 
-  BrightnESS::ForwardEpicsToKafka::ConfigSettings Settings =
+  Forwarder::ConfigSettings Settings =
       Config.extractConfiguration();
 
   ASSERT_EQ(2u, Settings.GlobalConverters.size());
@@ -128,10 +128,10 @@ TEST(config_parser_tests,
                             "status-uri": "//kafkabroker:1234/status_topic"
                            })";
 
-  BrightnESS::ForwardEpicsToKafka::ConfigParser Config;
+  Forwarder::ConfigParser Config;
   Config.setJsonFromString(RawJson);
 
-  BrightnESS::ForwardEpicsToKafka::ConfigSettings Settings =
+  Forwarder::ConfigSettings Settings =
       Config.extractConfiguration();
 
   ASSERT_EQ("kafkabroker", Settings.StatusReportURI.host);
@@ -142,10 +142,10 @@ TEST(config_parser_tests,
 TEST(config_parser_tests, no_status_uri_defined_gives_no_uri_port_or_topic) {
   std::string RawJson = "{}";
 
-  BrightnESS::ForwardEpicsToKafka::ConfigParser Config;
+  Forwarder::ConfigParser Config;
   Config.setJsonFromString(RawJson);
 
-  BrightnESS::ForwardEpicsToKafka::ConfigSettings Settings =
+  Forwarder::ConfigSettings Settings =
       Config.extractConfiguration();
 
   ASSERT_EQ("", Settings.StatusReportURI.host);
@@ -158,10 +158,10 @@ TEST(config_parser_tests, setting_broker_sets_host_and_port) {
                             "broker": "kafkabroker:1234"
                            })";
 
-  BrightnESS::ForwardEpicsToKafka::ConfigParser Config;
+  Forwarder::ConfigParser Config;
   Config.setJsonFromString(RawJson);
 
-  BrightnESS::ForwardEpicsToKafka::ConfigSettings Settings =
+  Forwarder::ConfigSettings Settings =
       Config.extractConfiguration();
 
   ASSERT_EQ("kafkabroker", Settings.Brokers.at(0).host);
@@ -174,10 +174,10 @@ TEST(config_parser_tests,
                             "broker": "kafkabroker1:1234, kafkabroker2:5678"
                            })";
 
-  BrightnESS::ForwardEpicsToKafka::ConfigParser Config;
+  Forwarder::ConfigParser Config;
   Config.setJsonFromString(RawJson);
 
-  BrightnESS::ForwardEpicsToKafka::ConfigSettings Settings =
+  Forwarder::ConfigSettings Settings =
       Config.extractConfiguration();
 
   ASSERT_EQ(2u, Settings.Brokers.size());
@@ -190,10 +190,10 @@ TEST(config_parser_tests,
 TEST(config_parser_tests, setting_no_brokers_sets_default_host_and_port) {
   std::string RawJson = "{}";
 
-  BrightnESS::ForwardEpicsToKafka::ConfigParser Config;
+  Forwarder::ConfigParser Config;
   Config.setJsonFromString(RawJson);
 
-  BrightnESS::ForwardEpicsToKafka::ConfigSettings Settings =
+  Forwarder::ConfigSettings Settings =
       Config.extractConfiguration();
 
   ASSERT_EQ("localhost", Settings.Brokers.at(0).host);
@@ -203,10 +203,10 @@ TEST(config_parser_tests, setting_no_brokers_sets_default_host_and_port) {
 TEST(config_parser_tests, no_kafka_broker_settings_has_no_side_effects) {
   std::string RawJson = "{}";
 
-  BrightnESS::ForwardEpicsToKafka::ConfigParser Config;
+  Forwarder::ConfigParser Config;
   Config.setJsonFromString(RawJson);
 
-  BrightnESS::ForwardEpicsToKafka::ConfigSettings Settings =
+  Forwarder::ConfigSettings Settings =
       Config.extractConfiguration();
 
   ASSERT_EQ(0u, Settings.BrokerSettings.ConfigurationIntegers.size());
@@ -223,10 +223,10 @@ TEST(config_parser_tests, ints_in_kafka_broker_settings_are_extracted) {
                             }
                            })";
 
-  BrightnESS::ForwardEpicsToKafka::ConfigParser Config;
+  Forwarder::ConfigParser Config;
   Config.setJsonFromString(RawJson);
 
-  BrightnESS::ForwardEpicsToKafka::ConfigSettings Settings =
+  Forwarder::ConfigSettings Settings =
       Config.extractConfiguration();
 
   ASSERT_EQ(2u, Settings.BrokerSettings.ConfigurationIntegers.size());
@@ -246,10 +246,10 @@ TEST(config_parser_tests, strings_in_kafka_broker_settings_are_extracted) {
                             }
                            })";
 
-  BrightnESS::ForwardEpicsToKafka::ConfigParser Config;
+  Forwarder::ConfigParser Config;
   Config.setJsonFromString(RawJson);
 
-  BrightnESS::ForwardEpicsToKafka::ConfigSettings Settings =
+  Forwarder::ConfigSettings Settings =
       Config.extractConfiguration();
 
   ASSERT_EQ(2u, Settings.BrokerSettings.ConfigurationStrings.size());
@@ -263,10 +263,10 @@ TEST(config_parser_tests,
      no_broker_config_settings_sets_default_host_port_and_topic) {
   std::string RawJson = "{}";
 
-  BrightnESS::ForwardEpicsToKafka::ConfigParser Config;
+  Forwarder::ConfigParser Config;
   Config.setJsonFromString(RawJson);
 
-  BrightnESS::ForwardEpicsToKafka::ConfigSettings Settings =
+  Forwarder::ConfigSettings Settings =
       Config.extractConfiguration();
 
   ASSERT_EQ("localhost", Settings.BrokerConfig.host);
@@ -280,10 +280,10 @@ TEST(config_parser_tests,
                             "broker-config": "//kafkabroker:1234/the_topic"
                            })";
 
-  BrightnESS::ForwardEpicsToKafka::ConfigParser Config;
+  Forwarder::ConfigParser Config;
   Config.setJsonFromString(RawJson);
 
-  BrightnESS::ForwardEpicsToKafka::ConfigSettings Settings =
+  Forwarder::ConfigSettings Settings =
       Config.extractConfiguration();
 
   ASSERT_EQ("kafkabroker", Settings.BrokerConfig.host);
@@ -294,10 +294,10 @@ TEST(config_parser_tests,
 TEST(config_parser_tests, no_conversion_threads_settings_sets_default) {
   std::string RawJson = "{}";
 
-  BrightnESS::ForwardEpicsToKafka::ConfigParser Config;
+  Forwarder::ConfigParser Config;
   Config.setJsonFromString(RawJson);
 
-  BrightnESS::ForwardEpicsToKafka::ConfigSettings Settings =
+  Forwarder::ConfigSettings Settings =
       Config.extractConfiguration();
 
   ASSERT_EQ(1u, Settings.ConversionThreads);
@@ -308,10 +308,10 @@ TEST(config_parser_tests, extracting_conversion_threads_sets_value) {
                             "conversion-threads": 3
                            })";
 
-  BrightnESS::ForwardEpicsToKafka::ConfigParser Config;
+  Forwarder::ConfigParser Config;
   Config.setJsonFromString(RawJson);
 
-  BrightnESS::ForwardEpicsToKafka::ConfigSettings Settings =
+  Forwarder::ConfigSettings Settings =
       Config.extractConfiguration();
 
   ASSERT_EQ(3u, Settings.ConversionThreads);
@@ -320,10 +320,10 @@ TEST(config_parser_tests, extracting_conversion_threads_sets_value) {
 TEST(config_parser_tests, no_conversion_worker_queue_size_sets_default) {
   std::string RawJson = "{}";
 
-  BrightnESS::ForwardEpicsToKafka::ConfigParser Config;
+  Forwarder::ConfigParser Config;
   Config.setJsonFromString(RawJson);
 
-  BrightnESS::ForwardEpicsToKafka::ConfigSettings Settings =
+  Forwarder::ConfigSettings Settings =
       Config.extractConfiguration();
 
   ASSERT_EQ(1024u, Settings.ConversionWorkerQueueSize);
@@ -334,10 +334,10 @@ TEST(config_parser_tests, extracting_conversion_worker_queue_size_sets_value) {
                             "conversion-worker-queue-size": 1234
                            })";
 
-  BrightnESS::ForwardEpicsToKafka::ConfigParser Config;
+  Forwarder::ConfigParser Config;
   Config.setJsonFromString(RawJson);
 
-  BrightnESS::ForwardEpicsToKafka::ConfigSettings Settings =
+  Forwarder::ConfigSettings Settings =
       Config.extractConfiguration();
 
   ASSERT_EQ(1234u, Settings.ConversionWorkerQueueSize);
@@ -346,10 +346,10 @@ TEST(config_parser_tests, extracting_conversion_worker_queue_size_sets_value) {
 TEST(config_parser_tests, no_main_poll_interval_sets_default) {
   std::string RawJson = "{}";
 
-  BrightnESS::ForwardEpicsToKafka::ConfigParser Config;
+  Forwarder::ConfigParser Config;
   Config.setJsonFromString(RawJson);
 
-  BrightnESS::ForwardEpicsToKafka::ConfigSettings Settings =
+  Forwarder::ConfigSettings Settings =
       Config.extractConfiguration();
 
   ASSERT_EQ(500, Settings.MainPollInterval);
@@ -360,10 +360,10 @@ TEST(config_parser_tests, extracting_main_poll_interval_sets_value) {
                             "main-poll-interval": 1234
                            })";
 
-  BrightnESS::ForwardEpicsToKafka::ConfigParser Config;
+  Forwarder::ConfigParser Config;
   Config.setJsonFromString(RawJson);
 
-  BrightnESS::ForwardEpicsToKafka::ConfigSettings Settings =
+  Forwarder::ConfigSettings Settings =
       Config.extractConfiguration();
 
   ASSERT_EQ(1234, Settings.MainPollInterval);
@@ -380,9 +380,9 @@ TEST(config_parser_tests,
                             ]
                            })";
 
-  BrightnESS::ForwardEpicsToKafka::ConfigParser Config;
+  Forwarder::ConfigParser Config;
   Config.setJsonFromString(RawJson);
-  BrightnESS::ForwardEpicsToKafka::ConfigSettings Settings =
+  Forwarder::ConfigSettings Settings =
       Config.extractConfiguration();
 
   ASSERT_EQ(1u, Settings.StreamsInfo.size());
@@ -408,9 +408,9 @@ TEST(config_parser_tests,
                             ]
                            })";
 
-  BrightnESS::ForwardEpicsToKafka::ConfigParser Config;
+  Forwarder::ConfigParser Config;
   Config.setJsonFromString(RawJson);
-  BrightnESS::ForwardEpicsToKafka::ConfigSettings Settings =
+  Forwarder::ConfigSettings Settings =
       Config.extractConfiguration();
 
   ASSERT_EQ(2u, Settings.StreamsInfo.size());
@@ -434,9 +434,9 @@ TEST(config_parser_tests,
                             ]
                            })";
 
-  BrightnESS::ForwardEpicsToKafka::ConfigParser Config;
+  Forwarder::ConfigParser Config;
   Config.setJsonFromString(RawJson);
-  BrightnESS::ForwardEpicsToKafka::ConfigSettings Settings =
+  Forwarder::ConfigSettings Settings =
       Config.extractConfiguration();
 
   ASSERT_EQ(1u, Settings.StreamsInfo.size());
@@ -463,9 +463,9 @@ TEST(config_parser_tests, extracting_streams_setting_gets_converter_info) {
                             ]
                            })";
 
-  BrightnESS::ForwardEpicsToKafka::ConfigParser Config;
+  Forwarder::ConfigParser Config;
   Config.setJsonFromString(RawJson);
-  BrightnESS::ForwardEpicsToKafka::ConfigSettings Settings =
+  Forwarder::ConfigSettings Settings =
       Config.extractConfiguration();
 
   auto Converter = Settings.StreamsInfo.at(0).Converters.at(0);
@@ -490,9 +490,9 @@ TEST(config_parser_tests,
                             ]
                            })";
 
-  BrightnESS::ForwardEpicsToKafka::ConfigParser Config;
+  Forwarder::ConfigParser Config;
   Config.setJsonFromString(RawJson);
-  BrightnESS::ForwardEpicsToKafka::ConfigSettings Settings =
+  Forwarder::ConfigSettings Settings =
       Config.extractConfiguration();
 
   auto Converter = Settings.StreamsInfo.at(0).Converters.at(0);
@@ -514,7 +514,7 @@ TEST(config_parser_tests, extracting_converter_info_with_no_topic_throws) {
                             ]
                            })";
 
-  BrightnESS::ForwardEpicsToKafka::ConfigParser Config;
+  Forwarder::ConfigParser Config;
   Config.setJsonFromString(RawJson);
 
   ASSERT_ANY_THROW(Config.extractConfiguration());
@@ -533,7 +533,7 @@ TEST(config_parser_tests, extracting_converter_info_with_no_schema_throws) {
                             ]
                            })";
 
-  BrightnESS::ForwardEpicsToKafka::ConfigParser Config;
+  Forwarder::ConfigParser Config;
   Config.setJsonFromString(RawJson);
 
   ASSERT_ANY_THROW(Config.extractConfiguration());
