@@ -261,8 +261,7 @@ V_t Field(flatbuffers::FlatBufferBuilder &builder,
 
 class Converter : public MakeFlatBufferFromPVStructure {
 public:
-  FlatBufs::FlatbufferMessage::uptr
-  convert(EpicsPVUpdate const &up) override {
+  FlatBufs::FlatbufferMessage::uptr convert(EpicsPVUpdate const &up) override {
     // Passing initial size:
     auto &pvstr = up.epics_pvstr;
     auto fb = make_unique<FlatBufs::FlatbufferMessage>();
@@ -344,4 +343,3 @@ FlatBufs::SchemaRegistry::Registrar<Info> g_registrar_info("f143",
                                                            Info::ptr(new Info));
 }
 }
-

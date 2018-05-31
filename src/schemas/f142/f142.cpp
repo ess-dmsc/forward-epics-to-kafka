@@ -389,8 +389,7 @@ public:
 
   ~Converter() override { LOG(3, "~Converter"); }
 
-  FlatBufs::FlatbufferMessage::uptr
-  convert(EpicsPVUpdate const &up) override {
+  FlatBufs::FlatbufferMessage::uptr convert(EpicsPVUpdate const &up) override {
     auto &pvstr = up.epics_pvstr;
     auto fb = make_unique<FlatBufs::FlatbufferMessage>();
 
@@ -486,8 +485,7 @@ public:
 /// This class is purely for testing
 class ConverterTestNamed : public MakeFlatBufferFromPVStructure {
 public:
-  FlatBufs::FlatbufferMessage::uptr
-  convert(EpicsPVUpdate const &up) override {
+  FlatBufs::FlatbufferMessage::uptr convert(EpicsPVUpdate const &up) override {
     auto &pvstr = up.epics_pvstr;
 
     {
