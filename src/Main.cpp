@@ -9,7 +9,6 @@
 #include "process.h"
 #define getpid _getpid
 #else
-#include <EpicsClient/CacheForPeriodicUpdate.h>
 #include <EpicsClient/EpicsClientInterface.h>
 #include <EpicsClient/EpicsClientMonitor.h>
 #include <unistd.h>
@@ -64,7 +63,7 @@ Main::Main(MainOpt &opt)
   }
   if (main_opt.periodMS > 0) {
     auto period = MS(main_opt.periodMS);
-    PVPoller = std::unique_ptr<Timer>(new Timer(period));
+    CallbackTimer = std::unique_ptr<Timer>(new Timer(period));
   }
   using nlohmann::json;
   if (auto Streams = find_array("streams", main_opt.JSONConfiguration)) {
@@ -200,8 +199,8 @@ void Main::forward_epics_to_kafka() {
       x->start();
     }
   }
-  if (PVPoller != nullptr) {
-    PVPoller->start();
+  if (CallbackTimer != nullptr) {
+    CallbackTimer->start();
   }
   while (ForwardingRunFlag.load() == ForwardingRunState::RUN) {
     auto do_stats = false;
@@ -240,7 +239,7 @@ void Main::forward_epics_to_kafka() {
   LOG(6, "Main::forward_epics_to_kafka shutting down");
   conversion_workers_clear();
   streams.streams_clear();
-  PVPoller->stop();
+  CallbackTimer->stop();
   ForwardingRunFlag.store(ForwardingRunState::STOPPED);
 }
 

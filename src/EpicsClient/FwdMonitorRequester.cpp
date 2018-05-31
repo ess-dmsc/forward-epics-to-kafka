@@ -11,9 +11,10 @@ namespace BrightnESS {
 namespace ForwardEpicsToKafka {
 namespace EpicsClient {
 
-FwdMonitorRequester::FwdMonitorRequester(EpicsClientMonitor *epicsClientMonitor,
-                                         const std::string &channel_name)
-    : channel_name(channel_name), epics_client(epicsClientMonitor) {
+FwdMonitorRequester::FwdMonitorRequester(
+    EpicsClientInterface *epicsClientMonitor, const std::string &channel_name)
+    : channel_name(channel_name), epics_client(epicsClientMonitor),
+      CachedUpdate(CacheForPeriodicUpdate(epicsClientMonitor)) {
   static std::atomic<uint32_t> __id{0};
   auto id = __id++;
   name = fmt::format("FwdMonitorRequester-{}", id);
@@ -84,6 +85,7 @@ void FwdMonitorRequester::monitorEvent(
     up->seq_data = seq_data;
     up->ts_epics_monitor = ts;
     ups.push_back(up);
+    CachedUpdate.setCachedUpdate(up);
     seq += 1;
   }
   for (auto &up : ups) {

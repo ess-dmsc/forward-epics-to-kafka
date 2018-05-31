@@ -24,7 +24,8 @@ class EpicsClientMonitor;
 ///\brief Implementation for EPICS client monitor.
 class EpicsClientMonitor_impl {
 public:
-  explicit EpicsClientMonitor_impl(EpicsClientMonitor *epics_client);
+  explicit EpicsClientMonitor_impl(EpicsClientInterface *epics_client)
+      : epics_client(epics_client) {}
   ~EpicsClientMonitor_impl();
   int init(std::string epics_channel_provider_type);
   int monitoring_start();
@@ -40,7 +41,7 @@ public:
   epics::pvData::Monitor::shared_pointer monitor;
   std::recursive_mutex mx;
   std::string channel_name;
-  EpicsClientMonitor *epics_client = nullptr;
+  EpicsClientInterface *epics_client = nullptr;
   std::unique_ptr<EpicsClientFactoryInit> factory_init;
 };
 

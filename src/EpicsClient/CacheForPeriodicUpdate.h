@@ -1,5 +1,6 @@
 #pragma once
 #include "EpicsClientInterface.h"
+#include "EpicsClientMonitor.h"
 #include "Ring.h"
 #include <memory>
 
@@ -9,15 +10,14 @@ namespace EpicsClient {
 
 class CacheForPeriodicUpdate {
 public:
-  explicit CacheForPeriodicUpdate(
-      std::shared_ptr<Ring<std::shared_ptr<FlatBufs::EpicsPVUpdate>>> Ring)
-      : EmitQueue(Ring){};
+  explicit CacheForPeriodicUpdate(EpicsClientInterface *EpicsClient)
+      : EpicsClient(EpicsClient){};
   int emit(std::shared_ptr<FlatBufs::EpicsPVUpdate> up);
   void setCachedUpdate(std::shared_ptr<FlatBufs::EpicsPVUpdate> PVUpdate);
 
 private:
   void EmitCachedValue();
-  std::shared_ptr<Ring<std::shared_ptr<FlatBufs::EpicsPVUpdate>>> EmitQueue;
+  EpicsClientInterface *EpicsClient;
   std::shared_ptr<FlatBufs::EpicsPVUpdate> CachedPVUpdate;
 };
 }

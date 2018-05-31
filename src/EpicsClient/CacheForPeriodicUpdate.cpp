@@ -1,5 +1,5 @@
 #include "CacheForPeriodicUpdate.h"
-
+#include <utility>
 namespace BrightnESS {
 namespace ForwardEpicsToKafka {
 namespace EpicsClient {
@@ -14,7 +14,7 @@ int CacheForPeriodicUpdate::emit(
     // should never happen, ignore
     return 0;
   }
-  EmitQueue->push_enlarge(up);
+  EpicsClient->emit(up);
   up.reset();
   return 1;
 }

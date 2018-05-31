@@ -1,4 +1,5 @@
 #pragma once
+#include "CacheForPeriodicUpdate.h"
 #include "RangeSet.h"
 #include <pv/monitor.h>
 namespace BrightnESS {
@@ -11,7 +12,7 @@ class EpicsClientMonitor;
 ///\brief an implementation of an internal epics monitor loop
 class FwdMonitorRequester : public ::epics::pvData::MonitorRequester {
 public:
-  FwdMonitorRequester(EpicsClientMonitor *epicsClientMonitor,
+  FwdMonitorRequester(EpicsClientInterface *epicsClientMonitor,
                       const std::string &channel_name);
   ~FwdMonitorRequester();
   std::string getRequesterName() override;
@@ -30,7 +31,8 @@ private:
   std::string name;
   std::string channel_name;
   uint64_t seq = 0;
-  EpicsClientMonitor *epics_client = nullptr;
+  EpicsClientInterface *epics_client = nullptr;
+  CacheForPeriodicUpdate CachedUpdate;
   RangeSet<uint64_t> seq_data_received;
 };
 }

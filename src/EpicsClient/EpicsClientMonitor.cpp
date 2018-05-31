@@ -24,10 +24,6 @@ using urlock = std::unique_lock<std::recursive_mutex>;
 // Testing alternative
 #define RLOCK() urlock lock(mx);
 
-EpicsClientMonitor_impl::EpicsClientMonitor_impl(
-    EpicsClientMonitor *epics_client)
-    : epics_client(epics_client) {}
-
 int EpicsClientMonitor_impl::init(std::string epics_channel_provider_type) {
   factory_init = EpicsClientFactoryInit::factory_init();
   {

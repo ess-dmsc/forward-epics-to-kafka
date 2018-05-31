@@ -6,9 +6,9 @@ namespace ForwardEpicsToKafka {
 
 using CallbackFunction = std::function<void()>;
 
-///\class PeriodicPVPoller
+///\class Timer
 ///\brief Timer for the periodic updates.
-/// Calls the callback from polling epics.
+/// Calls the callback for pushing cached pv values
 class Timer {
 public:
   explicit Timer(std::chrono::milliseconds Interval)
