@@ -52,8 +52,7 @@ set(INCLUDES
     EpicsClient/ChannelRequester.h
     EpicsClient/EpicsClientMonitor.h
     EpicsClient/EpicsClientFactory.h
-        EpicsClient/CacheForPeriodicUpdate.h
-    EpicsClient/FwdMonitorRequester.h
+        EpicsClient/FwdMonitorRequester.h
     EpicsClient/EpicsClientInterface.h
     Config.h
     ConversionWorker.h
@@ -87,8 +86,7 @@ set(SOURCES
     EpicsClient/ChannelRequester.cpp
     EpicsClient/FwdMonitorRequester.cpp
     EpicsClient/EpicsClientFactory.cpp
-        EpicsClient/CacheForPeriodicUpdate.cpp
-    helper.cpp
+        helper.cpp
     logger.cpp
     Kafka.cpp
     KafkaW/BrokerSettings.cpp

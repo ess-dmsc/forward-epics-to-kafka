@@ -1,6 +1,6 @@
 #pragma once
-#include "CacheForPeriodicUpdate.h"
 #include "RangeSet.h"
+#include "EpicsClientInterface.h"
 #include <pv/monitor.h>
 namespace BrightnESS {
 namespace ForwardEpicsToKafka {
@@ -32,7 +32,6 @@ private:
   std::string channel_name;
   uint64_t seq = 0;
   EpicsClientInterface *epics_client = nullptr;
-  CacheForPeriodicUpdate CachedUpdate;
   RangeSet<uint64_t> seq_data_received;
 };
 }

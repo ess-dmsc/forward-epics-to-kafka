@@ -17,7 +17,6 @@ namespace EpicsClient {
 using std::array;
 using std::vector;
 
-class FwdMonitorRequester;
 class EpicsClientMonitor;
 
 ///\class EpicsClientMonitor_impl
@@ -57,11 +56,14 @@ public:
   int stop() override;
   void error_in_epics() override;
   int status() override { return status_; };
+  void emitCachedValue();
+  int emitWithoutCaching(std::shared_ptr<FlatBufs::EpicsPVUpdate> Update);
 
 private:
   std::unique_ptr<EpicsClientMonitor_impl> impl;
   std::shared_ptr<Ring<std::shared_ptr<FlatBufs::EpicsPVUpdate>>> emit_queue;
   std::atomic<int> status_{0};
+  std::shared_ptr<FlatBufs::EpicsPVUpdate> CachedUpdate;
 };
 }
 }

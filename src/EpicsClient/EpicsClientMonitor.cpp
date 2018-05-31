@@ -137,19 +137,26 @@ EpicsClientMonitor::~EpicsClientMonitor() {
 int EpicsClientMonitor::stop() { return impl->stop(); }
 
 int EpicsClientMonitor::emit(std::shared_ptr<FlatBufs::EpicsPVUpdate> up) {
-  if (!up) {
+  CachedUpdate = up;
+  return emitWithoutCaching(up);
+}
+
+int EpicsClientMonitor::emitWithoutCaching(std::shared_ptr<FlatBufs::EpicsPVUpdate> Update){
+  if (!Update) {
     CLOG(6, 1, "empty update?");
     // should never happen, ignore
     return 0;
   }
-  emit_queue->push_enlarge(up);
-
-  // here we are, saying goodbye to a good buffer
-  up.reset();
+  emit_queue->push_enlarge(Update);
   return 1;
-}
+};
+
 
 void EpicsClientMonitor::error_in_epics() { status_ = -1; }
+
+void EpicsClientMonitor::emitCachedValue() {
+  emitWithoutCaching(CachedUpdate);
+}
 }
 }
 }
