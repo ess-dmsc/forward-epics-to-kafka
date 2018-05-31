@@ -79,9 +79,8 @@ private:
   std::unique_ptr<KafkaW::ProducerTopic> status_producer_topic;
   std::atomic<ForwardingRunState> ForwardingRunFlag{ForwardingRunState::RUN};
   void raiseForwardingFlag(ForwardingRunState ToBeRaised);
-  void
-  pushConverterToStream(ConverterSettings const &ConverterInfo,
-                        std::shared_ptr<Stream> &Stream);
+  void pushConverterToStream(ConverterSettings const &ConverterInfo,
+                             std::shared_ptr<Stream> &Stream);
 };
 
 extern std::atomic<uint64_t> g__total_msgs_to_kafka;

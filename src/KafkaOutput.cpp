@@ -27,4 +27,3 @@ int KafkaOutput::emit(FlatBufs::FlatbufferMessage::uptr fb) {
 
 std::string KafkaOutput::topic_name() { return pt.name(); }
 }
-

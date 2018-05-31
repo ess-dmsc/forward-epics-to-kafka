@@ -19,4 +19,3 @@ public:
   KafkaW::Producer::Topic pt;
 };
 }
-

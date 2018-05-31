@@ -246,9 +246,8 @@ void Forwarder::report_stats(int dt) {
   }
 }
 
-void Forwarder::pushConverterToStream(
-    ConverterSettings const &ConverterInfo,
-    std::shared_ptr<Stream> &Stream) {
+void Forwarder::pushConverterToStream(ConverterSettings const &ConverterInfo,
+                                      std::shared_ptr<Stream> &Stream) {
 
   // Check schema exists
   auto r1 = main_opt.schema_registry.items().find(ConverterInfo.Schema);

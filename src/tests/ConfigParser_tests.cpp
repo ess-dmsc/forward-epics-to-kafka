@@ -32,8 +32,7 @@ TEST(config_parser_tests, no_converters_specified_has_no_side_effects) {
   Forwarder::ConfigParser Config;
   Config.setJsonFromString(RawJson);
 
-  Forwarder::ConfigSettings Settings =
-      Config.extractConfiguration();
+  Forwarder::ConfigSettings Settings = Config.extractConfiguration();
 
   ASSERT_EQ(0u, Settings.GlobalConverters.size());
 }
@@ -51,8 +50,7 @@ TEST(config_parser_tests, ints_specified_in_converters_are_extracted) {
   Forwarder::ConfigParser Config;
   Config.setJsonFromString(RawJson);
 
-  Forwarder::ConfigSettings Settings =
-      Config.extractConfiguration();
+  Forwarder::ConfigSettings Settings = Config.extractConfiguration();
 
   ASSERT_EQ(1u, Settings.GlobalConverters.size());
 
@@ -75,8 +73,7 @@ TEST(config_parser_tests, strings_specified_in_converters_are_extracted) {
   Forwarder::ConfigParser Config;
   Config.setJsonFromString(RawJson);
 
-  Forwarder::ConfigSettings Settings =
-      Config.extractConfiguration();
+  Forwarder::ConfigSettings Settings = Config.extractConfiguration();
 
   ASSERT_EQ(1u, Settings.GlobalConverters.size());
 
@@ -104,8 +101,7 @@ TEST(config_parser_tests,
   Forwarder::ConfigParser Config;
   Config.setJsonFromString(RawJson);
 
-  Forwarder::ConfigSettings Settings =
-      Config.extractConfiguration();
+  Forwarder::ConfigSettings Settings = Config.extractConfiguration();
 
   ASSERT_EQ(2u, Settings.GlobalConverters.size());
 
@@ -131,8 +127,7 @@ TEST(config_parser_tests,
   Forwarder::ConfigParser Config;
   Config.setJsonFromString(RawJson);
 
-  Forwarder::ConfigSettings Settings =
-      Config.extractConfiguration();
+  Forwarder::ConfigSettings Settings = Config.extractConfiguration();
 
   ASSERT_EQ("kafkabroker", Settings.StatusReportURI.host);
   ASSERT_EQ(1234u, Settings.StatusReportURI.port);
@@ -145,8 +140,7 @@ TEST(config_parser_tests, no_status_uri_defined_gives_no_uri_port_or_topic) {
   Forwarder::ConfigParser Config;
   Config.setJsonFromString(RawJson);
 
-  Forwarder::ConfigSettings Settings =
-      Config.extractConfiguration();
+  Forwarder::ConfigSettings Settings = Config.extractConfiguration();
 
   ASSERT_EQ("", Settings.StatusReportURI.host);
   ASSERT_EQ(0u, Settings.StatusReportURI.port);
@@ -161,8 +155,7 @@ TEST(config_parser_tests, setting_broker_sets_host_and_port) {
   Forwarder::ConfigParser Config;
   Config.setJsonFromString(RawJson);
 
-  Forwarder::ConfigSettings Settings =
-      Config.extractConfiguration();
+  Forwarder::ConfigSettings Settings = Config.extractConfiguration();
 
   ASSERT_EQ("kafkabroker", Settings.Brokers.at(0).host);
   ASSERT_EQ(1234u, Settings.Brokers.at(0).port);
@@ -177,8 +170,7 @@ TEST(config_parser_tests,
   Forwarder::ConfigParser Config;
   Config.setJsonFromString(RawJson);
 
-  Forwarder::ConfigSettings Settings =
-      Config.extractConfiguration();
+  Forwarder::ConfigSettings Settings = Config.extractConfiguration();
 
   ASSERT_EQ(2u, Settings.Brokers.size());
   ASSERT_EQ("kafkabroker1", Settings.Brokers.at(0).host);
@@ -193,8 +185,7 @@ TEST(config_parser_tests, setting_no_brokers_sets_default_host_and_port) {
   Forwarder::ConfigParser Config;
   Config.setJsonFromString(RawJson);
 
-  Forwarder::ConfigSettings Settings =
-      Config.extractConfiguration();
+  Forwarder::ConfigSettings Settings = Config.extractConfiguration();
 
   ASSERT_EQ("localhost", Settings.Brokers.at(0).host);
   ASSERT_EQ(9092u, Settings.Brokers.at(0).port);
@@ -206,8 +197,7 @@ TEST(config_parser_tests, no_kafka_broker_settings_has_no_side_effects) {
   Forwarder::ConfigParser Config;
   Config.setJsonFromString(RawJson);
 
-  Forwarder::ConfigSettings Settings =
-      Config.extractConfiguration();
+  Forwarder::ConfigSettings Settings = Config.extractConfiguration();
 
   ASSERT_EQ(0u, Settings.BrokerSettings.ConfigurationIntegers.size());
   ASSERT_EQ(0u, Settings.BrokerSettings.ConfigurationStrings.size());
@@ -226,8 +216,7 @@ TEST(config_parser_tests, ints_in_kafka_broker_settings_are_extracted) {
   Forwarder::ConfigParser Config;
   Config.setJsonFromString(RawJson);
 
-  Forwarder::ConfigSettings Settings =
-      Config.extractConfiguration();
+  Forwarder::ConfigSettings Settings = Config.extractConfiguration();
 
   ASSERT_EQ(2u, Settings.BrokerSettings.ConfigurationIntegers.size());
   ASSERT_EQ(123,
@@ -249,8 +238,7 @@ TEST(config_parser_tests, strings_in_kafka_broker_settings_are_extracted) {
   Forwarder::ConfigParser Config;
   Config.setJsonFromString(RawJson);
 
-  Forwarder::ConfigSettings Settings =
-      Config.extractConfiguration();
+  Forwarder::ConfigSettings Settings = Config.extractConfiguration();
 
   ASSERT_EQ(2u, Settings.BrokerSettings.ConfigurationStrings.size());
   ASSERT_EQ("hello",
@@ -266,8 +254,7 @@ TEST(config_parser_tests,
   Forwarder::ConfigParser Config;
   Config.setJsonFromString(RawJson);
 
-  Forwarder::ConfigSettings Settings =
-      Config.extractConfiguration();
+  Forwarder::ConfigSettings Settings = Config.extractConfiguration();
 
   ASSERT_EQ("localhost", Settings.BrokerConfig.host);
   ASSERT_EQ(9092u, Settings.BrokerConfig.port);
@@ -283,8 +270,7 @@ TEST(config_parser_tests,
   Forwarder::ConfigParser Config;
   Config.setJsonFromString(RawJson);
 
-  Forwarder::ConfigSettings Settings =
-      Config.extractConfiguration();
+  Forwarder::ConfigSettings Settings = Config.extractConfiguration();
 
   ASSERT_EQ("kafkabroker", Settings.BrokerConfig.host);
   ASSERT_EQ(1234u, Settings.BrokerConfig.port);
@@ -297,8 +283,7 @@ TEST(config_parser_tests, no_conversion_threads_settings_sets_default) {
   Forwarder::ConfigParser Config;
   Config.setJsonFromString(RawJson);
 
-  Forwarder::ConfigSettings Settings =
-      Config.extractConfiguration();
+  Forwarder::ConfigSettings Settings = Config.extractConfiguration();
 
   ASSERT_EQ(1u, Settings.ConversionThreads);
 }
@@ -311,8 +296,7 @@ TEST(config_parser_tests, extracting_conversion_threads_sets_value) {
   Forwarder::ConfigParser Config;
   Config.setJsonFromString(RawJson);
 
-  Forwarder::ConfigSettings Settings =
-      Config.extractConfiguration();
+  Forwarder::ConfigSettings Settings = Config.extractConfiguration();
 
   ASSERT_EQ(3u, Settings.ConversionThreads);
 }
@@ -323,8 +307,7 @@ TEST(config_parser_tests, no_conversion_worker_queue_size_sets_default) {
   Forwarder::ConfigParser Config;
   Config.setJsonFromString(RawJson);
 
-  Forwarder::ConfigSettings Settings =
-      Config.extractConfiguration();
+  Forwarder::ConfigSettings Settings = Config.extractConfiguration();
 
   ASSERT_EQ(1024u, Settings.ConversionWorkerQueueSize);
 }
@@ -337,8 +320,7 @@ TEST(config_parser_tests, extracting_conversion_worker_queue_size_sets_value) {
   Forwarder::ConfigParser Config;
   Config.setJsonFromString(RawJson);
 
-  Forwarder::ConfigSettings Settings =
-      Config.extractConfiguration();
+  Forwarder::ConfigSettings Settings = Config.extractConfiguration();
 
   ASSERT_EQ(1234u, Settings.ConversionWorkerQueueSize);
 }
@@ -349,8 +331,7 @@ TEST(config_parser_tests, no_main_poll_interval_sets_default) {
   Forwarder::ConfigParser Config;
   Config.setJsonFromString(RawJson);
 
-  Forwarder::ConfigSettings Settings =
-      Config.extractConfiguration();
+  Forwarder::ConfigSettings Settings = Config.extractConfiguration();
 
   ASSERT_EQ(500, Settings.MainPollInterval);
 }
@@ -363,8 +344,7 @@ TEST(config_parser_tests, extracting_main_poll_interval_sets_value) {
   Forwarder::ConfigParser Config;
   Config.setJsonFromString(RawJson);
 
-  Forwarder::ConfigSettings Settings =
-      Config.extractConfiguration();
+  Forwarder::ConfigSettings Settings = Config.extractConfiguration();
 
   ASSERT_EQ(1234, Settings.MainPollInterval);
 }
@@ -382,8 +362,7 @@ TEST(config_parser_tests,
 
   Forwarder::ConfigParser Config;
   Config.setJsonFromString(RawJson);
-  Forwarder::ConfigSettings Settings =
-      Config.extractConfiguration();
+  Forwarder::ConfigSettings Settings = Config.extractConfiguration();
 
   ASSERT_EQ(1u, Settings.StreamsInfo.size());
 
@@ -410,8 +389,7 @@ TEST(config_parser_tests,
 
   Forwarder::ConfigParser Config;
   Config.setJsonFromString(RawJson);
-  Forwarder::ConfigSettings Settings =
-      Config.extractConfiguration();
+  Forwarder::ConfigSettings Settings = Config.extractConfiguration();
 
   ASSERT_EQ(2u, Settings.StreamsInfo.size());
 
@@ -436,8 +414,7 @@ TEST(config_parser_tests,
 
   Forwarder::ConfigParser Config;
   Config.setJsonFromString(RawJson);
-  Forwarder::ConfigSettings Settings =
-      Config.extractConfiguration();
+  Forwarder::ConfigSettings Settings = Config.extractConfiguration();
 
   ASSERT_EQ(1u, Settings.StreamsInfo.size());
 
@@ -465,8 +442,7 @@ TEST(config_parser_tests, extracting_streams_setting_gets_converter_info) {
 
   Forwarder::ConfigParser Config;
   Config.setJsonFromString(RawJson);
-  Forwarder::ConfigSettings Settings =
-      Config.extractConfiguration();
+  Forwarder::ConfigSettings Settings = Config.extractConfiguration();
 
   auto Converter = Settings.StreamsInfo.at(0).Converters.at(0);
 
@@ -492,8 +468,7 @@ TEST(config_parser_tests,
 
   Forwarder::ConfigParser Config;
   Config.setJsonFromString(RawJson);
-  Forwarder::ConfigSettings Settings =
-      Config.extractConfiguration();
+  Forwarder::ConfigSettings Settings = Config.extractConfiguration();
 
   auto Converter = Settings.StreamsInfo.at(0).Converters.at(0);
 
