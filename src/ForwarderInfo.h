@@ -2,8 +2,7 @@
 
 #include <cstdint>
 
-namespace BrightnESS {
-namespace ForwardEpicsToKafka {
+namespace Forwarder {
 
 class Forwarder;
 
@@ -20,5 +19,4 @@ public:
 private:
   Forwarder *main = nullptr;
 };
-}
 }

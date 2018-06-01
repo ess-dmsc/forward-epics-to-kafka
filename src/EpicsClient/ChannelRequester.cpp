@@ -2,8 +2,7 @@
 #include "EpicsClient.h"
 #include "logger.h"
 
-namespace BrightnESS {
-namespace ForwardEpicsToKafka {
+namespace Forwarder {
 namespace EpicsClient {
 
 using epics::pvAccess::Channel;
@@ -83,7 +82,6 @@ void ChannelRequester::channelStateChange(
          channel_state_name(cstate));
     epics_client_impl->error_channel_requester();
   }
-}
 }
 }
 }

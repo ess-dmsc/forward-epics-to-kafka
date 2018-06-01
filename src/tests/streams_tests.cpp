@@ -4,7 +4,7 @@
 #include <gmock/gmock.h>
 
 using namespace testing;
-using namespace BrightnESS::ForwardEpicsToKafka;
+using namespace Forwarder;
 
 class MockStream : public Stream {
 public:

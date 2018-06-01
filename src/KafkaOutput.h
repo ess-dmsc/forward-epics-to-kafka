@@ -4,8 +4,7 @@
 #include "KafkaW/KafkaW.h"
 #include <memory>
 
-namespace BrightnESS {
-namespace ForwardEpicsToKafka {
+namespace Forwarder {
 
 /**
 Represents the output sink used by Stream.
@@ -15,9 +14,8 @@ public:
   KafkaOutput(KafkaOutput &&pt);
   KafkaOutput(KafkaW::Producer::Topic &&pt);
   /// Hands off the message to Kafka
-  int emit(std::unique_ptr<BrightnESS::FlatBufs::FlatbufferMessage> fb);
+  int emit(std::unique_ptr<FlatBufs::FlatbufferMessage> fb);
   std::string topic_name();
   KafkaW::Producer::Topic pt;
 };
-}
 }

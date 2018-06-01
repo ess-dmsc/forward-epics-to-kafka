@@ -8,8 +8,7 @@
 #include <string>
 #include <vector>
 
-namespace BrightnESS {
-namespace ForwardEpicsToKafka {
+namespace Forwarder {
 
 struct MainOpt {
   ConfigSettings MainSettings;
@@ -34,5 +33,4 @@ private:
 
 std::pair<int, std::unique_ptr<MainOpt>> parse_opt(int argc, char **argv);
 
-} // namespace ForwardEpicsToKafka
-} // namespace BrightnESS
+} // namespace Forwarder

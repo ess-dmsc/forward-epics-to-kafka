@@ -2,7 +2,6 @@
 #include "logger.h"
 #include <flatbuffers/reflection.h>
 
-namespace BrightnESS {
 namespace FlatBufs {
 
 static_assert(FLATBUFFERS_LITTLEENDIAN, "We require little endian.");
@@ -36,5 +35,4 @@ FlatbufferMessageSlice FlatbufferMessage::message() {
 }
 
 void inspect(FlatbufferMessage const &fb) {}
-}
 }

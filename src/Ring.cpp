@@ -3,8 +3,7 @@
 #include "epics-to-fb.h"
 #include "logger.h"
 
-namespace BrightnESS {
-namespace ForwardEpicsToKafka {
+namespace Forwarder {
 
 static uint32_t const cap_max = 1024 * 1024;
 
@@ -247,5 +246,4 @@ template <typename TP> typename Ring<TP>::ulock Ring<TP>::lock() {
 
 template class Ring<std::unique_ptr<FlatBufs::EpicsPVUpdate>>;
 template class Ring<std::unique_ptr<ConversionWorkPacket>>;
-}
 }

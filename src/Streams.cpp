@@ -1,8 +1,7 @@
 #include "Streams.h"
 #include "Stream.h"
 
-using namespace BrightnESS::ForwardEpicsToKafka;
-
+namespace Forwarder {
 /**
  * Gets the number of streams in the streams vector.
  *
@@ -72,11 +71,11 @@ void Streams::add(std::shared_ptr<Stream> s) { streams.push_back(s); }
  *
  * @return The last stream in the vector.
  */
-std::shared_ptr<BrightnESS::ForwardEpicsToKafka::Stream> Streams::back() {
+std::shared_ptr<Stream> Streams::back() {
   return streams.empty() ? nullptr : streams.back();
 }
 
-const std::vector<std::shared_ptr<BrightnESS::ForwardEpicsToKafka::Stream>> &
-Streams::get_streams() {
+const std::vector<std::shared_ptr<Stream>> &Streams::get_streams() {
   return streams;
+}
 }

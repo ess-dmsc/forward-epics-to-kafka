@@ -14,8 +14,7 @@
 #endif
 #include "CURLReporter.h"
 
-namespace BrightnESS {
-namespace ForwardEpicsToKafka {
+namespace Forwarder {
 
 static bool isStopDueToSignal(ForwardingRunState Flag) {
   return static_cast<int>(Flag) &
@@ -34,8 +33,7 @@ using ulock = std::unique_lock<std::mutex>;
 /// \class Main
 /// \brief Main program entry class.
 Forwarder::Forwarder(MainOpt &opt)
-    : main_opt(opt),
-      kafka_instance_set(Kafka::InstanceSet::Set(make_broker_opt(opt))),
+    : main_opt(opt), kafka_instance_set(InstanceSet::Set(make_broker_opt(opt))),
       conversion_scheduler(this) {
   finfo = std::make_shared<ForwarderInfo>(this);
   finfo->teamid = main_opt.teamid;
@@ -86,7 +84,7 @@ Forwarder::~Forwarder() {
   streams.streams_clear();
   conversion_workers_clear();
   converters_clear();
-  Kafka::InstanceSet::clear();
+  InstanceSet::clear();
 }
 
 int Forwarder::conversion_workers_clear() {
@@ -247,9 +245,8 @@ void Forwarder::report_stats(int dt) {
   }
 }
 
-void Forwarder::pushConverterToStream(
-    ConverterSettings const &ConverterInfo,
-    std::shared_ptr<ForwardEpicsToKafka::Stream> &Stream) {
+void Forwarder::pushConverterToStream(ConverterSettings const &ConverterInfo,
+                                      std::shared_ptr<Stream> &Stream) {
 
   // Check schema exists
   auto r1 = main_opt.schema_registry.items().find(ConverterInfo.Schema);
@@ -258,18 +255,18 @@ void Forwarder::pushConverterToStream(
         "Cannot handle flatbuffer schema id {}", ConverterInfo.Schema));
   }
 
-  uri::URI URI;
+  URI Uri;
   if (!main_opt.MainSettings.Brokers.empty()) {
-    URI = main_opt.MainSettings.Brokers[0];
+    Uri = main_opt.MainSettings.Brokers[0];
   }
 
-  uri::URI TopicURI;
-  if (!URI.host.empty()) {
-    TopicURI.host = URI.host;
+  URI TopicURI;
+  if (!Uri.host.empty()) {
+    TopicURI.host = Uri.host;
   }
 
-  if (URI.port != 0) {
-    TopicURI.port = URI.port;
+  if (Uri.port != 0) {
+    TopicURI.port = Uri.port;
   }
   TopicURI.parse(ConverterInfo.Topic);
 
@@ -338,5 +335,4 @@ void Forwarder::stopForwarding() {
 void Forwarder::stopForwardingDueToSignal() {
   raiseForwardingFlag(ForwardingRunState::STOP_DUE_TO_SIGNAL);
 }
-} // namespace ForwardEpicsToKafka
-} // namespace BrightnESS
+} // namespace Forwarder

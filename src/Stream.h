@@ -13,8 +13,7 @@
 #include <string>
 #include <vector>
 
-namespace BrightnESS {
-namespace ForwardEpicsToKafka {
+namespace Forwarder {
 
 class Converter;
 class KafkaOutput;
@@ -55,8 +54,8 @@ public:
   Stream(std::shared_ptr<ForwarderInfo> finfo, ChannelInfo channel_info);
   Stream(Stream &&) = delete;
   ~Stream();
-  int converter_add(Kafka::InstanceSet &kset, std::shared_ptr<Converter> conv,
-                    uri::URI uri_kafka_output);
+  int converter_add(InstanceSet &kset, std::shared_ptr<Converter> conv,
+                    URI uri_kafka_output);
   int emit(std::unique_ptr<FlatBufs::EpicsPVUpdate> up);
   int32_t
   fill_conversion_work(Ring<std::unique_ptr<ConversionWorkPacket>> &queue,
@@ -86,5 +85,4 @@ private:
   std::atomic<int> status_{0};
   RangeSet<uint64_t> seq_data_emitted;
 };
-}
 }

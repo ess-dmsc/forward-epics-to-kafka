@@ -7,8 +7,7 @@
 #include <map>
 #include <string>
 
-namespace BrightnESS {
-namespace ForwardEpicsToKafka {
+namespace Forwarder {
 
 class Converter {
 public:
@@ -24,5 +23,4 @@ private:
   std::string schema;
   FlatBufs::MakeFlatBufferFromPVStructure::ptr conv;
 };
-} // namespace ForwardEpicsToKafka
-} // namespace BrightnESS
+} // namespace Forwarder

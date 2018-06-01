@@ -5,7 +5,6 @@
 #include <pv/pvData.h>
 #include <string>
 
-namespace BrightnESS {
 namespace FlatBufs {
 
 struct EpicsPVstr;
@@ -27,5 +26,4 @@ struct EpicsPVUpdate {
   uint32_t fwdix;
   uint64_t teamid = 0;
 };
-}
 }

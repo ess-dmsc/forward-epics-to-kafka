@@ -8,8 +8,7 @@
 #include <string>
 #include <vector>
 
-namespace BrightnESS {
-namespace ForwardEpicsToKafka {
+namespace Forwarder {
 
 /// Holder for the Kafka brokers settings defined in the configuration file.
 struct KafkaBrokerSettings {
@@ -33,12 +32,12 @@ struct StreamSettings {
 
 /// Holder for the configuration settings defined in the configuration file.
 struct ConfigSettings {
-  uri::URI BrokerConfig{"//localhost:9092/forward_epics_to_kafka_commands"};
-  std::vector<uri::URI> Brokers;
+  URI BrokerConfig{"//localhost:9092/forward_epics_to_kafka_commands"};
+  std::vector<URI> Brokers;
   size_t ConversionThreads{1};
   size_t ConversionWorkerQueueSize{1024};
   int32_t MainPollInterval{500};
-  uri::URI StatusReportURI;
+  URI StatusReportURI;
   KafkaBrokerSettings BrokerSettings;
   std::vector<StreamSettings> StreamsInfo;
   std::map<std::string, KafkaBrokerSettings> GlobalConverters;
@@ -82,5 +81,4 @@ private:
   void extractGlobalConverters(ConfigSettings &Settings);
   std::atomic<uint32_t> ConverterIndex{0};
 };
-} // namespace ForwardEpicsToKafka
-} // namespace BrightnESS
+} // namespace Forwarder

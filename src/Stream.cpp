@@ -6,8 +6,7 @@
 #include "helper.h"
 #include "logger.h"
 
-namespace BrightnESS {
-namespace ForwardEpicsToKafka {
+namespace Forwarder {
 
 ConversionPath::ConversionPath(ConversionPath &&x)
     : converter(std::move(x.converter)),
@@ -73,8 +72,8 @@ Stream::~Stream() {
   LOG(6, "seq_data_emitted: {}", seq_data_emitted.to_string());
 }
 
-int Stream::converter_add(Kafka::InstanceSet &kset, Converter::sptr conv,
-                          uri::URI uri_kafka_output) {
+int Stream::converter_add(InstanceSet &kset, Converter::sptr conv,
+                          URI uri_kafka_output) {
   auto pt = kset.producer_topic(uri_kafka_output);
   std::unique_ptr<ConversionPath> cp(new ConversionPath(
       {std::move(conv)},
@@ -218,6 +217,5 @@ nlohmann::json Stream::status_json() {
   }
   Document["converters"] = Converters;
   return Document;
-}
 }
 }

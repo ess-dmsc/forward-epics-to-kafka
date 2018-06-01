@@ -1,9 +1,7 @@
 #include "Kafka.h"
 #include "logger.h"
 
-namespace BrightnESS {
-namespace ForwardEpicsToKafka {
-namespace Kafka {
+namespace Forwarder {
 
 static std::mutex mx;
 static std::shared_ptr<InstanceSet> kset;
@@ -42,7 +40,7 @@ static void prod_delivery_failed(rd_kafka_message_t const *msg) {
   }
 }
 
-KafkaW::Producer::Topic InstanceSet::producer_topic(uri::URI uri) {
+KafkaW::Producer::Topic InstanceSet::producer_topic(Forwarder::URI uri) {
   LOG(7, "InstanceSet::producer_topic  for:  {}, {}", uri.host_port, uri.topic);
   auto host_port = uri.host_port;
   auto it = producers_by_host.find(host_port);
@@ -86,7 +84,5 @@ std::vector<KafkaW::ProducerStats> InstanceSet::stats_all() {
     ret.push_back(m.second->Stats);
   }
   return ret;
-}
-}
 }
 }
