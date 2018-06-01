@@ -256,18 +256,18 @@ void Forwarder::pushConverterToStream(ConverterSettings const &ConverterInfo,
         "Cannot handle flatbuffer schema id {}", ConverterInfo.Schema));
   }
 
-  uri::URI URI;
+  URI Uri;
   if (!main_opt.MainSettings.Brokers.empty()) {
-    URI = main_opt.MainSettings.Brokers[0];
+    Uri = main_opt.MainSettings.Brokers[0];
   }
 
-  uri::URI TopicURI;
-  if (!URI.host.empty()) {
-    TopicURI.host = URI.host;
+  URI TopicURI;
+  if (!Uri.host.empty()) {
+    TopicURI.host = Uri.host;
   }
 
-  if (URI.port != 0) {
-    TopicURI.port = URI.port;
+  if (Uri.port != 0) {
+    TopicURI.port = Uri.port;
   }
   TopicURI.parse(ConverterInfo.Topic);
 

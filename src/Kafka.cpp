@@ -41,7 +41,7 @@ static void prod_delivery_failed(rd_kafka_message_t const *msg) {
   }
 }
 
-KafkaW::Producer::Topic InstanceSet::producer_topic(uri::URI uri) {
+KafkaW::Producer::Topic InstanceSet::producer_topic(Forwarder::URI uri) {
   LOG(7, "InstanceSet::producer_topic  for:  {}, {}", uri.host_port, uri.topic);
   auto host_port = uri.host_port;
   auto it = producers_by_host.find(host_port);

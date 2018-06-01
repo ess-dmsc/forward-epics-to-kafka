@@ -4,11 +4,7 @@
 #include <string>
 #include <vector>
 
-namespace uri {
-
-using std::array;
-using std::vector;
-using std::string;
+namespace Forwarder {
 
 /// Thin parser for URIs.
 class URI {
@@ -17,9 +13,9 @@ public:
   /// URI::parse to fill it
   URI();
   /// Creates and parses the given URI
-  URI(string uri);
+  URI(std::string uri);
   /// Parses the given `uri`
-  void parse(string uri);
+  void parse(std::string uri);
   /// Given a `http://www.example.com` scheme will contain `http`
   std::string scheme;
   /// Just the parsed hostname

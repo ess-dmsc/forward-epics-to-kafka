@@ -2,24 +2,21 @@
 #include "logger.h"
 #include <iostream>
 
-namespace uri {
+namespace Forwarder {
 
-using std::array;
-using std::move;
-
-static string topic_from_path(string s) {
+static std::string topic_from_path(std::string s) {
   auto p = s.find("/");
   if (p == 0) {
     s = s.substr(1);
   }
   p = s.find("/");
-  if (p == string::npos) {
+  if (p == std::string::npos) {
     return s;
   } else {
     if (p == 0) {
       return s.substr(1);
     } else {
-      return string();
+      return std::string();
     }
   }
 }
@@ -38,9 +35,9 @@ void URI::update_deps() {
 
 URI::URI() {}
 
-URI::URI(string uri) { parse(uri); }
+URI::URI(std::string uri) { parse(uri); }
 
-static bool is_alpha(string s) {
+static bool is_alpha(std::string s) {
   for (auto c : s) {
     if (c < 'a' || c > 'z') {
       return false;
@@ -49,47 +46,47 @@ static bool is_alpha(string s) {
   return true;
 }
 
-static vector<string> protocol(string s) {
+static std::vector<std::string> protocol(std::string s) {
   auto slashes = s.find("://");
-  if (slashes == string::npos || slashes == 0) {
-    return {string(), s};
+  if (slashes == std::string::npos || slashes == 0) {
+    return {std::string(), s};
   }
   auto proto = s.substr(0, slashes);
   if (!is_alpha(proto)) {
-    return {string(), s};
+    return {std::string(), s};
   }
-  return {proto, s.substr(slashes + 1, string::npos)};
+  return {proto, s.substr(slashes + 1, std::string::npos)};
 }
 
-static vector<string> hostport(string s) {
+static std::vector<std::string> hostport(std::string s) {
   if (s.find("//") != 0) {
-    return {string(), string(), s};
+    return {std::string(), std::string(), s};
   }
   auto slash = s.find("/", 2);
   auto colon = s.find(":", 2);
-  if (colon == string::npos) {
-    if (slash == string::npos) {
-      return {s.substr(2), string(), string()};
+  if (colon == std::string::npos) {
+    if (slash == std::string::npos) {
+      return {s.substr(2), std::string(), std::string()};
     } else {
-      return {s.substr(2, slash - 2), string(), s.substr(slash)};
+      return {s.substr(2, slash - 2), std::string(), s.substr(slash)};
     }
   } else {
-    if (slash == string::npos) {
-      return {s.substr(2, colon - 2), s.substr(colon + 1), string()};
+    if (slash == std::string::npos) {
+      return {s.substr(2, colon - 2), s.substr(colon + 1), std::string()};
     } else {
       if (colon < slash) {
         return {s.substr(2, colon - 2), s.substr(colon + 1, slash - colon - 1),
                 s.substr(slash)};
       } else {
-        return {s.substr(2, slash - 2), string(), s.substr(slash)};
+        return {s.substr(2, slash - 2), std::string(), s.substr(slash)};
       }
     }
   }
-  return {string(), string(), s};
+  return {std::string(), std::string(), s};
 }
 
-static string trim(string s) {
-  string::size_type a = 0;
+static std::string trim(std::string s) {
+  std::string::size_type a = 0;
   while (s.find(" ", a) == a) {
     ++a;
   }
@@ -105,7 +102,7 @@ static string trim(string s) {
   return s;
 }
 
-void URI::parse(string uri) {
+void URI::parse(std::string uri) {
   uri = trim(uri);
   auto proto = protocol(uri);
   if (!proto[0].empty()) {

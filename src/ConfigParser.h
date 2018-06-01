@@ -32,12 +32,12 @@ struct StreamSettings {
 
 /// Holder for the configuration settings defined in the configuration file.
 struct ConfigSettings {
-  uri::URI BrokerConfig{"//localhost:9092/forward_epics_to_kafka_commands"};
-  std::vector<uri::URI> Brokers;
+  URI BrokerConfig{"//localhost:9092/forward_epics_to_kafka_commands"};
+  std::vector<URI> Brokers;
   size_t ConversionThreads{1};
   size_t ConversionWorkerQueueSize{1024};
   int32_t MainPollInterval{500};
-  uri::URI StatusReportURI;
+  URI StatusReportURI;
   KafkaBrokerSettings BrokerSettings;
   std::vector<StreamSettings> StreamsInfo;
   std::map<std::string, KafkaBrokerSettings> GlobalConverters;

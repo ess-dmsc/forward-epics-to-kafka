@@ -73,7 +73,7 @@ Stream::~Stream() {
 }
 
 int Stream::converter_add(Kafka::InstanceSet &kset, Converter::sptr conv,
-                          uri::URI uri_kafka_output) {
+                          URI uri_kafka_output) {
   auto pt = kset.producer_topic(uri_kafka_output);
   std::unique_ptr<ConversionPath> cp(new ConversionPath(
       {std::move(conv)},

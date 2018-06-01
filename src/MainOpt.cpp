@@ -77,7 +77,7 @@ ConfigSettings MainOpt::parse_document(const std::string &filepath) {
 }
 
 /// Add a URI valued option to the given App.
-static void addOption(CLI::App &App, std::string const &Name, uri::URI &URIArg,
+static void addOption(CLI::App &App, std::string const &Name, Forwarder::URI &URIArg,
                       std::string const &Description, bool Defaulted = false) {
   CLI::callback_t Fun = [&URIArg](CLI::results_t Results) {
     URIArg.parse(Results[0]);
@@ -146,7 +146,7 @@ std::pair<int, std::unique_ptr<MainOpt>> parse_opt(int argc, char **argv) {
 
 void MainOpt::init_logger() {
   if (!KafkaGELFAddress.empty()) {
-    uri::URI uri(KafkaGELFAddress);
+    Forwarder::URI uri(KafkaGELFAddress);
     log_kafka_gelf_start(uri.host, uri.topic);
     LOG(3, "Enabled kafka_gelf: //{}/{}", uri.host, uri.topic);
   }

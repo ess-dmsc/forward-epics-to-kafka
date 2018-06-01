@@ -55,7 +55,7 @@ public:
   Stream(Stream &&) = delete;
   ~Stream();
   int converter_add(Kafka::InstanceSet &kset, std::shared_ptr<Converter> conv,
-                    uri::URI uri_kafka_output);
+                    URI uri_kafka_output);
   int emit(std::unique_ptr<FlatBufs::EpicsPVUpdate> up);
   int32_t
   fill_conversion_work(Ring<std::unique_ptr<ConversionWorkPacket>> &queue,

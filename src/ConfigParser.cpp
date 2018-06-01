@@ -93,7 +93,7 @@ void ConfigParser::extractGlobalConverters(ConfigSettings &Settings) {
 void ConfigParser::extractStatusUri(ConfigSettings &Settings) {
   if (auto x = find<std::string>("status-uri", Json)) {
     auto URIString = x.inner();
-    uri::URI URI;
+    URI URI;
     URI.port = 9092;
     URI.parse(URIString);
     Settings.StatusReportURI = URI;
@@ -105,7 +105,7 @@ void ConfigParser::setBrokers(std::string const &Brokers,
   Settings.Brokers.clear();
   auto a = split(Brokers, ",");
   for (auto &x : a) {
-    uri::URI u1;
+    URI u1;
     u1.require_host_slashes = false;
     u1.parse(x);
     Settings.Brokers.push_back(u1);

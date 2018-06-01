@@ -30,7 +30,7 @@ class InstanceSet {
 public:
   static sptr<InstanceSet> Set(KafkaW::BrokerSettings opt);
   static void clear();
-  KafkaW::Producer::Topic producer_topic(uri::URI uri);
+  KafkaW::Producer::Topic producer_topic(URI uri);
   int poll();
   void log_stats();
   std::vector<KafkaW::ProducerStats> stats_all();
