@@ -77,8 +77,9 @@ ConfigSettings MainOpt::parse_document(const std::string &filepath) {
 }
 
 /// Add a URI valued option to the given App.
-static void addOption(CLI::App &App, std::string const &Name, Forwarder::URI &URIArg,
-                      std::string const &Description, bool Defaulted = false) {
+static void addOption(CLI::App &App, std::string const &Name,
+                      Forwarder::URI &URIArg, std::string const &Description,
+                      bool Defaulted = false) {
   CLI::callback_t Fun = [&URIArg](CLI::results_t Results) {
     URIArg.parse(Results[0]);
     return true;
