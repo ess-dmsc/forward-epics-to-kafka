@@ -72,7 +72,7 @@ Stream::~Stream() {
   LOG(6, "seq_data_emitted: {}", seq_data_emitted.to_string());
 }
 
-int Stream::converter_add(Kafka::InstanceSet &kset, Converter::sptr conv,
+int Stream::converter_add(InstanceSet &kset, Converter::sptr conv,
                           URI uri_kafka_output) {
   auto pt = kset.producer_topic(uri_kafka_output);
   std::unique_ptr<ConversionPath> cp(new ConversionPath(

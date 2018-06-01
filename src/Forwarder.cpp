@@ -33,8 +33,7 @@ using ulock = std::unique_lock<std::mutex>;
 /// \class Main
 /// \brief Main program entry class.
 Forwarder::Forwarder(MainOpt &opt)
-    : main_opt(opt),
-      kafka_instance_set(Kafka::InstanceSet::Set(make_broker_opt(opt))),
+    : main_opt(opt), kafka_instance_set(InstanceSet::Set(make_broker_opt(opt))),
       conversion_scheduler(this) {
   finfo = std::make_shared<ForwarderInfo>(this);
   finfo->teamid = main_opt.teamid;
@@ -85,7 +84,7 @@ Forwarder::~Forwarder() {
   streams.streams_clear();
   conversion_workers_clear();
   converters_clear();
-  Kafka::InstanceSet::clear();
+  InstanceSet::clear();
 }
 
 int Forwarder::conversion_workers_clear() {

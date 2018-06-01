@@ -54,7 +54,7 @@ public:
   Stream(std::shared_ptr<ForwarderInfo> finfo, ChannelInfo channel_info);
   Stream(Stream &&) = delete;
   ~Stream();
-  int converter_add(Kafka::InstanceSet &kset, std::shared_ptr<Converter> conv,
+  int converter_add(InstanceSet &kset, std::shared_ptr<Converter> conv,
                     URI uri_kafka_output);
   int emit(std::unique_ptr<FlatBufs::EpicsPVUpdate> up);
   int32_t

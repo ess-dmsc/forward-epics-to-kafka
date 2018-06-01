@@ -2,7 +2,6 @@
 #include "logger.h"
 
 namespace Forwarder {
-namespace Kafka {
 
 static std::mutex mx;
 static std::shared_ptr<InstanceSet> kset;
@@ -85,6 +84,5 @@ std::vector<KafkaW::ProducerStats> InstanceSet::stats_all() {
     ret.push_back(m.second->Stats);
   }
   return ret;
-}
 }
 }

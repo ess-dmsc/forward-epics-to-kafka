@@ -62,7 +62,7 @@ public:
 private:
   MainOpt &main_opt;
   std::shared_ptr<ForwarderInfo> finfo;
-  std::shared_ptr<Kafka::InstanceSet> kafka_instance_set;
+  std::shared_ptr<InstanceSet> kafka_instance_set;
   std::unique_ptr<Config::Listener> config_listener;
   std::mutex converters_mutex;
   std::map<std::string, std::weak_ptr<Converter>> converters;
