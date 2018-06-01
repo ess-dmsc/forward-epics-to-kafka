@@ -1,8 +1,7 @@
 #include "Streams.h"
 #include "Stream.h"
 
-using namespace Forwarder;
-
+namespace Forwarder {
 /**
  * Gets the number of streams in the streams vector.
  *
@@ -78,4 +77,5 @@ std::shared_ptr<Stream> Streams::back() {
 
 const std::vector<std::shared_ptr<Stream>> &Streams::get_streams() {
   return streams;
+}
 }
