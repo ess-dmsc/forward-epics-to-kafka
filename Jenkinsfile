@@ -1,15 +1,19 @@
 project = "forward-epics-to-kafka"
 clangformat_os = "fedora25"
-test_and_coverage_os = "centos7-gcc6"
-archive_os = "centos7-gcc6"
-eee_os = "centos7-gcc6"
+test_and_coverage_os = "centos7"
+release_os = "centos7-release"
+eee_os = "centos7"
 
 epics_dir = "/opt/epics"
 epics_profile_file = "/etc/profile.d/ess_epics_env.sh"
 
 images = [
-        'centos7-gcc6': [
-                'name': 'essdmscdm/centos7-gcc6-build-node:2.1.0',
+        'centos7': [
+                'name': 'essdmscdm/centos7-build-node:3.0.0',
+                'sh'  : '/usr/bin/scl enable rh-python35 devtoolset-6 -- /bin/bash'
+        ],
+        'centos7-release': [
+                'name': 'essdmscdm/centos7-build-node:3.0.0',
                 'sh'  : '/usr/bin/scl enable rh-python35 devtoolset-6 -- /bin/bash'
         ],
         'fedora25'    : [
@@ -44,6 +48,8 @@ def Object create_container(image_key) {
     def container = image.run("\
         --name ${container_name(image_key)} \
         --tty \
+        --cpus=2 \
+        --memory=4GB \
         --network=host \
         --env http_proxy=${env.http_proxy} \
         --env https_proxy=${env.https_proxy} \
@@ -104,6 +110,24 @@ def docker_cmake(image_key) {
     }
 }
 
+def docker_cmake_release(image_key) {
+    try {
+        def custom_sh = images[image_key]['sh']
+        def configure_script = """
+                        cd build && \
+                        cmake ../${project} \
+                            -DCMAKE_BUILD_TYPE=Release \
+                            -DCMAKE_SKIP_RPATH=FALSE \
+                            -DCMAKE_INSTALL_RPATH='\\\\\\\$ORIGIN/../lib' \
+                            -DCMAKE_BUILD_WITH_INSTALL_RPATH=TRUE \
+                            -DREQUIRE_GTEST=ON
+                    """
+        sh "docker exec ${container_name(image_key)} ${custom_sh} -c \"${configure_script}\""
+    } catch (e) {
+        failure_function(e, "CMake step for (${container_name(image_key)}) failed")
+    }
+}
+
 def docker_build(image_key) {
     try {
         def custom_sh = images[image_key]['sh']
@@ -118,13 +142,13 @@ def docker_build(image_key) {
     }
 }
 
-def docker_test(image_key) {
+def docker_test(image_key, test_dir) {
     try {
         def custom_sh = images[image_key]['sh']
         def test_script = """
                         cd build
                         . ./activate_run.sh
-                        ./tests/tests
+                        ./${test_dir}/tests
                     """
         sh "docker exec ${container_name(image_key)} ${custom_sh} -c \"${test_script}\""
     } catch (e) {
@@ -150,9 +174,15 @@ def docker_formatting(image_key) {
 def docker_archive(image_key) {
     try {
         def custom_sh = images[image_key]['sh']
-        def archive_output = "forward-epics-to-kafka.tar.gz"
+        def archive_output = "${project}-${image_key}.tar.gz"
         def archive_script = """
-                    tar czf ${archive_output} build
+                    cd build
+                    rm -rf forward-epics-to-kafka; mkdir forward-epics-to-kafka
+                    mkdir forward-epics-to-kafka/bin
+                    cp ./bin/forward-epics-to-kafka forward-epics-to-kafka/bin/
+                    cp -r ./lib forward-epics-to-kafka/
+                    cp -r ./licenses forward-epics-to-kafka/
+                    tar czf ${archive_output} forward-epics-to-kafka
                 """
         sh "docker exec ${container_name(image_key)} ${custom_sh} -c \"${archive_script}\""
         sh "docker cp ${container_name(image_key)}:/home/jenkins/${archive_output} ./"
@@ -217,7 +247,13 @@ def get_pipeline(image_key) {
 
                 docker_copy_code(image_key)
                 docker_dependencies(image_key)
-                docker_cmake(image_key)
+
+                if (image_key != release_os) {
+                    docker_cmake(image_key)
+                }
+                else {
+                    docker_cmake_release(image_key)
+                }
 
                 if (image_key == clangformat_os) {
                     docker_formatting(image_key)
@@ -228,12 +264,15 @@ def get_pipeline(image_key) {
                     if (image_key == test_and_coverage_os) {
                         docker_coverage(image_key)
                     }
+                    else if (image_key == release_os) {
+                        docker_test(image_key, "bin")
+                    }
                     else {
-                        docker_test(image_key)
+                        docker_test(image_key, "tests")
                     }
                 }
 
-                if (image_key == archive_os) {
+                if (image_key == release_os) {
                     docker_archive(image_key)
                 }
 
