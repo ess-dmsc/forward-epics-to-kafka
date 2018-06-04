@@ -10,6 +10,7 @@
 #include "process.h"
 #define getpid _getpid
 #else
+#include <EpicsClient/EpicsClientMonitor.h>
 #include <unistd.h>
 #endif
 #include "CURLReporter.h"
@@ -35,8 +36,6 @@ using ulock = std::unique_lock<std::mutex>;
 Forwarder::Forwarder(MainOpt &opt)
     : main_opt(opt), kafka_instance_set(InstanceSet::Set(make_broker_opt(opt))),
       conversion_scheduler(this) {
-  finfo = std::make_shared<ForwarderInfo>(this);
-  finfo->teamid = main_opt.teamid;
 
   for (size_t i = 0; i < opt.MainSettings.ConversionThreads; ++i) {
     conversion_workers.emplace_back(make_unique<ConversionWorker>(
@@ -302,7 +301,7 @@ void Forwarder::addMapping(StreamSettings const &StreamInfo) {
   std::unique_lock<std::mutex> lock(streams_mutex);
   try {
     ChannelInfo ChannelInfo{StreamInfo.EpicsProtocol, StreamInfo.Name};
-    streams.add(std::make_shared<Stream>(finfo, ChannelInfo));
+    auto client = addStream<EpicsClient::EpicsClientMonitor>(ChannelInfo);
   } catch (std::runtime_error &e) {
     std::throw_with_nested(MappingAddException("Cannot add stream"));
   }
@@ -312,6 +311,19 @@ void Forwarder::addMapping(StreamSettings const &StreamInfo) {
   for (auto &Converter : StreamInfo.Converters) {
     pushConverterToStream(Converter, Stream);
   }
+}
+
+template <typename T>
+std::shared_ptr<T> Forwarder::addStream(ChannelInfo &ChannelInfo) {
+  auto PVUpdateRing =
+      std::make_shared<Ring<std::unique_ptr<FlatBufs::EpicsPVUpdate>>>();
+  auto client = std::make_shared<T>(ChannelInfo, PVUpdateRing);
+  auto EpicsClientInterfacePtr =
+      std::static_pointer_cast<EpicsClient::EpicsClientInterface>(client);
+  auto stream = std::make_shared<Stream>(ChannelInfo, EpicsClientInterfacePtr,
+                                         PVUpdateRing);
+  streams.add(stream);
+  return client;
 }
 
 std::atomic<uint64_t> g__total_msgs_to_kafka{0};

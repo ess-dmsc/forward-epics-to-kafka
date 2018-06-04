@@ -1,5 +1,5 @@
 #pragma once
-#include "epics-to-fb.h"
+#include "EpicsPVUpdate.h"
 #include "logger.h"
 #include <array>
 #include <atomic>
@@ -45,7 +45,5 @@ private:
   uint32_t iRmax = 0;
   std::vector<TP> vec;
   friend class Stream;
-
-public:
 };
 }

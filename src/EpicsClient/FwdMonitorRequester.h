@@ -1,14 +1,17 @@
 #pragma once
+#include "EpicsClientInterface.h"
 #include "RangeSet.h"
 #include <pv/monitor.h>
 namespace Forwarder {
 namespace EpicsClient {
 
-class EpicsClient_impl;
+class EpicsClientMonitor;
 
+///\class FwdMonitorRequester
+///\brief an implementation of an internal epics monitor loop
 class FwdMonitorRequester : public ::epics::pvData::MonitorRequester {
 public:
-  FwdMonitorRequester(EpicsClient_impl *epics_client_impl,
+  FwdMonitorRequester(EpicsClientInterface *epicsClientMonitor,
                       const std::string &channel_name);
   ~FwdMonitorRequester();
   std::string getRequesterName() override;
@@ -27,7 +30,7 @@ private:
   std::string name;
   std::string channel_name;
   uint64_t seq = 0;
-  EpicsClient_impl *epics_client_impl = nullptr;
+  EpicsClientInterface *epics_client = nullptr;
   RangeSet<uint64_t> seq_data_received;
 };
 }

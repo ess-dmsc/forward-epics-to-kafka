@@ -1,8 +1,8 @@
 #include "Stream.h"
 #include "Converter.h"
-#include "EpicsClient/EpicsClient.h"
+#include "EpicsClient/EpicsClientMonitor.h"
+#include "EpicsPVUpdate.h"
 #include "KafkaOutput.h"
-#include "epics-to-fb.h"
 #include "helper.h"
 #include "logger.h"
 
@@ -51,19 +51,14 @@ nlohmann::json ConversionPath::status_json() const {
   return Document;
 }
 
-Stream::Stream(std::shared_ptr<ForwarderInfo> finfo, ChannelInfo channel_info)
-    : finfo(finfo), channel_info_(channel_info) {
-  emit_queue.formatter = _fmt;
-  try {
-    auto x = new EpicsClient::EpicsClient(
-        this, finfo, channel_info.provider_type, channel_info.channel_name);
-    epics_client.reset(x);
-  } catch (std::runtime_error &e) {
-    throw std::runtime_error("can not construct Stream");
-  }
+Stream::Stream(
+    ChannelInfo channel_info,
+    std::shared_ptr<EpicsClient::EpicsClientInterface> client,
+    std::shared_ptr<Ring<std::unique_ptr<FlatBufs::EpicsPVUpdate>>> ring)
+    : channel_info_(channel_info), epics_client(std::move(client)),
+      emit_queue(ring) {
+  emit_queue->formatter = _fmt;
 }
-
-Stream::Stream(ChannelInfo channel_info) : channel_info_(channel_info){};
 
 Stream::~Stream() {
   CLOG(7, 2, "~Stream");
@@ -82,64 +77,22 @@ int Stream::converter_add(InstanceSet &kset, Converter::sptr conv,
   return 0;
 }
 
-int Stream::emit(std::unique_ptr<FlatBufs::EpicsPVUpdate> up) {
-  // CLOG(9, 7, "Stream::emit");
-  if (!up) {
-    CLOG(6, 1, "empty update?");
-    // should never happen, ignore
-    return 0;
-  }
-  auto seq_data = up->seq_data;
-  if (true) {
-    for (int i1 = 0; i1 < 256; ++i1) {
-      auto x = emit_queue.push(up);
-      if (x == 0) {
-        break;
-      }
-      {
-        // CLOG(9, 1, "buffer full {} times", i1);
-        emit_queue.push_enlarge(up);
-        break;
-      }
-    }
-    if (up) {
-      // here we are, saying goodbye to a good buffer
-      // LOG(4, "loosing buffer {}", up->seq_data);
-      up.reset();
-      return 1;
-    }
-    // auto s1 = emit_queue.to_vec();
-    // LOG(9, "Queue {}\n{}", channel_info.channel_name, s1.data());
-  } else {
-    // Emit directly
-    // LOG(9, "Stream::emit  convs: {}", conversion_paths.size());
-    for (auto &cp : conversion_paths) {
-      cp->emit(std::move(up));
-    }
-  }
-  if (false) {
-    seq_data_emitted.insert(seq_data);
-  }
-  return 0;
-}
+void Stream::error_in_epics() { epics_client->error_in_epics(); }
 
 int32_t
 Stream::fill_conversion_work(Ring<std::unique_ptr<ConversionWorkPacket>> &q2,
                              uint32_t max,
                              std::function<void(uint64_t)> on_seq_data) {
-  auto &q1 = emit_queue;
   uint32_t n0 = 0;
   uint32_t n1 = 0;
-  ulock l1(q1.mx);
+  ulock l1(emit_queue->mx);
   ulock l2(q2.mx);
-  uint32_t n2 = q1.size_unsafe();
+  uint32_t n2 = emit_queue->size_unsafe();
   uint32_t n3 = (std::min)(max, q2.capacity_unsafe() - q2.size_unsafe());
   uint32_t ncp = conversion_paths.size();
   std::vector<ConversionWorkPacket *> cwp_last(conversion_paths.size());
-  // LOG(8, "Stream::fill_conversion_work {}  {}  {}", n1, n2, n3);
   while (n0 < n2 && n3 - n1 >= ncp) {
-    // LOG(8, "Stream::fill_conversion_work  loop   {}  {}  {}", n1, n2, n3);
-    auto e = q1.pop_unsafe();
+    auto e = emit_queue->pop_unsafe();
     n0 += 1;
     if (e.first != 0) {
       CLOG(6, 1, "empty? should not happen");
@@ -189,13 +142,11 @@ int Stream::stop() {
   return 0;
 }
 
-void Stream::error_in_epics() { status_ = -1; }
-
-int Stream::status() { return status_; }
+int Stream::status() { return epics_client->status(); }
 
 ChannelInfo const &Stream::channel_info() const { return channel_info_; }
 
-size_t Stream::emit_queue_size() { return emit_queue.size(); }
+size_t Stream::emit_queue_size() { return emit_queue->size(); }
 
 nlohmann::json Stream::status_json() {
   using nlohmann::json;
