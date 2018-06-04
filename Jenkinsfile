@@ -133,7 +133,7 @@ def docker_build(image_key) {
         def custom_sh = images[image_key]['sh']
         def build_script = """
                       cd build
-                      . ./activate_build.sh
+                      . ./activate_run.sh
                       make VERBOSE=1
                   """
         sh "docker exec ${container_name(image_key)} ${custom_sh} -c \"${build_script}\""
