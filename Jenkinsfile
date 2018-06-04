@@ -176,12 +176,12 @@ def docker_archive(image_key) {
         def custom_sh = images[image_key]['sh']
         def archive_output = "${project}-${image_key}.tar.gz"
         def archive_script = """
-                    cd build
-                    rm -rf forward-epics-to-kafka; mkdir forward-epics-to-kafka
-                    mkdir forward-epics-to-kafka/bin
-                    cp ./bin/forward-epics-to-kafka forward-epics-to-kafka/bin/
-                    cp -r ./lib forward-epics-to-kafka/
-                    cp -r ./licenses forward-epics-to-kafka/
+                    cd build && \
+                    rm -rf forward-epics-to-kafka; mkdir forward-epics-to-kafka && \
+                    mkdir -p forward-epics-to-kafka/bin && \
+                    cp ./bin/forward-epics-to-kafka forward-epics-to-kafka/bin/ && \
+                    cp -r ./lib forward-epics-to-kafka/ && \
+                    cp -r ./licenses forward-epics-to-kafka/ && \
                     tar czf ${archive_output} forward-epics-to-kafka
                 """
         sh "docker exec ${container_name(image_key)} ${custom_sh} -c \"${archive_script}\""
