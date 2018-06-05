@@ -9,11 +9,11 @@
 #include <EpicsClient/EpicsClientInterface.h>
 #include <array>
 #include <atomic>
+#include <concurrentqueue/concurrentqueue.h>
 #include <memory>
 #include <nlohmann/json.hpp>
 #include <string>
 #include <vector>
-#include <concurrentqueue/concurrentqueue.h>
 
 namespace Forwarder {
 
@@ -51,7 +51,9 @@ public:
   explicit Stream(
       ChannelInfo channel_info,
       std::shared_ptr<EpicsClient::EpicsClientInterface> client,
-      std::shared_ptr<moodycamel::ConcurrentQueue<std::unique_ptr<FlatBufs::EpicsPVUpdate>>> ring);
+      std::shared_ptr<
+          moodycamel::ConcurrentQueue<std::unique_ptr<FlatBufs::EpicsPVUpdate>>>
+          ring);
   Stream(Stream &&) = delete;
   ~Stream();
   int converter_add(InstanceSet &kset, std::shared_ptr<Converter> conv,
@@ -73,7 +75,9 @@ private:
   ChannelInfo channel_info_;
   std::vector<std::unique_ptr<ConversionPath>> conversion_paths;
   std::shared_ptr<EpicsClient::EpicsClientInterface> epics_client;
-  std::shared_ptr<moodycamel::ConcurrentQueue<std::unique_ptr<FlatBufs::EpicsPVUpdate>>> emit_queue;
+  std::shared_ptr<
+      moodycamel::ConcurrentQueue<std::unique_ptr<FlatBufs::EpicsPVUpdate>>>
+      emit_queue;
   RangeSet<uint64_t> seq_data_emitted;
 };
 }

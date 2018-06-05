@@ -118,7 +118,9 @@ void EpicsClientMonitor_impl::error_channel_requester() {
 
 EpicsClientMonitor::EpicsClientMonitor(
     ChannelInfo &channelInfo,
-    std::shared_ptr<moodycamel::ConcurrentQueue<std::unique_ptr<FlatBufs::EpicsPVUpdate>>> ring)
+    std::shared_ptr<
+        moodycamel::ConcurrentQueue<std::unique_ptr<FlatBufs::EpicsPVUpdate>>>
+        ring)
     : emit_queue(ring) {
   impl.reset(new EpicsClientMonitor_impl(this));
   CLOG(7, 7, "channel_name: {}", channelInfo.channel_name);

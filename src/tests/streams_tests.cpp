@@ -19,8 +19,8 @@ private:
 
 std::shared_ptr<Stream> createStream(std::string provider_type,
                                      std::string channel_name) {
-  auto ring =
-      std::make_shared<moodycamel::ConcurrentQueue<std::unique_ptr<FlatBufs::EpicsPVUpdate>>>();
+  auto ring = std::make_shared<
+      moodycamel::ConcurrentQueue<std::unique_ptr<FlatBufs::EpicsPVUpdate>>>();
   auto client =
       std::unique_ptr<EpicsClient::EpicsClientInterface>(new FakeEpicsClient());
   ChannelInfo ci{std::move(provider_type), std::move(channel_name)};

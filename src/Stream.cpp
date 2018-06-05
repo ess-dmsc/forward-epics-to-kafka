@@ -37,7 +37,6 @@ int ConversionPath::emit(std::unique_ptr<FlatBufs::EpicsPVUpdate> up) {
   return 0;
 }
 
-
 nlohmann::json ConversionPath::status_json() const {
   using nlohmann::json;
   auto Document = json::object();
@@ -51,9 +50,11 @@ nlohmann::json ConversionPath::status_json() const {
 Stream::Stream(
     ChannelInfo channel_info,
     std::shared_ptr<EpicsClient::EpicsClientInterface> client,
-    std::shared_ptr<moodycamel::ConcurrentQueue<std::unique_ptr<FlatBufs::EpicsPVUpdate>>> ring)
+    std::shared_ptr<
+        moodycamel::ConcurrentQueue<std::unique_ptr<FlatBufs::EpicsPVUpdate>>>
+        ring)
     : channel_info_(channel_info), epics_client(std::move(client)),
-      emit_queue(ring){}
+      emit_queue(ring) {}
 
 Stream::~Stream() {
   CLOG(7, 2, "~Stream");
