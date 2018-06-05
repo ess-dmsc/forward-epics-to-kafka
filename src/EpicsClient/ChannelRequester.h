@@ -5,11 +5,13 @@
 namespace Forwarder {
 namespace EpicsClient {
 
-class EpicsClient_impl;
+char const *channel_state_name(epics::pvAccess::Channel::ConnectionState x);
+
+class EpicsClientMonitor_impl;
 
 class ChannelRequester : public epics::pvAccess::ChannelRequester {
 public:
-  ChannelRequester(EpicsClient_impl *epics_client_impl);
+  ChannelRequester(EpicsClientMonitor_impl *epics_client_impl);
   // From class pvData::Requester
   std::string getRequesterName() override;
   void message(std::string const &message,
@@ -22,9 +24,7 @@ public:
       epics::pvAccess::Channel::ConnectionState connectionState) override;
 
 private:
-  epics::pvData::MonitorRequester::shared_pointer monitor_requester;
-  epics::pvData::MonitorPtr monitor;
-  EpicsClient_impl *epics_client_impl = nullptr;
+  EpicsClientMonitor_impl *epics_client_impl = nullptr;
 };
 }
 }

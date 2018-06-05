@@ -1,17 +1,18 @@
 #include "FwdMonitorRequester.h"
-#include "EpicsClient.h"
-#include "epics-to-fb.h"
+#include "EpicsClientMonitor.h"
+#include "EpicsPVUpdate.h"
 #include "logger.h"
 #include <atomic>
+#include <memory>
 #include <pv/pvAccess.h>
 #include <pv/pvData.h>
 
 namespace Forwarder {
 namespace EpicsClient {
 
-FwdMonitorRequester::FwdMonitorRequester(EpicsClient_impl *epics_client_impl,
-                                         const std::string &channel_name)
-    : channel_name(channel_name), epics_client_impl(epics_client_impl) {
+FwdMonitorRequester::FwdMonitorRequester(
+    EpicsClientInterface *epicsClientMonitor, const std::string &channel_name)
+    : channel_name(channel_name), epics_client(epicsClientMonitor) {
   static std::atomic<uint32_t> __id{0};
   auto id = __id++;
   name = fmt::format("FwdMonitorRequester-{}", id);
@@ -40,7 +41,7 @@ void FwdMonitorRequester::monitorConnect(
     // Docs does not say anything about whether we are responsible for any
     // handling of the monitor if non-null?
     CLOG(3, 2, "monitorConnect is != success for {}", name);
-    epics_client_impl->monitor_requester_error(this);
+    epics_client->error_in_epics();
   } else {
     if (status.isOK()) {
       CLOG(7, 7, "success and OK");
@@ -83,15 +84,13 @@ void FwdMonitorRequester::monitorEvent(
     up.seq_fwd = seq;
     up.seq_data = seq_data;
     up.ts_epics_monitor = ts;
-    up.fwdix = epics_client_impl->fwdix;
-    up.teamid = epics_client_impl->teamid;
     ups.push_back(std::move(up_));
     seq += 1;
   }
   for (auto &up : ups) {
     up->epics_pvstr->setImmutable();
     auto seq_data = up->seq_data;
-    auto x = epics_client_impl->emit(std::move(up));
+    auto x = epics_client->emit(std::move(up));
     if (x != 0) {
       LOG(5, "error can not push update {}", seq_data);
     }

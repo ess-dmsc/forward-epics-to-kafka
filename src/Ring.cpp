@@ -1,6 +1,6 @@
 #include "Ring.h"
 #include "ConversionWorker.h"
-#include "epics-to-fb.h"
+#include "EpicsPVUpdate.h"
 #include "logger.h"
 
 namespace Forwarder {
