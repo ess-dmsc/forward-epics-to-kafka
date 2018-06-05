@@ -314,7 +314,7 @@ void Forwarder::addMapping(StreamSettings const &StreamInfo) {
 }
 
 template <typename T>
-std::shared_ptr<T> Forwarder::addStream(ChannelInfo &ChannelInfo) {
+void Forwarder::addStream(ChannelInfo &ChannelInfo) {
   auto PVUpdateRing =
       std::make_shared<Ring<std::unique_ptr<FlatBufs::EpicsPVUpdate>>>();
   auto client = std::make_shared<T>(ChannelInfo, PVUpdateRing);
