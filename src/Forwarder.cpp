@@ -301,7 +301,7 @@ void Forwarder::addMapping(StreamSettings const &StreamInfo) {
   std::unique_lock<std::mutex> lock(streams_mutex);
   try {
     ChannelInfo ChannelInfo{StreamInfo.EpicsProtocol, StreamInfo.Name};
-    auto client = addStream<EpicsClient::EpicsClientMonitor>(ChannelInfo);
+    addStream<EpicsClient::EpicsClientMonitor>(ChannelInfo);
   } catch (std::runtime_error &e) {
     std::throw_with_nested(MappingAddException("Cannot add stream"));
   }
@@ -323,7 +323,6 @@ std::shared_ptr<T> Forwarder::addStream(ChannelInfo &ChannelInfo) {
   auto stream = std::make_shared<Stream>(ChannelInfo, EpicsClientInterfacePtr,
                                          PVUpdateRing);
   streams.add(stream);
-  return client;
 }
 
 std::atomic<uint64_t> g__total_msgs_to_kafka{0};
