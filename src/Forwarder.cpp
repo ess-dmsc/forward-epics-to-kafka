@@ -301,7 +301,7 @@ void Forwarder::addMapping(StreamSettings const &StreamInfo) {
   std::unique_lock<std::mutex> lock(streams_mutex);
   try {
     ChannelInfo ChannelInfo{StreamInfo.EpicsProtocol, StreamInfo.Name};
-    addStream<EpicsClient::EpicsClientMonitor>(ChannelInfo);
+    auto client = addStream<EpicsClient::EpicsClientMonitor>(ChannelInfo);
   } catch (std::runtime_error &e) {
     std::throw_with_nested(MappingAddException("Cannot add stream"));
   }
@@ -314,7 +314,7 @@ void Forwarder::addMapping(StreamSettings const &StreamInfo) {
 }
 
 template <typename T>
-void Forwarder::addStream(ChannelInfo &ChannelInfo) {
+std::shared_ptr<T> Forwarder::addStream(ChannelInfo &ChannelInfo) {
   auto PVUpdateRing =
       std::make_shared<Ring<std::unique_ptr<FlatBufs::EpicsPVUpdate>>>();
   auto client = std::make_shared<T>(ChannelInfo, PVUpdateRing);

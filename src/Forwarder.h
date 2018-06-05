@@ -59,7 +59,7 @@ public:
   Streams streams;
 
 private:
-  template <typename T> void addStream(ChannelInfo &ChannelInfo);
+  template <typename T> std::shared_ptr<T> addStream(ChannelInfo &ChannelInfo);
   MainOpt &main_opt;
   std::shared_ptr<InstanceSet> kafka_instance_set;
   std::unique_ptr<Config::Listener> config_listener;
