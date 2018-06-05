@@ -4,13 +4,14 @@
 #include "Stream.h"
 #include "helper.h"
 #include "logger.h"
+#include <EpicsClient/EpicsClientInterface.h>
+#include <EpicsClient/EpicsClientMonitor.h>
 #include <nlohmann/json.hpp>
 #include <sys/types.h>
 #ifdef _MSC_VER
 #include "process.h"
 #define getpid _getpid
 #else
-#include <EpicsClient/EpicsClientMonitor.h>
 #include <unistd.h>
 #endif
 #include "CURLReporter.h"
@@ -323,6 +324,7 @@ std::shared_ptr<T> Forwarder::addStream(ChannelInfo &ChannelInfo) {
   auto stream = std::make_shared<Stream>(ChannelInfo, EpicsClientInterfacePtr,
                                          PVUpdateRing);
   streams.add(stream);
+  return client;
 }
 
 std::atomic<uint64_t> g__total_msgs_to_kafka{0};
