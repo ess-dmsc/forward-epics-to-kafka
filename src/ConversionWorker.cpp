@@ -12,17 +12,9 @@ ConversionWorkPacket::~ConversionWorkPacket() {
   }
 }
 
-static uint16_t _fmt(std::unique_ptr<ConversionWorkPacket> &x) {
-  if (!x->up)
-    return 0xfff0;
-  return (uint16_t)(((uint64_t)x->up.get()) >> 0);
-}
-
 ConversionWorker::ConversionWorker(ConversionScheduler *scheduler,
                                    uint32_t queue_size)
-    : queue(queue_size), id(s_id++), scheduler(scheduler) {
-  queue.formatter = _fmt;
-}
+    : queue(queue_size), id(s_id++), scheduler(scheduler) {}
 
 int ConversionWorker::start() {
   do_run = 1;
@@ -43,16 +35,17 @@ int ConversionWorker::run() {
   auto Dt = MS(100);
   auto t1 = CLK::now();
   while (do_run) {
-    auto qs = queue.size();
+    auto qs = queue.size_approx();
     if (qs == 0) {
-      auto qf = queue.capacity() - qs;
+      auto qf = queue.MAX_SUBQUEUE_SIZE - qs;
       scheduler->fill(queue, qf, id);
     }
     while (true) {
-      auto p = queue.pop();
-      if (p.first != 0)
+      std::unique_ptr<ConversionWorkPacket> p;
+      bool found = queue.try_dequeue(p);
+      if (!found)
         break;
-      auto &cwp = p.second;
+      auto cwp = std::move(p);
       cwp->cp->emit(std::move(cwp->up));
     }
     auto t2 = CLK::now();
@@ -70,7 +63,7 @@ std::atomic<uint32_t> ConversionWorker::s_id{0};
 ConversionScheduler::ConversionScheduler(Forwarder *main) : main(main) {}
 
 int ConversionScheduler::fill(
-    Ring<std::unique_ptr<ConversionWorkPacket>> &queue, uint32_t const nfm,
+    moodycamel::ConcurrentQueue<std::unique_ptr<ConversionWorkPacket>> &queue, uint32_t const nfm,
     uint32_t wid) {
   std::unique_lock<std::mutex> lock(mx);
   if (main->streams.size() == 0) {

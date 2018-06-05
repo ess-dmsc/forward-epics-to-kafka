@@ -3,7 +3,6 @@
 #include "ConversionWorker.h"
 #include "Kafka.h"
 #include "RangeSet.h"
-#include "Ring.h"
 #include "SchemaRegistry.h"
 #include "uri.h"
 #include <EpicsClient/EpicsClientInterface.h>
@@ -59,7 +58,7 @@ public:
   int converter_add(InstanceSet &kset, std::shared_ptr<Converter> conv,
                     URI uri_kafka_output);
   int32_t
-  fill_conversion_work(Ring<std::unique_ptr<ConversionWorkPacket>> &queue,
+  fill_conversion_work(moodycamel::ConcurrentQueue<std::unique_ptr<ConversionWorkPacket>> &queue,
                        uint32_t max, std::function<void(uint64_t)> on_seq_data);
   int stop();
   void error_in_epics();

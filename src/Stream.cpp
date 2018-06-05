@@ -76,14 +76,13 @@ int Stream::converter_add(InstanceSet &kset, Converter::sptr conv,
 void Stream::error_in_epics() { epics_client->error_in_epics(); }
 
 int32_t
-Stream::fill_conversion_work(Ring<std::unique_ptr<ConversionWorkPacket>> &q2,
+Stream::fill_conversion_work(moodycamel::ConcurrentQueue<std::unique_ptr<ConversionWorkPacket>> &q2,
                              uint32_t max,
                              std::function<void(uint64_t)> on_seq_data) {
   uint32_t n0 = 0;
   uint32_t n1 = 0;
-  ulock l2(q2.mx);
   uint32_t n2 = emit_queue->size_approx();
-  uint32_t n3 = (std::min)(max, q2.capacity_unsafe() - q2.size_unsafe());
+  uint32_t n3 = max;
   uint32_t ncp = conversion_paths.size();
   std::vector<ConversionWorkPacket *> cwp_last(conversion_paths.size());
   while (n0 < n2 && n3 - n1 >= ncp) {
@@ -113,8 +112,8 @@ Stream::fill_conversion_work(Ring<std::unique_ptr<ConversionWorkPacket>> &q2,
         p->up = std::unique_ptr<FlatBufs::EpicsPVUpdate>(
             new FlatBufs::EpicsPVUpdate(*e));
       }
-      auto x = q2.push_unsafe(p);
-      if (x != 0) {
+      bool x = q2.enqueue(std::move(p));
+      if (x) {
         CLOG(6, 1, "full? should not happen");
         break;
       }

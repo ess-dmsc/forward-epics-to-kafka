@@ -1,11 +1,11 @@
 #pragma once
 #include "EpicsPVUpdate.h"
 #include "RangeSet.h"
-#include "Ring.h"
 #include "Stream.h"
 #include <atomic>
 #include <mutex>
 #include <thread>
+#include <concurrentqueue/concurrentqueue.h>
 
 namespace Forwarder {
 
@@ -29,7 +29,7 @@ public:
   int run();
 
 private:
-  Ring<std::unique_ptr<ConversionWorkPacket>> queue;
+  moodycamel::ConcurrentQueue<std::unique_ptr<ConversionWorkPacket>> queue;
   std::atomic<uint32_t> do_run{0};
   static std::atomic<uint32_t> s_id;
   uint32_t id;
@@ -41,7 +41,7 @@ class ConversionScheduler {
 public:
   ConversionScheduler(Forwarder *main);
   ~ConversionScheduler();
-  int fill(Ring<std::unique_ptr<ConversionWorkPacket>> &queue, uint32_t nfm,
+  int fill(moodycamel::ConcurrentQueue<std::unique_ptr<ConversionWorkPacket>> &queue, uint32_t nfm,
            uint32_t wid);
 
 private:
