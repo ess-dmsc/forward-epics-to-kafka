@@ -3,9 +3,9 @@
 #include "RangeSet.h"
 #include "Stream.h"
 #include <atomic>
+#include <concurrentqueue/concurrentqueue.h>
 #include <mutex>
 #include <thread>
-#include <concurrentqueue/concurrentqueue.h>
 
 namespace Forwarder {
 
@@ -41,8 +41,9 @@ class ConversionScheduler {
 public:
   ConversionScheduler(Forwarder *main);
   ~ConversionScheduler();
-  int fill(moodycamel::ConcurrentQueue<std::unique_ptr<ConversionWorkPacket>> &queue, uint32_t nfm,
-           uint32_t wid);
+  int fill(
+      moodycamel::ConcurrentQueue<std::unique_ptr<ConversionWorkPacket>> &queue,
+      uint32_t nfm, uint32_t wid);
 
 private:
   Forwarder *main = nullptr;

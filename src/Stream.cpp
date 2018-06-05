@@ -75,10 +75,9 @@ int Stream::converter_add(InstanceSet &kset, Converter::sptr conv,
 
 void Stream::error_in_epics() { epics_client->error_in_epics(); }
 
-int32_t
-Stream::fill_conversion_work(moodycamel::ConcurrentQueue<std::unique_ptr<ConversionWorkPacket>> &q2,
-                             uint32_t max,
-                             std::function<void(uint64_t)> on_seq_data) {
+int32_t Stream::fill_conversion_work(
+    moodycamel::ConcurrentQueue<std::unique_ptr<ConversionWorkPacket>> &q2,
+    uint32_t max, std::function<void(uint64_t)> on_seq_data) {
   uint32_t n0 = 0;
   uint32_t n1 = 0;
   uint32_t n2 = emit_queue->size_approx();
