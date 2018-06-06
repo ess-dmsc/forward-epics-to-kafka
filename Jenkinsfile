@@ -95,7 +95,7 @@ def docker_cmake(image_key) {
         def configure_script = """
                     cd build
                     ${configure_epics}
-                    cmake ../${project} -DREQUIRE_GTEST=ON ${coverage_on}
+                    cmake ../${project} ${coverage_on}
                 """
 
         sh "docker exec ${container_name(image_key)} ${custom_sh} -c \"${configure_script}\""
