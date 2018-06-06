@@ -4,9 +4,9 @@
 #include "helper.h"
 #include "json.h"
 #include "logger.h"
-#include <sys/types.h>
 #include <EpicsClient/EpicsClientInterface.h>
 #include <EpicsClient/EpicsClientMonitor.h>
+#include <sys/types.h>
 #ifdef _MSC_VER
 #include "process.h"
 #define getpid _getpid

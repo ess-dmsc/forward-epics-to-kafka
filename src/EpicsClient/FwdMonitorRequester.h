@@ -1,6 +1,6 @@
 #pragma once
-#include "RangeSet.h"
 #include "EpicsClientInterface.h"
+#include "RangeSet.h"
 #include <pv/monitor.h>
 namespace BrightnESS {
 namespace ForwardEpicsToKafka {
