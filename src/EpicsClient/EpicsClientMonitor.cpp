@@ -141,7 +141,8 @@ int EpicsClientMonitor::emit(std::shared_ptr<FlatBufs::EpicsPVUpdate> up) {
   return emitWithoutCaching(up);
 }
 
-int EpicsClientMonitor::emitWithoutCaching(std::shared_ptr<FlatBufs::EpicsPVUpdate> Update){
+int EpicsClientMonitor::emitWithoutCaching(
+    std::shared_ptr<FlatBufs::EpicsPVUpdate> Update) {
   if (!Update) {
     CLOG(6, 1, "empty update?");
     // should never happen, ignore
@@ -151,12 +152,9 @@ int EpicsClientMonitor::emitWithoutCaching(std::shared_ptr<FlatBufs::EpicsPVUpda
   return 1;
 };
 
-
 void EpicsClientMonitor::error_in_epics() { status_ = -1; }
 
-void EpicsClientMonitor::emitCachedValue() {
-  emitWithoutCaching(CachedUpdate);
-}
+void EpicsClientMonitor::emitCachedValue() { emitWithoutCaching(CachedUpdate); }
 }
 }
 }

@@ -5,12 +5,12 @@
 #include "json.h"
 #include "logger.h"
 #include <sys/types.h>
+#include <EpicsClient/EpicsClientInterface.h>
+#include <EpicsClient/EpicsClientMonitor.h>
 #ifdef _MSC_VER
 #include "process.h"
 #define getpid _getpid
 #else
-#include <EpicsClient/EpicsClientInterface.h>
-#include <EpicsClient/EpicsClientMonitor.h>
 #include <unistd.h>
 #endif
 #include "CURLReporter.h"
