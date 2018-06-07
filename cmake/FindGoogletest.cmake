@@ -10,9 +10,9 @@ function(setup_googletest_from_repository)
 	add_subdirectory(${path_googletest_repository} googletest)
 endfunction()
 
-set(REQUIRE_GTEST FALSE CACHE BOOL "Require Google Test")
+set(BUILD_TESTS TRUE CACHE BOOL "Require Google Test")
 
-if (REQUIRE_GTEST)
+if (BUILD_TESTS)
 	find_library(GMOCK_MAIN_LIB NAMES gmock_main gmock_maind)
 	if (GMOCK_MAIN_LIB)
 		message(STATUS "Google Test found")

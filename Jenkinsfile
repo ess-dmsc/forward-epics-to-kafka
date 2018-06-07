@@ -101,7 +101,7 @@ def docker_cmake(image_key) {
         def configure_script = """
                     cd build
                     ${configure_epics}
-                    cmake ../${project} -DREQUIRE_GTEST=ON ${coverage_on}
+                    cmake ../${project} ${coverage_on}
                 """
 
         sh "docker exec ${container_name(image_key)} ${custom_sh} -c \"${configure_script}\""
@@ -314,7 +314,7 @@ def get_win10_pipeline() {
 
 	 stage("win10: Build") {
            bat """cd _build
-	     cmake .. -G \"Visual Studio 15 2017 Win64\" -DCMAKE_BUILD_TYPE=Release
+	     cmake .. -G \"Visual Studio 15 2017 Win64\" -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTS=FALSE
 	     cmake --build .
 	     """
         }  // stage
