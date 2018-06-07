@@ -99,8 +99,8 @@ def docker_cmake(image_key) {
         }
 
         def configure_script = """
-                    cd build
-                    ${configure_epics}
+                    cd build && \
+                    ${configure_epics} && \
                     cmake ../${project} ${coverage_on}
                 """
 
@@ -132,8 +132,8 @@ def docker_build(image_key) {
     try {
         def custom_sh = images[image_key]['sh']
         def build_script = """
-                      cd build
-                      . ./activate_run.sh
+                      cd build && \
+                      . ./activate_run.sh && \
                       make VERBOSE=1
                   """
         sh "docker exec ${container_name(image_key)} ${custom_sh} -c \"${build_script}\""
@@ -145,10 +145,12 @@ def docker_build(image_key) {
 def docker_test(image_key, test_dir) {
     try {
         def custom_sh = images[image_key]['sh']
+        // The last line prevents the script from hanging
         def test_script = """
-                        cd build
-                        . ./activate_run.sh
-                        ./${test_dir}/tests
+                        cd build && \
+                        . ./activate_run.sh && \
+                        ./${test_dir}/tests && \
+                        pkill caRepeater || true
                     """
         sh "docker exec ${container_name(image_key)} ${custom_sh} -c \"${test_script}\""
     } catch (e) {
@@ -160,8 +162,8 @@ def docker_formatting(image_key) {
     try {
         def custom_sh = images[image_key]['sh']
         def script = """
-                    clang-format -version
-                    cd ${project}
+                    clang-format -version && \
+                    cd ${project} && \
                     find . \\\\( -name '*.cpp' -or -name '*.cxx' -or -name '*.h' -or -name '*.hpp' \\\\) \\
                         -exec clangformatdiff.sh {} +
                   """
@@ -196,14 +198,15 @@ def docker_coverage(image_key) {
     try {
         def custom_sh = images[image_key]['sh']
         def test_output = "TestResults.xml"
+        // The last line prevents the script from hanging
         def coverage_script = """
-                        cd build
-                        . ./activate_run.sh
-                        ./tests/tests -- --gtest_output=xml:${test_output}
-                        make coverage
-                        lcov --directory . --capture --output-file coverage.info
-                        lcov --remove coverage.info '*_generated.h' '*/src/date/*' '*/.conan/data/*' '*/usr/*' --output-file coverage.info
-                        . ./deactivate_run.sh
+                        cd build && \
+                        . ./activate_run.sh && \
+                        ./tests/tests -- --gtest_output=xml:${test_output} && \
+                        make coverage && \
+                        lcov --directory . --capture --output-file coverage.info && \
+                        lcov --remove coverage.info '*_generated.h' '*/src/date/*' '*/.conan/data/*' '*/usr/*' --output-file coverage.info && \
+                        pkill caRepeater || true
                     """
         sh "docker exec ${container_name(image_key)} ${custom_sh} -c \"${coverage_script}\""
         sh "docker cp ${container_name(image_key)}:/home/jenkins/build ./"
@@ -211,11 +214,11 @@ def docker_coverage(image_key) {
 
         withCredentials([string(credentialsId: 'forward-epics-to-kafka-codecov-token', variable: 'TOKEN')]) {
             def codecov_upload_script = """
-                cd ${project}
-                export WORKSPACE='.'
-                export JENKINS_URL=${JENKINS_URL}
-                pip install --user codecov
-                python -m codecov -t ${TOKEN} --commit ${scm_vars.GIT_COMMIT} -f ../build/coverage.info
+                cd ${project} && \
+                export WORKSPACE='.' && \
+                export JENKINS_URL=${JENKINS_URL} && \
+                pip install --user codecov && \
+                python -m codecov -t ${TOKEN} --commit ${scm_vars.GIT_COMMIT} -f ../build/coverage.info && \
                 """
             sh "docker exec ${container_name(image_key)} ${custom_sh} -c \"${codecov_upload_script}\""
         }
@@ -229,7 +232,7 @@ def docker_cppcheck(image_key) {
         def custom_sh = images[image_key]['sh']
         def test_output = "cppcheck.txt"
         def cppcheck_script = """
-                        cd forward-epics-to-kafka
+                        cd forward-epics-to-kafka && \
                         cppcheck --enable=all --inconclusive --template="{file},{line},{severity},{id},{message}" src/ 2> ${test_output}
                     """
         sh "docker exec ${container_name(image_key)} ${custom_sh} -c \"${cppcheck_script}\""
