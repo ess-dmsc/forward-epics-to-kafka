@@ -96,11 +96,14 @@ def docker_cmake(image_key) {
         if (image_key == eee_os) {
             // Only use the host machine's EPICS environment on eee_os
             configure_epics = ". ${epics_profile_file}"
+        } else {
+            // A problem is caused by "&& \" if left empty
+            configure_epics = "true"
         }
 
         def configure_script = """
                     cd build && \
-                    ${configure_epics} \
+                    ${configure_epics} && \
                     cmake ../${project} ${coverage_on}
                 """
 
