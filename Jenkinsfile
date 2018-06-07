@@ -100,7 +100,7 @@ def docker_cmake(image_key) {
 
         def configure_script = """
                     cd build && \
-                    ${configure_epics} && \
+                    ${configure_epics} \
                     cmake ../${project} ${coverage_on}
                 """
 
