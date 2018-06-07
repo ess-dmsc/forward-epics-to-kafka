@@ -55,11 +55,12 @@ remotes can be listed with `conan remote list`.
 Assuming you have `make`:
 
 ```
-cmake <path-to-source> [-DREQUIRE_GTEST=TRUE] [-DCONAN_DISABLE=TRUE]
+cmake <path-to-source> [-DCONAN_DISABLE=TRUE]
 make
 make docs  # optional
 ```
 
+To skip building the tests target pass cmake `-DBUILD_TESTS=FALSE`
 
 #### Running on macOS
 
