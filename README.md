@@ -170,7 +170,7 @@ including the EPICS producer.
 Higher frequency updates over EPICS should be batched into a PV which contains
 many events at a time.
 
-The Forwarder uses the [MDEL](https://epics.anl.gov/EpicsDocumentation/AppDevManuals/RecordRef/Recordref-5.html#MARKER-9-15) monitor specification for monitoring PV updates rather than the ADEL Archive monitoring specification. This means that all changes are processed rather than just significant update values - Every PV update is processed.  
+The Forwarder uses the [MDEL](https://epics.anl.gov/EpicsDocumentation/AppDevManuals/RecordRef/Recordref-5.html#MARKER-9-15) monitor specification for monitoring PV updates rather than the ADEL Archive monitoring specification. This means that every PV update is processed rather than just those that exceed the ADEL. 
 
 
 
