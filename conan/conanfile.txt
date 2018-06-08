@@ -1,11 +1,11 @@
 [requires]
 gtest/3121b20-dm2@ess-dmsc/stable
 fmt/3.0.2-dm1@ess-dmsc/stable
-FlatBuffers/1.8.0@ess-dmsc/stable
-librdkafka/0.11.3-dm3@ess-dmsc/testing
-graylog-logger/1.0.3-dm1@ess-dmsc/stable
+FlatBuffers/1.9.0@ess-dmsc/stable
+librdkafka/0.11.4@ess-dmsc/stable
+graylog-logger/1.0.5-dm1@ess-dmsc/stable
 epics/3.16.1-4.6.0-dm4@ess-dmsc/stable
-streaming-data-types/3e85b23@ess-dmsc/stable
+streaming-data-types/d429d55@ess-dmsc/stable
 cli11/1.5.3@bincrafters/stable
 jsonformoderncpp/3.1.0@vthiery/stable
 
@@ -18,3 +18,8 @@ FlatBuffers:shared=True
 gtest:shared=True
 librdkafka:shared=True
 
+[imports]
+lib, *.dylib* -> ./lib
+lib, *.so* -> ./lib
+lib64, *.so* -> ./lib
+., LICENSE* -> ./licenses @ folder=True, ignore_case=True
