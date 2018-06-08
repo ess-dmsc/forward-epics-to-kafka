@@ -12,7 +12,7 @@ struct EpicsClientFactoryInit {
   EpicsClientFactoryInit();
   ~EpicsClientFactoryInit();
 
-  /// Returns a new instance of the EPICS client factory in a unique pointer.
+  /// Returns a new instance of the EPICS client factory.
   static std::unique_ptr<EpicsClientFactoryInit> factory_init();
   static std::atomic<int> count;
   static std::mutex mxl;
