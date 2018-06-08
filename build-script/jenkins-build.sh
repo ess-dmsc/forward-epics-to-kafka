@@ -70,4 +70,4 @@ echo "-----------------------------------------------------"
 mkdir -p build
 mkdir -p install
 cd build
-cmake -DCMAKE_INCLUDE_PATH=../repos/streaming-data-types -DCMAKE_INSTALL_PREFIX=`cd ../install; pwd` -DREQUIRE_GTEST=1 ../repos/forward-epics-to-kafka  &&  make VERBOSE=1
+cmake -DCMAKE_INCLUDE_PATH=../repos/streaming-data-types -DCMAKE_INSTALL_PREFIX=`cd ../install; pwd` ../repos/forward-epics-to-kafka  &&  make VERBOSE=1

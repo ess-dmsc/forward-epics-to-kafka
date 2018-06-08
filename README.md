@@ -55,11 +55,12 @@ remotes can be listed with `conan remote list`.
 Assuming you have `make`:
 
 ```
-cmake <path-to-source> [-DREQUIRE_GTEST=TRUE] [-DCONAN_DISABLE=TRUE]
+cmake <path-to-source> [-DCONAN_DISABLE=TRUE]
 make
 make docs  # optional
 ```
 
+To skip building the tests target pass cmake `-DBUILD_TESTS=FALSE`
 
 #### Running on macOS
 
@@ -169,6 +170,8 @@ including the EPICS producer.
 
 Higher frequency updates over EPICS should be batched into a PV which contains
 many events at a time.
+
+The Forwarder uses the [MDEL](https://epics.anl.gov/EpicsDocumentation/AppDevManuals/RecordRef/Recordref-5.html#MARKER-9-15) monitor specification for monitoring PV updates rather than the ADEL Archive monitoring specification. This means that every PV update is processed rather than just those that exceed the ADEL. 
 
 
 

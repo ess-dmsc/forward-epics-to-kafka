@@ -20,11 +20,17 @@ if(CMAKE_COMPILER_IS_GNUCXX AND COV)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CMAKE_CXX_FLAGS_COVERAGE}")
 endif()
 
+if(CMAKE_BUILD_TYPE MATCHES "Release")
+  set(OUTPUT_DIRS "")
+else()
+  set(OUTPUT_DIRS "NO_OUTPUT_DIRS")
+endif()
+
 if(NOT CONAN_DISABLE)
     include(${CMAKE_MODULE_PATH}/conan.cmake)
     conan_cmake_run(CONANFILE conan/conanfile.txt
             PROFILE default
-            BASIC_SETUP NO_OUTPUT_DIRS
+            BASIC_SETUP ${OUTPUT_DIRS}
             BUILD_TYPE "None"
             BUILD outdated)
 endif()
