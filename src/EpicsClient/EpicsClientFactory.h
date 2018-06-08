@@ -6,6 +6,9 @@
 namespace Forwarder {
 namespace EpicsClient {
 
+///\Struct EpicsClientFactoryInit
+///\brief handles the channel access network provider.
+/// Starts and stops provider on construction and destruction respectively.
 struct EpicsClientFactoryInit {
   EpicsClientFactoryInit();
   ~EpicsClientFactoryInit();

@@ -32,9 +32,6 @@ channelInfo(epics::pvAccess::Channel::shared_pointer const &channel) {
   return ss.str();
 }
 
-ChannelRequester::ChannelRequester(EpicsClientMonitor_impl *epics_client_impl)
-    : epics_client_impl(epics_client_impl) {}
-
 std::string ChannelRequester::getRequesterName() { return "ChannelRequester"; }
 
 void ChannelRequester::message(std::string const &message,

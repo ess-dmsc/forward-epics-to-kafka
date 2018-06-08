@@ -51,6 +51,9 @@ public:
       ChannelInfo &channelInfo,
       std::shared_ptr<Ring<std::unique_ptr<FlatBufs::EpicsPVUpdate>>> ring);
   ~EpicsClientMonitor() override;
+  ///\fn emit
+  ///\param up an epics PV update struct holding the pv structure
+  ///\brief pushes the PV update onto the emit_queue ring buffer
   int emit(std::unique_ptr<FlatBufs::EpicsPVUpdate> up) override;
   int stop() override;
   void error_in_epics() override;
