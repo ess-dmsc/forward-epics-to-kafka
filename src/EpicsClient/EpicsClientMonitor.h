@@ -4,11 +4,11 @@
 #include "Stream.h"
 #include <array>
 #include <atomic>
-#include <pv/pvAccess.h>
 #include <string>
 #include <vector>
 
-///\file Epics client monitor classes (PIMPL idiom)
+///\file Epics client monitor classes (PIMPL idiom avoids exposing pvAccess.h
+/// and other details to other parts of the codebase)
 
 namespace Forwarder {
 namespace EpicsClient {
@@ -16,32 +16,7 @@ namespace EpicsClient {
 using std::array;
 using std::vector;
 
-class EpicsClientMonitor;
-
-///\class EpicsClientMonitor_impl
-///\brief Implementation for EPICS client monitor.
-class EpicsClientMonitor_impl {
-public:
-  explicit EpicsClientMonitor_impl(EpicsClientInterface *epics_client)
-      : epics_client(epics_client) {}
-  ~EpicsClientMonitor_impl();
-  int init(std::string epics_channel_provider_type);
-  int monitoring_start();
-  int monitoring_stop();
-  int channel_destroyed();
-  int stop();
-  int emit(std::unique_ptr<FlatBufs::EpicsPVUpdate>);
-  void error_channel_requester();
-  epics::pvData::MonitorRequester::shared_pointer monitor_requester;
-  epics::pvAccess::ChannelProvider::shared_pointer provider;
-  epics::pvAccess::ChannelRequester::shared_pointer channel_requester;
-  epics::pvAccess::Channel::shared_pointer channel;
-  epics::pvData::Monitor::shared_pointer monitor;
-  std::recursive_mutex mx;
-  std::string channel_name;
-  EpicsClientInterface *epics_client = nullptr;
-  std::unique_ptr<EpicsClientFactoryInit> factory_init;
-};
+class EpicsClientMonitor_impl;
 
 ///\class EpicsClientMonitor
 ///\brief Epics client implementation which monitors for PV updates.
@@ -53,9 +28,19 @@ public:
           moodycamel::ConcurrentQueue<std::unique_ptr<FlatBufs::EpicsPVUpdate>>>
           ring);
   ~EpicsClientMonitor() override;
+
+  /// Pushes the PV update onto the emit_queue ring buffer.
+  ///
+  ///\param up An epics PV update holding the pv structure.
   int emit(std::unique_ptr<FlatBufs::EpicsPVUpdate> up) override;
+
+  /// Calls stop on the client implementation.
   int stop() override;
+
+  /// Setter method for status if there is an error in EPICS.
   void error_in_epics() override;
+
+  /// Getter method for EPICS status_.
   int status() override { return status_; };
 
 private:

@@ -1,6 +1,7 @@
 #include "FwdMonitorRequester.h"
 #include "EpicsClientMonitor.h"
 #include "EpicsPVUpdate.h"
+#include "helper.h"
 #include "logger.h"
 #include <atomic>
 #include <memory>
@@ -73,8 +74,7 @@ void FwdMonitorRequester::monitorEvent(
     // Structure.
     // Does that mean that we never get a scalar here directly??
 
-    auto up_ =
-        std::unique_ptr<FlatBufs::EpicsPVUpdate>(new FlatBufs::EpicsPVUpdate);
+    auto up_ = ::make_unique<FlatBufs::EpicsPVUpdate>();
     auto &up = *up_;
     up.channel = channel_name;
     up.epics_pvstr = epics::pvData::PVStructure::shared_pointer(
@@ -100,5 +100,5 @@ void FwdMonitorRequester::monitorEvent(
 void FwdMonitorRequester::unlisten(epics::pvData::MonitorPtr const &monitor) {
   CLOG(7, 1, "FwdMonitorRequester::unlisten  {}", name);
 }
-}
-}
+} // namespace EpicsClient
+} // namespace Forwarder

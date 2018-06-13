@@ -72,7 +72,7 @@ set(INCLUDES
     logger.h
     MainOpt.h
     RangeSet.h
-        SchemaRegistry.h
+    SchemaRegistry.h
     Stream.h
     Streams.h
     uri.h)
@@ -83,7 +83,6 @@ set(SOURCES
     ConfigParser.cpp
     CommandHandler.cpp
     EpicsClient/EpicsClientMonitor.cpp
-    EpicsClient/ChannelRequester.cpp
     EpicsClient/FwdMonitorRequester.cpp
     EpicsClient/EpicsClientFactory.cpp
     helper.cpp
@@ -97,7 +96,7 @@ set(SOURCES
     KafkaW/Producer.cpp
     KafkaW/ProducerTopic.cpp
     KafkaW/TopicSettings.cpp
-        ConversionWorker.cpp
+    ConversionWorker.cpp
     Config.cpp
     FlatbufferMessage.cpp
     SchemaRegistry.cpp
