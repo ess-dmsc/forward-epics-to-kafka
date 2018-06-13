@@ -4,11 +4,11 @@
 #include "Stream.h"
 #include <array>
 #include <atomic>
-#include <pv/pvAccess.h>
 #include <string>
 #include <vector>
 
-///\file Epics client monitor classes (PIMPL idiom)
+///\file Epics client monitor classes (PIMPL idiom avoids exposing pvAccess.h
+/// and other details to other parts of the codebase)
 
 namespace Forwarder {
 namespace EpicsClient {
@@ -16,47 +16,7 @@ namespace EpicsClient {
 using std::array;
 using std::vector;
 
-class EpicsClientMonitor;
-
-/// Implementation for EPICS client monitor.
-class EpicsClientMonitor_impl {
-public:
-  explicit EpicsClientMonitor_impl(EpicsClientInterface *epics_client)
-      : epics_client(epics_client) {}
-  ~EpicsClientMonitor_impl();
-
-  /// Starts the EPICS channel access provider loop and the monitor requester
-  /// loop for monitoring EPICS PVs.
-  int init(std::string epics_channel_provider_type);
-
-  /// Creates a new monitor requester instance and starts the epics monitoring
-  /// loop.
-  int monitoring_start();
-
-  /// Stops the EPICS monitor loop in monitor_requester and resets the pointer.
-  int monitoring_stop();
-
-  /// Logs that the channel has been destroyed and stops monitoring.
-  int channel_destroyed();
-
-  /// Stops the EPICS monitor loop.
-  int stop();
-
-  /// Pushes update to the emit_queue ring buffer which is owned by a stream.
-  int emit(std::unique_ptr<FlatBufs::EpicsPVUpdate>);
-
-  /// Logging function.
-  void error_channel_requester();
-  epics::pvData::MonitorRequester::shared_pointer monitor_requester;
-  epics::pvAccess::ChannelProvider::shared_pointer provider;
-  epics::pvAccess::ChannelRequester::shared_pointer channel_requester;
-  epics::pvAccess::Channel::shared_pointer channel;
-  epics::pvData::Monitor::shared_pointer monitor;
-  std::recursive_mutex mx;
-  std::string channel_name;
-  EpicsClientInterface *epics_client = nullptr;
-  std::unique_ptr<EpicsClientFactoryInit> factory_init;
-};
+class EpicsClientMonitor_impl;
 
 /// Epics client implementation which monitors for PV updates.
 class EpicsClientMonitor : public EpicsClientInterface {

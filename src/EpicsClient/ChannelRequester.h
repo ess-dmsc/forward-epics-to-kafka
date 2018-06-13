@@ -12,7 +12,7 @@ class EpicsClientMonitor_impl;
 /// Provides channel state information for PVs.
 class ChannelRequester : public epics::pvAccess::ChannelRequester {
 public:
-  ChannelRequester(EpicsClientMonitor_impl *epics_client_impl)
+  explicit ChannelRequester(EpicsClientMonitor_impl *epics_client_impl)
       : epics_client_impl(epics_client_impl){};
 
   std::string getRequesterName() override;
