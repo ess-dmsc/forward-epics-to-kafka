@@ -1,4 +1,5 @@
 #include "EpicsClientRandom.h"
+#include "pv/pvData.h"
 
 namespace Forwarder {
 namespace EpicsClient {
@@ -6,6 +7,41 @@ namespace EpicsClient {
 int EpicsClientRandom::emit(std::unique_ptr<FlatBufs::EpicsPVUpdate> up) {
   emit_queue->push_enlarge(up);
   return 1;
+}
+
+void EpicsClientRandom::generateFakePVUpdate() {
+  auto FakePVUpdate =
+      std::unique_ptr<FlatBufs::EpicsPVUpdate>(new FlatBufs::EpicsPVUpdate);
+  FakePVUpdate->epics_pvstr =
+      epics::pvData::PVStructure::shared_pointer(createFakePVStructure(10.0));
+  FakePVUpdate->channel = "FakeChannel";
+  FakePVUpdate->ts_epics_monitor = getCurrentTimestamp();
+  FakePVUpdate->seq_data = 0;
+  FakePVUpdate->seq_fwd = 0;
+
+  emit(std::move(FakePVUpdate));
+}
+
+epics::pvData::PVStructurePtr
+EpicsClientRandom::createFakePVStructure(double Value) const {
+  auto FieldCreator = epics::pvData::getFieldCreate();
+  auto PVDataCreator = epics::pvData::getPVDataCreate();
+  auto PVFieldBuilder = FieldCreator->createFieldBuilder();
+  auto Structure =
+      PVFieldBuilder->add("value", epics::pvData::pvDouble)->createStructure();
+  auto FakePVStructure = PVDataCreator->createPVStructure(Structure);
+  epics::pvData::PVDoublePtr FakePVDouble =
+      FakePVStructure->getSubField<epics::pvData::PVDouble>("value");
+  FakePVDouble->put(Value);
+  return FakePVStructure;
+}
+
+uint64_t EpicsClientRandom::getCurrentTimestamp() const {
+  uint64_t CurrentTimestamp = static_cast<uint64_t>(
+      std::chrono::duration_cast<std::chrono::nanoseconds>(
+          std::chrono::_V2::system_clock::now().time_since_epoch())
+          .count());
+  return CurrentTimestamp;
 }
 }
 }

@@ -24,7 +24,15 @@ public:
   void error_in_epics() override { status_ = -1; };
   int status() override { return status_; };
 
+  /// Generate a fake EpicsPVUpdate and emit it
+  void generateFakePVUpdate();
+
 private:
+  /// Get current time since unix epoch in nanoseconds
+  uint64_t getCurrentTimestamp() const;
+  /// Create a PVStructure with the specified value
+  epics::pvData::PVStructurePtr createFakePVStructure(double Value) const;
+
   /// Buffer of (fake) PVUpdates
   std::shared_ptr<Ring<std::unique_ptr<FlatBufs::EpicsPVUpdate>>> emit_queue;
   // int status_ = 0;
