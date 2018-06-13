@@ -32,10 +32,11 @@ public:
   void log_stats();
   std::vector<KafkaW::ProducerStats> stats_all();
   InstanceSet(InstanceSet const &&) = delete;
+
 private:
   explicit InstanceSet(KafkaW::BrokerSettings BrokerSettings);
   KafkaW::BrokerSettings BrokerSettings;
   std::mutex mx_producers_by_host;
   std::map<std::string, std::shared_ptr<KafkaW::Producer>> producers_by_host;
 };
-}
+} // namespace Forwarder
