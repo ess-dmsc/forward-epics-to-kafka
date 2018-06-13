@@ -28,9 +28,9 @@ FwdMonitorRequester::~FwdMonitorRequester() {
 
 std::string FwdMonitorRequester::getRequesterName() { return name; }
 
-void FwdMonitorRequester::message(std::string const &msg,
-                                  ::epics::pvData::MessageType msgT) {
-  CLOG(7, 7, "FwdMonitorRequester::message: {}:  {}", name, msg.c_str());
+void FwdMonitorRequester::message(std::string const &Msg,
+                                  ::epics::pvData::MessageType MsgType) {
+  CLOG(7, 7, "FwdMonitorRequester::message: {}:  {}", name, Msg.c_str());
 }
 
 void FwdMonitorRequester::monitorConnect(

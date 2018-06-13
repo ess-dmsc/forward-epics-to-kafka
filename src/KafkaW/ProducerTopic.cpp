@@ -12,7 +12,7 @@ using std::atomic;
 using std::move;
 
 ProducerTopic::~ProducerTopic() {
-  LOG(Sev::Debug, "~ProducerTopic {}", Name);
+  LOG(Sev::Debug, "~ProducerTopic {}", Name_);
   if (RdKafkaTopic) {
     LOG(Sev::Debug, "rd_kafka_topic_destroy");
     rd_kafka_topic_destroy(RdKafkaTopic);
@@ -21,8 +21,8 @@ ProducerTopic::~ProducerTopic() {
 }
 
 ProducerTopic::ProducerTopic(std::shared_ptr<Producer> Producer,
-                             std::string Name_)
-    : Producer_(Producer), Name(Name_) {
+                             std::string Name)
+    : Producer_(Producer), Name_(Name) {
   TopicSettings TopicSettings;
   rd_kafka_topic_conf_t *topic_conf = rd_kafka_topic_conf_new();
   TopicSettings.applySettingsToRdKafkaConf(topic_conf);
@@ -43,7 +43,7 @@ ProducerTopic::ProducerTopic(std::shared_ptr<Producer> Producer,
 ProducerTopic::ProducerTopic(ProducerTopic &&x) {
   std::swap(Producer_, x.Producer_);
   std::swap(RdKafkaTopic, x.RdKafkaTopic);
-  std::swap(Name, x.Name);
+  std::swap(Name_, x.Name_);
   std::swap(DoCopyMsg, x.DoCopyMsg);
 }
 
@@ -115,5 +115,5 @@ int ProducerTopic::produce(unique_ptr<Producer::Msg> &Msg) {
 
 void ProducerTopic::enableCopy() { DoCopyMsg = true; }
 
-std::string ProducerTopic::name() const { return Name; }
+std::string ProducerTopic::name() const { return Name_; }
 }

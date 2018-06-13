@@ -34,7 +34,7 @@ public:
   Logger();
   ~Logger();
   void use_log_file(std::string fname);
-  void log_kafka_gelf_start(std::string broker, std::string topic);
+  void log_kafka_gelf_start(std::string address, std::string topicname);
   void log_kafka_gelf_stop();
   FILE *log_file = stdout;
   int is_tty = 1;

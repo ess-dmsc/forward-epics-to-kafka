@@ -12,7 +12,7 @@ Represents the output sink used by Stream.
 class KafkaOutput {
 public:
   KafkaOutput(KafkaOutput &&pt);
-  KafkaOutput(KafkaW::Producer::Topic &&pt);
+  explicit KafkaOutput(KafkaW::Producer::Topic &&pt);
   /// Hands off the message to Kafka
   int emit(std::unique_ptr<FlatBufs::FlatbufferMessage> fb);
   std::string topic_name();

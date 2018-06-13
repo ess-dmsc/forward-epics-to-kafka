@@ -24,7 +24,7 @@ static std::atomic<SignalHandler *> g__SignalHandler;
 
 class SignalHandler {
 public:
-  SignalHandler(std::shared_ptr<Forwarder::Forwarder> MainPtr_)
+  explicit SignalHandler(std::shared_ptr<Forwarder::Forwarder> MainPtr_)
       : MainPtr(MainPtr_) {
     g__SignalHandler.store(this);
     std::signal(SIGINT, handleSignal);

@@ -12,7 +12,7 @@ class Inspect;
 
 class Consumer {
 public:
-  Consumer(BrokerSettings opt);
+  explicit Consumer(BrokerSettings BrokerSettings);
   Consumer(Consumer &&) = delete;
   Consumer(Consumer const &) = delete;
   ~Consumer();
@@ -32,7 +32,7 @@ private:
                      char const *buf);
   static int cb_stats(rd_kafka_t *rk, char *json, size_t json_size,
                       void *opaque);
-  static void cb_error(rd_kafka_t *rk, int err_i, char const *reason,
+  static void cb_error(rd_kafka_t *rk, int err_i, char const *msg,
                        void *opaque);
   static void cb_rebalance(rd_kafka_t *rk, rd_kafka_resp_err_t err,
                            rd_kafka_topic_partition_list_t *plist,

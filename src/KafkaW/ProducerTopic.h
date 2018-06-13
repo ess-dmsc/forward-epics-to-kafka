@@ -21,7 +21,7 @@ enum ProducerTopicError {
 class ProducerTopic {
 public:
   ProducerTopic(ProducerTopic &&);
-  ProducerTopic(std::shared_ptr<Producer> Producer_, std::string Name_);
+  ProducerTopic(std::shared_ptr<Producer> Producer, std::string Name);
   ~ProducerTopic();
   int produce(uchar *MsgData, size_t MsgSize, bool PrintError = false);
   int produce(std::unique_ptr<Producer::Msg> &Msg);
@@ -32,7 +32,7 @@ public:
   std::string name() const;
 
 private:
-  std::string Name;
+  std::string Name_;
   bool DoCopyMsg{false};
 };
 }

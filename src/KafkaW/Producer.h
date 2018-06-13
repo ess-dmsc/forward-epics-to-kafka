@@ -37,7 +37,7 @@ class Producer {
 public:
   typedef ProducerTopic Topic;
   typedef ProducerMsg Msg;
-  Producer(BrokerSettings ProducerBrokerSettings_);
+  explicit Producer(BrokerSettings ProducerBrokerSettings);
   Producer(Producer const &) = delete;
   Producer(Producer &&x);
   ~Producer();
@@ -47,7 +47,7 @@ public:
   uint64_t outputQueueLength();
   static void cb_delivered(rd_kafka_t *rk, rd_kafka_message_t const *msg,
                            void *opaque);
-  static void cb_error(rd_kafka_t *rk, int err_i, char const *reason,
+  static void cb_error(rd_kafka_t *rk, int err_i, char const *msg,
                        void *opaque);
   static int cb_stats(rd_kafka_t *rk, char *json, size_t json_len,
                       void *opaque);

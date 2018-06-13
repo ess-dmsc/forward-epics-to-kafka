@@ -13,7 +13,7 @@ public:
   /// URI::parse to fill it
   URI();
   /// Creates and parses the given URI
-  URI(std::string uri);
+  explicit URI(std::string uri);
   /// Parses the given `uri`
   void parse(std::string uri);
   /// Given a `http://www.example.com` scheme will contain `http`

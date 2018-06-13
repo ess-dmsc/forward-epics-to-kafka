@@ -33,7 +33,7 @@ ConfigSettings ConfigParser::extractConfiguration() {
 
 void ConfigParser::extractBrokerConfig(ConfigSettings &Settings) {
   if (auto x = find<std::string>("broker-config", Json)) {
-    Settings.BrokerConfig = x.inner();
+    Settings.BrokerConfig = URI(x.inner());
   }
 }
 
