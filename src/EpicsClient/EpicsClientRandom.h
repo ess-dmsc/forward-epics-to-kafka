@@ -17,7 +17,7 @@ public:
   explicit EpicsClientRandom(
       std::shared_ptr<Ring<std::unique_ptr<FlatBufs::EpicsPVUpdate>>>
           RingBuffer)
-      : emit_queue(RingBuffer){};
+      : emit_queue(RingBuffer), UniformDistribution(0, 100){};
   ~EpicsClientRandom() override = default;
   int emit(std::unique_ptr<FlatBufs::EpicsPVUpdate> up) override;
   int stop() override { return 0; };
@@ -35,8 +35,11 @@ private:
 
   /// Buffer of (fake) PVUpdates
   std::shared_ptr<Ring<std::unique_ptr<FlatBufs::EpicsPVUpdate>>> emit_queue;
-  // int status_ = 0;
+  /// Status is set to 1 if something fails
   int status_{0};
+  /// Tools for generating random doubles
+  std::uniform_real_distribution<double> UniformDistribution;
+  std::default_random_engine RandomEngine;
 };
 }
 }

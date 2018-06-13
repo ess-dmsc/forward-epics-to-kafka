@@ -12,8 +12,8 @@ int EpicsClientRandom::emit(std::unique_ptr<FlatBufs::EpicsPVUpdate> up) {
 void EpicsClientRandom::generateFakePVUpdate() {
   auto FakePVUpdate =
       std::unique_ptr<FlatBufs::EpicsPVUpdate>(new FlatBufs::EpicsPVUpdate);
-  FakePVUpdate->epics_pvstr =
-      epics::pvData::PVStructure::shared_pointer(createFakePVStructure(10.0));
+  FakePVUpdate->epics_pvstr = epics::pvData::PVStructure::shared_pointer(
+      createFakePVStructure(UniformDistribution(RandomEngine)));
   FakePVUpdate->channel = "FakeChannel";
   FakePVUpdate->ts_epics_monitor = getCurrentTimestamp();
   FakePVUpdate->seq_data = 0;
