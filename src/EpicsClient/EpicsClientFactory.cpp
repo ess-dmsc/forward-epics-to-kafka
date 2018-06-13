@@ -1,6 +1,6 @@
 #include "EpicsClientFactory.h"
-#include "logger.h"
 #include "helper.h"
+#include "logger.h"
 // For epics::pvAccess::ClientFactory::start()
 #include <pv/caProvider.h>
 #include <pv/clientFactory.h>
@@ -35,8 +35,9 @@ EpicsClientFactoryInit::~EpicsClientFactoryInit() {
   ulock lock(mxl);
   auto c = --count;
   if (c < 0) {
-    LOG(0, "Reference count {} is not consistent, should never happen, but "
-           "ignoring for now.",
+    LOG(0,
+        "Reference count {} is not consistent, should never happen, but "
+        "ignoring for now.",
         c);
     c = 0;
   }
@@ -46,5 +47,5 @@ EpicsClientFactoryInit::~EpicsClientFactoryInit() {
     ::epics::pvAccess::ca::CAClientFactory::stop();
   }
 }
-}
-}
+} // namespace EpicsClient
+} // namespace Forwarder
