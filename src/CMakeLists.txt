@@ -48,11 +48,11 @@ if (CURL_FOUND)
 endif()
 
 set(INCLUDES
-    EpicsClient/ChannelRequester.h
     EpicsClient/EpicsClientMonitor.h
     EpicsClient/EpicsClientFactory.h
     EpicsClient/FwdMonitorRequester.h
     EpicsClient/EpicsClientInterface.h
+    EpicsClient/ChannelRequester.h
     Config.h
     ConfigParser.h
     ConversionWorker.h

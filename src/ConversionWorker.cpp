@@ -12,10 +12,6 @@ ConversionWorkPacket::~ConversionWorkPacket() {
   }
 }
 
-ConversionWorker::ConversionWorker(ConversionScheduler *scheduler,
-                                   uint32_t queue_size)
-    : queue(queue_size), id(s_id++), scheduler(scheduler) {}
-
 int ConversionWorker::start() {
   do_run = 1;
   thr = std::thread([this] { run(); });

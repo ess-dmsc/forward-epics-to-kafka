@@ -23,7 +23,8 @@ struct ConversionWorkPacket {
 
 class ConversionWorker {
 public:
-  ConversionWorker(ConversionScheduler *scheduler, uint32_t queue_size);
+  ConversionWorker(ConversionScheduler *scheduler, uint32_t queue_size)
+      : queue(queue_size), id(s_id++), scheduler(scheduler) {}
   int start();
   int stop();
   int run();
