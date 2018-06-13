@@ -49,6 +49,7 @@ endif()
 
 set(INCLUDES
     EpicsClient/EpicsClientMonitor.h
+    EpicsClient/EpicsClientRandom.h
     EpicsClient/EpicsClientFactory.h
     EpicsClient/FwdMonitorRequester.h
     EpicsClient/EpicsClientInterface.h
@@ -84,6 +85,7 @@ set(SOURCES
     ConfigParser.cpp
     CommandHandler.cpp
     EpicsClient/EpicsClientMonitor.cpp
+    EpicsClient/EpicsClientRandom.cpp
     EpicsClient/FwdMonitorRequester.cpp
     EpicsClient/EpicsClientFactory.cpp
     helper.cpp
