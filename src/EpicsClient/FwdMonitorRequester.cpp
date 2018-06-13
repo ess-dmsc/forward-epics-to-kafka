@@ -2,6 +2,7 @@
 #include "EpicsClientMonitor.h"
 #include "EpicsPVUpdate.h"
 #include "logger.h"
+#include "helper.h"
 #include <atomic>
 #include <memory>
 #include <pv/pvAccess.h>
@@ -74,7 +75,7 @@ void FwdMonitorRequester::monitorEvent(
     // Does that mean that we never get a scalar here directly??
 
     auto up_ =
-        std::unique_ptr<FlatBufs::EpicsPVUpdate>(new FlatBufs::EpicsPVUpdate);
+        ::make_unique<FlatBufs::EpicsPVUpdate>();
     auto &up = *up_;
     up.channel = channel_name;
     up.epics_pvstr = epics::pvData::PVStructure::shared_pointer(

@@ -1,5 +1,6 @@
 #include "EpicsClientFactory.h"
 #include "logger.h"
+#include "helper.h"
 // For epics::pvAccess::ClientFactory::start()
 #include <pv/caProvider.h>
 #include <pv/clientFactory.h>
@@ -15,7 +16,7 @@ std::atomic<int> EpicsClientFactoryInit::count{0};
 std::mutex EpicsClientFactoryInit::mxl;
 
 std::unique_ptr<EpicsClientFactoryInit> EpicsClientFactoryInit::factory_init() {
-  return std::unique_ptr<EpicsClientFactoryInit>(new EpicsClientFactoryInit);
+  return ::make_unique<EpicsClientFactoryInit>();
 }
 
 EpicsClientFactoryInit::EpicsClientFactoryInit() {
