@@ -5,8 +5,7 @@
 namespace Forwarder {
 namespace EpicsClient {
 
-/// Pure virtual interface for the epics client wrappers (monitor/period
-/// updates)
+/// Pure virtual interface for EPICS communication
 class EpicsClientInterface {
 public:
   virtual ~EpicsClientInterface() = default;
