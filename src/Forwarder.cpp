@@ -200,7 +200,7 @@ void Forwarder::report_stats(int dt) {
   b2 %= 1024;
   LOG(6, "dt: {:4}  m: {:4}.{:03}  b: {:3}.{:03}.{:03}", dt, m2, m1, b3, b2,
       b1);
-  if (CURLReporter::HaveCURL && main_opt.InfluxURI.size() != 0) {
+  if (CURLReporter::HaveCURL && !main_opt.InfluxURI.empty()) {
     int i1 = 0;
     for (auto &s : kafka_instance_set->stats_all()) {
       auto &m1 = influxbuf;
