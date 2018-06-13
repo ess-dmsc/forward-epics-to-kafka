@@ -8,6 +8,7 @@ using namespace Forwarder;
 
 class FakeEpicsClient : public EpicsClient::EpicsClientInterface {
 public:
+  FakeEpicsClient() = default;
   int emit(std::unique_ptr<FlatBufs::EpicsPVUpdate> up) override { return 0; };
   int stop() override { return 0; };
   void error_in_epics() override { status_ = -1; };
@@ -21,8 +22,7 @@ std::shared_ptr<Stream> createStream(std::string provider_type,
                                      std::string channel_name) {
   auto ring =
       std::make_shared<Ring<std::unique_ptr<FlatBufs::EpicsPVUpdate>>>();
-  auto client =
-      std::unique_ptr<EpicsClient::EpicsClientInterface>(new FakeEpicsClient());
+  auto client = ::make_unique<FakeEpicsClient>();
   ChannelInfo ci{std::move(provider_type), std::move(channel_name)};
   return std::make_shared<Stream>(ci, std::move(client), ring);
 }
