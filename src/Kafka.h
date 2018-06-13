@@ -6,6 +6,7 @@ Manage the running Kafka producer instances.
 Simple load balance over the available producers.
 */
 
+#include "uri.h"
 #include <atomic>
 #include <map>
 #include <memory>
@@ -13,9 +14,6 @@ Simple load balance over the available producers.
 #include <string>
 #include <thread>
 #include <vector>
-
-#include "tools.h"
-#include "uri.h"
 
 #include "FlatbufferMessage.h"
 #include "KafkaW/KafkaW.h"

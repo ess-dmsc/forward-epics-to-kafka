@@ -1,5 +1,4 @@
 #pragma once
-#include "epics-to-fb.h"
 #include "logger.h"
 #include <array>
 #include <atomic>
@@ -17,7 +16,7 @@ public:
   using mutex = std::mutex;
   using ulock = std::unique_lock<mutex>;
   Ring();
-  Ring(uint32_t n);
+  explicit Ring(uint32_t n);
   int resize(uint32_t);
   int resize_unsafe(uint32_t);
   int push(TP &x);
@@ -45,7 +44,5 @@ private:
   uint32_t iRmax = 0;
   std::vector<TP> vec;
   friend class Stream;
-
-public:
 };
 }
