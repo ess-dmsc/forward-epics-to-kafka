@@ -41,5 +41,5 @@ void Listener::poll(Callback &cb) {
   }
 }
 
-}
-}
+} // namespace Config
+} // namespace Forwarder

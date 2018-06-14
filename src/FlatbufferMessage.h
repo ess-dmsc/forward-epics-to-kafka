@@ -13,7 +13,7 @@ namespace FlatBufs {
 namespace f142 {
 class Converter;
 class ConverterTestNamed;
-}
+} // namespace f142
 
 /// \brief
 /// Holds the flatbuffer until it has been sent.
@@ -42,4 +42,4 @@ private:
   friend class f142::ConverterTestNamed;
 };
 
-}
+} // namespace FlatBufs

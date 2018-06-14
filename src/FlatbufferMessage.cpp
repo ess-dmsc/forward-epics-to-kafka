@@ -34,4 +34,4 @@ FlatbufferMessageSlice FlatbufferMessage::message() {
   return ret;
 }
 
-}
+} // namespace FlatBufs
