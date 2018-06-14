@@ -12,15 +12,15 @@ public:
   static PollStatus EOP();
   static PollStatus Empty();
   static PollStatus newWithMsg(std::unique_ptr<Msg> Msg);
-  PollStatus(PollStatus &&);
-  PollStatus &operator=(PollStatus &&);
+  PollStatus(PollStatus &&) noexcept;
+  PollStatus &operator=(PollStatus &&) noexcept;
   ~PollStatus();
   void reset();
-  PollStatus();
-  bool isOk();
-  bool isErr();
-  bool isEOP();
-  bool isEmpty();
+  PollStatus() = default;
+  bool isOk() const;
+  bool isErr() const;
+  bool isEOP() const;
+  bool isEmpty() const;
   std::unique_ptr<Msg> isMsg();
 
 private:

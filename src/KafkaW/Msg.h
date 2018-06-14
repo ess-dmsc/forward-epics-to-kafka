@@ -10,11 +10,8 @@ using uchar = unsigned char;
 class Msg {
 public:
   ~Msg();
-  uchar *data();
-  size_t size();
+  uchar *data() const;
+  size_t size() const;
   void *MsgPtr;
-  char const *topicName();
-  int64_t offset();
-  int32_t partition();
 };
 }

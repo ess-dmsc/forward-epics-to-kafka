@@ -41,9 +41,7 @@ public:
   Producer(Producer const &) = delete;
   Producer(Producer &&x);
   ~Producer();
-  void pollWhileOutputQueueFilled();
   void poll();
-  uint64_t totalMessagesProduced();
   uint64_t outputQueueLength();
   static void cb_delivered(rd_kafka_t *rk, rd_kafka_message_t const *msg,
                            void *opaque);

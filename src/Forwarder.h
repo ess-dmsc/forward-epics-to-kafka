@@ -15,7 +15,7 @@ namespace Forwarder {
 
 class MappingAddException : public std::runtime_error {
 public:
-  explicit MappingAddException(std::string what) : std::runtime_error(what) {}
+  MappingAddException(std::string what) : std::runtime_error(what) {}
 };
 
 class Converter;

@@ -142,11 +142,11 @@ int Stream::stop() {
   return 0;
 }
 
-int Stream::status() { return epics_client->status(); }
+int Stream::status() const { return epics_client->status(); }
 
 ChannelInfo const &Stream::channel_info() const { return channel_info_; }
 
-size_t Stream::emit_queue_size() { return emit_queue->size(); }
+size_t Stream::emit_queue_size() const { return emit_queue->size(); }
 
 nlohmann::json Stream::status_json() {
   using nlohmann::json;

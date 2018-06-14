@@ -46,7 +46,7 @@ static bool is_alpha(std::string s) {
   return true;
 }
 
-static std::vector<std::string> protocol(std::string s) {
+static std::vector<std::string> protocol(const std::string & s) {
   auto slashes = s.find("://");
   if (slashes == std::string::npos || slashes == 0) {
     return {std::string(), s};
@@ -58,7 +58,7 @@ static std::vector<std::string> protocol(std::string s) {
   return {proto, s.substr(slashes + 1, std::string::npos)};
 }
 
-static std::vector<std::string> hostport(std::string s) {
+static std::vector<std::string> hostport(const std::string & s) {
   if (s.find("//") != 0) {
     return {std::string(), std::string(), s};
   }
@@ -82,7 +82,6 @@ static std::vector<std::string> hostport(std::string s) {
       }
     }
   }
-  return {std::string(), std::string(), s};
 }
 
 static std::string trim(std::string s) {

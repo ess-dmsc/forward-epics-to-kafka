@@ -1,5 +1,6 @@
 #include "logger.h"
 #include "KafkaW/KafkaW.h"
+#include "helper.h"
 #include <atomic>
 #include <cstdarg>
 #include <cstdio>
@@ -73,8 +74,8 @@ void Logger::use_log_file(std::string fname) {
 void Logger::log_kafka_gelf_start(std::string address, std::string topicname) {
   KafkaW::BrokerSettings BrokerSettings;
   BrokerSettings.Address = address;
-  producer.reset(new KafkaW::Producer(BrokerSettings));
-  topic.reset(new KafkaW::Producer::Topic(producer, topicname));
+  producer = std::make_shared<KafkaW::Producer>(BrokerSettings);
+  topic = ::make_unique<KafkaW::Producer::Topic>(producer, topicname);
   topic->enableCopy();
   thread_poll = std::thread([this] {
     while (do_run_kafka.load()) {
@@ -84,8 +85,6 @@ void Logger::log_kafka_gelf_start(std::string address, std::string topicname) {
   });
   do_run_kafka = true;
 }
-
-void Logger::log_kafka_gelf_stop() { do_run_kafka = false; }
 
 void Logger::fwd_graylog_logger_enable(std::string address) {
 #ifdef HAVE_GRAYLOG_LOGGER

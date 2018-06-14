@@ -34,5 +34,4 @@ FlatbufferMessageSlice FlatbufferMessage::message() {
   return ret;
 }
 
-void inspect(FlatbufferMessage const &fb) {}
 }

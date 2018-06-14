@@ -16,7 +16,7 @@ private:
   std::mutex streams_mutex;
 
 public:
-  size_t size();
+  size_t size() const;
   void channel_stop(std::string const &channel);
   void streams_clear();
   void check_stream_status();

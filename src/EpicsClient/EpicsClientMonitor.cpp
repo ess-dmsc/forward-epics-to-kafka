@@ -247,7 +247,7 @@ void ChannelRequester::channelStateChange(
   if (cstate == Channel::CONNECTED) {
     CLOG(7, 7, "Epics channel connected");
     if (log_level >= 9) {
-      LOG(9, "ChannelRequester::channelStateChange  channelinfo: {}",
+      LOG(9, "ChannelRequester::channelStateChange channelinfo: {}",
           channelInfo(channel));
     }
     epics_client_impl->monitoring_start();
@@ -257,7 +257,7 @@ void ChannelRequester::channelStateChange(
   } else if (cstate == Channel::DESTROYED) {
     CLOG(7, 6, "Epics channel destroyed");
     epics_client_impl->channel_destroyed();
-  } else if (cstate != Channel::CONNECTED) {
+  } else {
     CLOG(3, 3, "Unhandled channel state change: {} {}", cstate,
          channel_state_name(cstate));
     epics_client_impl->error_channel_requester();

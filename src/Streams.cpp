@@ -7,7 +7,7 @@ namespace Forwarder {
  *
  * @return The size of the stream vector.
  */
-size_t Streams::size() { return streams.size(); }
+size_t Streams::size() const { return streams.size(); }
 
 /**
  * Stops specified channel and removes the stream.

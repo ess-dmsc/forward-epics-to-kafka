@@ -12,11 +12,6 @@ public:
   Range(T a, T b) : a(a), b(b) {}
   T a;
   T b;
-  bool check_consistent() {
-    if (a > b) {
-      throw std::runtime_error("not consistent");
-    }
-  }
   std::string to_s() const { return fmt::format("<Range {:3} {:3}>", a, b); }
 };
 
