@@ -2,6 +2,7 @@
 
 #include "EpicsClientInterface.h"
 #include "Ring.h"
+#include <random>
 
 namespace FlatBufs {
 class EpicsPVUpdate;
