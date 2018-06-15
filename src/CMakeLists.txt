@@ -77,6 +77,7 @@ set(INCLUDES
     SchemaRegistry.h
     Stream.h
     Streams.h
+    Timer.h
     uri.h)
 
 set(SOURCES
@@ -114,6 +115,7 @@ set(SOURCES
     schemas/f142/f142.cpp
     ${FMT_SRC}
     schemas/f143/f143.cpp
+    Timer.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/git_commit_current.cpp
 )
 
