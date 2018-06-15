@@ -39,7 +39,7 @@ EpicsClientRandom::createFakePVStructure(double Value) const {
 uint64_t EpicsClientRandom::getCurrentTimestamp() const {
   uint64_t CurrentTimestamp = static_cast<uint64_t>(
       std::chrono::duration_cast<std::chrono::nanoseconds>(
-          std::chrono::_V2::system_clock::now().time_since_epoch())
+          std::chrono::system_clock::now().time_since_epoch())
           .count());
   return CurrentTimestamp;
 }
