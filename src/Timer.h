@@ -6,6 +6,7 @@
 #include <mutex>
 #include <thread>
 #include <vector>
+#include <iostream>
 
 namespace Forwarder {
 
@@ -64,7 +65,7 @@ public:
       : Running(false), IntervalMS(Interval), CallbacksMutex(),
         Sleeper_(Sleeper){};
 
-  ///\fn executionLoop()
+  ///\fn executionLoop
   ///\brief Loops with the specified period, calling all registered callbacks
   /// with each iteration
   static void executionLoop(Timer *ThisTimer) {
@@ -79,13 +80,17 @@ public:
     }
   }
 
-  ///\fn start()
+  ///\fn start
   ///\brief starts the timer thread with a call to the callbacks
   void start();
 
-  ///\fn stop
-  ///\brief stops the timer thread.
-  void stop();
+  ///\fn triggerStop
+  ///\brief asks the timer thread to stop
+  void triggerStop();
+
+  ///\fn waitForStop
+  ///\brief blocks until the timer thread has stopped
+  void waitForStop();
 
   ///\fn addCallback
   ///\brief adds a callback to the vector of callbacks for the timer loop to
