@@ -39,7 +39,7 @@ private:
 
 class ConversionScheduler {
 public:
-  ConversionScheduler(Forwarder *main);
+  explicit ConversionScheduler(Forwarder *main);
   ~ConversionScheduler();
   int fill(Ring<std::unique_ptr<ConversionWorkPacket>> &queue, uint32_t nfm,
            uint32_t wid);

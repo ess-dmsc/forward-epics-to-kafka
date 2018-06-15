@@ -1,4 +1,5 @@
 #include "PollStatus.h"
+#include <algorithm>
 
 namespace KafkaW {
 
@@ -35,10 +36,10 @@ PollStatus PollStatus::newWithMsg(std::unique_ptr<Msg> Msg) {
   return ret;
 }
 
-PollStatus::PollStatus(PollStatus &&x)
-    : state(std::move(x.state)), data(std::move(x.data)) {}
+PollStatus::PollStatus(PollStatus &&x) noexcept
+    : state(x.state), data(x.data) {}
 
-PollStatus &PollStatus::operator=(PollStatus &&x) {
+PollStatus &PollStatus::operator=(PollStatus &&x) noexcept {
   reset();
   std::swap(state, x.state);
   std::swap(data, x.data);
@@ -47,7 +48,7 @@ PollStatus &PollStatus::operator=(PollStatus &&x) {
 
 void PollStatus::reset() {
   if (state == 1) {
-    if (auto x = (Msg *)data) {
+    if (auto x = reinterpret_cast<Msg *>(data)) {
       delete x;
     }
   }
@@ -55,19 +56,17 @@ void PollStatus::reset() {
   data = nullptr;
 }
 
-PollStatus::PollStatus() {}
+bool PollStatus::isOk() const { return state == 0; }
 
-bool PollStatus::isOk() { return state == 0; }
+bool PollStatus::isErr() const { return state == -1; }
 
-bool PollStatus::isErr() { return state == -1; }
+bool PollStatus::isEOP() const { return state == -2; }
 
-bool PollStatus::isEOP() { return state == -2; }
-
-bool PollStatus::isEmpty() { return state == -3; }
+bool PollStatus::isEmpty() const { return state == -3; }
 
 std::unique_ptr<Msg> PollStatus::isMsg() {
   if (state == 1) {
-    std::unique_ptr<Msg> ret((Msg *)data);
+    std::unique_ptr<Msg> ret(reinterpret_cast<Msg *>(data));
     data = nullptr;
     return ret;
   }

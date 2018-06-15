@@ -80,15 +80,15 @@ int Stream::converter_add(InstanceSet &kset, Converter::sptr conv,
 void Stream::error_in_epics() { epics_client->error_in_epics(); }
 
 int32_t
-Stream::fill_conversion_work(Ring<std::unique_ptr<ConversionWorkPacket>> &q2,
+Stream::fill_conversion_work(Ring<std::unique_ptr<ConversionWorkPacket>> &queue,
                              uint32_t max,
                              std::function<void(uint64_t)> on_seq_data) {
   uint32_t n0 = 0;
   uint32_t n1 = 0;
   ulock l1(emit_queue->mx);
-  ulock l2(q2.mx);
+  ulock l2(queue.mx);
   uint32_t n2 = emit_queue->size_unsafe();
-  uint32_t n3 = (std::min)(max, q2.capacity_unsafe() - q2.size_unsafe());
+  uint32_t n3 = (std::min)(max, queue.capacity_unsafe() - queue.size_unsafe());
   uint32_t ncp = conversion_paths.size();
   std::vector<ConversionWorkPacket *> cwp_last(conversion_paths.size());
   while (n0 < n2 && n3 - n1 >= ncp) {
@@ -117,7 +117,7 @@ Stream::fill_conversion_work(Ring<std::unique_ptr<ConversionWorkPacket>> &q2,
         p->up = std::unique_ptr<FlatBufs::EpicsPVUpdate>(
             new FlatBufs::EpicsPVUpdate(*e.second));
       }
-      auto x = q2.push_unsafe(p);
+      auto x = queue.push_unsafe(p);
       if (x != 0) {
         CLOG(6, 1, "full? should not happen");
         break;
@@ -142,11 +142,11 @@ int Stream::stop() {
   return 0;
 }
 
-int Stream::status() { return epics_client->status(); }
+int Stream::status() const { return epics_client->status(); }
 
 ChannelInfo const &Stream::channel_info() const { return channel_info_; }
 
-size_t Stream::emit_queue_size() { return emit_queue->size(); }
+size_t Stream::emit_queue_size() const { return emit_queue->size(); }
 
 nlohmann::json Stream::status_json() {
   using nlohmann::json;
@@ -169,4 +169,4 @@ nlohmann::json Stream::status_json() {
   Document["converters"] = Converters;
   return Document;
 }
-}
+} // namespace Forwarder

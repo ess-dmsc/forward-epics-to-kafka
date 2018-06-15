@@ -30,7 +30,6 @@ public:
   Listener(Listener const &) = delete;
   ~Listener();
   void poll(Callback &cb);
-  void wait_for_connected(std::chrono::milliseconds timeout);
 
 private:
   std::unique_ptr<Listener_impl> impl;

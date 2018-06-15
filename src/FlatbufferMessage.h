@@ -13,7 +13,7 @@ namespace FlatBufs {
 namespace f142 {
 class Converter;
 class ConverterTestNamed;
-}
+} // namespace f142
 
 /// \brief
 /// Holds the flatbuffer until it has been sent.
@@ -27,21 +27,19 @@ class FlatbufferMessage : public KafkaW::Producer::Msg {
 public:
   using uptr = std::unique_ptr<FlatbufferMessage>;
   FlatbufferMessage();
-  FlatbufferMessage(uint32_t initial_size);
+  explicit FlatbufferMessage(uint32_t initial_size);
   ~FlatbufferMessage() override;
   FlatbufferMessageSlice message();
   std::unique_ptr<flatbuffers::FlatBufferBuilder> builder;
+  FlatbufferMessage(FlatbufferMessage const &) = delete;
 
 private:
-  FlatbufferMessage(FlatbufferMessage const &) = delete;
   // Used for performance tests, please do not touch.
   uint64_t seq = 0;
-  uint32_t fwdix = 0;
   friend class Kafka;
   // Only here for some specific tests:
   friend class f142::Converter;
   friend class f142::ConverterTestNamed;
 };
 
-void inspect(FlatbufferMessage const &fb);
-}
+} // namespace FlatBufs

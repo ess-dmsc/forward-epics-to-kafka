@@ -4,7 +4,7 @@
 
 namespace Forwarder {
 
-KafkaOutput::KafkaOutput(KafkaOutput &&x) : pt(std::move(x.pt)) {}
+KafkaOutput::KafkaOutput(KafkaOutput &&pt) : pt(std::move(pt.pt)) {}
 
 KafkaOutput::KafkaOutput(KafkaW::Producer::Topic &&pt) : pt(std::move(pt)) {}
 

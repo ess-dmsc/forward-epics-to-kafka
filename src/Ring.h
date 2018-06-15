@@ -22,7 +22,7 @@ public:
   int push(TP &x);
   int push_unsafe(TP &x);
   int push_enlarge(TP &x);
-  int push_enlarge_unsafe(TP &x);
+  int push_enlarge_unsafe(TP &p);
   std::pair<int, TP> pop();
   std::pair<int, TP> pop_unsafe();
   uint32_t size();

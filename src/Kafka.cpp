@@ -21,7 +21,7 @@ void InstanceSet::clear() {
   kset.reset();
 }
 
-InstanceSet::InstanceSet(KafkaW::BrokerSettings BrokerSettings)
+InstanceSet::InstanceSet(KafkaW::BrokerSettings &BrokerSettings)
     : BrokerSettings(BrokerSettings) {}
 
 static void prod_delivery_ok(rd_kafka_message_t const *msg) {
@@ -85,4 +85,4 @@ std::vector<KafkaW::ProducerStats> InstanceSet::stats_all() {
   }
   return ret;
 }
-}
+} // namespace Forwarder

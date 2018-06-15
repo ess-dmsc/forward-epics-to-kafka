@@ -25,8 +25,8 @@ public:
   ///
   ///\param msg The logging message.
   ///\param msg_type Not used, satisfies inheritance from MonitorRequester.
-  void message(std::string const &msg,
-               ::epics::pvData::MessageType msg_type) override;
+  void message(std::string const &Msg,
+               ::epics::pvData::MessageType MsgType) override;
 
   /// Checks the epics monitor is connected and no errors are returned.
   ///

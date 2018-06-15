@@ -365,7 +365,6 @@ Value_t make_Value(flatbuffers::FlatBufferBuilder &builder,
       return make_Value_scalar(
           builder, static_cast<epics::pvData::PVScalar *>(findex.get()),
           statistics);
-      break;
     }
     break;
   }

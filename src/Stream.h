@@ -60,9 +60,9 @@ public:
                        uint32_t max, std::function<void(uint64_t)> on_seq_data);
   int stop();
   void error_in_epics();
-  int status();
+  int status() const;
   ChannelInfo const &channel_info() const;
-  size_t emit_queue_size();
+  size_t emit_queue_size() const;
   nlohmann::json status_json();
   using mutex = std::mutex;
   using ulock = std::unique_lock<mutex>;
