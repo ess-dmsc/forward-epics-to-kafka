@@ -2,6 +2,7 @@
 
 #include "EpicsClientInterface.h"
 #include "Ring.h"
+#include <Stream.h>
 #include <random>
 
 namespace FlatBufs {
@@ -16,9 +17,11 @@ namespace EpicsClient {
 class EpicsClientRandom : public EpicsClientInterface {
 public:
   explicit EpicsClientRandom(
+      ChannelInfo &channelInfo,
       std::shared_ptr<Ring<std::unique_ptr<FlatBufs::EpicsPVUpdate>>>
           RingBuffer)
-      : emit_queue(RingBuffer), UniformDistribution(0, 100){};
+      : ChannelInformation(channelInfo), emit_queue(RingBuffer),
+        UniformDistribution(0, 100){};
   ~EpicsClientRandom() override = default;
   int emit(std::unique_ptr<FlatBufs::EpicsPVUpdate> up) override;
   int stop() override { return 0; };
@@ -34,6 +37,7 @@ private:
   /// Create a PVStructure with the specified value
   epics::pvData::PVStructurePtr createFakePVStructure(double Value) const;
 
+  ChannelInfo ChannelInformation;
   /// Buffer of (fake) PVUpdates
   std::shared_ptr<Ring<std::unique_ptr<FlatBufs::EpicsPVUpdate>>> emit_queue;
   /// Status is set to 1 if something fails

@@ -1,6 +1,7 @@
 #include "../EpicsClient/EpicsClientRandom.h"
 #include "EpicsPVUpdate.h"
 #include "Ring.h"
+#include "Streams.h"
 #include <gtest/gtest.h>
 #include <memory>
 
@@ -11,7 +12,9 @@ TEST(EpicsClientRandomTests,
   // GIVEN an EpicsClient with a ring buffer
   auto RingBuffer =
       std::make_shared<Ring<std::unique_ptr<FlatBufs::EpicsPVUpdate>>>();
-  auto EpicsClient = EpicsClient::EpicsClientRandom(RingBuffer);
+  ChannelInfo ChannelInformation{"", ""};
+  auto EpicsClient =
+      EpicsClient::EpicsClientRandom(ChannelInformation, RingBuffer);
 
   // WHEN we call generateFakePVUpdate once
   EpicsClient.generateFakePVUpdate();
@@ -31,7 +34,9 @@ TEST(EpicsClientRandomTests,
   // GIVEN an EpicsClient with a ring buffer
   auto RingBuffer =
       std::make_shared<Ring<std::unique_ptr<FlatBufs::EpicsPVUpdate>>>();
-  auto EpicsClient = EpicsClient::EpicsClientRandom(RingBuffer);
+  ChannelInfo ChannelInformation{"", ""};
+  auto EpicsClient =
+      EpicsClient::EpicsClientRandom(ChannelInformation, RingBuffer);
 
   // WHEN we call generateFakePVUpdate once
   EpicsClient.generateFakePVUpdate();

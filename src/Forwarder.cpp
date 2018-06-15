@@ -2,6 +2,7 @@
 #include "CommandHandler.h"
 #include "Converter.h"
 #include "Stream.h"
+#include "Timer.h"
 #include "helper.h"
 #include "logger.h"
 #include <EpicsClient/EpicsClientInterface.h>
@@ -12,7 +13,9 @@
 #include "process.h"
 #define getpid _getpid
 #else
+#include <EpicsClient/EpicsClientRandom.h>
 #include <unistd.h>
+
 #endif
 #include "CURLReporter.h"
 
@@ -61,6 +64,8 @@ Forwarder::Forwarder(MainOpt &opt)
         new Config::Listener{bopt, main_opt.MainSettings.BrokerConfig});
   }
 
+  createFakePVUpdateTimerIfRequired();
+
   for (auto &Stream : main_opt.MainSettings.StreamsInfo) {
     try {
       addMapping(Stream);
@@ -85,6 +90,15 @@ Forwarder::~Forwarder() {
   conversion_workers_clear();
   converters_clear();
   InstanceSet::clear();
+}
+
+void Forwarder::createFakePVUpdateTimerIfRequired() {
+  if (main_opt.FakePVPeriodMS > 0) {
+    auto Interval = std::chrono::milliseconds(main_opt.FakePVPeriodMS);
+    std::shared_ptr<Sleeper> IntervalSleeper = std::make_shared<RealSleeper>();
+    GenerateFakePVUpdateTimer =
+        std::unique_ptr<Timer>(new Timer(Interval, IntervalSleeper));
+  }
 }
 
 int Forwarder::conversion_workers_clear() {
@@ -133,6 +147,10 @@ void Forwarder::forward_epics_to_kafka() {
       x->start();
     }
   }
+
+  if (GenerateFakePVUpdateTimer != nullptr)
+    GenerateFakePVUpdateTimer->start();
+
   while (ForwardingRunFlag.load() == ForwardingRunState::RUN) {
     auto do_stats = false;
     auto t1 = CLK::now();
@@ -170,6 +188,12 @@ void Forwarder::forward_epics_to_kafka() {
   LOG(6, "Main::forward_epics_to_kafka shutting down");
   conversion_workers_clear();
   streams.streams_clear();
+
+  if (GenerateFakePVUpdateTimer != nullptr) {
+    GenerateFakePVUpdateTimer->triggerStop();
+    GenerateFakePVUpdateTimer->waitForStop();
+  }
+
   LOG(6, "ForwardingStatus::STOPPED");
   forwarding_status.store(ForwardingStatus::STOPPED);
 }
@@ -302,7 +326,11 @@ void Forwarder::addMapping(StreamSettings const &StreamInfo) {
   std::unique_lock<std::mutex> lock(streams_mutex);
   try {
     ChannelInfo ChannelInfo{StreamInfo.EpicsProtocol, StreamInfo.Name};
-    auto client = addStream<EpicsClient::EpicsClientMonitor>(ChannelInfo);
+    std::shared_ptr<EpicsClient::EpicsClientInterface> client;
+    if (GenerateFakePVUpdateTimer != nullptr)
+      client = addStream<EpicsClient::EpicsClientRandom>(ChannelInfo);
+    else
+      client = addStream<EpicsClient::EpicsClientMonitor>(ChannelInfo);
   } catch (std::runtime_error &e) {
     std::throw_with_nested(MappingAddException("Cannot add stream"));
   }
