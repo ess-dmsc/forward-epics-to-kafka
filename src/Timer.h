@@ -88,6 +88,8 @@ private:
   void callCallbacks();
   void waitForExecutionTrigger();
   void notifyOfCompletedIteration();
+  void triggerCallbackExecution();
+  void waitForPreviousIterationToComplete();
 
   std::atomic_bool Running;
   std::chrono::milliseconds IntervalMS;

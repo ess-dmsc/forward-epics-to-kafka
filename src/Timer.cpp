@@ -32,8 +32,7 @@ void Timer::notifyOfCompletedIteration() {
 
 void Timer::waitForExecutionTrigger() {
   std::unique_lock<std::mutex> DoIterationLock(DoIterationMutex);
-  DoIterationCV.wait(DoIterationLock,
-                     [this] { return DoIteration == true; });
+  DoIterationCV.wait(DoIterationLock, [this] { return DoIteration == true; });
 }
 
 void Timer::callCallbacks() {
@@ -46,26 +45,27 @@ void Timer::callCallbacks() {
 void Timer::timerLoop() {
   while (Running) {
     Sleeper_->sleepFor(IntervalMS);
-    bool CheckedIterationComplete;
-    {
-      std::lock_guard<std::mutex> LockIterationComplete(IterationCompleteMutex);
-      CheckedIterationComplete = IterationComplete;
-    }
-    if (!CheckedIterationComplete) {
-      LOG(3, "Timer could not execute callbacks within specified iteration "
-             "period");
-      std::unique_lock<std::mutex> Lock(IterationCompleteMutex);
-      IterationCompleteCV.wait(Lock,
-                               [this] { return IterationComplete == true; });
-    }
-    {
-      std::lock_guard<std::mutex> LockDoIteration(DoIterationMutex);
-      DoIteration = true;
-      IterationComplete = false;
-      DoIterationCV.notify_one();
-    }
+    waitForPreviousIterationToComplete();
+    triggerCallbackExecution();
   }
 };
+
+void Timer::waitForPreviousIterationToComplete() {
+  if (!IterationComplete) {
+    LOG(3, "Timer could not execute callbacks within specified iteration "
+           "period");
+    std::unique_lock<std::mutex> Lock(IterationCompleteMutex);
+    IterationCompleteCV.wait(Lock,
+                             [this] { return IterationComplete == true; });
+  }
+}
+
+void Timer::triggerCallbackExecution() {
+  std::lock_guard<std::mutex> LockDoIteration(DoIterationMutex);
+  DoIteration = true;
+  IterationComplete = false;
+  DoIterationCV.notify_one();
+}
 
 void Timer::start() {
   Running = true;
