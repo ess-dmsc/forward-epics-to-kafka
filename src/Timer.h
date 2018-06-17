@@ -97,10 +97,13 @@ private:
   std::thread TimerThread;
   std::shared_ptr<Sleeper> Sleeper_;
 
+  /// For triggering execution of registered callbacks
   std::atomic_bool DoIteration;
   std::condition_variable DoIterationCV;
   std::mutex DoIterationMutex;
 
+  /// For checking execution of callbacks is complete before triggering next
+  /// execution
   std::atomic_bool IterationComplete;
   std::condition_variable IterationCompleteCV;
   std::mutex IterationCompleteMutex;
