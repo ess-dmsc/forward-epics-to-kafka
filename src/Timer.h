@@ -54,64 +54,17 @@ public:
   explicit Timer(std::chrono::milliseconds Interval,
                  std::shared_ptr<Sleeper> Sleeper)
       : Running(false), IntervalMS(Interval), CallbacksMutex(),
-        Sleeper_(Sleeper){};
+        Sleeper_(Sleeper), DoIteration(false), IterationComplete(true){};
 
   ///\fn executionLoop
   ///\brief Executes all registered callbacks when notified to do iteration
-  static void executionLoop(Timer *ThisTimer) {
-    while (ThisTimer->Running) {
-      {
-        std::unique_lock<std::mutex> DoIterationLock(
-            ThisTimer->DoIterationMutex);
-        ThisTimer->DoIterationCV.wait(
-            DoIterationLock, [ThisTimer] { return ThisTimer->DoIteration; });
-      }
-      {
-        std::lock_guard<std::mutex> CallbackLock(ThisTimer->CallbacksMutex);
-        for (const CallbackFunction &Callback : ThisTimer->Callbacks) {
-          Callback();
-        }
-      }
-      {
-        std::lock_guard<std::mutex> IterationCompleteLock(
-            ThisTimer->IterationCompleteMutex);
-        ThisTimer->IterationComplete = true;
-        ThisTimer->IterationCompleteCV.notify_one();
-      }
-    }
-  };
+  void executionLoop();
 
   ///\fn timerLoop
   ///\brief Triggers executing registered callbacks at the specified interval
   /// Logs an error and waits for callback execution to complete if it takes
   /// longer than the requested interval
-  static void timerLoop(Timer *ThisTimer) {
-    while (ThisTimer->Running) {
-      ThisTimer->Sleeper_->sleepFor(ThisTimer->IntervalMS);
-      bool CheckedIterationComplete;
-      {
-        std::lock_guard<std::mutex> LockIterationComplete(
-            ThisTimer->IterationCompleteMutex);
-        CheckedIterationComplete = ThisTimer->IterationComplete;
-      }
-      if (!CheckedIterationComplete) {
-        LOG(3, "Timer could not execute callbacks within specified iteration "
-               "period");
-        std::unique_lock<std::mutex> Lock(ThisTimer->IterationCompleteMutex);
-        ThisTimer->IterationCompleteCV.wait(
-            Lock, [ThisTimer] { return ThisTimer->IterationComplete; });
-      }
-      {
-        std::lock_guard<std::mutex> LockDoIteration(
-            ThisTimer->DoIterationMutex);
-        std::lock_guard<std::mutex> LockIterationComplete(
-            ThisTimer->IterationCompleteMutex);
-        ThisTimer->DoIteration = true;
-        ThisTimer->IterationComplete = false;
-        ThisTimer->DoIterationCV.notify_one();
-      }
-    }
-  };
+  void timerLoop();
 
   ///\fn start
   ///\brief starts the timer thread with a call to the callbacks
@@ -132,6 +85,10 @@ public:
   void addCallback(CallbackFunction Callback);
 
 private:
+  void callCallbacks();
+  void waitForExecutionTrigger();
+  void notifyOfCompletedIteration();
+
   std::atomic_bool Running;
   std::chrono::milliseconds IntervalMS;
   std::mutex CallbacksMutex;
@@ -140,11 +97,11 @@ private:
   std::thread TimerThread;
   std::shared_ptr<Sleeper> Sleeper_;
 
-  bool DoIteration = false;
+  std::atomic_bool DoIteration;
   std::condition_variable DoIterationCV;
   std::mutex DoIterationMutex;
 
-  bool IterationComplete = true;
+  std::atomic_bool IterationComplete;
   std::condition_variable IterationCompleteCV;
   std::mutex IterationCompleteMutex;
 };
