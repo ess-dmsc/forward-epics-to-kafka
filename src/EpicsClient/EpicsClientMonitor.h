@@ -25,7 +25,9 @@ public:
   /// This can then call the functions in the implementation.
   explicit EpicsClientMonitor(
       ChannelInfo &channelInfo,
-      std::shared_ptr<Ring<std::unique_ptr<FlatBufs::EpicsPVUpdate>>> ring);
+      std::shared_ptr<
+          moodycamel::ConcurrentQueue<std::unique_ptr<FlatBufs::EpicsPVUpdate>>>
+          ring);
   ~EpicsClientMonitor() override;
 
   /// Pushes the PV update onto the emit_queue ring buffer.
@@ -44,7 +46,9 @@ public:
 
 private:
   std::unique_ptr<EpicsClientMonitor_impl> impl;
-  std::shared_ptr<Ring<std::unique_ptr<FlatBufs::EpicsPVUpdate>>> emit_queue;
+  std::shared_ptr<
+      moodycamel::ConcurrentQueue<std::unique_ptr<FlatBufs::EpicsPVUpdate>>>
+      emit_queue;
   std::atomic<int> status_{0};
 };
 }

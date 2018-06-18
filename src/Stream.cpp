@@ -37,10 +37,6 @@ int ConversionPath::emit(std::unique_ptr<FlatBufs::EpicsPVUpdate> up) {
   return 0;
 }
 
-static uint16_t _fmt(std::unique_ptr<FlatBufs::EpicsPVUpdate> &x) {
-  return (uint16_t)(((uint64_t)x.get()) >> 0);
-}
-
 nlohmann::json ConversionPath::status_json() const {
   using nlohmann::json;
   auto Document = json::object();
@@ -54,11 +50,11 @@ nlohmann::json ConversionPath::status_json() const {
 Stream::Stream(
     ChannelInfo channel_info,
     std::shared_ptr<EpicsClient::EpicsClientInterface> client,
-    std::shared_ptr<Ring<std::unique_ptr<FlatBufs::EpicsPVUpdate>>> ring)
+    std::shared_ptr<
+        moodycamel::ConcurrentQueue<std::unique_ptr<FlatBufs::EpicsPVUpdate>>>
+        ring)
     : channel_info_(channel_info), epics_client(std::move(client)),
-      emit_queue(ring) {
-  emit_queue->formatter = _fmt;
-}
+      emit_queue(ring) {}
 
 Stream::~Stream() {
   CLOG(7, 2, "~Stream");
@@ -71,58 +67,53 @@ int Stream::converter_add(InstanceSet &kset, Converter::sptr conv,
                           URI uri_kafka_output) {
   auto pt = kset.producer_topic(uri_kafka_output);
   std::unique_ptr<ConversionPath> cp(new ConversionPath(
-      {std::move(conv)},
-      std::unique_ptr<KafkaOutput>(new KafkaOutput(std::move(pt)))));
+      {std::move(conv)}, make_unique<KafkaOutput>(std::move(pt))));
   conversion_paths.push_back(std::move(cp));
   return 0;
 }
 
 void Stream::error_in_epics() { epics_client->error_in_epics(); }
 
-int32_t
-Stream::fill_conversion_work(Ring<std::unique_ptr<ConversionWorkPacket>> &q2,
-                             uint32_t max,
-                             std::function<void(uint64_t)> on_seq_data) {
+int32_t Stream::fill_conversion_work(
+    moodycamel::ConcurrentQueue<std::unique_ptr<ConversionWorkPacket>> &q2,
+    uint32_t max, std::function<void(uint64_t)> on_seq_data) {
   uint32_t n0 = 0;
   uint32_t n1 = 0;
-  ulock l1(emit_queue->mx);
-  ulock l2(q2.mx);
-  uint32_t n2 = emit_queue->size_unsafe();
-  uint32_t n3 = (std::min)(max, q2.capacity_unsafe() - q2.size_unsafe());
-  uint32_t ncp = conversion_paths.size();
+  auto BufferSize = emit_queue->size_approx();
+  auto ConversionPathSize = conversion_paths.size();
   std::vector<ConversionWorkPacket *> cwp_last(conversion_paths.size());
-  while (n0 < n2 && n3 - n1 >= ncp) {
-    auto e = emit_queue->pop_unsafe();
+  while (n0 < BufferSize && max - n1 >= ConversionPathSize) {
+    std::unique_ptr<FlatBufs::EpicsPVUpdate> EpicsUpdate;
+    auto found = emit_queue->try_dequeue(EpicsUpdate);
     n0 += 1;
-    if (e.first != 0) {
-      CLOG(6, 1, "empty? should not happen");
+    if (!found) {
+      CLOG(6, 1, "Conversion worker buffer is empty");
       break;
     }
-    auto &up = e.second;
-    if (!up) {
-      LOG(6, "empty epics update");
+    if (!EpicsUpdate) {
+      LOG(6, "Empty EPICS PV update");
       continue;
     }
-    size_t cpid = 0;
-    uint32_t ncp = conversion_paths.size();
-    on_seq_data(e.second->seq_data);
-    for (auto &cp : conversion_paths) {
-      auto p = std::unique_ptr<ConversionWorkPacket>(new ConversionWorkPacket);
-      cwp_last[cpid] = p.get();
-      p->cp = cp.get();
-      if (ncp == 1) {
+    size_t ConversionPathID = 0;
+    ConversionPathSize = conversion_paths.size();
+    on_seq_data(EpicsUpdate->seq_data);
+    for (auto &ConversionPath : conversion_paths) {
+      auto ConversionPacket = make_unique<ConversionWorkPacket>();
+      cwp_last[ConversionPathID] = ConversionPacket.get();
+      ConversionPacket->cp = ConversionPath.get();
+      if (ConversionPathSize == 1) {
         // more common case
-        p->up = std::move(e.second);
+        ConversionPacket->up = std::move(EpicsUpdate);
       } else {
-        p->up = std::unique_ptr<FlatBufs::EpicsPVUpdate>(
-            new FlatBufs::EpicsPVUpdate(*e.second));
+        ConversionPacket->up =
+            make_unique<FlatBufs::EpicsPVUpdate>(*EpicsUpdate);
       }
-      auto x = q2.push_unsafe(p);
-      if (x != 0) {
-        CLOG(6, 1, "full? should not happen");
+      bool QueuedUnsuccessful = q2.enqueue(std::move(ConversionPacket));
+      if (QueuedUnsuccessful) {
+        CLOG(6, 1, "Conversion work queue is full");
         break;
       }
-      cpid += 1;
+      ConversionPathID += 1;
       n1 += 1;
     }
   }
@@ -146,7 +137,7 @@ int Stream::status() { return epics_client->status(); }
 
 ChannelInfo const &Stream::channel_info() const { return channel_info_; }
 
-size_t Stream::emit_queue_size() { return emit_queue->size(); }
+size_t Stream::emit_queue_size() { return emit_queue->size_approx(); }
 
 nlohmann::json Stream::status_json() {
   using nlohmann::json;

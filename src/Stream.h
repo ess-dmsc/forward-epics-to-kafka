@@ -3,12 +3,12 @@
 #include "ConversionWorker.h"
 #include "Kafka.h"
 #include "RangeSet.h"
-#include "Ring.h"
 #include "SchemaRegistry.h"
 #include "uri.h"
 #include <EpicsClient/EpicsClientInterface.h>
 #include <array>
 #include <atomic>
+#include <concurrentqueue/concurrentqueue.h>
 #include <memory>
 #include <nlohmann/json.hpp>
 #include <string>
@@ -50,14 +50,16 @@ public:
   explicit Stream(
       ChannelInfo channel_info,
       std::shared_ptr<EpicsClient::EpicsClientInterface> client,
-      std::shared_ptr<Ring<std::unique_ptr<FlatBufs::EpicsPVUpdate>>> ring);
+      std::shared_ptr<
+          moodycamel::ConcurrentQueue<std::unique_ptr<FlatBufs::EpicsPVUpdate>>>
+          ring);
   Stream(Stream &&) = delete;
   ~Stream();
   int converter_add(InstanceSet &kset, std::shared_ptr<Converter> conv,
                     URI uri_kafka_output);
-  int32_t
-  fill_conversion_work(Ring<std::unique_ptr<ConversionWorkPacket>> &queue,
-                       uint32_t max, std::function<void(uint64_t)> on_seq_data);
+  int32_t fill_conversion_work(
+      moodycamel::ConcurrentQueue<std::unique_ptr<ConversionWorkPacket>> &queue,
+      uint32_t max, std::function<void(uint64_t)> on_seq_data);
   int stop();
   void error_in_epics();
   int status();
@@ -72,7 +74,9 @@ private:
   ChannelInfo channel_info_;
   std::vector<std::unique_ptr<ConversionPath>> conversion_paths;
   std::shared_ptr<EpicsClient::EpicsClientInterface> epics_client;
-  std::shared_ptr<Ring<std::unique_ptr<FlatBufs::EpicsPVUpdate>>> emit_queue;
+  std::shared_ptr<
+      moodycamel::ConcurrentQueue<std::unique_ptr<FlatBufs::EpicsPVUpdate>>>
+      emit_queue;
   RangeSet<uint64_t> seq_data_emitted;
 };
 }

@@ -16,7 +16,7 @@ public:
   FwdMonitorRequester(EpicsClientInterface *epicsClientMonitor,
                       const std::string &channel_name);
 
-  ~FwdMonitorRequester();
+  ~FwdMonitorRequester() override;
 
   /// returns the requester ID.
   std::string getRequesterName() override;

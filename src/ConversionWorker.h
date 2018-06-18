@@ -1,9 +1,9 @@
 #pragma once
 #include "EpicsPVUpdate.h"
 #include "RangeSet.h"
-#include "Ring.h"
 #include "Stream.h"
 #include <atomic>
+#include <concurrentqueue/concurrentqueue.h>
 #include <mutex>
 #include <thread>
 
@@ -23,13 +23,14 @@ struct ConversionWorkPacket {
 
 class ConversionWorker {
 public:
-  ConversionWorker(ConversionScheduler *scheduler, uint32_t queue_size);
+  ConversionWorker(ConversionScheduler *scheduler, uint32_t queue_size)
+      : queue(queue_size), id(s_id++), scheduler(scheduler) {}
   int start();
   int stop();
   int run();
 
 private:
-  Ring<std::unique_ptr<ConversionWorkPacket>> queue;
+  moodycamel::ConcurrentQueue<std::unique_ptr<ConversionWorkPacket>> queue;
   std::atomic<uint32_t> do_run{0};
   static std::atomic<uint32_t> s_id;
   uint32_t id;
@@ -41,8 +42,9 @@ class ConversionScheduler {
 public:
   ConversionScheduler(Forwarder *main);
   ~ConversionScheduler();
-  int fill(Ring<std::unique_ptr<ConversionWorkPacket>> &queue, uint32_t nfm,
-           uint32_t wid);
+  int fill(
+      moodycamel::ConcurrentQueue<std::unique_ptr<ConversionWorkPacket>> &queue,
+      uint32_t nfm, uint32_t wid);
 
 private:
   Forwarder *main = nullptr;
