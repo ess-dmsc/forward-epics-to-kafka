@@ -1,8 +1,8 @@
 #pragma once
 
 #include "EpicsClientInterface.h"
-#include "Ring.h"
 #include <Stream.h>
+#include <concurrentqueue/concurrentqueue.h>
 #include <random>
 
 namespace FlatBufs {
@@ -18,7 +18,8 @@ class EpicsClientRandom : public EpicsClientInterface {
 public:
   explicit EpicsClientRandom(
       ChannelInfo &channelInfo,
-      std::shared_ptr<Ring<std::unique_ptr<FlatBufs::EpicsPVUpdate>>>
+      std::shared_ptr<
+          moodycamel::ConcurrentQueue<std::unique_ptr<FlatBufs::EpicsPVUpdate>>>
           RingBuffer)
       : ChannelInformation(channelInfo), emit_queue(RingBuffer),
         UniformDistribution(0, 100){};
@@ -39,7 +40,9 @@ private:
 
   ChannelInfo ChannelInformation;
   /// Buffer of (fake) PVUpdates
-  std::shared_ptr<Ring<std::unique_ptr<FlatBufs::EpicsPVUpdate>>> emit_queue;
+  std::shared_ptr<
+      moodycamel::ConcurrentQueue<std::unique_ptr<FlatBufs::EpicsPVUpdate>>>
+      emit_queue;
   /// Status is set to 1 if something fails
   int status_{0};
   /// Tools for generating random doubles

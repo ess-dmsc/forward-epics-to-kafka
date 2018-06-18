@@ -1,17 +1,18 @@
 #include "EpicsClientRandom.h"
 #include "pv/pvData.h"
+#include <helper.h>
+#include <memory>
 
 namespace Forwarder {
 namespace EpicsClient {
 
 int EpicsClientRandom::emit(std::unique_ptr<FlatBufs::EpicsPVUpdate> up) {
-  emit_queue->push_enlarge(up);
+  emit_queue->enqueue(std::move(up));
   return 1;
 }
 
 void EpicsClientRandom::generateFakePVUpdate() {
-  auto FakePVUpdate =
-      std::unique_ptr<FlatBufs::EpicsPVUpdate>(new FlatBufs::EpicsPVUpdate);
+  auto FakePVUpdate = make_unique<FlatBufs::EpicsPVUpdate>();
   FakePVUpdate->epics_pvstr = epics::pvData::PVStructure::shared_pointer(
       createFakePVStructure(UniformDistribution(RandomEngine)));
   FakePVUpdate->channel = ChannelInformation.channel_name;
