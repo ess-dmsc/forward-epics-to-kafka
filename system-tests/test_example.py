@@ -10,7 +10,6 @@ from json import loads
 from time import sleep
 
 
-BUILD_FORWARDER = False
 CONFIG_TOPIC = "TEST_forwarderConfig"
 
 
