@@ -183,7 +183,12 @@ void Forwarder::report_status() {
   }
   Status["streams"] = Streams;
   auto StatusString = Status.dump();
-  LOG(0, "status: {}", StatusString);
+  auto StatusStringSize = StatusString.size();
+  if (StatusStringSize > 1000) {
+    StatusString = StatusString.substr(0, 1000) +
+                   fmt::format(" ... {} chars total ...", StatusStringSize);
+  }
+  LOG(7, "status: {}", StatusString);
   status_producer_topic->produce((KafkaW::uchar *)StatusString.c_str(),
                                  StatusString.size());
 }
