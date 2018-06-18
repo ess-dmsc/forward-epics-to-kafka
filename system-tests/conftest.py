@@ -29,7 +29,7 @@ def wait_until_kafka_ready(docker_cmd, docker_options):
         raise Exception('Kafka broker was not ready after 100 seconds, aborting tests.')
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="module")
 def docker_compose(request):
     """
     :type request: _pytest.python.FixtureRequest
