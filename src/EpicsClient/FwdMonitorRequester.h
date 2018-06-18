@@ -7,10 +7,12 @@ namespace EpicsClient {
 
 class EpicsClientMonitor;
 
-///\class FwdMonitorRequester
-///\brief an implementation of an internal epics monitor loop
+/// An implementation of an internal epics monitor loop.
+/// Owned by the epics client monitor, responsible for starting the monitor
+/// and creating callbacks.
 class FwdMonitorRequester : public ::epics::pvData::MonitorRequester {
 public:
+  /// Sets the Requester ID, channel name and pointer to epics client.
   FwdMonitorRequester(EpicsClientInterface *epicsClientMonitor,
                       const std::string &channel_name);
 

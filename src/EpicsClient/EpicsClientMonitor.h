@@ -18,10 +18,11 @@ using std::vector;
 
 class EpicsClientMonitor_impl;
 
-///\class EpicsClientMonitor
-///\brief Epics client implementation which monitors for PV updates.
+/// Epics client implementation which monitors for PV updates.
 class EpicsClientMonitor : public EpicsClientInterface {
 public:
+  /// Creates a new implementation and stores it as impl.
+  /// This can then call the functions in the implementation.
   explicit EpicsClientMonitor(
       ChannelInfo &channelInfo,
       std::shared_ptr<

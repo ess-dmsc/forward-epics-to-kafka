@@ -14,6 +14,7 @@ class ChannelRequester : public epics::pvAccess::ChannelRequester {
 public:
   explicit ChannelRequester(EpicsClientMonitor_impl *epics_client_impl)
       : epics_client_impl(epics_client_impl){};
+
   std::string getRequesterName() override;
 
   /// Logs the channel status message.
