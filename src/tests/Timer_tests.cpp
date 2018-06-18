@@ -9,11 +9,11 @@ protected:
     CallbackACalled = false;
     CallbackBCalled = false;
   }
-  void testCallbackA() { CallbackACalled = true; }
-  void testCallbackB() { CallbackBCalled = true; }
+  void testCallbackA() { ++CallbackACalled; }
+  void testCallbackB() { ++CallbackBCalled; }
 
-  std::atomic_bool CallbackACalled{false};
-  std::atomic_bool CallbackBCalled{false};
+  std::atomic_uint CallbackACalled{0};
+  std::atomic_uint CallbackBCalled{0};
 };
 
 TEST_F(TimerTest, testCanStartAndStopATimerWithNoRegisteredCallbacks) {
@@ -45,7 +45,8 @@ TEST_F(TimerTest, testRegisteredCallbackIsExecuted) {
   TestTimer.triggerStop();
   TestFakeSleeper->triggerEndOfSleep(); // Fakes 1 Interval passing
   TestTimer.waitForStop();
-  ASSERT_TRUE(CallbackACalled);
+  uint32_t ExpectedTimesCalled = 1;
+  ASSERT_EQ(ExpectedTimesCalled, CallbackACalled);
 }
 
 TEST_F(TimerTest, testMultipleRegisteredCallbacksAreExecuted) {
@@ -59,6 +60,7 @@ TEST_F(TimerTest, testMultipleRegisteredCallbacksAreExecuted) {
   TestTimer.triggerStop();
   TestFakeSleeper->triggerEndOfSleep(); // Fakes 1 Interval passing
   TestTimer.waitForStop();
-  ASSERT_TRUE(CallbackACalled);
-  ASSERT_TRUE(CallbackBCalled);
+  uint32_t ExpectedTimesCalled = 1;
+  ASSERT_EQ(ExpectedTimesCalled, CallbackACalled);
+  ASSERT_EQ(ExpectedTimesCalled, CallbackBCalled);
 }

@@ -33,6 +33,7 @@ void Timer::notifyOfCompletedIteration() {
 void Timer::waitForExecutionTrigger() {
   std::unique_lock<std::mutex> DoIterationLock(DoIterationMutex);
   DoIterationCV.wait(DoIterationLock, [this] { return DoIteration == true; });
+  DoIteration = false;
 }
 
 void Timer::callCallbacks() {
