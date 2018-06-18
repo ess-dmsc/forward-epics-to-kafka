@@ -79,8 +79,8 @@ int32_t Stream::fill_conversion_work(
     uint32_t max, std::function<void(uint64_t)> on_seq_data) {
   uint32_t n0 = 0;
   uint32_t n1 = 0;
-  uint32_t BufferSize = emit_queue->size_approx();
-  uint32_t ConversionPathSize = conversion_paths.size();
+  auto BufferSize = emit_queue->size_approx();
+  auto ConversionPathSize = conversion_paths.size();
   std::vector<ConversionWorkPacket *> cwp_last(conversion_paths.size());
   while (n0 < BufferSize && max - n1 >= ConversionPathSize) {
     std::unique_ptr<FlatBufs::EpicsPVUpdate> EpicsUpdate;
