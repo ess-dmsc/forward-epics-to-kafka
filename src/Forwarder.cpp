@@ -95,8 +95,7 @@ void Forwarder::createFakePVUpdateTimerIfRequired() {
   if (main_opt.FakePVPeriodMS > 0) {
     auto Interval = std::chrono::milliseconds(main_opt.FakePVPeriodMS);
     std::shared_ptr<Sleeper> IntervalSleeper = std::make_shared<RealSleeper>();
-    GenerateFakePVUpdateTimer =
-        std::unique_ptr<Timer>(new Timer(Interval, IntervalSleeper));
+    GenerateFakePVUpdateTimer = ::make_unique<Timer>(Interval, IntervalSleeper);
   }
 }
 
