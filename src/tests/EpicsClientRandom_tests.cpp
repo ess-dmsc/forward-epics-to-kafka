@@ -7,7 +7,7 @@
 
 using namespace Forwarder;
 
-TEST(EpicsClientRandomTests,
+TEST(EpicsClientRandomTest,
      CallingGeneratePVUpdateResultsInAPVUpdateInTheBuffer) {
   // GIVEN an EpicsClient with a ring buffer
   auto RingBuffer =
@@ -29,7 +29,7 @@ TEST(EpicsClientRandomTests,
             1); // this time expect failure as only one should have been created
 }
 
-TEST(EpicsClientRandomTests,
+TEST(EpicsClientRandomTest,
      CallingGeneratePVUpdateResultsInDifferentPVValues) {
   // GIVEN an EpicsClient with a ring buffer
   auto RingBuffer =
