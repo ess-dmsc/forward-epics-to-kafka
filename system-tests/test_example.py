@@ -1,13 +1,13 @@
 ﻿from helpers.producerwrapper import ProducerWrapper
-from confluent_kafka import Producer, Consumer
+from confluent_kafka import Producer
 from helpers.f142_logdata import LogData, Value, Int, Double
 import flatbuffers
-import uuid
 import time
 from epics import caput
 import math
 from json import loads
 from time import sleep
+from helpers.kafkahelpers import create_consumer, poll_for_valid_message
 
 
 CONFIG_TOPIC = "TEST_forwarderConfig"
@@ -152,25 +152,6 @@ def test_forwarder_sends_pv_updates_single_pv_double(docker_compose):
     check_message_pv_name_and_value_type(log_data_second, Value.Value.Double, b'SIM:Spd')
     check_double_value_and_equality(log_data_second, 5)
     cons.close()
-
-
-def poll_for_valid_message(consumer):
-    """
-    Polls the subscribed topics by the consumer and checks the buffer is not empty or malformed.
-    
-    :param consumer: The consumer object.
-    :return: The message object received from polling.
-    """
-    msg = consumer.poll()
-    assert not msg.error()
-    return msg
-
-
-def create_consumer():
-    consumer_config = {'bootstrap.servers': 'localhost:9092', 'default.topic.config': {'auto.offset.reset': 'smallest'},
-                       'group.id': uuid.uuid4()}
-    cons = Consumer(**consumer_config)
-    return cons
 
 
 def check_double_value_and_equality(log_data, expected_value):
