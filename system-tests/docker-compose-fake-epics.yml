@@ -27,10 +27,9 @@ services:
     build: ../
     depends_on:
       - kafka
-      - ioc
     network_mode: "host"
     volumes:
-      - ./forwarder_config.json:/forwarder_config.json
+      - ./forwarder_config_fake_epics.json:/forwarder_config_fake_epics.json
     environment:
-      CONFIG_FILE: "/forwarder_config.json"
+      CONFIG_FILE: "/forwarder_config_fake_epics.json"
       FAKE_PV_PERIOD_MS: "1000"
