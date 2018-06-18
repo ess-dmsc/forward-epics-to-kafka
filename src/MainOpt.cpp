@@ -117,11 +117,11 @@ std::pair<int, std::unique_ptr<MainOpt>> parse_opt(int argc, char **argv) {
   addOption(App, "--status-uri", opt.MainSettings.StatusReportURI,
             "<//host[:port][/topic]> Kafka broker/topic to publish status "
             "updates on");
-  App.add_option(
-      "--fake-pv-period", opt.FakePVPeriodMS,
-      "Generates and forwards fake (random "
-      "value) PV updates with the specified period in milliseconds, instead of forwarding real "
-      "PV updates from EPICS");
+  App.add_option("--fake-pv-period", opt.FakePVPeriodMS,
+                 "Generates and forwards fake (random "
+                 "value) PV updates with the specified period in milliseconds, "
+                 "instead of forwarding real "
+                 "PV updates from EPICS");
 
   try {
     App.parse(argc, argv);

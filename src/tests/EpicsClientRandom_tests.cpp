@@ -29,8 +29,7 @@ TEST(EpicsClientRandomTest,
             1); // this time expect failure as only one should have been created
 }
 
-TEST(EpicsClientRandomTest,
-     CallingGeneratePVUpdateResultsInDifferentPVValues) {
+TEST(EpicsClientRandomTest, CallingGeneratePVUpdateResultsInDifferentPVValues) {
   // GIVEN an EpicsClient with a ring buffer
   auto RingBuffer =
       std::make_shared<Ring<std::unique_ptr<FlatBufs::EpicsPVUpdate>>>();

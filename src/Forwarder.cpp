@@ -7,15 +7,14 @@
 #include "logger.h"
 #include <EpicsClient/EpicsClientInterface.h>
 #include <EpicsClient/EpicsClientMonitor.h>
+#include <EpicsClient/EpicsClientRandom.h>
 #include <nlohmann/json.hpp>
 #include <sys/types.h>
 #ifdef _MSC_VER
 #include "process.h"
 #define getpid _getpid
 #else
-#include <EpicsClient/EpicsClientRandom.h>
 #include <unistd.h>
-
 #endif
 #include "CURLReporter.h"
 
@@ -326,11 +325,15 @@ void Forwarder::addMapping(StreamSettings const &StreamInfo) {
   std::unique_lock<std::mutex> lock(streams_mutex);
   try {
     ChannelInfo ChannelInfo{StreamInfo.EpicsProtocol, StreamInfo.Name};
-    std::shared_ptr<EpicsClient::EpicsClientInterface> client;
-    if (GenerateFakePVUpdateTimer != nullptr)
-      client = addStream<EpicsClient::EpicsClientRandom>(ChannelInfo);
+    std::shared_ptr<EpicsClient::EpicsClientInterface> Client;
+    if (GenerateFakePVUpdateTimer != nullptr) {
+      Client = addStream<EpicsClient::EpicsClientRandom>(ChannelInfo);
+      //TODO register client->generateFakePVUpdate as a callback for the timer
+      auto RandomClient = std::static_pointer_cast<EpicsClient::EpicsClientRandom>(Client);
+      GenerateFakePVUpdateTimer->addCallback([RandomClient]() { RandomClient->generateFakePVUpdate(); });
+    }
     else
-      client = addStream<EpicsClient::EpicsClientMonitor>(ChannelInfo);
+      Client = addStream<EpicsClient::EpicsClientMonitor>(ChannelInfo);
   } catch (std::runtime_error &e) {
     std::throw_with_nested(MappingAddException("Cannot add stream"));
   }
