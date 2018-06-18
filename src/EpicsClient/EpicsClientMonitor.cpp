@@ -143,7 +143,9 @@ public:
 
 EpicsClientMonitor::EpicsClientMonitor(
     ChannelInfo &channelInfo,
-    std::shared_ptr<Ring<std::unique_ptr<FlatBufs::EpicsPVUpdate>>> ring)
+    std::shared_ptr<
+        moodycamel::ConcurrentQueue<std::unique_ptr<FlatBufs::EpicsPVUpdate>>>
+        ring)
     : emit_queue(ring) {
   impl.reset(new EpicsClientMonitor_impl(this));
   CLOG(7, 7, "channel_name: {}", channelInfo.channel_name);
@@ -166,7 +168,7 @@ int EpicsClientMonitor::emit(std::unique_ptr<FlatBufs::EpicsPVUpdate> up) {
     // should never happen, ignore
     return 0;
   }
-  emit_queue->push_enlarge(up);
+  emit_queue->enqueue(std::move(up));
   return 1;
 }
 
