@@ -67,8 +67,7 @@ int Stream::converter_add(InstanceSet &kset, Converter::sptr conv,
                           URI uri_kafka_output) {
   auto pt = kset.producer_topic(uri_kafka_output);
   std::unique_ptr<ConversionPath> cp(new ConversionPath(
-      {std::move(conv)},
-      std::unique_ptr<KafkaOutput>(new KafkaOutput(std::move(pt)))));
+      {std::move(conv)}, make_unique<KafkaOutput>(std::move(pt))));
   conversion_paths.push_back(std::move(cp));
   return 0;
 }
@@ -80,43 +79,41 @@ int32_t Stream::fill_conversion_work(
     uint32_t max, std::function<void(uint64_t)> on_seq_data) {
   uint32_t n0 = 0;
   uint32_t n1 = 0;
-  uint32_t n2 = emit_queue->size_approx();
-  uint32_t n3 = max;
-  uint32_t ncp = conversion_paths.size();
+  uint32_t BufferSize = emit_queue->size_approx();
+  uint32_t ConversionPathSize = conversion_paths.size();
   std::vector<ConversionWorkPacket *> cwp_last(conversion_paths.size());
-  while (n0 < n2 && n3 - n1 >= ncp) {
-    std::unique_ptr<FlatBufs::EpicsPVUpdate> e;
-    auto found = emit_queue->try_dequeue(e);
+  while (n0 < BufferSize && max - n1 >= ConversionPathSize) {
+    std::unique_ptr<FlatBufs::EpicsPVUpdate> EpicsUpdate;
+    auto found = emit_queue->try_dequeue(EpicsUpdate);
     n0 += 1;
     if (!found) {
-      CLOG(6, 1, "empty? should not happen");
+      CLOG(6, 1, "Conversion worker buffer is empty");
       break;
     }
-    auto &up = e;
-    if (!up) {
-      LOG(6, "empty epics update");
+    if (!EpicsUpdate) {
+      LOG(6, "Empty EPICS PV update");
       continue;
     }
-    size_t cpid = 0;
-    uint32_t ncp = conversion_paths.size();
-    on_seq_data(e->seq_data);
-    for (auto &cp : conversion_paths) {
-      auto p = std::unique_ptr<ConversionWorkPacket>(new ConversionWorkPacket);
-      cwp_last[cpid] = p.get();
-      p->cp = cp.get();
-      if (ncp == 1) {
+    size_t ConversionPathID = 0;
+    ConversionPathSize = conversion_paths.size();
+    on_seq_data(EpicsUpdate->seq_data);
+    for (auto &ConversionPath : conversion_paths) {
+      auto ConversionPacket = make_unique<ConversionWorkPacket>();
+      cwp_last[ConversionPathID] = ConversionPacket.get();
+      ConversionPacket->cp = ConversionPath.get();
+      if (ConversionPathSize == 1) {
         // more common case
-        p->up = std::move(e);
+        ConversionPacket->up = std::move(EpicsUpdate);
       } else {
-        p->up = std::unique_ptr<FlatBufs::EpicsPVUpdate>(
-            new FlatBufs::EpicsPVUpdate(*e));
+        ConversionPacket->up =
+            make_unique<FlatBufs::EpicsPVUpdate>(*EpicsUpdate);
       }
-      bool x = q2.enqueue(std::move(p));
-      if (x) {
-        CLOG(6, 1, "full? should not happen");
+      bool QueuedUnsuccessful = q2.enqueue(std::move(ConversionPacket));
+      if (QueuedUnsuccessful) {
+        CLOG(6, 1, "Conversion work queue is full");
         break;
       }
-      cpid += 1;
+      ConversionPathID += 1;
       n1 += 1;
     }
   }
