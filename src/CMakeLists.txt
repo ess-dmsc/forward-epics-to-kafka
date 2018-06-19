@@ -49,6 +49,7 @@ endif()
 
 set(INCLUDES
     EpicsClient/EpicsClientMonitor.h
+    EpicsClient/EpicsClientRandom.h
     EpicsClient/EpicsClientFactory.h
     EpicsClient/FwdMonitorRequester.h
     EpicsClient/EpicsClientInterface.h
@@ -75,6 +76,7 @@ set(INCLUDES
     SchemaRegistry.h
     Stream.h
     Streams.h
+    Timer.h
     uri.h)
 
 set(SOURCES
@@ -83,6 +85,7 @@ set(SOURCES
     ConfigParser.cpp
     CommandHandler.cpp
     EpicsClient/EpicsClientMonitor.cpp
+    EpicsClient/EpicsClientRandom.cpp
     EpicsClient/FwdMonitorRequester.cpp
     EpicsClient/EpicsClientFactory.cpp
     helper.cpp
@@ -110,6 +113,7 @@ set(SOURCES
     schemas/f142/f142.cpp
     ${FMT_SRC}
     schemas/f143/f143.cpp
+    Timer.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/git_commit_current.cpp
 )
 
