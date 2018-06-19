@@ -72,7 +72,6 @@ set(INCLUDES
     logger.h
     MainOpt.h
     RangeSet.h
-    Ring.h
     SchemaRegistry.h
     Stream.h
     Streams.h
@@ -97,7 +96,6 @@ set(SOURCES
     KafkaW/Producer.cpp
     KafkaW/ProducerTopic.cpp
     KafkaW/TopicSettings.cpp
-    Ring.cpp
     ConversionWorker.cpp
     Config.cpp
     FlatbufferMessage.cpp
