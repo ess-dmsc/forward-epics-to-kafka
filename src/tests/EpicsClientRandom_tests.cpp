@@ -10,7 +10,7 @@ TEST(EpicsClientRandomTest,
      CallingGeneratePVUpdateResultsInAPVUpdateInTheBuffer) {
   // GIVEN an EpicsClient with a ring buffer
   auto RingBuffer = std::make_shared<
-      moodycamel::ConcurrentQueue<std::unique_ptr<FlatBufs::EpicsPVUpdate>>>();
+      moodycamel::ConcurrentQueue<std::shared_ptr<FlatBufs::EpicsPVUpdate>>>();
   ChannelInfo ChannelInformation{"", ""};
   auto EpicsClient =
       EpicsClient::EpicsClientRandom(ChannelInformation, RingBuffer);
@@ -19,18 +19,18 @@ TEST(EpicsClientRandomTest,
   EpicsClient.generateFakePVUpdate();
 
   // THEN there will be a single EpicsPVUpdate in the ring buffer
-  std::unique_ptr<FlatBufs::EpicsPVUpdate> FirstPV;
+  std::shared_ptr<FlatBufs::EpicsPVUpdate> FirstPV;
   ASSERT_TRUE(RingBuffer->try_dequeue(FirstPV));
 
   // this time expect failure as only one should have been created
-  std::unique_ptr<FlatBufs::EpicsPVUpdate> SecondPV;
+  std::shared_ptr<FlatBufs::EpicsPVUpdate> SecondPV;
   ASSERT_FALSE(RingBuffer->try_dequeue(SecondPV));
 }
 
 TEST(EpicsClientRandomTest, CallingGeneratePVUpdateResultsInDifferentPVValues) {
   // GIVEN an EpicsClient with a ring buffer
   auto RingBuffer = std::make_shared<
-      moodycamel::ConcurrentQueue<std::unique_ptr<FlatBufs::EpicsPVUpdate>>>();
+      moodycamel::ConcurrentQueue<std::shared_ptr<FlatBufs::EpicsPVUpdate>>>();
   ChannelInfo ChannelInformation{"", ""};
   auto EpicsClient =
       EpicsClient::EpicsClientRandom(ChannelInformation, RingBuffer);
@@ -41,9 +41,9 @@ TEST(EpicsClientRandomTest, CallingGeneratePVUpdateResultsInDifferentPVValues) {
 
   // THEN there will be two EpicsPVUpdates in the ring buffer with different
   // values
-  std::unique_ptr<FlatBufs::EpicsPVUpdate> FirstPV;
+  std::shared_ptr<FlatBufs::EpicsPVUpdate> FirstPV;
   ASSERT_TRUE(RingBuffer->try_dequeue(FirstPV));
-  std::unique_ptr<FlatBufs::EpicsPVUpdate> SecondPV;
+  std::shared_ptr<FlatBufs::EpicsPVUpdate> SecondPV;
   ASSERT_TRUE(RingBuffer->try_dequeue(SecondPV));
 
   double FirstGeneratedPVValue =

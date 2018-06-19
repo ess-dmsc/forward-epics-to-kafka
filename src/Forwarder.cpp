@@ -347,7 +347,7 @@ void Forwarder::addMapping(StreamSettings const &StreamInfo) {
 template <typename T>
 std::shared_ptr<T> Forwarder::addStream(ChannelInfo &ChannelInfo) {
   auto PVUpdateRing = std::make_shared<
-      moodycamel::ConcurrentQueue<std::unique_ptr<FlatBufs::EpicsPVUpdate>>>();
+      moodycamel::ConcurrentQueue<std::shared_ptr<FlatBufs::EpicsPVUpdate>>>();
   auto client = std::make_shared<T>(ChannelInfo, PVUpdateRing);
   auto EpicsClientInterfacePtr =
       std::static_pointer_cast<EpicsClient::EpicsClientInterface>(client);

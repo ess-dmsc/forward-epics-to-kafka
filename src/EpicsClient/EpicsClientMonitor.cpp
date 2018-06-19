@@ -116,7 +116,7 @@ public:
   }
 
   /// Pushes update to the emit_queue ring buffer which is owned by a stream.
-  int emit(std::unique_ptr<FlatBufs::EpicsPVUpdate> up) {
+  int emit(std::shared_ptr<FlatBufs::EpicsPVUpdate> up) {
 #if TEST_PROVOKE_ERROR == 1
     static std::atomic<int> c1{0};
     if (c1 > 10) {
@@ -124,7 +124,7 @@ public:
     }
     ++c1;
 #endif
-    return epics_client->emit(std::move(up));
+    return epics_client->emit(up);
   }
 
   /// Logging function.
@@ -144,7 +144,7 @@ public:
 EpicsClientMonitor::EpicsClientMonitor(
     ChannelInfo &channelInfo,
     std::shared_ptr<
-        moodycamel::ConcurrentQueue<std::unique_ptr<FlatBufs::EpicsPVUpdate>>>
+        moodycamel::ConcurrentQueue<std::shared_ptr<FlatBufs::EpicsPVUpdate>>>
         ring)
     : emit_queue(ring) {
   impl.reset(new EpicsClientMonitor_impl(this));
@@ -162,7 +162,7 @@ EpicsClientMonitor::~EpicsClientMonitor() {
 
 int EpicsClientMonitor::stop() { return impl->stop(); }
 
-int EpicsClientMonitor::emit(std::unique_ptr<FlatBufs::EpicsPVUpdate> up) {
+int EpicsClientMonitor::emit(std::shared_ptr<FlatBufs::EpicsPVUpdate> up) {
   if (!up) {
     CLOG(6, 1, "empty update?");
     // should never happen, ignore

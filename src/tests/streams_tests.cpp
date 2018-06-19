@@ -8,7 +8,7 @@ using namespace Forwarder;
 
 class FakeEpicsClient : public EpicsClient::EpicsClientInterface {
 public:
-  int emit(std::unique_ptr<FlatBufs::EpicsPVUpdate> up) override { return 0; };
+  int emit(std::shared_ptr<FlatBufs::EpicsPVUpdate> up) override { return 0; };
   int stop() override { return 0; };
   void error_in_epics() override { status_ = -1; };
   int status() override { return status_; };
@@ -20,7 +20,7 @@ private:
 std::shared_ptr<Stream> createStream(std::string provider_type,
                                      std::string channel_name) {
   auto ring = std::make_shared<
-      moodycamel::ConcurrentQueue<std::unique_ptr<FlatBufs::EpicsPVUpdate>>>();
+      moodycamel::ConcurrentQueue<std::shared_ptr<FlatBufs::EpicsPVUpdate>>>();
   auto client =
       std::unique_ptr<EpicsClient::EpicsClientInterface>(new FakeEpicsClient());
   ChannelInfo ci{std::move(provider_type), std::move(channel_name)};

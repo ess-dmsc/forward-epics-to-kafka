@@ -27,7 +27,7 @@ ConversionPath::~ConversionPath() {
   }
 }
 
-int ConversionPath::emit(std::unique_ptr<FlatBufs::EpicsPVUpdate> up) {
+int ConversionPath::emit(std::shared_ptr<FlatBufs::EpicsPVUpdate> up) {
   auto fb = converter->convert(*up);
   if (fb == nullptr) {
     CLOG(6, 1, "empty converted flat buffer");
@@ -51,7 +51,7 @@ Stream::Stream(
     ChannelInfo channel_info,
     std::shared_ptr<EpicsClient::EpicsClientInterface> client,
     std::shared_ptr<
-        moodycamel::ConcurrentQueue<std::unique_ptr<FlatBufs::EpicsPVUpdate>>>
+        moodycamel::ConcurrentQueue<std::shared_ptr<FlatBufs::EpicsPVUpdate>>>
         ring)
     : channel_info_(channel_info), epics_client(std::move(client)),
       emit_queue(ring) {}
@@ -83,7 +83,7 @@ int32_t Stream::fill_conversion_work(
   auto ConversionPathSize = conversion_paths.size();
   std::vector<ConversionWorkPacket *> cwp_last(conversion_paths.size());
   while (n0 < BufferSize && max - n1 >= ConversionPathSize) {
-    std::unique_ptr<FlatBufs::EpicsPVUpdate> EpicsUpdate;
+    std::shared_ptr<FlatBufs::EpicsPVUpdate> EpicsUpdate;
     auto found = emit_queue->try_dequeue(EpicsUpdate);
     n0 += 1;
     if (!found) {
@@ -101,13 +101,7 @@ int32_t Stream::fill_conversion_work(
       auto ConversionPacket = make_unique<ConversionWorkPacket>();
       cwp_last[ConversionPathID] = ConversionPacket.get();
       ConversionPacket->cp = ConversionPath.get();
-      if (ConversionPathSize == 1) {
-        // more common case
-        ConversionPacket->up = std::move(EpicsUpdate);
-      } else {
-        ConversionPacket->up =
-            make_unique<FlatBufs::EpicsPVUpdate>(*EpicsUpdate);
-      }
+      ConversionPacket->up = EpicsUpdate;
       bool QueuedUnsuccessful = q2.enqueue(std::move(ConversionPacket));
       if (QueuedUnsuccessful) {
         CLOG(6, 1, "Conversion work queue is full");
