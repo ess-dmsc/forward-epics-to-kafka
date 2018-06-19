@@ -1,4 +1,4 @@
-﻿
+
 version: '2'
 
 services:
@@ -23,22 +23,13 @@ services:
     image: zookeeper:3.4
     restart: unless-stopped
 
-  ioc:
-    image: dmscid/lewis:latest
-    network_mode: "host"
-    depends_on:
-      - zookeeper
-      - kafka
-    restart: unless-stopped
-    command: "chopper -p \"epics: {prefix: 'SIM:'}\""
-
   forwarder:
     build: ../
     depends_on:
       - kafka
-      - ioc
     network_mode: "host"
     volumes:
-      - ./forwarder_config.json:/forwarder_config.json
+      - ./forwarder_config_fake_epics.json:/forwarder_config_fake_epics.json
     environment:
-      CONFIG_FILE: "/forwarder_config.json"
+      CONFIG_FILE: "/forwarder_config_fake_epics.json"
+      FAKE_PV_PERIOD_MS: "1000"

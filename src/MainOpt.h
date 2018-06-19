@@ -18,6 +18,7 @@ struct MainOpt {
   std::string InfluxURI = "";
   std::string LogFilename;
   std::string ConfigurationFile;
+  uint32_t FakePVPeriodMS = 0;
   uint64_t teamid = 0;
   std::vector<char> Hostname;
   FlatBufs::SchemaRegistry schema_registry;
