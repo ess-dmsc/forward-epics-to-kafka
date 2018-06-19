@@ -37,7 +37,6 @@ public:
 
   int emitWithoutCaching(std::shared_ptr<FlatBufs::EpicsPVUpdate> up);
 
-
   /// Calls stop on the client implementation.
   int stop() override;
 

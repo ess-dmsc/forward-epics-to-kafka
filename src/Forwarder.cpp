@@ -348,9 +348,10 @@ void Forwarder::addMapping(StreamSettings const &StreamInfo) {
       GenerateFakePVUpdateTimer->addCallback(
           [RandomClient]() { RandomClient->generateFakePVUpdate(); });
     } else
-    Client = addStream<EpicsClient::EpicsClientMonitor>(ChannelInfo);
+      Client = addStream<EpicsClient::EpicsClientMonitor>(ChannelInfo);
     if (PVUpdateTimer != nullptr) {
-      auto PeriodicClient = std::static_pointer_cast<EpicsClient::EpicsClientMonitor>(Client);
+      auto PeriodicClient =
+          std::static_pointer_cast<EpicsClient::EpicsClientMonitor>(Client);
       PVUpdateTimer->addCallback([&]() { PeriodicClient->emitCachedValue(); });
     }
   } catch (std::runtime_error &e) {
