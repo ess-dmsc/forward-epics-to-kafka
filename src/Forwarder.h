@@ -61,10 +61,12 @@ public:
 
 private:
   void createFakePVUpdateTimerIfRequired();
+  void createPVUpdateTimerIfRequired();
   template <typename T> std::shared_ptr<T> addStream(ChannelInfo &ChannelInfo);
   MainOpt &main_opt;
   std::shared_ptr<InstanceSet> kafka_instance_set;
   std::unique_ptr<Config::Listener> config_listener;
+  std::unique_ptr<Timer> PVUpdateTimer;
   std::unique_ptr<Timer> GenerateFakePVUpdateTimer;
   std::mutex converters_mutex;
   std::map<std::string, std::weak_ptr<Converter>> converters;

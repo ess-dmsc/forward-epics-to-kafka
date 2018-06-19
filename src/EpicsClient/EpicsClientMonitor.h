@@ -35,6 +35,9 @@ public:
   ///\param up An epics PV update holding the pv structure.
   int emit(std::shared_ptr<FlatBufs::EpicsPVUpdate> up) override;
 
+  int emitWithoutCaching(std::shared_ptr<FlatBufs::EpicsPVUpdate> up);
+
+
   /// Calls stop on the client implementation.
   int stop() override;
 
@@ -44,12 +47,14 @@ public:
   /// Getter method for EPICS status_.
   int status() override { return status_; };
 
+  void emitCachedValue();
+
 private:
   std::unique_ptr<EpicsClientMonitor_impl> impl;
   std::shared_ptr<
       moodycamel::ConcurrentQueue<std::shared_ptr<FlatBufs::EpicsPVUpdate>>>
       emit_queue;
-  std::shared_ptr<FlatBufs::EpicsPVUpdate> Cache;
+  std::shared_ptr<FlatBufs::EpicsPVUpdate> CachedUpdate;
   std::atomic<int> status_{0};
 };
 }

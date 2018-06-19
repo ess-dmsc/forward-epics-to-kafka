@@ -117,7 +117,7 @@ std::pair<int, std::unique_ptr<MainOpt>> parse_opt(int argc, char **argv) {
   addOption(App, "--status-uri", opt.MainSettings.StatusReportURI,
             "<//host[:port][/topic]> Kafka broker/topic to publish status "
             "updates on");
-  App.add_option("--pv-update-period", opt.periodMS,
+  App.add_option("--pv-update-period", opt.PeriodMS,
                  "Force forwarding all PVs with this period even if values "
                  "are not updated (ms). 0=Off",
                  true);

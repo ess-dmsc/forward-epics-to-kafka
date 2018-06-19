@@ -163,6 +163,17 @@ EpicsClientMonitor::~EpicsClientMonitor() {
 int EpicsClientMonitor::stop() { return impl->stop(); }
 
 int EpicsClientMonitor::emit(std::shared_ptr<FlatBufs::EpicsPVUpdate> up) {
+  CachedUpdate = up;
+  return emitWithoutCaching(up);
+
+}
+
+void EpicsClientMonitor::error_in_epics() { status_ = -1; }
+
+void EpicsClientMonitor::emitCachedValue() {
+  emitWithoutCaching(CachedUpdate);
+}
+int EpicsClientMonitor::emitWithoutCaching(std::shared_ptr<FlatBufs::EpicsPVUpdate> up) {
   if (!up) {
     CLOG(6, 1, "empty update?");
     // should never happen, ignore
@@ -171,8 +182,6 @@ int EpicsClientMonitor::emit(std::shared_ptr<FlatBufs::EpicsPVUpdate> up) {
   emit_queue->enqueue(std::move(up));
   return 1;
 }
-
-void EpicsClientMonitor::error_in_epics() { status_ = -1; }
 
 #define STRINGIFY2(x) #x
 #define STRINGIFY(x) STRINGIFY2(x)
