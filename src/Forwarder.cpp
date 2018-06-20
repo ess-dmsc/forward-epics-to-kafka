@@ -352,7 +352,8 @@ void Forwarder::addMapping(StreamSettings const &StreamInfo) {
     if (PVUpdateTimer != nullptr) {
       auto PeriodicClient =
           std::static_pointer_cast<EpicsClient::EpicsClientMonitor>(Client);
-      PVUpdateTimer->addCallback([&]() { PeriodicClient->emitCachedValue(); });
+      PVUpdateTimer->addCallback(
+          [PeriodicClient]() { PeriodicClient->emitCachedValue(); });
     }
   } catch (std::runtime_error &e) {
     std::throw_with_nested(MappingAddException("Cannot add stream"));
