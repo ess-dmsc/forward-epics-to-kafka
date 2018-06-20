@@ -174,7 +174,7 @@ The Forwarder uses the [MDEL](https://epics.anl.gov/EpicsDocumentation/AppDevMan
 
 To enable the forwarder to publish PV values periodically even if their values have not been updated use the `pv-update-period <MILLISECONDS>` flag. This runs alongside the normal PV monitor so it will push value updates as well as sending values periodically.
 
-By default this is not enable. 
+By default this is not enabled. 
 
 ## Usage
 
