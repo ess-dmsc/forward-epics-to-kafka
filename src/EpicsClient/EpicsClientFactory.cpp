@@ -11,9 +11,9 @@ namespace EpicsClient {
 using std::mutex;
 using ulock = std::unique_lock<mutex>;
 
-std::atomic<int> EpicsClientFactoryInit::count{0};
+std::atomic<int> EpicsClientFactoryInit::Count{0};
 
-std::mutex EpicsClientFactoryInit::mxl;
+std::mutex EpicsClientFactoryInit::MutexLock;
 
 std::unique_ptr<EpicsClientFactoryInit> EpicsClientFactoryInit::factory_init() {
   return ::make_unique<EpicsClientFactoryInit>();
@@ -21,8 +21,8 @@ std::unique_ptr<EpicsClientFactoryInit> EpicsClientFactoryInit::factory_init() {
 
 EpicsClientFactoryInit::EpicsClientFactoryInit() {
   CLOG(7, 7, "EpicsClientFactoryInit");
-  ulock lock(mxl);
-  auto c = count++;
+  ulock lock(MutexLock);
+  auto c = Count++;
   if (c == 0) {
     CLOG(6, 6, "START  Epics factories");
     ::epics::pvAccess::ClientFactory::start();
@@ -32,8 +32,8 @@ EpicsClientFactoryInit::EpicsClientFactoryInit() {
 
 EpicsClientFactoryInit::~EpicsClientFactoryInit() {
   CLOG(7, 7, "~EpicsClientFactoryInit");
-  ulock lock(mxl);
-  auto c = --count;
+  ulock lock(MutexLock);
+  auto c = --Count;
   if (c < 0) {
     LOG(0, "Reference count {} is not consistent, should never happen, but "
            "ignoring for now.",

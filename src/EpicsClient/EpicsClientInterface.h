@@ -9,9 +9,9 @@ namespace EpicsClient {
 class EpicsClientInterface {
 public:
   virtual ~EpicsClientInterface() = default;
-  virtual int emit(std::shared_ptr<FlatBufs::EpicsPVUpdate> up) = 0;
+  virtual int emit(std::shared_ptr<FlatBufs::EpicsPVUpdate> Update) = 0;
   virtual int stop() = 0;
-  virtual void error_in_epics() = 0;
+  virtual void errorInEpics() = 0;
   virtual int status() = 0;
 };
 }

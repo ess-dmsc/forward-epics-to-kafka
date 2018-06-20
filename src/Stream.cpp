@@ -72,7 +72,7 @@ int Stream::converter_add(InstanceSet &kset, Converter::sptr conv,
   return 0;
 }
 
-void Stream::error_in_epics() { epics_client->error_in_epics(); }
+void Stream::error_in_epics() { epics_client->errorInEpics(); }
 
 int32_t Stream::fill_conversion_work(
     moodycamel::ConcurrentQueue<std::unique_ptr<ConversionWorkPacket>> &q2,

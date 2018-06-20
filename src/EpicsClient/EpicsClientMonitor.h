@@ -24,24 +24,24 @@ public:
   /// Creates a new implementation and stores it as impl.
   /// This can then call the functions in the implementation.
   explicit EpicsClientMonitor(
-      ChannelInfo &channelInfo,
+      ChannelInfo &ChannelInfo,
       std::shared_ptr<
           moodycamel::ConcurrentQueue<std::shared_ptr<FlatBufs::EpicsPVUpdate>>>
-          ring);
+          Ring);
   ~EpicsClientMonitor() override;
 
   /// Pushes the PV update onto the emit_queue ring buffer.
   ///
-  ///\param up An epics PV update holding the pv structure.
-  int emit(std::shared_ptr<FlatBufs::EpicsPVUpdate> up) override;
+  ///\param Update An epics PV update holding the pv structure.
+  int emit(std::shared_ptr<FlatBufs::EpicsPVUpdate> Update) override;
 
-  int emitWithoutCaching(std::shared_ptr<FlatBufs::EpicsPVUpdate> up);
+  int emitWithoutCaching(std::shared_ptr<FlatBufs::EpicsPVUpdate> Update);
 
   /// Calls stop on the client implementation.
   int stop() override;
 
   /// Setter method for status if there is an error in EPICS.
-  void error_in_epics() override;
+  void errorInEpics() override;
 
   /// Getter method for EPICS status_.
   int status() override { return status_; };
@@ -49,10 +49,10 @@ public:
   void emitCachedValue();
 
 private:
-  std::unique_ptr<EpicsClientMonitor_impl> impl;
+  std::unique_ptr<EpicsClientMonitor_impl> Impl;
   std::shared_ptr<
       moodycamel::ConcurrentQueue<std::shared_ptr<FlatBufs::EpicsPVUpdate>>>
-      emit_queue;
+      EmitQueue;
   std::shared_ptr<FlatBufs::EpicsPVUpdate> CachedUpdate;
   std::atomic<int> status_{0};
 };

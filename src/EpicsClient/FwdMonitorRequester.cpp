@@ -12,8 +12,8 @@ namespace Forwarder {
 namespace EpicsClient {
 
 FwdMonitorRequester::FwdMonitorRequester(
-    EpicsClientInterface *epicsClientMonitor, const std::string &channel_name)
-    : channel_name(channel_name), epics_client(epicsClientMonitor) {
+    EpicsClientInterface *EpicsClientMonitor, const std::string &ChannelName)
+    : channel_name(ChannelName), epics_client(EpicsClientMonitor) {
   static std::atomic<uint32_t> __id{0};
   auto id = __id++;
   name = fmt::format("FwdMonitorRequester-{}", id);
@@ -28,25 +28,25 @@ FwdMonitorRequester::~FwdMonitorRequester() {
 
 std::string FwdMonitorRequester::getRequesterName() { return name; }
 
-void FwdMonitorRequester::message(std::string const &msg,
-                                  ::epics::pvData::MessageType msgT) {
-  CLOG(7, 7, "FwdMonitorRequester::message: {}:  {}", name, msg.c_str());
+void FwdMonitorRequester::message(std::string const &Message,
+                                  ::epics::pvData::MessageType MessageType) {
+  CLOG(7, 7, "FwdMonitorRequester::message: {}:  {}", name, Message.c_str());
 }
 
 void FwdMonitorRequester::monitorConnect(
-    ::epics::pvData::Status const &status,
-    ::epics::pvData::Monitor::shared_pointer const &monitor,
-    ::epics::pvData::StructureConstPtr const &structure) {
-  if (!status.isSuccess()) {
+    ::epics::pvData::Status const &Status,
+    ::epics::pvData::Monitor::shared_pointer const &Monitor,
+    ::epics::pvData::StructureConstPtr const &Structure) {
+  if (!Status.isSuccess()) {
     // NOTE
     // Docs does not say anything about whether we are responsible for any
     // handling of the monitor if non-null?
     CLOG(3, 2, "monitorConnect is != success for {}", name);
-    epics_client->error_in_epics();
+    epics_client->errorInEpics();
   } else {
-    if (status.isOK()) {
+    if (Status.isOK()) {
       CLOG(7, 7, "success and OK");
-      monitor->start();
+      Monitor->start();
     } else {
       CLOG(7, 6, "success with warning");
     }
@@ -54,10 +54,10 @@ void FwdMonitorRequester::monitorConnect(
 }
 
 void FwdMonitorRequester::monitorEvent(
-    ::epics::pvData::MonitorPtr const &monitor) {
+    ::epics::pvData::MonitorPtr const &Monitor) {
   std::vector<std::shared_ptr<FlatBufs::EpicsPVUpdate>> ups;
   while (true) {
-    auto ele = monitor->poll();
+    auto ele = Monitor->poll();
     if (!ele) {
       break;
     }
@@ -80,7 +80,7 @@ void FwdMonitorRequester::monitorEvent(
     up.epics_pvstr = epics::pvData::PVStructure::shared_pointer(
         new ::epics::pvData::PVStructure(ele->pvStructurePtr->getStructure()));
     up.epics_pvstr->copyUnchecked(*ele->pvStructurePtr);
-    monitor->release(ele);
+    Monitor->release(ele);
     up.seq_fwd = seq;
     up.seq_data = seq_data;
     up.ts_epics_monitor = ts;
@@ -96,7 +96,7 @@ void FwdMonitorRequester::monitorEvent(
   }
 }
 
-void FwdMonitorRequester::unlisten(epics::pvData::MonitorPtr const &monitor) {
+void FwdMonitorRequester::unlisten(epics::pvData::MonitorPtr const &Monitor) {
   CLOG(7, 1, "FwdMonitorRequester::unlisten  {}", name);
 }
 } // namespace EpicsClient
