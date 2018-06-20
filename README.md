@@ -173,7 +173,11 @@ many events at a time.
 
 The Forwarder uses the [MDEL](https://epics.anl.gov/EpicsDocumentation/AppDevManuals/RecordRef/Recordref-5.html#MARKER-9-15) monitor specification for monitoring PV updates rather than the ADEL Archive monitoring specification. This means that every PV update is processed rather than just those that exceed the ADEL. 
 
+### Idle PV Updates
 
+To push PV values on a period even if they have not been updated, the `pv-update-period MILLISECONDS` flag can be used when running the program. This runs alongside the normal PV monitor so will push updates when they have changed as well as if the PVs are idle.
+
+By default this is turned off. 
 
 ## Usage
 
