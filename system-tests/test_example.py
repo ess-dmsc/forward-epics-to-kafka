@@ -1,12 +1,12 @@
 ﻿from helpers.producerwrapper import ProducerWrapper
 from confluent_kafka import Producer
 from helpers.f142_logdata import LogData, Value, Int, Double
-from epics import caput
 from json import loads
 from time import sleep
 from helpers.kafkahelpers import create_consumer, poll_for_valid_message
 from helpers.flatbufferhelpers import check_double_value_and_equality,\
     check_message_pv_name_and_value_type, create_flatbuffers_object
+from helpers.epicshelpers import change_pv_value
 
 
 CONFIG_TOPIC = "TEST_forwarderConfig"
@@ -127,17 +127,6 @@ def test_forwarder_sends_pv_updates_single_pv_double(docker_compose):
     check_message_pv_name_and_value_type(log_data_second, Value.Value.Double, b'SIM:Spd')
     check_double_value_and_equality(log_data_second, 5)
     cons.close()
-
-
-def change_pv_value(pvname, value):
-    """
-    Epics call to change PV value.
-
-    :param pvname:(string) PV name
-    :param value: PV value to change to
-    :return: none
-    """
-    caput(pvname, value, wait=True)
 
 
 def check_json_config(json_object, topicname, pvs, schema="f142", channel_provider_type="ca"):
