@@ -86,9 +86,7 @@ TEST(EpicsClientMonitorTest,
   ASSERT_FALSE(PVUpdateRing->try_dequeue(SecondValue));
 }
 
-
-TEST(EpicsClientMonitorTest,
-     TestCachedValueIsNotPushedWhenNoValueIsEmitted) {
+TEST(EpicsClientMonitorTest, TestCachedValueIsNotPushedWhenNoValueIsEmitted) {
   ChannelInfo ChannelInfo;
   ChannelInfo.channel_name = "SIM:Spd";
   ChannelInfo.provider_type = "ca";
