@@ -3,10 +3,10 @@ from confluent_kafka import Producer
 from helpers.f142_logdata import LogData, Value, Int, Double
 from json import loads
 from time import sleep
-from helpers.kafkahelpers import create_consumer, poll_for_valid_message
-from helpers.flatbufferhelpers import check_double_value_and_equality,\
+from helpers.kafka_helpers import create_consumer, poll_for_valid_message
+from helpers.flatbuffer_helpers import check_double_value_and_equality,\
     check_message_pv_name_and_value_type, create_flatbuffers_object
-from helpers.epicshelpers import change_pv_value
+from helpers.epics_helpers import change_pv_value
 
 
 CONFIG_TOPIC = "TEST_forwarderConfig"
