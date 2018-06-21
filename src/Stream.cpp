@@ -95,7 +95,6 @@ int32_t Stream::fill_conversion_work(
       continue;
     }
     size_t ConversionPathID = 0;
-    ConversionPathSize = conversion_paths.size();
     on_seq_data(EpicsUpdate->seq_data);
     for (auto &ConversionPath : conversion_paths) {
       auto ConversionPacket = make_unique<ConversionWorkPacket>();
