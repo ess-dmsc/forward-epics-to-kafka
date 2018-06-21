@@ -169,7 +169,11 @@ int EpicsClientMonitor::emit(std::shared_ptr<FlatBufs::EpicsPVUpdate> Update) {
 
 void EpicsClientMonitor::errorInEpics() { status_ = -1; }
 
-void EpicsClientMonitor::emitCachedValue() { emitWithoutCaching(CachedUpdate); }
+void EpicsClientMonitor::emitCachedValue() {
+  if (CachedUpdate != nullptr) {
+    emitWithoutCaching(CachedUpdate);
+  }
+}
 int EpicsClientMonitor::emitWithoutCaching(
     std::shared_ptr<FlatBufs::EpicsPVUpdate> Update) {
   if (!Update) {
