@@ -24,21 +24,22 @@ services:
     restart: unless-stopped
 
   ioc:
-      image: dmscid/lewis:latest
-      network_mode: "host"
-      depends_on:
-        - zookeeper
-        - kafka
-      restart: unless-stopped
-      command: "chopper -p \"epics: {prefix: 'SIM:'}\""
+    image: dmscid/lewis:latest
+    network_mode: "host"
+    depends_on:
+      - zookeeper
+      - kafka
+    restart: unless-stopped
+    command: "chopper -p \"epics: {prefix: 'SIM:'}\""
 
   forwarder:
     build: ../
     depends_on:
       - kafka
+      - ioc
     network_mode: "host"
     volumes:
-      - ./forwarder_config_fake_epics.json:/forwarder_config_fake_epics.json
+      - ./forwarder_config_idle_updates.json:/forwarder_config_idle_updates.json
     environment:
       CONFIG_FILE: "/forwarder_config_idle_updates.json"
       IDLE_PV_UPDATE_PERIOD: "1000"
