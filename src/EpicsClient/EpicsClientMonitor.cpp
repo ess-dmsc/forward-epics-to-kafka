@@ -166,10 +166,10 @@ int EpicsClientMonitor::emit(std::unique_ptr<FlatBufs::EpicsPVUpdate> up) {
   if (!up) {
     CLOG(6, 1, "empty update?");
     // should never happen, ignore
-    return 0;
+    return 1;
   }
   emit_queue->enqueue(std::move(up));
-  return 1;
+  return 0;
 }
 
 void EpicsClientMonitor::error_in_epics() { status_ = -1; }
