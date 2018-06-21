@@ -177,7 +177,7 @@ int EpicsClientMonitor::emitWithoutCaching(
     // should never happen, ignore
     return 0;
   }
-  EmitQueue->enqueue(std::move(Update));
+  EmitQueue->enqueue(Update);
   return 1;
 }
 

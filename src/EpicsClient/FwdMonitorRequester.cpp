@@ -55,7 +55,7 @@ void FwdMonitorRequester::monitorConnect(
 
 void FwdMonitorRequester::monitorEvent(
     ::epics::pvData::MonitorPtr const &Monitor) {
-  std::vector<std::shared_ptr<FlatBufs::EpicsPVUpdate>> ups;
+  std::vector<std::shared_ptr<FlatBufs::EpicsPVUpdate>> Updates;
   while (true) {
     auto ele = Monitor->poll();
     if (!ele) {
@@ -74,20 +74,19 @@ void FwdMonitorRequester::monitorEvent(
     // Structure.
     // Does that mean that we never get a scalar here directly??
 
-    auto up_ = std::make_shared<FlatBufs::EpicsPVUpdate>();
-    auto &up = *up_;
-    up.channel = channel_name;
-    up.epics_pvstr = epics::pvData::PVStructure::shared_pointer(
+    auto Update = std::make_shared<FlatBufs::EpicsPVUpdate>();
+    Update->channel = channel_name;
+    Update->epics_pvstr = epics::pvData::PVStructure::shared_pointer(
         new ::epics::pvData::PVStructure(ele->pvStructurePtr->getStructure()));
-    up.epics_pvstr->copyUnchecked(*ele->pvStructurePtr);
+    Update->epics_pvstr->copyUnchecked(*ele->pvStructurePtr);
     Monitor->release(ele);
-    up.seq_fwd = seq;
-    up.seq_data = seq_data;
-    up.ts_epics_monitor = ts;
-    ups.push_back(up_);
+    Update->seq_fwd = seq;
+    Update->seq_data = seq_data;
+    Update->ts_epics_monitor = ts;
+    Updates.push_back(Update);
     seq += 1;
   }
-  for (auto &up : ups) {
+  for (auto &up : Updates) {
     auto seq_data = up->seq_data;
     auto x = epics_client->emit(up);
     if (x != 0) {

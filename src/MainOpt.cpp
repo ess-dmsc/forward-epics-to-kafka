@@ -125,7 +125,8 @@ std::pair<int, std::unique_ptr<MainOpt>> parse_opt(int argc, char **argv) {
                  "Generates and forwards fake (random "
                  "value) PV updates with the specified period in milliseconds, "
                  "instead of forwarding real "
-                 "PV updates from EPICS");
+                 "PV updates from EPICS",
+                 true);
 
   try {
     App.parse(argc, argv);
