@@ -66,8 +66,8 @@ Stream::~Stream() {
 int Stream::converter_add(InstanceSet &kset, Converter::sptr conv,
                           URI uri_kafka_output) {
   auto pt = kset.producer_topic(uri_kafka_output);
-  std::unique_ptr<ConversionPath> cp(new ConversionPath(
-      {std::move(conv)}, make_unique<KafkaOutput>(std::move(pt))));
+  std::unique_ptr<ConversionPath> cp = ::make_unique<ConversionPath>(
+      std::move(conv), ::make_unique<KafkaOutput>(std::move(pt)));
   conversion_paths.push_back(std::move(cp));
   return 0;
 }
@@ -98,7 +98,7 @@ int32_t Stream::fill_conversion_work(
     ConversionPathSize = conversion_paths.size();
     on_seq_data(EpicsUpdate->seq_data);
     for (auto &ConversionPath : conversion_paths) {
-      auto ConversionPacket = make_unique<ConversionWorkPacket>();
+      auto ConversionPacket = ::make_unique<ConversionWorkPacket>();
       cwp_last[ConversionPathID] = ConversionPacket.get();
       ConversionPacket->cp = ConversionPath.get();
       if (ConversionPathSize == 1) {
@@ -106,7 +106,7 @@ int32_t Stream::fill_conversion_work(
         ConversionPacket->up = std::move(EpicsUpdate);
       } else {
         ConversionPacket->up =
-            make_unique<FlatBufs::EpicsPVUpdate>(*EpicsUpdate);
+            ::make_unique<FlatBufs::EpicsPVUpdate>(*EpicsUpdate);
       }
       bool QueuedUnsuccessful = q2.enqueue(std::move(ConversionPacket));
       if (QueuedUnsuccessful) {
