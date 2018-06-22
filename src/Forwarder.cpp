@@ -352,6 +352,9 @@ void Forwarder::addMapping(StreamSettings const &StreamInfo) {
 
 template <typename T>
 std::shared_ptr<T> Forwarder::addStream(ChannelInfo &ChannelInfo) {
+  if (streams.hasChannelName(ChannelInfo.channel_name)) {
+    throw std::runtime_error("channel_name is already forwarded");
+  }
   auto PVUpdateRing = std::make_shared<
       moodycamel::ConcurrentQueue<std::unique_ptr<FlatBufs::EpicsPVUpdate>>>();
   auto client = std::make_shared<T>(ChannelInfo, PVUpdateRing);
