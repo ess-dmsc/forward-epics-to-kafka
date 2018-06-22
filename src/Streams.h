@@ -21,6 +21,7 @@ public:
   void streams_clear();
   void check_stream_status();
   void add(std::shared_ptr<Stream> s);
+  bool hasChannelName(std::string const &channel_name);
   std::shared_ptr<Stream> back();
   std::shared_ptr<Stream> operator[](size_t s) { return streams.at(s); };
   const std::vector<std::shared_ptr<Stream>> &get_streams();
