@@ -179,10 +179,10 @@ int EpicsClientMonitor::emitWithoutCaching(
   if (!Update) {
     CLOG(6, 1, "empty update?");
     // should never happen, ignore
-    return 0;
+    return 1;
   }
   EmitQueue->enqueue(Update);
-  return 1;
+  return 0;
 }
 
 #define STRINGIFY2(x) #x
