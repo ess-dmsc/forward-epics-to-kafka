@@ -336,8 +336,9 @@ void Forwarder::addMapping(StreamSettings const &StreamInfo) {
           std::static_pointer_cast<EpicsClient::EpicsClientRandom>(Client);
       GenerateFakePVUpdateTimer->addCallback(
           [RandomClient]() { RandomClient->generateFakePVUpdate(); });
-    } else
+    } else {
       Client = addStream<EpicsClient::EpicsClientMonitor>(ChannelInfo);
+    }
   } catch (std::runtime_error &e) {
     std::throw_with_nested(MappingAddException("Cannot add stream"));
   }
