@@ -4,7 +4,8 @@
 
 using namespace Forwarder;
 
-TEST(EpicsClientMonitorTest, TestValueIsCachedWhenEmitIsCalledFirstTime) {
+TEST(EpicsClientMonitorTest,
+     test_value_is_cached_when_emit_is_called_first_time) {
   ChannelInfo ChannelInfo;
   ChannelInfo.channel_name = "SIM:Spd";
   ChannelInfo.provider_type = "ca";
@@ -36,8 +37,9 @@ TEST(EpicsClientMonitorTest, TestValueIsCachedWhenEmitIsCalledFirstTime) {
   ASSERT_FALSE(PVUpdateRing->try_dequeue(ThirdValue));
 }
 
-TEST(EpicsClientMonitorTest,
-     TestCachedValueIsNotPushedWhenEmitIsCalledWithoutEmitCachedValue) {
+TEST(
+    EpicsClientMonitorTest,
+    test_cached_value_is_not_pushed_when_emit_is_called_without_emitcachedvalue) {
   ChannelInfo ChannelInfo;
   ChannelInfo.channel_name = "SIM:Spd";
   ChannelInfo.provider_type = "ca";
@@ -61,7 +63,7 @@ TEST(EpicsClientMonitorTest,
 }
 
 TEST(EpicsClientMonitorTest,
-     TestCachedValueIsNotUpdatedWhenEmitWithoutCachingIsUsed) {
+     test_cached_value_is_not_updated_when_emitwithoutcaching_is_used) {
   ChannelInfo ChannelInfo;
   ChannelInfo.channel_name = "SIM:Spd";
   ChannelInfo.provider_type = "ca";
@@ -86,7 +88,8 @@ TEST(EpicsClientMonitorTest,
   ASSERT_FALSE(PVUpdateRing->try_dequeue(SecondValue));
 }
 
-TEST(EpicsClientMonitorTest, TestCachedValueIsNotPushedWhenNoValueIsEmitted) {
+TEST(EpicsClientMonitorTest,
+     test_cached_value_is_not_pushed_when_no_value_is_emitted) {
   ChannelInfo ChannelInfo;
   ChannelInfo.channel_name = "SIM:Spd";
   ChannelInfo.provider_type = "ca";
