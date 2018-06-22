@@ -60,3 +60,26 @@ class ForwarderConfig:
             }
             output_list.append(json.dumps(out_dict))
         return output_list
+
+
+def check_json_config(json_object, topicname, pvs, schema="f142", channel_provider_type="ca"):
+    """
+    Check the json config is valid that gets sent to the configuration topic.
+
+    :param json_object: Dictionary containing all config options
+    :param topicname: The data topic name to push updates to
+    :param pvs: The list of PVs to listen for changes
+    :param schema: The flatbuffers schema to check against
+    :param channel_provider_type: Epics v3/v4 specification
+    :return: none
+    """
+    assert json_object["cmd"] == "add"
+    configured_pvs = []
+    for stream in json_object["streams"]:
+        assert channel_provider_type == stream["channel_provider_type"]
+        channel = stream["channel"]
+        assert channel not in configured_pvs and channel in pvs
+        configured_pvs.append(channel)
+        converter = stream["converter"]
+        assert converter["schema"] == schema
+        assert converter["topic"] == topicname
