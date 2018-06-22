@@ -39,7 +39,7 @@ TEST(EpicsClientMonitorTest,
 
 TEST(
     EpicsClientMonitorTest,
-    test_cached_value_is_not_pushed_when_emit_is_called_without_emitcachedvalue) {
+    test_cached_value_is_not_pushed_when_emit_is_called_without_emitCachedValue) {
   ChannelInfo ChannelInfo;
   ChannelInfo.channel_name = "SIM:Spd";
   ChannelInfo.provider_type = "ca";
@@ -63,7 +63,7 @@ TEST(
 }
 
 TEST(EpicsClientMonitorTest,
-     test_cached_value_is_not_updated_when_emitwithoutcaching_is_used) {
+     test_cached_value_is_not_updated_when_emitWithoutCaching_is_used) {
   ChannelInfo ChannelInfo;
   ChannelInfo.channel_name = "SIM:Spd";
   ChannelInfo.provider_type = "ca";
