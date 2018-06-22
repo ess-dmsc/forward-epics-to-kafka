@@ -16,9 +16,9 @@ TEST(command_handler_tests, add_command_adds_stream_correctly) {
                             ]
                            })";
 
-  BrightnESS::ForwardEpicsToKafka::MainOpt MainOpt;
-  BrightnESS::ForwardEpicsToKafka::Forwarder Main(MainOpt);
-  BrightnESS::ForwardEpicsToKafka::ConfigCB Config(Main);
+  Forwarder::MainOpt MainOpt;
+  Forwarder::Forwarder Main(MainOpt);
+  Forwarder::ConfigCB Config(Main);
 
   Config(RawJson);
 
@@ -42,9 +42,9 @@ TEST(command_handler_tests, add_command_adds_multiple_streams_correctly) {
                             ]
                            })";
 
-  BrightnESS::ForwardEpicsToKafka::MainOpt MainOpt;
-  BrightnESS::ForwardEpicsToKafka::Forwarder Main(MainOpt);
-  BrightnESS::ForwardEpicsToKafka::ConfigCB Config(Main);
+  Forwarder::MainOpt MainOpt;
+  Forwarder::Forwarder Main(MainOpt);
+  Forwarder::ConfigCB Config(Main);
 
   Config(RawJson);
 
@@ -70,9 +70,9 @@ TEST(command_handler_tests, stop_all_command_removes_all_streams_correctly) {
                             ]
                            })";
 
-  BrightnESS::ForwardEpicsToKafka::MainOpt MainOpt;
-  BrightnESS::ForwardEpicsToKafka::Forwarder Main(MainOpt);
-  BrightnESS::ForwardEpicsToKafka::ConfigCB Config(Main);
+  Forwarder::MainOpt MainOpt;
+  Forwarder::Forwarder Main(MainOpt);
+  Forwarder::ConfigCB Config(Main);
 
   Config(AddJson);
 
@@ -96,9 +96,9 @@ TEST(command_handler_tests, stop_command_removes_stream_correctly) {
                             ]
                            })";
 
-  BrightnESS::ForwardEpicsToKafka::MainOpt MainOpt;
-  BrightnESS::ForwardEpicsToKafka::Forwarder Main(MainOpt);
-  BrightnESS::ForwardEpicsToKafka::ConfigCB Config(Main);
+  Forwarder::MainOpt MainOpt;
+  Forwarder::Forwarder Main(MainOpt);
+  Forwarder::ConfigCB Config(Main);
 
   Config(AddJson);
 
@@ -129,9 +129,9 @@ TEST_P(ExtractCommandsTest, extracting_command_gets_command_name) {
   std::string RawJson = os.str();
 
   nlohmann::json Json = nlohmann::json::parse(RawJson);
-  BrightnESS::ForwardEpicsToKafka::MainOpt MainOpt;
-  BrightnESS::ForwardEpicsToKafka::Forwarder Main(MainOpt);
-  BrightnESS::ForwardEpicsToKafka::ConfigCB config(Main);
+  Forwarder::MainOpt MainOpt;
+  Forwarder::Forwarder Main(MainOpt);
+  Forwarder::ConfigCB config(Main);
 
   auto Cmd = config.findCommand(Json);
 

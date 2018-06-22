@@ -1,10 +1,9 @@
+#include "../../EpicsPVUpdate.h"
 #include "../../SchemaRegistry.h"
-#include "../../epics-to-fb.h"
 #include "../../helper.h"
 #include "../../logger.h"
 #include "schemas/f143_structure_generated.h"
 
-namespace BrightnESS {
 namespace FlatBufs {
 namespace f143 {
 
@@ -262,11 +261,10 @@ V_t Field(flatbuffers::FlatBufferBuilder &builder,
 
 class Converter : public MakeFlatBufferFromPVStructure {
 public:
-  BrightnESS::FlatBufs::FlatbufferMessage::uptr
-  convert(EpicsPVUpdate const &up) override {
+  FlatBufs::FlatbufferMessage::uptr convert(EpicsPVUpdate const &up) override {
     // Passing initial size:
     auto &pvstr = up.epics_pvstr;
-    auto fb = make_unique<BrightnESS::FlatBufs::FlatbufferMessage>();
+    auto fb = make_unique<FlatBufs::FlatbufferMessage>();
     auto builder = fb->builder.get();
 
     flatbuffers::Offset<void> fwdinfo = 0;
@@ -287,8 +285,6 @@ public:
       bf.add_seq_fwd(up.seq_fwd);
       bf.add_ts_data(ts_data);
       bf.add_ts_fwd(up.ts_epics_monitor);
-      bf.add_fwdix(up.fwdix);
-      bf.add_teamid(up.teamid);
       fwdinfo = bf.Finish().Union();
     }
 
@@ -343,6 +339,5 @@ MakeFlatBufferFromPVStructure::ptr Info::create_converter() {
 
 FlatBufs::SchemaRegistry::Registrar<Info> g_registrar_info("f143",
                                                            Info::ptr(new Info));
-}
 }
 }

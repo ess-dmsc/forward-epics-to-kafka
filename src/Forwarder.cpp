@@ -2,8 +2,12 @@
 #include "CommandHandler.h"
 #include "Converter.h"
 #include "Stream.h"
+#include "Timer.h"
 #include "helper.h"
 #include "logger.h"
+#include <EpicsClient/EpicsClientInterface.h>
+#include <EpicsClient/EpicsClientMonitor.h>
+#include <EpicsClient/EpicsClientRandom.h>
 #include <nlohmann/json.hpp>
 #include <sys/types.h>
 #ifdef _MSC_VER
@@ -14,8 +18,7 @@
 #endif
 #include "CURLReporter.h"
 
-namespace BrightnESS {
-namespace ForwardEpicsToKafka {
+namespace Forwarder {
 
 static bool isStopDueToSignal(ForwardingRunState Flag) {
   return static_cast<int>(Flag) &
@@ -34,11 +37,8 @@ using ulock = std::unique_lock<std::mutex>;
 /// \class Main
 /// \brief Main program entry class.
 Forwarder::Forwarder(MainOpt &opt)
-    : main_opt(opt),
-      kafka_instance_set(Kafka::InstanceSet::Set(make_broker_opt(opt))),
+    : main_opt(opt), kafka_instance_set(InstanceSet::Set(make_broker_opt(opt))),
       conversion_scheduler(this) {
-  finfo = std::make_shared<ForwarderInfo>(this);
-  finfo->teamid = main_opt.teamid;
 
   for (size_t i = 0; i < opt.MainSettings.ConversionThreads; ++i) {
     conversion_workers.emplace_back(make_unique<ConversionWorker>(
@@ -62,6 +62,8 @@ Forwarder::Forwarder(MainOpt &opt)
     config_listener.reset(
         new Config::Listener{bopt, main_opt.MainSettings.BrokerConfig});
   }
+  createPVUpdateTimerIfRequired();
+  createFakePVUpdateTimerIfRequired();
 
   for (auto &Stream : main_opt.MainSettings.StreamsInfo) {
     try {
@@ -86,7 +88,23 @@ Forwarder::~Forwarder() {
   streams.streams_clear();
   conversion_workers_clear();
   converters_clear();
-  Kafka::InstanceSet::clear();
+  InstanceSet::clear();
+}
+
+void Forwarder::createPVUpdateTimerIfRequired() {
+  if (main_opt.PeriodMS > 0) {
+    auto Interval = std::chrono::milliseconds(main_opt.PeriodMS);
+    std::shared_ptr<Sleeper> IntervalSleeper = std::make_shared<RealSleeper>();
+    PVUpdateTimer = ::make_unique<Timer>(Interval, IntervalSleeper);
+  }
+}
+
+void Forwarder::createFakePVUpdateTimerIfRequired() {
+  if (main_opt.FakePVPeriodMS > 0) {
+    auto Interval = std::chrono::milliseconds(main_opt.FakePVPeriodMS);
+    std::shared_ptr<Sleeper> IntervalSleeper = std::make_shared<RealSleeper>();
+    GenerateFakePVUpdateTimer = ::make_unique<Timer>(Interval, IntervalSleeper);
+  }
 }
 
 int Forwarder::conversion_workers_clear() {
@@ -135,6 +153,13 @@ void Forwarder::forward_epics_to_kafka() {
       x->start();
     }
   }
+
+  if (PVUpdateTimer != nullptr)
+    PVUpdateTimer->start();
+
+  if (GenerateFakePVUpdateTimer != nullptr)
+    GenerateFakePVUpdateTimer->start();
+
   while (ForwardingRunFlag.load() == ForwardingRunState::RUN) {
     auto do_stats = false;
     auto t1 = CLK::now();
@@ -172,6 +197,17 @@ void Forwarder::forward_epics_to_kafka() {
   LOG(6, "Main::forward_epics_to_kafka shutting down");
   conversion_workers_clear();
   streams.streams_clear();
+
+  if (PVUpdateTimer != nullptr) {
+    PVUpdateTimer->triggerStop();
+    PVUpdateTimer->waitForStop();
+  }
+
+  if (GenerateFakePVUpdateTimer != nullptr) {
+    GenerateFakePVUpdateTimer->triggerStop();
+    GenerateFakePVUpdateTimer->waitForStop();
+  }
+
   LOG(6, "ForwardingStatus::STOPPED");
   forwarding_status.store(ForwardingStatus::STOPPED);
 }
@@ -185,7 +221,15 @@ void Forwarder::report_status() {
   }
   Status["streams"] = Streams;
   auto StatusString = Status.dump();
-  LOG(0, "status: {}", StatusString);
+  auto StatusStringSize = StatusString.size();
+  if (StatusStringSize > 1000) {
+    auto StatusStringShort =
+        StatusString.substr(0, 1000) +
+        fmt::format(" ... {} chars total ...", StatusStringSize);
+    LOG(7, "status: {}", StatusStringShort);
+  } else {
+    LOG(7, "status: {}", StatusString);
+  }
   status_producer_topic->produce((KafkaW::uchar *)StatusString.c_str(),
                                  StatusString.size());
 }
@@ -202,7 +246,7 @@ void Forwarder::report_stats(int dt) {
   b2 %= 1024;
   LOG(6, "dt: {:4}  m: {:4}.{:03}  b: {:3}.{:03}.{:03}", dt, m2, m1, b3, b2,
       b1);
-  if (CURLReporter::HaveCURL && main_opt.InfluxURI.size() != 0) {
+  if (CURLReporter::HaveCURL && !main_opt.InfluxURI.empty()) {
     int i1 = 0;
     for (auto &s : kafka_instance_set->stats_all()) {
       auto &m1 = influxbuf;
@@ -247,9 +291,8 @@ void Forwarder::report_stats(int dt) {
   }
 }
 
-void Forwarder::pushConverterToStream(
-    ConverterSettings const &ConverterInfo,
-    std::shared_ptr<ForwardEpicsToKafka::Stream> &Stream) {
+void Forwarder::pushConverterToStream(ConverterSettings const &ConverterInfo,
+                                      std::shared_ptr<Stream> &Stream) {
 
   // Check schema exists
   auto r1 = main_opt.schema_registry.items().find(ConverterInfo.Schema);
@@ -258,18 +301,18 @@ void Forwarder::pushConverterToStream(
         "Cannot handle flatbuffer schema id {}", ConverterInfo.Schema));
   }
 
-  uri::URI URI;
+  URI Uri;
   if (!main_opt.MainSettings.Brokers.empty()) {
-    URI = main_opt.MainSettings.Brokers[0];
+    Uri = main_opt.MainSettings.Brokers[0];
   }
 
-  uri::URI TopicURI;
-  if (!URI.host.empty()) {
-    TopicURI.host = URI.host;
+  URI TopicURI;
+  if (!Uri.host.empty()) {
+    TopicURI.host = Uri.host;
   }
 
-  if (URI.port != 0) {
-    TopicURI.port = URI.port;
+  if (Uri.port != 0) {
+    TopicURI.port = Uri.port;
   }
   TopicURI.parse(ConverterInfo.Topic);
 
@@ -305,7 +348,21 @@ void Forwarder::addMapping(StreamSettings const &StreamInfo) {
   std::unique_lock<std::mutex> lock(streams_mutex);
   try {
     ChannelInfo ChannelInfo{StreamInfo.EpicsProtocol, StreamInfo.Name};
-    streams.add(std::make_shared<Stream>(finfo, ChannelInfo));
+    std::shared_ptr<EpicsClient::EpicsClientInterface> Client;
+    if (GenerateFakePVUpdateTimer != nullptr) {
+      Client = addStream<EpicsClient::EpicsClientRandom>(ChannelInfo);
+      auto RandomClient =
+          std::static_pointer_cast<EpicsClient::EpicsClientRandom>(Client);
+      GenerateFakePVUpdateTimer->addCallback(
+          [RandomClient]() { RandomClient->generateFakePVUpdate(); });
+    } else
+      Client = addStream<EpicsClient::EpicsClientMonitor>(ChannelInfo);
+    if (PVUpdateTimer != nullptr) {
+      auto PeriodicClient =
+          std::static_pointer_cast<EpicsClient::EpicsClientMonitor>(Client);
+      PVUpdateTimer->addCallback(
+          [PeriodicClient]() { PeriodicClient->emitCachedValue(); });
+    }
   } catch (std::runtime_error &e) {
     std::throw_with_nested(MappingAddException("Cannot add stream"));
   }
@@ -315,6 +372,19 @@ void Forwarder::addMapping(StreamSettings const &StreamInfo) {
   for (auto &Converter : StreamInfo.Converters) {
     pushConverterToStream(Converter, Stream);
   }
+}
+
+template <typename T>
+std::shared_ptr<T> Forwarder::addStream(ChannelInfo &ChannelInfo) {
+  auto PVUpdateRing = std::make_shared<
+      moodycamel::ConcurrentQueue<std::shared_ptr<FlatBufs::EpicsPVUpdate>>>();
+  auto client = std::make_shared<T>(ChannelInfo, PVUpdateRing);
+  auto EpicsClientInterfacePtr =
+      std::static_pointer_cast<EpicsClient::EpicsClientInterface>(client);
+  auto stream = std::make_shared<Stream>(ChannelInfo, EpicsClientInterfacePtr,
+                                         PVUpdateRing);
+  streams.add(stream);
+  return client;
 }
 
 std::atomic<uint64_t> g__total_msgs_to_kafka{0};
@@ -338,5 +408,4 @@ void Forwarder::stopForwarding() {
 void Forwarder::stopForwardingDueToSignal() {
   raiseForwardingFlag(ForwardingRunState::STOP_DUE_TO_SIGNAL);
 }
-} // namespace ForwardEpicsToKafka
-} // namespace BrightnESS
+} // namespace Forwarder

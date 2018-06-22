@@ -1,0 +1,11 @@
+{
+  "broker": "//localhost:9092",
+  "broker-config": "//localhost:9092/TEST_forwarderConfig",
+  "streams": [
+    {
+      "channel": "FakePV",
+      "channel_provider_type": "ca",
+      "converter": { "schema": "f142", "topic": "TEST_forward_fake_generated_pvs" }
+    }
+  ]
+}

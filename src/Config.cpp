@@ -4,8 +4,7 @@
 #include <memory>
 #include <mutex>
 
-namespace BrightnESS {
-namespace ForwardEpicsToKafka {
+namespace Forwarder {
 namespace Config {
 
 struct Listener_impl {
@@ -15,7 +14,7 @@ struct Listener_impl {
   int connected = 0;
 };
 
-Listener::Listener(KafkaW::BrokerSettings BrokerSettings, uri::URI uri) {
+Listener::Listener(KafkaW::BrokerSettings BrokerSettings, Forwarder::URI uri) {
   BrokerSettings.Address = uri.host_port;
   BrokerSettings.PollTimeoutMS = 0;
   impl.reset(new Listener_impl);
@@ -45,7 +44,6 @@ void Listener::poll(Callback &cb) {
 void Listener::wait_for_connected(std::chrono::milliseconds timeout) {
   std::unique_lock<std::mutex> lock(impl->mx);
   impl->cv.wait_for(lock, timeout, [this] { return impl->connected == 1; });
-}
 }
 }
 }

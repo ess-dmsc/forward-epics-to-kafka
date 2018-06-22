@@ -14,9 +14,7 @@
 #include <thread>
 #include <vector>
 
-namespace BrightnESS {
-namespace ForwardEpicsToKafka {}
-} // namespace BrightnESS
+namespace Forwarder {}
 
 static void handleSignal(int Signal);
 
@@ -26,8 +24,7 @@ static std::atomic<SignalHandler *> g__SignalHandler;
 
 class SignalHandler {
 public:
-  SignalHandler(
-      std::shared_ptr<BrightnESS::ForwardEpicsToKafka::Forwarder> MainPtr_)
+  SignalHandler(std::shared_ptr<Forwarder::Forwarder> MainPtr_)
       : MainPtr(MainPtr_) {
     g__SignalHandler.store(this);
     std::signal(SIGINT, handleSignal);
@@ -41,7 +38,7 @@ public:
   void handle(int Signal) { MainPtr->stopForwardingDueToSignal(); }
 
 private:
-  std::shared_ptr<BrightnESS::ForwardEpicsToKafka::Forwarder> MainPtr;
+  std::shared_ptr<Forwarder::Forwarder> MainPtr;
 };
 
 static void handleSignal(int Signal) {
@@ -51,7 +48,7 @@ static void handleSignal(int Signal) {
 }
 
 int main(int argc, char **argv) {
-  auto op = BrightnESS::ForwardEpicsToKafka::parse_opt(argc, argv);
+  auto op = Forwarder::parse_opt(argc, argv);
   auto &opt = *op.second;
 
   if (!opt.LogFilename.empty()) {
@@ -64,7 +61,7 @@ int main(int argc, char **argv) {
     return 1;
   }
 
-  auto Main = std::make_shared<BrightnESS::ForwardEpicsToKafka::Forwarder>(opt);
+  auto Main = std::make_shared<Forwarder::Forwarder>(opt);
 
   try {
     SignalHandler SignalHandlerInstance(Main);

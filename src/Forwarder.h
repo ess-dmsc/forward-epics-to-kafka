@@ -2,7 +2,6 @@
 
 #include "Config.h"
 #include "ConversionWorker.h"
-#include "ForwarderInfo.h"
 #include "MainOpt.h"
 #include "Streams.h"
 #include <algorithm>
@@ -12,8 +11,7 @@
 #include <mutex>
 #include <stdexcept>
 
-namespace BrightnESS {
-namespace ForwardEpicsToKafka {
+namespace Forwarder {
 
 class MappingAddException : public std::runtime_error {
 public:
@@ -22,6 +20,7 @@ public:
 
 class Converter;
 class Stream;
+class Timer;
 namespace tests {
 class Remote_T;
 }
@@ -61,10 +60,14 @@ public:
   Streams streams;
 
 private:
+  void createFakePVUpdateTimerIfRequired();
+  void createPVUpdateTimerIfRequired();
+  template <typename T> std::shared_ptr<T> addStream(ChannelInfo &ChannelInfo);
   MainOpt &main_opt;
-  std::shared_ptr<ForwarderInfo> finfo;
-  std::shared_ptr<Kafka::InstanceSet> kafka_instance_set;
+  std::shared_ptr<InstanceSet> kafka_instance_set;
   std::unique_ptr<Config::Listener> config_listener;
+  std::unique_ptr<Timer> PVUpdateTimer;
+  std::unique_ptr<Timer> GenerateFakePVUpdateTimer;
   std::mutex converters_mutex;
   std::map<std::string, std::weak_ptr<Converter>> converters;
   std::mutex streams_mutex;
@@ -80,12 +83,10 @@ private:
   std::unique_ptr<KafkaW::ProducerTopic> status_producer_topic;
   std::atomic<ForwardingRunState> ForwardingRunFlag{ForwardingRunState::RUN};
   void raiseForwardingFlag(ForwardingRunState ToBeRaised);
-  void
-  pushConverterToStream(ConverterSettings const &ConverterInfo,
-                        std::shared_ptr<ForwardEpicsToKafka::Stream> &Stream);
+  void pushConverterToStream(ConverterSettings const &ConverterInfo,
+                             std::shared_ptr<Stream> &Stream);
 };
 
 extern std::atomic<uint64_t> g__total_msgs_to_kafka;
 extern std::atomic<uint64_t> g__total_bytes_to_kafka;
-} // namespace ForwardEpicsToKafka
-} // namespace BrightnESS
+} // namespace Forwarder

@@ -5,8 +5,7 @@
 #include "logger.h"
 #include <nlohmann/json.hpp>
 
-namespace BrightnESS {
-namespace ForwardEpicsToKafka {
+namespace Forwarder {
 
 ConfigCB::ConfigCB(Forwarder &main) : main(main) {}
 
@@ -70,5 +69,4 @@ std::string ConfigCB::findCommand(nlohmann::json const &Document) {
   return std::string();
 }
 
-} // namespace ForwardEpicsToKafka
-} // namespace BrightnESS
+} // namespace Forwarder

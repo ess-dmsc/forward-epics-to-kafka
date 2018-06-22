@@ -3,8 +3,7 @@
 #include "Forwarder.h"
 #include <string>
 
-namespace BrightnESS {
-namespace ForwardEpicsToKafka {
+namespace Forwarder {
 
 /// Helper class to provide a callback for the Kafka command listener.
 class ConfigCB : public Config::Callback {
@@ -34,5 +33,4 @@ private:
   void handleCommandExit();
 };
 
-} // namespace ForwardEpicsToKafka
-} // namespace BrightnESS
+} // namespace Forwarder

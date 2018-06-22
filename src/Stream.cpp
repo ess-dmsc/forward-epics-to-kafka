@@ -1,13 +1,12 @@
 #include "Stream.h"
 #include "Converter.h"
-#include "EpicsClient/EpicsClient.h"
+#include "EpicsClient/EpicsClientMonitor.h"
+#include "EpicsPVUpdate.h"
 #include "KafkaOutput.h"
-#include "epics-to-fb.h"
 #include "helper.h"
 #include "logger.h"
 
-namespace BrightnESS {
-namespace ForwardEpicsToKafka {
+namespace Forwarder {
 
 ConversionPath::ConversionPath(ConversionPath &&x)
     : converter(std::move(x.converter)),
@@ -28,7 +27,7 @@ ConversionPath::~ConversionPath() {
   }
 }
 
-int ConversionPath::emit(std::unique_ptr<FlatBufs::EpicsPVUpdate> up) {
+int ConversionPath::emit(std::shared_ptr<FlatBufs::EpicsPVUpdate> up) {
   auto fb = converter->convert(*up);
   if (fb == nullptr) {
     CLOG(6, 1, "empty converted flat buffer");
@@ -36,10 +35,6 @@ int ConversionPath::emit(std::unique_ptr<FlatBufs::EpicsPVUpdate> up) {
   }
   kafka_output->emit(std::move(fb));
   return 0;
-}
-
-static uint16_t _fmt(std::unique_ptr<FlatBufs::EpicsPVUpdate> &x) {
-  return (uint16_t)(((uint64_t)x.get()) >> 0);
 }
 
 nlohmann::json ConversionPath::status_json() const {
@@ -52,19 +47,14 @@ nlohmann::json ConversionPath::status_json() const {
   return Document;
 }
 
-Stream::Stream(std::shared_ptr<ForwarderInfo> finfo, ChannelInfo channel_info)
-    : finfo(finfo), channel_info_(channel_info) {
-  emit_queue.formatter = _fmt;
-  try {
-    auto x = new EpicsClient::EpicsClient(
-        this, finfo, channel_info.provider_type, channel_info.channel_name);
-    epics_client.reset(x);
-  } catch (std::runtime_error &e) {
-    throw std::runtime_error("can not construct Stream");
-  }
-}
-
-Stream::Stream(ChannelInfo channel_info) : channel_info_(channel_info){};
+Stream::Stream(
+    ChannelInfo channel_info,
+    std::shared_ptr<EpicsClient::EpicsClientInterface> client,
+    std::shared_ptr<
+        moodycamel::ConcurrentQueue<std::shared_ptr<FlatBufs::EpicsPVUpdate>>>
+        ring)
+    : channel_info_(channel_info), epics_client(std::move(client)),
+      emit_queue(ring) {}
 
 Stream::~Stream() {
   CLOG(7, 2, "~Stream");
@@ -73,104 +63,50 @@ Stream::~Stream() {
   LOG(6, "seq_data_emitted: {}", seq_data_emitted.to_string());
 }
 
-int Stream::converter_add(Kafka::InstanceSet &kset, Converter::sptr conv,
-                          uri::URI uri_kafka_output) {
+int Stream::converter_add(InstanceSet &kset, Converter::sptr conv,
+                          URI uri_kafka_output) {
   auto pt = kset.producer_topic(uri_kafka_output);
-  std::unique_ptr<ConversionPath> cp(new ConversionPath(
-      {std::move(conv)},
-      std::unique_ptr<KafkaOutput>(new KafkaOutput(std::move(pt)))));
+  std::unique_ptr<ConversionPath> cp = ::make_unique<ConversionPath>(
+      std::move(conv), ::make_unique<KafkaOutput>(std::move(pt)));
   conversion_paths.push_back(std::move(cp));
   return 0;
 }
 
-int Stream::emit(std::unique_ptr<FlatBufs::EpicsPVUpdate> up) {
-  // CLOG(9, 7, "Stream::emit");
-  if (!up) {
-    CLOG(6, 1, "empty update?");
-    // should never happen, ignore
-    return 0;
-  }
-  auto seq_data = up->seq_data;
-  if (true) {
-    for (int i1 = 0; i1 < 256; ++i1) {
-      auto x = emit_queue.push(up);
-      if (x == 0) {
-        break;
-      }
-      {
-        // CLOG(9, 1, "buffer full {} times", i1);
-        emit_queue.push_enlarge(up);
-        break;
-      }
-    }
-    if (up) {
-      // here we are, saying goodbye to a good buffer
-      // LOG(4, "loosing buffer {}", up->seq_data);
-      up.reset();
-      return 1;
-    }
-    // auto s1 = emit_queue.to_vec();
-    // LOG(9, "Queue {}\n{}", channel_info.channel_name, s1.data());
-  } else {
-    // Emit directly
-    // LOG(9, "Stream::emit  convs: {}", conversion_paths.size());
-    for (auto &cp : conversion_paths) {
-      cp->emit(std::move(up));
-    }
-  }
-  if (false) {
-    seq_data_emitted.insert(seq_data);
-  }
-  return 0;
-}
+void Stream::error_in_epics() { epics_client->errorInEpics(); }
 
-int32_t
-Stream::fill_conversion_work(Ring<std::unique_ptr<ConversionWorkPacket>> &q2,
-                             uint32_t max,
-                             std::function<void(uint64_t)> on_seq_data) {
-  auto &q1 = emit_queue;
+int32_t Stream::fill_conversion_work(
+    moodycamel::ConcurrentQueue<std::unique_ptr<ConversionWorkPacket>> &q2,
+    uint32_t max, std::function<void(uint64_t)> on_seq_data) {
   uint32_t n0 = 0;
   uint32_t n1 = 0;
-  ulock l1(q1.mx);
-  ulock l2(q2.mx);
-  uint32_t n2 = q1.size_unsafe();
-  uint32_t n3 = (std::min)(max, q2.capacity_unsafe() - q2.size_unsafe());
-  uint32_t ncp = conversion_paths.size();
+  auto BufferSize = emit_queue->size_approx();
+  auto ConversionPathSize = conversion_paths.size();
   std::vector<ConversionWorkPacket *> cwp_last(conversion_paths.size());
-  // LOG(8, "Stream::fill_conversion_work {}  {}  {}", n1, n2, n3);
-  while (n0 < n2 && n3 - n1 >= ncp) {
-    // LOG(8, "Stream::fill_conversion_work  loop   {}  {}  {}", n1, n2, n3);
-    auto e = q1.pop_unsafe();
+  while (n0 < BufferSize && max - n1 >= ConversionPathSize) {
+    std::shared_ptr<FlatBufs::EpicsPVUpdate> EpicsUpdate;
+    auto found = emit_queue->try_dequeue(EpicsUpdate);
     n0 += 1;
-    if (e.first != 0) {
-      CLOG(6, 1, "empty? should not happen");
+    if (!found) {
+      CLOG(6, 1, "Conversion worker buffer is empty");
       break;
     }
-    auto &up = e.second;
-    if (!up) {
-      LOG(6, "empty epics update");
+    if (!EpicsUpdate) {
+      LOG(6, "Empty EPICS PV update");
       continue;
     }
-    size_t cpid = 0;
-    uint32_t ncp = conversion_paths.size();
-    on_seq_data(e.second->seq_data);
-    for (auto &cp : conversion_paths) {
-      auto p = std::unique_ptr<ConversionWorkPacket>(new ConversionWorkPacket);
-      cwp_last[cpid] = p.get();
-      p->cp = cp.get();
-      if (ncp == 1) {
-        // more common case
-        p->up = std::move(e.second);
-      } else {
-        p->up = std::unique_ptr<FlatBufs::EpicsPVUpdate>(
-            new FlatBufs::EpicsPVUpdate(*e.second));
-      }
-      auto x = q2.push_unsafe(p);
-      if (x != 0) {
-        CLOG(6, 1, "full? should not happen");
+    size_t ConversionPathID = 0;
+    on_seq_data(EpicsUpdate->seq_data);
+    for (auto &ConversionPath : conversion_paths) {
+      auto ConversionPacket = ::make_unique<ConversionWorkPacket>();
+      cwp_last[ConversionPathID] = ConversionPacket.get();
+      ConversionPacket->cp = ConversionPath.get();
+      ConversionPacket->up = EpicsUpdate;
+      bool QueuedUnsuccessful = q2.enqueue(std::move(ConversionPacket));
+      if (QueuedUnsuccessful) {
+        CLOG(6, 1, "Conversion work queue is full");
         break;
       }
-      cpid += 1;
+      ConversionPathID += 1;
       n1 += 1;
     }
   }
@@ -190,13 +126,11 @@ int Stream::stop() {
   return 0;
 }
 
-void Stream::error_in_epics() { status_ = -1; }
-
-int Stream::status() { return status_; }
+int Stream::status() { return epics_client->status(); }
 
 ChannelInfo const &Stream::channel_info() const { return channel_info_; }
 
-size_t Stream::emit_queue_size() { return emit_queue.size(); }
+size_t Stream::emit_queue_size() { return emit_queue->size_approx(); }
 
 nlohmann::json Stream::status_json() {
   using nlohmann::json;
@@ -218,6 +152,5 @@ nlohmann::json Stream::status_json() {
   }
   Document["converters"] = Converters;
   return Document;
-}
 }
 }

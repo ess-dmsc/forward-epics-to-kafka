@@ -15,8 +15,7 @@
 #include <iostream>
 #include <streambuf>
 
-namespace BrightnESS {
-namespace ForwardEpicsToKafka {
+namespace Forwarder {
 
 MainOpt::MainOpt() {
   Hostname.resize(256);
@@ -78,8 +77,9 @@ ConfigSettings MainOpt::parse_document(const std::string &filepath) {
 }
 
 /// Add a URI valued option to the given App.
-static void addOption(CLI::App &App, std::string const &Name, uri::URI &URIArg,
-                      std::string const &Description, bool Defaulted = false) {
+static void addOption(CLI::App &App, std::string const &Name,
+                      Forwarder::URI &URIArg, std::string const &Description,
+                      bool Defaulted = false) {
   CLI::callback_t Fun = [&URIArg](CLI::results_t Results) {
     URIArg.parse(Results[0]);
     return true;
@@ -117,6 +117,16 @@ std::pair<int, std::unique_ptr<MainOpt>> parse_opt(int argc, char **argv) {
   addOption(App, "--status-uri", opt.MainSettings.StatusReportURI,
             "<//host[:port][/topic]> Kafka broker/topic to publish status "
             "updates on");
+  App.add_option("--pv-update-period", opt.PeriodMS,
+                 "Force forwarding all PVs with this period even if values "
+                 "are not updated (ms). 0=Off",
+                 true);
+  App.add_option("--fake-pv-period", opt.FakePVPeriodMS,
+                 "Generates and forwards fake (random "
+                 "value) PV updates with the specified period in milliseconds, "
+                 "instead of forwarding real "
+                 "PV updates from EPICS",
+                 true);
 
   try {
     App.parse(argc, argv);
@@ -147,7 +157,7 @@ std::pair<int, std::unique_ptr<MainOpt>> parse_opt(int argc, char **argv) {
 
 void MainOpt::init_logger() {
   if (!KafkaGELFAddress.empty()) {
-    uri::URI uri(KafkaGELFAddress);
+    Forwarder::URI uri(KafkaGELFAddress);
     log_kafka_gelf_start(uri.host, uri.topic);
     LOG(3, "Enabled kafka_gelf: //{}/{}", uri.host, uri.topic);
   }
@@ -155,5 +165,4 @@ void MainOpt::init_logger() {
     fwd_graylog_logger_enable(GraylogLoggerAddress);
   }
 }
-} // namespace ForwardEpicsToKafka
-} // namespace BrightnESS
+} // namespace Forwarder

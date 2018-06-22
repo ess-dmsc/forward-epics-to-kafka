@@ -5,7 +5,6 @@
 #include <memory>
 #include <string>
 
-namespace BrightnESS {
 namespace FlatBufs {
 
 class SchemaInfo {
@@ -35,5 +34,4 @@ public:
     }
   };
 };
-}
 }

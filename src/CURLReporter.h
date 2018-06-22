@@ -4,8 +4,7 @@
 #include <curl/curl.h>
 #endif
 
-namespace BrightnESS {
-namespace ForwardEpicsToKafka {
+namespace Forwarder {
 
 /// CURLReporter is used to push metrics into InfluxDB via the HTTP endpoint.
 /// It allow to easily send a message to a given URL.
@@ -56,5 +55,4 @@ void CURLReporter::send(fmt::MemoryWriter &MemoryWriter,
                         std::string const &URL) {}
 
 #endif
-}
 }

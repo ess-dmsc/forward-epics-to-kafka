@@ -8,8 +8,7 @@
 #include <string>
 #include <vector>
 
-namespace BrightnESS {
-namespace ForwardEpicsToKafka {
+namespace Forwarder {
 
 struct MainOpt {
   ConfigSettings MainSettings;
@@ -19,6 +18,8 @@ struct MainOpt {
   std::string InfluxURI = "";
   std::string LogFilename;
   std::string ConfigurationFile;
+  uint32_t PeriodMS = 0;
+  uint32_t FakePVPeriodMS = 0;
   uint64_t teamid = 0;
   std::vector<char> Hostname;
   FlatBufs::SchemaRegistry schema_registry;
@@ -34,5 +35,4 @@ private:
 
 std::pair<int, std::unique_ptr<MainOpt>> parse_opt(int argc, char **argv);
 
-} // namespace ForwardEpicsToKafka
-} // namespace BrightnESS
+} // namespace Forwarder

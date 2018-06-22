@@ -3,27 +3,22 @@
 #include "ConversionWorker.h"
 #include "Kafka.h"
 #include "RangeSet.h"
-#include "Ring.h"
 #include "SchemaRegistry.h"
 #include "uri.h"
+#include <EpicsClient/EpicsClientInterface.h>
 #include <array>
 #include <atomic>
+#include <concurrentqueue/concurrentqueue.h>
 #include <memory>
 #include <nlohmann/json.hpp>
 #include <string>
 #include <vector>
 
-namespace BrightnESS {
-namespace ForwardEpicsToKafka {
+namespace Forwarder {
 
 class Converter;
 class KafkaOutput;
-class ForwarderInfo;
 struct ConversionWorkPacket;
-
-namespace EpicsClient {
-class EpicsClient;
-}
 
 struct ChannelInfo {
   std::string provider_type;
@@ -38,7 +33,7 @@ public:
   ConversionPath(ConversionPath &&x);
   ConversionPath(std::shared_ptr<Converter>, std::unique_ptr<KafkaOutput>);
   ~ConversionPath();
-  int emit(std::unique_ptr<FlatBufs::EpicsPVUpdate> up);
+  int emit(std::shared_ptr<FlatBufs::EpicsPVUpdate> up);
   std::atomic<uint32_t> transit{0};
   nlohmann::json status_json() const;
 
@@ -52,15 +47,19 @@ Represents a stream from an EPICS PV through a Converter into a KafkaOutput.
 */
 class Stream {
 public:
-  Stream(std::shared_ptr<ForwarderInfo> finfo, ChannelInfo channel_info);
+  explicit Stream(
+      ChannelInfo channel_info,
+      std::shared_ptr<EpicsClient::EpicsClientInterface> client,
+      std::shared_ptr<
+          moodycamel::ConcurrentQueue<std::shared_ptr<FlatBufs::EpicsPVUpdate>>>
+          ring);
   Stream(Stream &&) = delete;
   ~Stream();
-  int converter_add(Kafka::InstanceSet &kset, std::shared_ptr<Converter> conv,
-                    uri::URI uri_kafka_output);
-  int emit(std::unique_ptr<FlatBufs::EpicsPVUpdate> up);
-  int32_t
-  fill_conversion_work(Ring<std::unique_ptr<ConversionWorkPacket>> &queue,
-                       uint32_t max, std::function<void(uint64_t)> on_seq_data);
+  int converter_add(InstanceSet &kset, std::shared_ptr<Converter> conv,
+                    URI uri_kafka_output);
+  int32_t fill_conversion_work(
+      moodycamel::ConcurrentQueue<std::unique_ptr<ConversionWorkPacket>> &queue,
+      uint32_t max, std::function<void(uint64_t)> on_seq_data);
   int stop();
   void error_in_epics();
   int status();
@@ -70,21 +69,14 @@ public:
   using mutex = std::mutex;
   using ulock = std::unique_lock<mutex>;
 
-protected:
-  // This constructor is to enable unit-testing.
-  // Not to be used outside of testing.
-  explicit Stream(ChannelInfo channel_info);
-
 private:
   /// Each Epics update is converted by each Converter in the list
-  // std::vector<std::shared_ptr<Converter>> converters;
-  std::shared_ptr<ForwarderInfo> finfo;
   ChannelInfo channel_info_;
   std::vector<std::unique_ptr<ConversionPath>> conversion_paths;
-  std::unique_ptr<EpicsClient::EpicsClient> epics_client;
-  Ring<std::unique_ptr<FlatBufs::EpicsPVUpdate>> emit_queue;
-  std::atomic<int> status_{0};
+  std::shared_ptr<EpicsClient::EpicsClientInterface> epics_client;
+  std::shared_ptr<
+      moodycamel::ConcurrentQueue<std::shared_ptr<FlatBufs::EpicsPVUpdate>>>
+      emit_queue;
   RangeSet<uint64_t> seq_data_emitted;
 };
-}
 }

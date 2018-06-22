@@ -1,6 +1,6 @@
+#include "../../EpicsPVUpdate.h"
 #include "../../RangeSet.h"
 #include "../../SchemaRegistry.h"
-#include "../../epics-to-fb.h"
 #include "../../helper.h"
 #include "../../logger.h"
 #include "schemas/f142_logdata_generated.h"
@@ -13,7 +13,6 @@
 #include <pv/pvEnumerated.h>
 #include <set>
 
-namespace BrightnESS {
 namespace FlatBufs {
 namespace f142 {
 
@@ -399,10 +398,9 @@ public:
 
   ~Converter() override { LOG(3, "~Converter"); }
 
-  BrightnESS::FlatBufs::FlatbufferMessage::uptr
-  convert(EpicsPVUpdate const &up) override {
+  FlatBufs::FlatbufferMessage::uptr convert(EpicsPVUpdate const &up) override {
     auto &pvstr = up.epics_pvstr;
-    auto fb = make_unique<BrightnESS::FlatBufs::FlatbufferMessage>();
+    auto fb = make_unique<FlatBufs::FlatbufferMessage>();
 
     auto builder = fb->builder.get();
     // this is the field type ID string: up.pvstr->getStructure()->getID()
@@ -414,7 +412,6 @@ public:
       // Was only interesting for forwarder testing
       fwdinfo_1_tBuilder bf(*builder);
       fb->seq = up.seq_fwd;
-      fb->fwdix = up.fwdix;
       uint64_t seq_data = 0;
       if (auto x = pvstr->getSubField<epics::pvData::PVScalarValue<uint64_t>>(
               "seq")) {
@@ -429,8 +426,6 @@ public:
       bf.add_seq_fwd(up.seq_fwd);
       bf.add_ts_data(ts_data);
       bf.add_ts_fwd(up.ts_epics_monitor);
-      bf.add_fwdix(up.fwdix);
-      bf.add_teamid(up.teamid);
       fwdinfo = bf.Finish().Union();
 #ifdef TRACK_SEQ_DATA
       seqs.insert(seq_data);
@@ -496,8 +491,7 @@ public:
 /// This class is purely for testing
 class ConverterTestNamed : public MakeFlatBufferFromPVStructure {
 public:
-  BrightnESS::FlatBufs::FlatbufferMessage::uptr
-  convert(EpicsPVUpdate const &up) override {
+  FlatBufs::FlatbufferMessage::uptr convert(EpicsPVUpdate const &up) override {
     auto &pvstr = up.epics_pvstr;
 
     {
@@ -519,7 +513,7 @@ public:
       }
     }
 
-    auto fb = make_unique<BrightnESS::FlatBufs::FlatbufferMessage>();
+    auto fb = make_unique<FlatBufs::FlatbufferMessage>();
     auto builder = fb->builder.get();
     using uchar = unsigned char;
     static_assert(sizeof(uchar) == 1, "");
@@ -570,4 +564,3 @@ FlatBufs::SchemaRegistry::Registrar<Info>
                                           Info::ptr(new InfoNamedConverter));
 } // namespace f142
 } // namespace FlatBufs
-} // namespace BrightnESS
