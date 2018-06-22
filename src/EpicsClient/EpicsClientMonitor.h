@@ -43,7 +43,7 @@ public:
   /// Setter method for status if there is an error in EPICS.
   void errorInEpics() override;
 
-  /// Getter method for EPICS status_.
+  /// Getter method for EPICS status.
   int status() override { return status_; };
 
   void emitCachedValue();
