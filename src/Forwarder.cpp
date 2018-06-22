@@ -62,7 +62,7 @@ Forwarder::Forwarder(MainOpt &opt)
     config_listener.reset(
         new Config::Listener{bopt, main_opt.MainSettings.BrokerConfig});
   }
-
+  createPVUpdateTimerIfRequired();
   createFakePVUpdateTimerIfRequired();
 
   for (auto &Stream : main_opt.MainSettings.StreamsInfo) {
@@ -89,6 +89,14 @@ Forwarder::~Forwarder() {
   conversion_workers_clear();
   converters_clear();
   InstanceSet::clear();
+}
+
+void Forwarder::createPVUpdateTimerIfRequired() {
+  if (main_opt.PeriodMS > 0) {
+    auto Interval = std::chrono::milliseconds(main_opt.PeriodMS);
+    std::shared_ptr<Sleeper> IntervalSleeper = std::make_shared<RealSleeper>();
+    PVUpdateTimer = ::make_unique<Timer>(Interval, IntervalSleeper);
+  }
 }
 
 void Forwarder::createFakePVUpdateTimerIfRequired() {
@@ -146,6 +154,9 @@ void Forwarder::forward_epics_to_kafka() {
     }
   }
 
+  if (PVUpdateTimer != nullptr)
+    PVUpdateTimer->start();
+
   if (GenerateFakePVUpdateTimer != nullptr)
     GenerateFakePVUpdateTimer->start();
 
@@ -186,6 +197,11 @@ void Forwarder::forward_epics_to_kafka() {
   LOG(6, "Main::forward_epics_to_kafka shutting down");
   conversion_workers_clear();
   streams.streams_clear();
+
+  if (PVUpdateTimer != nullptr) {
+    PVUpdateTimer->triggerStop();
+    PVUpdateTimer->waitForStop();
+  }
 
   if (GenerateFakePVUpdateTimer != nullptr) {
     GenerateFakePVUpdateTimer->triggerStop();
@@ -339,6 +355,12 @@ void Forwarder::addMapping(StreamSettings const &StreamInfo) {
     } else {
       Client = addStream<EpicsClient::EpicsClientMonitor>(ChannelInfo);
     }
+    if (PVUpdateTimer != nullptr) {
+      auto PeriodicClient =
+          std::static_pointer_cast<EpicsClient::EpicsClientMonitor>(Client);
+      PVUpdateTimer->addCallback(
+          [PeriodicClient]() { PeriodicClient->emitCachedValue(); });
+    }
   } catch (std::runtime_error &e) {
     std::throw_with_nested(MappingAddException("Cannot add stream"));
   }
@@ -356,7 +378,7 @@ std::shared_ptr<T> Forwarder::addStream(ChannelInfo &ChannelInfo) {
     throw std::runtime_error("channel_name is already forwarded");
   }
   auto PVUpdateRing = std::make_shared<
-      moodycamel::ConcurrentQueue<std::unique_ptr<FlatBufs::EpicsPVUpdate>>>();
+      moodycamel::ConcurrentQueue<std::shared_ptr<FlatBufs::EpicsPVUpdate>>>();
   auto client = std::make_shared<T>(ChannelInfo, PVUpdateRing);
   auto EpicsClientInterfacePtr =
       std::static_pointer_cast<EpicsClient::EpicsClientInterface>(client);

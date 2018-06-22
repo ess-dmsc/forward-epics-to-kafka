@@ -106,3 +106,33 @@ def docker_compose_fake_epics(request):
     # Using a finalizer rather than yield in the fixture means
     # that the containers will be brought down even if tests fail
     request.addfinalizer(fin)
+
+
+@pytest.fixture(scope="module")
+def docker_compose_idle_updates(request):
+    """
+    :type request: _pytest.python.FixtureRequest
+    """
+    print("Started preparing test environment...", flush=True)
+    build = False
+
+    # Options must be given as long form
+    options = common_options
+    options["--build"] = build
+    options["--file"] = ["docker-compose-idle-updates.yml"]
+
+    project = project_from_options(os.path.dirname(__file__), options)
+    cmd = TopLevelCommand(project)
+    print("Running docker-compose up", flush=True)
+    cmd.up(options)
+    print("\nFinished docker-compose up\n", flush=True)
+    wait_until_kafka_ready(cmd, options)
+
+    def fin():
+        cmd.logs(options)
+        # Stop the containers then remove them and their volumes (--volumes option)
+        cmd.down(options)
+
+    # Using a finalizer rather than yield in the fixture means
+    # that the containers will be brought down even if tests fail
+    request.addfinalizer(fin)

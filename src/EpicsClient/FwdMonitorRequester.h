@@ -13,8 +13,8 @@ class EpicsClientMonitor;
 class FwdMonitorRequester : public ::epics::pvData::MonitorRequester {
 public:
   /// Sets the Requester ID, channel name and pointer to epics client.
-  FwdMonitorRequester(EpicsClientInterface *epicsClientMonitor,
-                      const std::string &channel_name);
+  FwdMonitorRequester(EpicsClientInterface *EpicsClientMonitor,
+                      const std::string &ChannelName);
 
   ~FwdMonitorRequester() override;
 
@@ -23,21 +23,21 @@ public:
 
   /// Logging function from MonitorRequester.
   ///
-  ///\param msg The logging message.
-  ///\param msg_type Not used, satisfies inheritance from MonitorRequester.
-  void message(std::string const &msg,
-               ::epics::pvData::MessageType msg_type) override;
+  ///\param Message The logging message.
+  ///\param MessageType Not used, satisfies inheritance from MonitorRequester.
+  void message(std::string const &Message,
+               ::epics::pvData::MessageType MessageType) override;
 
   /// Checks the epics monitor is connected and no errors are returned.
   ///
-  ///\param status The status of the internal epics monitor.
-  ///\param monitor Reference to the epics monitor.
-  ///\param structure Not used, used to satisfy inheritance from
+  ///\param Status The status of the internal epics monitor.
+  ///\param Monitor Reference to the epics monitor.
+  ///\param Structure Not used, used to satisfy inheritance from
   /// MonitorRequester.
   void
-  monitorConnect(::epics::pvData::Status const &status,
-                 ::epics::pvData::Monitor::shared_pointer const &monitor,
-                 ::epics::pvData::StructureConstPtr const &structure) override;
+  monitorConnect(::epics::pvData::Status const &Status,
+                 ::epics::pvData::Monitor::shared_pointer const &Monitor,
+                 ::epics::pvData::StructureConstPtr const &Structure) override;
 
   /// Create callbacks from the epics pv updates after polling the
   /// monitor.
@@ -45,10 +45,10 @@ public:
   /// emit_queue via emit()
   ///
   ///\param pointer to the epics monitor loop.
-  void monitorEvent(::epics::pvData::MonitorPtr const &monitor) override;
+  void monitorEvent(::epics::pvData::MonitorPtr const &Monitor) override;
 
   /// Logging method.
-  void unlisten(::epics::pvData::MonitorPtr const &monitor) override;
+  void unlisten(::epics::pvData::MonitorPtr const &Monitor) override;
 
 private:
   std::string name;

@@ -160,20 +160,21 @@ factors.  For systematic tests are to be done.
 
 ### Update Frequency
 
-Note that EPICS is not made for very high frequency updates as it will happily
-lose updates.
+Note that EPICS is not made for very high frequency updates as it will discard updates if there are too many.
 
 That being said, a process variable updated at 10 kHz containing 2048 doubles,
 with 3 EPICS to flatbuffer converters attached and therefore producing 460MB/s
-of data works just fine, utilizing about 30% of each core on my desktop machine
-including the EPICS producer.
+of data works just fine, utilizing about 30% of each core on a reasonable desktop machine.
 
-Higher frequency updates over EPICS should be batched into a PV which contains
-many events at a time.
+Higher frequency updates over EPICS should be batched into a PV structure which can hold multiple events at a time, such as a waveform record.
 
 The Forwarder uses the [MDEL](https://epics.anl.gov/EpicsDocumentation/AppDevManuals/RecordRef/Recordref-5.html#MARKER-9-15) monitor specification for monitoring PV updates rather than the ADEL Archive monitoring specification. This means that every PV update is processed rather than just those that exceed the ADEL. 
 
+### Idle PV Updates
 
+To enable the forwarder to publish PV values periodically even if their values have not been updated use the `pv-update-period <MILLISECONDS>` flag. This runs alongside the normal PV monitor so it will push value updates as well as sending values periodically.
+
+By default this is not enabled. 
 
 ## Usage
 

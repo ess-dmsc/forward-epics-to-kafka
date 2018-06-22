@@ -19,14 +19,14 @@ public:
   explicit EpicsClientRandom(
       ChannelInfo &channelInfo,
       std::shared_ptr<
-          moodycamel::ConcurrentQueue<std::unique_ptr<FlatBufs::EpicsPVUpdate>>>
+          moodycamel::ConcurrentQueue<std::shared_ptr<FlatBufs::EpicsPVUpdate>>>
           RingBuffer)
-      : ChannelInformation(channelInfo), emit_queue(RingBuffer),
+      : ChannelInformation(channelInfo), EmitQueue(RingBuffer),
         UniformDistribution(0, 100){};
   ~EpicsClientRandom() override = default;
-  int emit(std::unique_ptr<FlatBufs::EpicsPVUpdate> up) override;
+  int emit(std::shared_ptr<FlatBufs::EpicsPVUpdate> up) override;
   int stop() override { return 0; };
-  void error_in_epics() override { status_ = -1; };
+  void errorInEpics() override { status_ = -1; };
   int status() override { return status_; };
 
   /// Generate a fake EpicsPVUpdate and emit it
@@ -41,8 +41,8 @@ private:
   ChannelInfo ChannelInformation;
   /// Buffer of (fake) PVUpdates
   std::shared_ptr<
-      moodycamel::ConcurrentQueue<std::unique_ptr<FlatBufs::EpicsPVUpdate>>>
-      emit_queue;
+      moodycamel::ConcurrentQueue<std::shared_ptr<FlatBufs::EpicsPVUpdate>>>
+      EmitQueue;
   /// Status is set to 1 if something fails
   int status_{0};
   /// Tools for generating random doubles
