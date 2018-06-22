@@ -1,6 +1,6 @@
-from helpers.kafkahelpers import create_consumer, poll_for_valid_message
+from helpers.kafka_helpers import create_consumer, poll_for_valid_message
 from helpers.f142_logdata import LogData, Value, Double
-from helpers.flatbufferhelpers import check_message_pv_name_and_value_type
+from helpers.flatbuffer_helpers import check_message_pv_name_and_value_type
 from time import sleep
 
 

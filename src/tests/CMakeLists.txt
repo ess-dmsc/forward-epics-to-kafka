@@ -9,6 +9,7 @@ set(sources
     ConfigParser_tests.cpp
     streams_tests.cpp
     CommandHandler_tests.cpp
+    EpicsClientMonitor_tests.cpp
     EpicsClientRandom_tests.cpp
     Timer_tests.cpp
     $<TARGET_OBJECTS:__objects>
