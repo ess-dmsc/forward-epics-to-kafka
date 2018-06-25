@@ -223,10 +223,13 @@ void Forwarder::report_status() {
   auto StatusString = Status.dump();
   auto StatusStringSize = StatusString.size();
   if (StatusStringSize > 1000) {
-    StatusString = StatusString.substr(0, 1000) +
-                   fmt::format(" ... {} chars total ...", StatusStringSize);
+    auto StatusStringShort =
+        StatusString.substr(0, 1000) +
+        fmt::format(" ... {} chars total ...", StatusStringSize);
+    LOG(7, "status: {}", StatusStringShort);
+  } else {
+    LOG(7, "status: {}", StatusString);
   }
-  LOG(7, "status: {}", StatusString);
   status_producer_topic->produce((KafkaW::uchar *)StatusString.c_str(),
                                  StatusString.size());
 }
