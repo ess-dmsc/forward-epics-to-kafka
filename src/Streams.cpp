@@ -69,12 +69,13 @@ const std::vector<std::shared_ptr<Stream>> &Streams::get_streams() {
 }
 
 /// Return true is the given channel name is already forwarded
-bool Streams::hasChannelName(std::string const &channel_name) {
+std::shared_ptr<Stream>
+Streams::getStreamByChannelName(std::string const &channel_name) {
   for (auto const &x : streams) {
     if (x->channel_info().channel_name == channel_name) {
-      return true;
+      return x;
     }
   }
-  return false;
+  return {nullptr};
 }
 }

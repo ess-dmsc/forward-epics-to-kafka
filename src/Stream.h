@@ -36,6 +36,8 @@ public:
   int emit(std::shared_ptr<FlatBufs::EpicsPVUpdate> up);
   std::atomic<uint32_t> transit{0};
   nlohmann::json status_json() const;
+  std::string getKafkaTopicName() const;
+  std::string getSchemaName() const;
 
 private:
   std::shared_ptr<Converter> converter;
@@ -64,6 +66,7 @@ public:
   void error_in_epics();
   int status();
   ChannelInfo const &channel_info() const;
+  std::shared_ptr<EpicsClient::EpicsClientInterface> getEpicsClient();
   size_t emit_queue_size();
   nlohmann::json status_json();
   using mutex = std::mutex;

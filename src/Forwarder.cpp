@@ -348,47 +348,53 @@ void Forwarder::addMapping(StreamSettings const &StreamInfo) {
   std::unique_lock<std::mutex> lock(streams_mutex);
   try {
     ChannelInfo ChannelInfo{StreamInfo.EpicsProtocol, StreamInfo.Name};
+    std::shared_ptr<Stream> Stream;
+    if (GenerateFakePVUpdateTimer != nullptr) {
+      Stream = findOrAddStream<EpicsClient::EpicsClientRandom>(ChannelInfo);
+    } else {
+      Stream = findOrAddStream<EpicsClient::EpicsClientMonitor>(ChannelInfo);
+    }
     std::shared_ptr<EpicsClient::EpicsClientInterface> Client;
     if (GenerateFakePVUpdateTimer != nullptr) {
-      Client = addStream<EpicsClient::EpicsClientRandom>(ChannelInfo);
+      auto Client = Stream->getEpicsClient();
       auto RandomClient =
-          std::static_pointer_cast<EpicsClient::EpicsClientRandom>(Client);
-      GenerateFakePVUpdateTimer->addCallback(
-          [RandomClient]() { RandomClient->generateFakePVUpdate(); });
-    } else {
-      Client = addStream<EpicsClient::EpicsClientMonitor>(ChannelInfo);
+          dynamic_cast<EpicsClient::EpicsClientRandom *>(Client.get());
+      if (RandomClient) {
+        GenerateFakePVUpdateTimer->addCallback(
+            [Client, RandomClient]() { RandomClient->generateFakePVUpdate(); });
+      }
     }
     if (PVUpdateTimer != nullptr) {
+      auto Client = Stream->getEpicsClient();
       auto PeriodicClient =
-          std::static_pointer_cast<EpicsClient::EpicsClientMonitor>(Client);
+          dynamic_cast<EpicsClient::EpicsClientMonitor *>(Client.get());
       PVUpdateTimer->addCallback(
-          [PeriodicClient]() { PeriodicClient->emitCachedValue(); });
+          [Client, PeriodicClient]() { PeriodicClient->emitCachedValue(); });
+    }
+    for (auto &Converter : StreamInfo.Converters) {
+      pushConverterToStream(Converter, Stream);
     }
   } catch (std::runtime_error &e) {
     std::throw_with_nested(MappingAddException("Cannot add stream"));
   }
-
-  auto Stream = streams.back();
-
-  for (auto &Converter : StreamInfo.Converters) {
-    pushConverterToStream(Converter, Stream);
-  }
 }
 
 template <typename T>
-std::shared_ptr<T> Forwarder::addStream(ChannelInfo &ChannelInfo) {
-  if (streams.hasChannelName(ChannelInfo.channel_name)) {
-    throw std::runtime_error("channel_name is already forwarded");
+std::shared_ptr<Stream> Forwarder::findOrAddStream(ChannelInfo &ChannelInfo) {
+  std::shared_ptr<Stream> FoundStream =
+      streams.getStreamByChannelName(ChannelInfo.channel_name);
+  if (FoundStream != nullptr) {
+    return FoundStream;
   }
   auto PVUpdateRing = std::make_shared<
       moodycamel::ConcurrentQueue<std::shared_ptr<FlatBufs::EpicsPVUpdate>>>();
   auto client = std::make_shared<T>(ChannelInfo, PVUpdateRing);
   auto EpicsClientInterfacePtr =
       std::static_pointer_cast<EpicsClient::EpicsClientInterface>(client);
-  auto stream = std::make_shared<Stream>(ChannelInfo, EpicsClientInterfacePtr,
-                                         PVUpdateRing);
-  streams.add(stream);
-  return client;
+  auto NewStream = std::make_shared<Stream>(
+      ChannelInfo, EpicsClientInterfacePtr, PVUpdateRing);
+  streams.add(NewStream);
+  return NewStream;
 }
 
 std::atomic<uint64_t> g__total_msgs_to_kafka{0};

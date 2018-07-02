@@ -47,6 +47,20 @@ nlohmann::json ConversionPath::status_json() const {
   return Document;
 }
 
+std::string ConversionPath::getKafkaTopicName() const {
+  if (kafka_output) {
+    return kafka_output->topic_name();
+  }
+  return "nullptr";
+}
+
+std::string ConversionPath::getSchemaName() const {
+  if (converter) {
+    converter->schema_name();
+  }
+  return "nullptr";
+}
+
 Stream::Stream(
     ChannelInfo channel_info,
     std::shared_ptr<EpicsClient::EpicsClientInterface> client,
@@ -65,9 +79,20 @@ Stream::~Stream() {
 
 int Stream::converter_add(InstanceSet &kset, Converter::sptr conv,
                           URI uri_kafka_output) {
+  ulock(conversion_paths_mx);
   auto pt = kset.producer_topic(uri_kafka_output);
   std::unique_ptr<ConversionPath> cp = ::make_unique<ConversionPath>(
       std::move(conv), ::make_unique<KafkaOutput>(std::move(pt)));
+  for (auto const &ConversionPath : conversion_paths) {
+    if (ConversionPath->getKafkaTopicName() == cp->getKafkaTopicName() &&
+        ConversionPath->getSchemaName() == cp->getSchemaName()) {
+      LOG(5, "Stream with channel name: {}  KafkaTopicName: {}  SchemaName: {} "
+             " already exists.",
+          channel_info_.channel_name, ConversionPath->getKafkaTopicName(),
+          ConversionPath->getSchemaName());
+      return 1;
+    }
+  }
   conversion_paths.push_back(std::move(cp));
   return 0;
 }
@@ -153,5 +178,9 @@ nlohmann::json Stream::status_json() {
   }
   Document["converters"] = Converters;
   return Document;
+}
+
+std::shared_ptr<EpicsClient::EpicsClientInterface> Stream::getEpicsClient() {
+  return epics_client;
 }
 }

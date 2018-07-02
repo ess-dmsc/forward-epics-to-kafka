@@ -1,5 +1,5 @@
-#ifndef FORWARD_EPICS_TO_KAFKA_STREAMS_H
-#define FORWARD_EPICS_TO_KAFKA_STREAMS_H
+#pragma once
+
 #include "Stream.h"
 #include <memory>
 #include <mutex>
@@ -21,10 +21,10 @@ public:
   void streams_clear();
   void check_stream_status();
   void add(std::shared_ptr<Stream> s);
-  bool hasChannelName(std::string const &channel_name);
+  std::shared_ptr<Stream>
+  getStreamByChannelName(std::string const &channel_name);
   std::shared_ptr<Stream> back();
   std::shared_ptr<Stream> operator[](size_t s) { return streams.at(s); };
   const std::vector<std::shared_ptr<Stream>> &get_streams();
 };
 }
-#endif // FORWARD_EPICS_TO_KAFKA_STREAMS_H

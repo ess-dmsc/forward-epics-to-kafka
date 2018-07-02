@@ -62,7 +62,10 @@ public:
 private:
   void createFakePVUpdateTimerIfRequired();
   void createPVUpdateTimerIfRequired();
-  template <typename T> std::shared_ptr<T> addStream(ChannelInfo &ChannelInfo);
+  template <typename T>
+  std::shared_ptr<Stream> findOrAddStream(ChannelInfo &ChannelInfo);
+  template <typename T>
+  std::shared_ptr<T> getStreamByChannelName(std::string const &ChannelName);
   MainOpt &main_opt;
   std::shared_ptr<InstanceSet> kafka_instance_set;
   std::unique_ptr<Config::Listener> config_listener;
