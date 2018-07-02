@@ -10,13 +10,13 @@
 #include <sstream>
 #include <string>
 
-TEST(config_parser_tests, not_parsing_a_config_file_gives_defaults) {
+TEST(ConfigParserTest, not_parsing_a_config_file_gives_defaults) {
   Forwarder::MainOpt MainOpt;
 
   ASSERT_EQ(1u, MainOpt.MainSettings.ConversionThreads);
 }
 
-TEST(config_parser_tests, trying_to_parse_invalid_json_throws) {
+TEST(ConfigParserTest, trying_to_parse_invalid_json_throws) {
   std::string RawJson = R"({
                             "streams": [
                              }
@@ -26,7 +26,7 @@ TEST(config_parser_tests, trying_to_parse_invalid_json_throws) {
   ASSERT_ANY_THROW(Config.setJsonFromString(RawJson));
 }
 
-TEST(config_parser_tests, no_converters_specified_has_no_side_effects) {
+TEST(ConfigParserTest, no_converters_specified_has_no_side_effects) {
   std::string RawJson = "{}";
 
   Forwarder::ConfigParser Config;
@@ -37,7 +37,7 @@ TEST(config_parser_tests, no_converters_specified_has_no_side_effects) {
   ASSERT_EQ(0u, Settings.GlobalConverters.size());
 }
 
-TEST(config_parser_tests, ints_specified_in_converters_are_extracted) {
+TEST(ConfigParserTest, ints_specified_in_converters_are_extracted) {
   std::string RawJson = R"({
                             "converters": {
                                "f142": {
@@ -60,7 +60,7 @@ TEST(config_parser_tests, ints_specified_in_converters_are_extracted) {
   ASSERT_EQ(456, f142.ConfigurationIntegers.at("some_option2"));
 }
 
-TEST(config_parser_tests, strings_specified_in_converters_are_extracted) {
+TEST(ConfigParserTest, strings_specified_in_converters_are_extracted) {
   std::string RawJson = R"({
                             "converters": {
                                "f142": {
@@ -83,8 +83,7 @@ TEST(config_parser_tests, strings_specified_in_converters_are_extracted) {
   ASSERT_EQ("goodbye", f142.ConfigurationStrings.at("some_option2"));
 }
 
-TEST(config_parser_tests,
-     values_specified_in_multiple_converters_are_extracted) {
+TEST(ConfigParserTest, values_specified_in_multiple_converters_are_extracted) {
   std::string RawJson = R"({
                             "converters": {
                                "f142": {
@@ -118,8 +117,7 @@ TEST(config_parser_tests,
   ASSERT_EQ(456, f143.ConfigurationIntegers.at("some_option4"));
 }
 
-TEST(config_parser_tests,
-     extracting_status_uri_gives_correct_uri_port_and_topic) {
+TEST(ConfigParserTest, extracting_status_uri_gives_correct_uri_port_and_topic) {
   std::string RawJson = R"({
                             "status-uri": "//kafkabroker:1234/status_topic"
                            })";
@@ -134,7 +132,7 @@ TEST(config_parser_tests,
   ASSERT_EQ("status_topic", Settings.StatusReportURI.topic);
 }
 
-TEST(config_parser_tests, no_status_uri_defined_gives_no_uri_port_or_topic) {
+TEST(ConfigParserTest, no_status_uri_defined_gives_no_uri_port_or_topic) {
   std::string RawJson = "{}";
 
   Forwarder::ConfigParser Config;
@@ -147,7 +145,7 @@ TEST(config_parser_tests, no_status_uri_defined_gives_no_uri_port_or_topic) {
   ASSERT_EQ("", Settings.StatusReportURI.topic);
 }
 
-TEST(config_parser_tests, setting_broker_sets_host_and_port) {
+TEST(ConfigParserTest, setting_broker_sets_host_and_port) {
   std::string RawJson = R"({
                             "broker": "kafkabroker:1234"
                            })";
@@ -161,8 +159,7 @@ TEST(config_parser_tests, setting_broker_sets_host_and_port) {
   ASSERT_EQ(1234u, Settings.Brokers.at(0).port);
 }
 
-TEST(config_parser_tests,
-     setting_multiple_brokers_sets_multiple_hosts_and_ports) {
+TEST(ConfigParserTest, setting_multiple_brokers_sets_multiple_hosts_and_ports) {
   std::string RawJson = R"({
                             "broker": "kafkabroker1:1234, kafkabroker2:5678"
                            })";
@@ -179,7 +176,7 @@ TEST(config_parser_tests,
   ASSERT_EQ(5678u, Settings.Brokers.at(1).port);
 }
 
-TEST(config_parser_tests, setting_no_brokers_sets_default_host_and_port) {
+TEST(ConfigParserTest, setting_no_brokers_sets_default_host_and_port) {
   std::string RawJson = "{}";
 
   Forwarder::ConfigParser Config;
@@ -191,7 +188,7 @@ TEST(config_parser_tests, setting_no_brokers_sets_default_host_and_port) {
   ASSERT_EQ(9092u, Settings.Brokers.at(0).port);
 }
 
-TEST(config_parser_tests, no_kafka_broker_settings_has_no_side_effects) {
+TEST(ConfigParserTest, no_kafka_broker_settings_has_no_side_effects) {
   std::string RawJson = "{}";
 
   Forwarder::ConfigParser Config;
@@ -203,7 +200,7 @@ TEST(config_parser_tests, no_kafka_broker_settings_has_no_side_effects) {
   ASSERT_EQ(0u, Settings.BrokerSettings.ConfigurationStrings.size());
 }
 
-TEST(config_parser_tests, ints_in_kafka_broker_settings_are_extracted) {
+TEST(ConfigParserTest, ints_in_kafka_broker_settings_are_extracted) {
   std::string RawJson = R"({
                             "kafka": {
                                "broker": {
@@ -225,7 +222,7 @@ TEST(config_parser_tests, ints_in_kafka_broker_settings_are_extracted) {
             Settings.BrokerSettings.ConfigurationIntegers.at("some_option2"));
 }
 
-TEST(config_parser_tests, strings_in_kafka_broker_settings_are_extracted) {
+TEST(ConfigParserTest, strings_in_kafka_broker_settings_are_extracted) {
   std::string RawJson = R"({
                             "kafka": {
                                "broker": {
@@ -247,7 +244,7 @@ TEST(config_parser_tests, strings_in_kafka_broker_settings_are_extracted) {
             Settings.BrokerSettings.ConfigurationStrings.at("some_option2"));
 }
 
-TEST(config_parser_tests,
+TEST(ConfigParserTest,
      no_broker_config_settings_sets_default_host_port_and_topic) {
   std::string RawJson = "{}";
 
@@ -261,7 +258,7 @@ TEST(config_parser_tests,
   ASSERT_EQ("forward_epics_to_kafka_commands", Settings.BrokerConfig.topic);
 }
 
-TEST(config_parser_tests,
+TEST(ConfigParserTest,
      extracting_broker_config_settings_sets_host_port_and_topic) {
   std::string RawJson = R"({
                             "broker-config": "//kafkabroker:1234/the_topic"
@@ -277,7 +274,7 @@ TEST(config_parser_tests,
   ASSERT_EQ("the_topic", Settings.BrokerConfig.topic);
 }
 
-TEST(config_parser_tests, no_conversion_threads_settings_sets_default) {
+TEST(ConfigParserTest, no_conversion_threads_settings_sets_default) {
   std::string RawJson = "{}";
 
   Forwarder::ConfigParser Config;
@@ -288,7 +285,7 @@ TEST(config_parser_tests, no_conversion_threads_settings_sets_default) {
   ASSERT_EQ(1u, Settings.ConversionThreads);
 }
 
-TEST(config_parser_tests, extracting_conversion_threads_sets_value) {
+TEST(ConfigParserTest, extracting_conversion_threads_sets_value) {
   std::string RawJson = R"({
                             "conversion-threads": 3
                            })";
@@ -301,7 +298,7 @@ TEST(config_parser_tests, extracting_conversion_threads_sets_value) {
   ASSERT_EQ(3u, Settings.ConversionThreads);
 }
 
-TEST(config_parser_tests, no_conversion_worker_queue_size_sets_default) {
+TEST(ConfigParserTest, no_conversion_worker_queue_size_sets_default) {
   std::string RawJson = "{}";
 
   Forwarder::ConfigParser Config;
@@ -312,7 +309,7 @@ TEST(config_parser_tests, no_conversion_worker_queue_size_sets_default) {
   ASSERT_EQ(1024u, Settings.ConversionWorkerQueueSize);
 }
 
-TEST(config_parser_tests, extracting_conversion_worker_queue_size_sets_value) {
+TEST(ConfigParserTest, extracting_conversion_worker_queue_size_sets_value) {
   std::string RawJson = R"({
                             "conversion-worker-queue-size": 1234
                            })";
@@ -325,7 +322,7 @@ TEST(config_parser_tests, extracting_conversion_worker_queue_size_sets_value) {
   ASSERT_EQ(1234u, Settings.ConversionWorkerQueueSize);
 }
 
-TEST(config_parser_tests, no_main_poll_interval_sets_default) {
+TEST(ConfigParserTest, no_main_poll_interval_sets_default) {
   std::string RawJson = "{}";
 
   Forwarder::ConfigParser Config;
@@ -336,7 +333,7 @@ TEST(config_parser_tests, no_main_poll_interval_sets_default) {
   ASSERT_EQ(500, Settings.MainPollInterval);
 }
 
-TEST(config_parser_tests, extracting_main_poll_interval_sets_value) {
+TEST(ConfigParserTest, extracting_main_poll_interval_sets_value) {
   std::string RawJson = R"({
                             "main-poll-interval": 1234
                            })";
@@ -349,8 +346,7 @@ TEST(config_parser_tests, extracting_main_poll_interval_sets_value) {
   ASSERT_EQ(1234, Settings.MainPollInterval);
 }
 
-TEST(config_parser_tests,
-     extracting_streams_setting_gets_channel_and_protocol) {
+TEST(ConfigParserTest, extracting_streams_setting_gets_channel_and_protocol) {
   std::string RawJson = R"({
                             "streams": [
                                {
@@ -372,7 +368,7 @@ TEST(config_parser_tests,
   ASSERT_EQ("ca", Converter.EpicsProtocol);
 }
 
-TEST(config_parser_tests,
+TEST(ConfigParserTest,
      extracting_multiple_streams_setting_gets_channel_and_protocol) {
   std::string RawJson = R"({
                             "streams": [
@@ -402,7 +398,7 @@ TEST(config_parser_tests,
   ASSERT_EQ("pva", Converter.EpicsProtocol);
 }
 
-TEST(config_parser_tests,
+TEST(ConfigParserTest,
      extracting_streams_setting_if_protocol_not_defined_use_default) {
   std::string RawJson = R"({
                             "streams": [
@@ -424,7 +420,7 @@ TEST(config_parser_tests,
   ASSERT_EQ("pva", Converter.EpicsProtocol);
 }
 
-TEST(config_parser_tests, extracting_streams_setting_gets_converter_info) {
+TEST(ConfigParserTest, extracting_streams_setting_gets_converter_info) {
 
   std::string RawJson = R"({
                             "streams": [
@@ -451,8 +447,7 @@ TEST(config_parser_tests, extracting_streams_setting_gets_converter_info) {
   ASSERT_EQ("my_name", Converter.Name);
 }
 
-TEST(config_parser_tests,
-     extracting_converter_info_with_no_name_gets_auto_named) {
+TEST(ConfigParserTest, extracting_converter_info_with_no_name_gets_auto_named) {
   std::string RawJson = R"({
                             "streams": [
                                {
@@ -476,7 +471,7 @@ TEST(config_parser_tests,
   ASSERT_TRUE(!Converter.Name.empty());
 }
 
-TEST(config_parser_tests, extracting_converter_info_with_no_topic_throws) {
+TEST(ConfigParserTest, extracting_converter_info_with_no_topic_throws) {
   std::string RawJson = R"({
                             "streams": [
                                {
@@ -495,7 +490,7 @@ TEST(config_parser_tests, extracting_converter_info_with_no_topic_throws) {
   ASSERT_ANY_THROW(Config.extractConfiguration());
 }
 
-TEST(config_parser_tests, extracting_converter_info_with_no_schema_throws) {
+TEST(ConfigParserTest, extracting_converter_info_with_no_schema_throws) {
   std::string RawJson = R"({
                             "streams": [
                                {

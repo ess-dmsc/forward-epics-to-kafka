@@ -4,10 +4,10 @@ set(tgt "tests")
 set(sources
     tests.cpp
     helper_tests.cpp
-    uri_tests.cpp
+    URI_tests.cpp
     json_tests.cpp
     ConfigParser_tests.cpp
-    streams_tests.cpp
+    Streams_tests.cpp
     CommandHandler_tests.cpp
     EpicsClientMonitor_tests.cpp
     EpicsClientRandom_tests.cpp
