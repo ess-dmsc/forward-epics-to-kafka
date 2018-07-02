@@ -7,7 +7,7 @@
 using namespace Forwarder;
 
 TEST(EpicsClientRandomTest,
-     CallingGeneratePVUpdateResultsInAPVUpdateInTheBuffer) {
+     calling_GeneratePVUpdate_results_in_a_PV_update_in_the_buffer) {
   // GIVEN an EpicsClient with a ring buffer
   auto RingBuffer = std::make_shared<
       moodycamel::ConcurrentQueue<std::shared_ptr<FlatBufs::EpicsPVUpdate>>>();
@@ -27,7 +27,8 @@ TEST(EpicsClientRandomTest,
   ASSERT_FALSE(RingBuffer->try_dequeue(SecondPV));
 }
 
-TEST(EpicsClientRandomTest, CallingGeneratePVUpdateResultsInDifferentPVValues) {
+TEST(EpicsClientRandomTest,
+     calling_GeneratePVUpdate_results_in_different_PV_values) {
   // GIVEN an EpicsClient with a ring buffer
   auto RingBuffer = std::make_shared<
       moodycamel::ConcurrentQueue<std::shared_ptr<FlatBufs::EpicsPVUpdate>>>();
