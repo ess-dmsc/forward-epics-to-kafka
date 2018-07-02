@@ -58,9 +58,6 @@ def test_forwarder_sends_pv_updates_single_pv_double(docker_compose):
     sleep(2)
 
     cons = create_consumer()
-    cons.subscribe([CONFIG_TOPIC])
-    msg = poll_for_valid_message(cons)
-    check_json_config(loads(str(msg.value(), encoding="utf-8")), data_topic, pvs)
 
     # Update value
     change_pv_value("SIM:Spd", 5)
@@ -78,6 +75,3 @@ def test_forwarder_sends_pv_updates_single_pv_double(docker_compose):
     check_message_pv_name_and_value_type(log_data_second, Value.Value.Double, b'SIM:Spd')
     check_double_value_and_equality(log_data_second, 5)
     cons.close()
-
-
-
