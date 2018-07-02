@@ -147,27 +147,22 @@ def test_forwarder_sends_pv_updates_single_pv_string(docker_compose):
     sleep(2)
 
     cons = create_consumer()
-    cons.subscribe([CONFIG_TOPIC])
-    config_msg = poll_for_valid_message(cons)
 
     # Update value
-    stop_command = "stop"
+    stop_command = b'stop'
     change_pv_value(write_PV_name, stop_command)
+
     # Wait for PV to be updated
-    sleep(5)
+    sleep(7)
     cons.subscribe([data_topic])
 
     # Poll for message which should contain forwarded PV update
     data_msg = poll_for_valid_message(cons).value()
     log_data = LogData.LogData.GetRootAsLogData(data_msg, 0)
-    check_message_pv_name_and_value_type(log_data, Value.Value.String, read_PV_name.encode('utf-8'))
+
     union_string = String.String()
     union_string.Init(log_data.Value().Bytes, log_data.Value().Pos)
-    union_value = union_string.Value()
-    # Check expected PV update did occur
-    # assert stop_command == caget(read_PV_name)
-    # Check PV update was forwarded
-    assert stop_command == union_value.decode('utf8')
+    assert union_string.Value() == stop_command
 
     cons.close()
 
