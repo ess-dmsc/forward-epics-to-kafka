@@ -16,7 +16,8 @@ protected:
   std::atomic_uint CallbackBCalled{0};
 };
 
-TEST_F(TimerTest, testCanStartAndStopATimerWithNoRegisteredCallbacks) {
+TEST_F(TimerTest,
+       test_can_start_and_stop_a_timer_with_no_registered_callbacks) {
   std::shared_ptr<Sleeper> TestSleeper = std::make_shared<FakeSleeper>();
   std::chrono::milliseconds Interval(1);
   Timer TestTimer(Interval, TestSleeper);
@@ -28,14 +29,14 @@ TEST_F(TimerTest, testCanStartAndStopATimerWithNoRegisteredCallbacks) {
   TestTimer.waitForStop();
 }
 
-TEST_F(TimerTest, testCanRegisterACallback) {
+TEST_F(TimerTest, test_can_register_a_callback) {
   std::shared_ptr<Sleeper> TestSleeper = std::make_shared<FakeSleeper>();
   std::chrono::milliseconds Interval(1);
   Timer TestTimer(Interval, TestSleeper);
   TestTimer.addCallback([&]() { testCallbackA(); });
 }
 
-TEST_F(TimerTest, testRegisteredCallbackIsExecuted) {
+TEST_F(TimerTest, test_registered_callback_is_executed) {
   std::shared_ptr<Sleeper> TestSleeper = std::make_shared<FakeSleeper>();
   std::chrono::milliseconds Interval(1);
   Timer TestTimer(Interval, TestSleeper);
@@ -49,7 +50,7 @@ TEST_F(TimerTest, testRegisteredCallbackIsExecuted) {
   ASSERT_EQ(ExpectedTimesCalled, CallbackACalled);
 }
 
-TEST_F(TimerTest, testMultipleRegisteredCallbacksAreExecuted) {
+TEST_F(TimerTest, test_multiple_registered_callbacks_are_executed) {
   std::shared_ptr<Sleeper> TestSleeper = std::make_shared<FakeSleeper>();
   std::chrono::milliseconds Interval(1);
   Timer TestTimer(Interval, TestSleeper);

@@ -2,7 +2,7 @@
 #include "../logger.h"
 #include <gtest/gtest.h>
 
-TEST(json_tests, JSONIntegerMaximumValues) {
+TEST(JsonTest, JSON_integer_maximum_values) {
   using nlohmann::json;
   auto Doc = json::parse(R"""({
     "large_uint32": 4294967295,
@@ -32,7 +32,7 @@ TEST(json_tests, JSONIntegerMaximumValues) {
             find<int64_t>("large_int64_neg", Doc).inner());
 }
 
-TEST(json_tests, GivenJSONArrayVerifyItFindsJSONArrayType) {
+TEST(JsonTest, given_JSON_array_verify_it_finds_JSON_array_type) {
   using nlohmann::json;
   auto Doc = json::parse(R"""({
     "some_array": [1, 2, 3]
@@ -43,7 +43,7 @@ TEST(json_tests, GivenJSONArrayVerifyItFindsJSONArrayType) {
   ASSERT_TRUE(Maybe.inner().is_array());
 }
 
-TEST(json_tests, IterateObject) {
+TEST(JsonTest, iterate_object) {
   using nlohmann::json;
   auto Doc = json::parse(R"""({
     "some_array": [1, 2, 3],
@@ -58,7 +58,7 @@ TEST(json_tests, IterateObject) {
   ASSERT_EQ(Count, 3u);
 }
 
-TEST(json_tests, AccessingMissingKeyShouldThrow) {
+TEST(JsonTest, accessing_missing_key_should_throw) {
   using nlohmann::json;
   auto Doc = json::parse("{}");
   ASSERT_TRUE(Doc.is_object());
