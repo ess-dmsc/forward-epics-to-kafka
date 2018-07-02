@@ -77,6 +77,7 @@ void Stream::error_in_epics() { epics_client->errorInEpics(); }
 int32_t Stream::fill_conversion_work(
     moodycamel::ConcurrentQueue<std::unique_ptr<ConversionWorkPacket>> &q2,
     uint32_t max, std::function<void(uint64_t)> on_seq_data) {
+  ulock(conversion_paths_mx);
   uint32_t n0 = 0;
   uint32_t n1 = 0;
   auto BufferSize = emit_queue->size_approx();

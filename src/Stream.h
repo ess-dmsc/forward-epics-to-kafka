@@ -78,5 +78,9 @@ private:
       moodycamel::ConcurrentQueue<std::shared_ptr<FlatBufs::EpicsPVUpdate>>>
       emit_queue;
   RangeSet<uint64_t> seq_data_emitted;
+
+  /// We want to be able to add conversion paths after forwarding is running.
+  /// Therefore, we need mutually exclusive access to 'conversion_paths'.
+  mutex conversion_paths_mx;
 };
 }
