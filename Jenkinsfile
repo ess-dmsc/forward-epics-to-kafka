@@ -10,23 +10,23 @@ epics_profile_file = "/etc/profile.d/ess_epics_env.sh"
 images = [
         'centos7': [
                 'name': 'essdmscdm/centos7-build-node:3.0.0',
-                'sh'  : '/usr/bin/scl enable rh-python35 devtoolset-6 -- /bin/bash'
+                'sh'  : '/usr/bin/scl enable rh-python35 devtoolset-6 -- /bin/bash -e'
         ],
         'centos7-release': [
                 'name': 'essdmscdm/centos7-build-node:3.0.0',
-                'sh'  : '/usr/bin/scl enable rh-python35 devtoolset-6 -- /bin/bash'
+                'sh'  : '/usr/bin/scl enable rh-python35 devtoolset-6 -- /bin/bash -e'
         ],
         'fedora25'    : [
                 'name': 'essdmscdm/fedora25-build-node:1.0.0',
-                'sh'  : 'sh'
+                'sh'  : 'bash -e'
         ],
         'ubuntu1604'  : [
                 'name': 'essdmscdm/ubuntu16.04-build-node:2.1.0',
-                'sh'  : 'sh'
+                'sh'  : 'bash -e'
         ],
         'ubuntu1710': [
                 'name': 'essdmscdm/ubuntu17.10-build-node:2.0.0',
-                'sh': 'sh'
+                'sh': 'bash -e'
         ]
 ]
 
@@ -102,8 +102,8 @@ def docker_cmake(image_key) {
         }
 
         def configure_script = """
-                    cd build && \
-                    ${configure_epics} && \
+                    cd build
+                    ${configure_epics}
                     cmake ../${project} ${coverage_on}
                 """
 
@@ -117,7 +117,7 @@ def docker_cmake_release(image_key) {
     try {
         def custom_sh = images[image_key]['sh']
         def configure_script = """
-                        cd build && \
+                        cd build
                         cmake ../${project} \
                             -DCMAKE_BUILD_TYPE=Release \
                             -DCMAKE_SKIP_RPATH=FALSE \
@@ -135,8 +135,8 @@ def docker_build(image_key) {
     try {
         def custom_sh = images[image_key]['sh']
         def build_script = """
-                      cd build && \
-                      . ./activate_run.sh && \
+                      cd build
+                      . ./activate_run.sh
                       make VERBOSE=1
                   """
         sh "docker exec ${container_name(image_key)} ${custom_sh} -c \"${build_script}\""
@@ -150,9 +150,9 @@ def docker_test(image_key, test_dir) {
         def custom_sh = images[image_key]['sh']
         // The last line prevents the script from hanging
         def test_script = """
-                        cd build && \
-                        . ./activate_run.sh && \
-                        ./${test_dir}/tests && \
+                        cd build
+                        . ./activate_run.sh
+                        ./${test_dir}/tests
                         pkill caRepeater || true
                     """
         sh "docker exec ${container_name(image_key)} ${custom_sh} -c \"${test_script}\""
@@ -165,8 +165,8 @@ def docker_formatting(image_key) {
     try {
         def custom_sh = images[image_key]['sh']
         def script = """
-                    clang-format -version && \
-                    cd ${project} && \
+                    clang-format -version
+                    cd ${project}
                     find . \\\\( -name '*.cpp' -or -name '*.cxx' -or -name '*.h' -or -name '*.hpp' \\\\) \\
                         -exec clangformatdiff.sh {} +
                   """
@@ -181,17 +181,24 @@ def docker_archive(image_key) {
         def custom_sh = images[image_key]['sh']
         def archive_output = "${project}-${image_key}.tar.gz"
         def archive_script = """
-                    cd build && \
-                    rm -rf forward-epics-to-kafka; mkdir forward-epics-to-kafka && \
-                    mkdir -p forward-epics-to-kafka/bin && \
-                    cp ./bin/forward-epics-to-kafka forward-epics-to-kafka/bin/ && \
-                    cp -r ./lib forward-epics-to-kafka/ && \
-                    cp -r ./licenses forward-epics-to-kafka/ && \
+                    cd build
+                    rm -rf forward-epics-to-kafka; mkdir forward-epics-to-kafka
+                    mkdir -p forward-epics-to-kafka/bin
+                    cp ./bin/forward-epics-to-kafka forward-epics-to-kafka/bin/
+                    cp -r ./lib forward-epics-to-kafka/
+                    cp -r ./licenses forward-epics-to-kafka/
                     tar czf ${archive_output} forward-epics-to-kafka
+
+                    # Create file with build information
+                    touch BUILD_INFO
+                    echo 'Repository: ${project}/${env.BRANCH_NAME}' >> BUILD_INFO
+                    echo 'Commit: ${scm_vars.GIT_COMMIT}' >> BUILD_INFO
+                    echo 'Jenkins build: ${BUILD_NUMBER}' >> BUILD_INFO
                 """
         sh "docker exec ${container_name(image_key)} ${custom_sh} -c \"${archive_script}\""
         sh "docker cp ${container_name(image_key)}:/home/jenkins/build/${archive_output} ./"
-        archiveArtifacts "${archive_output}"
+        sh "docker cp ${container_name(image_key)}:/home/jenkins/build/BUILD_INFO ./"
+        archiveArtifacts "${archive_output},BUILD_INFO"
     } catch (e) {
         failure_function(e, "Test step for (${container_name(image_key)}) failed")
     }
@@ -203,12 +210,12 @@ def docker_coverage(image_key) {
         def test_output = "TestResults.xml"
         // The last line prevents the script from hanging
         def coverage_script = """
-                        cd build && \
-                        . ./activate_run.sh && \
-                        ./tests/tests -- --gtest_output=xml:${test_output} && \
-                        make coverage && \
-                        lcov --directory . --capture --output-file coverage.info && \
-                        lcov --remove coverage.info '*_generated.h' '*/src/date/*' '*/.conan/data/*' '*/usr/*' --output-file coverage.info && \
+                        cd build
+                        . ./activate_run.sh
+                        ./tests/tests -- --gtest_output=xml:${test_output}
+                        make coverage
+                        lcov --directory . --capture --output-file coverage.info
+                        lcov --remove coverage.info '*_generated.h' '*/src/date/*' '*/.conan/data/*' '*/usr/*' --output-file coverage.info
                         pkill caRepeater || true
                     """
         sh "docker exec ${container_name(image_key)} ${custom_sh} -c \"${coverage_script}\""
@@ -217,10 +224,10 @@ def docker_coverage(image_key) {
 
         withCredentials([string(credentialsId: 'forward-epics-to-kafka-codecov-token', variable: 'TOKEN')]) {
             def codecov_upload_script = """
-                cd ${project} && \
-                export WORKSPACE='.' && \
-                export JENKINS_URL=${JENKINS_URL} && \
-                pip install --user codecov && \
+                cd ${project}
+                export WORKSPACE='.'
+                export JENKINS_URL=${JENKINS_URL}
+                pip install --user codecov
                 python -m codecov -t ${TOKEN} --commit ${scm_vars.GIT_COMMIT} -f ../build/coverage.info
                 """
             sh "docker exec ${container_name(image_key)} ${custom_sh} -c \"${codecov_upload_script}\""
@@ -235,7 +242,7 @@ def docker_cppcheck(image_key) {
         def custom_sh = images[image_key]['sh']
         def test_output = "cppcheck.txt"
         def cppcheck_script = """
-                        cd forward-epics-to-kafka && \
+                        cd forward-epics-to-kafka
                         cppcheck --enable=all --inconclusive --template="{file},{line},{severity},{id},{message}" src/ 2> ${test_output}
                     """
         sh "docker exec ${container_name(image_key)} ${custom_sh} -c \"${cppcheck_script}\""
