@@ -5,7 +5,7 @@
 #include <gtest/gtest.h>
 #include <nlohmann/json.hpp>
 
-TEST(command_handler_tests, add_command_adds_stream_correctly) {
+TEST(CommandHandlerTest, add_command_adds_stream_correctly) {
   std::string RawJson = R"({
                             "cmd": "add",
                             "streams": [
@@ -27,7 +27,7 @@ TEST(command_handler_tests, add_command_adds_stream_correctly) {
   ASSERT_EQ("ca", Main.streams[0]->channel_info().provider_type);
 }
 
-TEST(command_handler_tests, add_command_adds_multiple_streams_correctly) {
+TEST(CommandHandlerTest, add_command_adds_multiple_streams_correctly) {
   std::string RawJson = R"({
                             "cmd": "add",
                             "streams": [
@@ -55,7 +55,7 @@ TEST(command_handler_tests, add_command_adds_multiple_streams_correctly) {
   ASSERT_EQ("pva", Main.streams[1]->channel_info().provider_type);
 }
 
-TEST(command_handler_tests, stop_all_command_removes_all_streams_correctly) {
+TEST(CommandHandlerTest, stop_all_command_removes_all_streams_correctly) {
   std::string AddJson = R"({
                             "cmd": "add",
                             "streams": [
@@ -85,7 +85,7 @@ TEST(command_handler_tests, stop_all_command_removes_all_streams_correctly) {
   ASSERT_EQ(0u, Main.streams.size());
 }
 
-TEST(command_handler_tests, stop_command_removes_stream_correctly) {
+TEST(CommandHandlerTest, stop_command_removes_stream_correctly) {
   std::string AddJson = R"({
                             "cmd": "add",
                             "streams": [
