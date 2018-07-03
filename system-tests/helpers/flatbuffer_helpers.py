@@ -29,7 +29,6 @@ def check_message_pv_name_and_value_type(log_data, value_type, pv_name):
     :return: none
     """
     assert value_type == log_data.ValueType()
-    print(log_data.SourceName())
     assert pv_name == log_data.SourceName()
 
 

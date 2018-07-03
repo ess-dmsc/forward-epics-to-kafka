@@ -97,6 +97,10 @@ template <>
 struct BuilderType_to_Enum_Value<DoubleBuilder> : public Enum_Value_Base {
   static Value v() { return Value::Double; }
 };
+template <>
+struct BuilderType_to_Enum_Value<StringBuilder> : public Enum_Value_Base {
+  static Value v() { return Value::String; }
+};
 
 template <>
 struct BuilderType_to_Enum_Value<ArrayByteBuilder> : public Enum_Value_Base {
@@ -141,34 +145,21 @@ struct BuilderType_to_Enum_Value<ArrayDoubleBuilder> : public Enum_Value_Base {
 
 template <typename T0> class Make_Scalar {
 public:
-  using T1 = typename std::conditional<
-      std::is_same<T0, epics::pvData::boolean>::value, ByteBuilder,
-      typename std::conditional<
-          std::is_same<T0, int8_t>::value, ByteBuilder,
-          typename std::conditional<
-              std::is_same<T0, int16_t>::value, ShortBuilder,
-              typename std::conditional<
-                  std::is_same<T0, int32_t>::value, IntBuilder,
-                  typename std::conditional<
-                      std::is_same<T0, int64_t>::value, LongBuilder,
-                      typename std::conditional<
-                          std::is_same<T0, uint8_t>::value, UByteBuilder,
-                          typename std::conditional<
-                              std::is_same<T0, uint16_t>::value, UShortBuilder,
-                              typename std::conditional<
-                                  std::is_same<T0, uint32_t>::value,
-                                  UIntBuilder,
-                                  typename std::conditional<
-                                      std::is_same<T0, uint64_t>::value,
-                                      ULongBuilder,
-                                      typename std::conditional<
-                                          std::is_same<T0, float>::value,
-                                          FloatBuilder,
-                                          typename std::conditional<
-                                              std::is_same<T0, double>::value,
-                                              DoubleBuilder, std::nullptr_t>::
-                                              type>::type>::type>::type>::
-                              type>::type>::type>::type>::type>::type>::type;
+  // clang-format off
+  using T1 =
+    typename std::conditional<std::is_same<T0, epics::pvData::boolean>::value, ByteBuilder,
+    typename std::conditional<std::is_same<T0,   int8_t>::value, ByteBuilder,
+    typename std::conditional<std::is_same<T0,  int16_t>::value, ShortBuilder,
+    typename std::conditional<std::is_same<T0,  int32_t>::value, IntBuilder,
+    typename std::conditional<std::is_same<T0,  int64_t>::value, LongBuilder,
+    typename std::conditional<std::is_same<T0,  uint8_t>::value, UByteBuilder,
+    typename std::conditional<std::is_same<T0, uint16_t>::value, UShortBuilder,
+    typename std::conditional<std::is_same<T0, uint32_t>::value, UIntBuilder,
+    typename std::conditional<std::is_same<T0, uint64_t>::value, ULongBuilder,
+    typename std::conditional<std::is_same<T0,    float>::value, FloatBuilder,
+    typename std::conditional<std::is_same<T0,   double>::value, DoubleBuilder,
+    std::nullptr_t>::type>::type>::type>::type>::type>::type>::type>::type>::type>::type>::type;
+  // clang-format on
 
   static Value_t convert(flatbuffers::FlatBufferBuilder *builder,
                          epics::pvData::PVScalar *field_) {
@@ -240,6 +231,22 @@ public:
   }
 };
 
+class MakeScalarString {
+public:
+  static Value_t convert(flatbuffers::FlatBufferBuilder *Builder,
+                         epics::pvData::PVScalar *PVScalarValue) {
+    auto PVScalarString =
+        static_cast<epics::pvData::PVScalarValue<std::string> *>(PVScalarValue);
+    std::string Value = PVScalarString->get();
+    auto FlatbufferedValueString =
+        Builder->CreateString(Value.data(), Value.size());
+    StringBuilder ValueBuilder(*Builder);
+    ValueBuilder.add_value(FlatbufferedValueString);
+    return {BuilderType_to_Enum_Value<StringBuilder>::v(),
+            ValueBuilder.Finish().Union()};
+  }
+};
+
 } // end namespace PVStructureToFlatBufferN
 
 Value_t make_Value_scalar(flatbuffers::FlatBufferBuilder &builder,
@@ -272,6 +279,8 @@ Value_t make_Value_scalar(flatbuffers::FlatBufferBuilder &builder,
   case S::pvDouble:
     return Make_Scalar<double>::convert(&builder, field);
   case S::pvString:
+    return MakeScalarString::convert(&builder, field);
+  default:
     ++statistics.err_not_implemented_yet;
     break;
   }
