@@ -374,7 +374,6 @@ Value_t make_Value(flatbuffers::FlatBufferBuilder &builder,
       return make_Value_scalar(
           builder, static_cast<epics::pvData::PVScalar *>(findex.get()),
           statistics);
-      break;
     }
     break;
   }
@@ -407,31 +406,6 @@ public:
     auto n = builder->CreateString(up.channel);
     auto vF = make_Value(*builder, pvstr, 1, statistics);
 
-    flatbuffers::Offset<void> fwdinfo = 0;
-    if (true) {
-      // Was only interesting for forwarder testing
-      fwdinfo_1_tBuilder bf(*builder);
-      fb->seq = up.seq_fwd;
-      uint64_t seq_data = 0;
-      if (auto x = pvstr->getSubField<epics::pvData::PVScalarValue<uint64_t>>(
-              "seq")) {
-        seq_data = x->get();
-      }
-      uint64_t ts_data = 0;
-      if (auto x = pvstr->getSubField<epics::pvData::PVScalarValue<uint64_t>>(
-              "ts")) {
-        ts_data = x->get();
-      }
-      bf.add_seq_data(seq_data);
-      bf.add_seq_fwd(up.seq_fwd);
-      bf.add_ts_data(ts_data);
-      bf.add_ts_fwd(up.ts_epics_monitor);
-      fwdinfo = bf.Finish().Union();
-#ifdef TRACK_SEQ_DATA
-      seqs.insert(seq_data);
-#endif
-    }
-
     LogDataBuilder b(*builder);
     b.add_source_name(n);
     b.add_value_type(vF.type);
@@ -453,30 +427,7 @@ public:
       ++statistics.err_timestamp_not_available;
     }
 
-    b.add_fwdinfo_type(forwarder_internal::fwdinfo_1_t);
-    b.add_fwdinfo(fwdinfo);
-
     FinishLogDataBuffer(*builder, b.Finish());
-    if (log_level >= 9) {
-      auto b1 = binary_to_hex((char const *)builder->GetBufferPointer(),
-                              builder->GetSize());
-      uint64_t seq_data = 0;
-      flatbuffers::Verifier veri(builder->GetBufferPointer(),
-                                 builder->GetSize());
-      if (!VerifyLogDataBuffer(veri)) {
-        // TODO
-        // Handle this situation more gracefully...
-        throw std::runtime_error("Can not verify the just cretaed buffer");
-      }
-      auto d1 = GetLogData(builder->GetBufferPointer());
-      if (auto fi = d1->fwdinfo()) {
-        if (d1->fwdinfo_type() == forwarder_internal::fwdinfo_1_t) {
-          seq_data = static_cast<fwdinfo_1_t const *>(fi)->seq_data();
-        }
-      }
-      LOG(9, "seq data/fwd: {} / {}  schema: [{}]\n{:.{}}", seq_data,
-          up.seq_fwd, LogDataIdentifier(), b1.data(), b1.size());
-    }
     return fb;
   }
 

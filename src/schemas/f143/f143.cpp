@@ -182,20 +182,8 @@ field_PVScalar_array(flatbuffers::FlatBufferBuilder &builder,
 #undef M
 
   if (stype == epics::pvData::ScalarType::pvString) {
-    auto p1 =
-        reinterpret_cast<epics::pvData::PVValueArray<std::string> const *>(
-            field);
     FLOG(level, "WARNING serializing string arrays is disabled...");
     return {Value::NONE, 0};
-    auto view = p1->view();
-    vector<flatbuffers::Offset<flatbuffers::String>> v1;
-    for (auto &s0 : view) {
-      v1.push_back(builder.CreateString(s0));
-    }
-    auto v2 = builder.CreateVector(v1);
-    ArrayStringBuilder b(builder);
-    b.add_value(v2);
-    return {Value::ArrayString, b.Finish().Union()};
   }
   if (stype == epics::pvData::ScalarType::pvBoolean) {
     FLOG(level, "WARNING array of booleans are not handled so far");
@@ -267,27 +255,6 @@ public:
     auto fb = make_unique<FlatBufs::FlatbufferMessage>();
     auto builder = fb->builder.get();
 
-    flatbuffers::Offset<void> fwdinfo = 0;
-    if (do_fwdinfo) {
-      // Was only interesting for forwarder testing
-      fwdinfo_1_tBuilder bf(*builder);
-      uint64_t seq_data = 0;
-      if (auto x = pvstr->getSubField<epics::pvData::PVScalarValue<uint64_t>>(
-              "seq")) {
-        seq_data = x->get();
-      }
-      uint64_t ts_data = 0;
-      if (auto x = pvstr->getSubField<epics::pvData::PVScalarValue<uint64_t>>(
-              "ts")) {
-        ts_data = x->get();
-      }
-      bf.add_seq_data(seq_data);
-      bf.add_seq_fwd(up.seq_fwd);
-      bf.add_ts_data(ts_data);
-      bf.add_ts_fwd(up.ts_epics_monitor);
-      fwdinfo = bf.Finish().Union();
-    }
-
     auto n = builder->CreateString(up.channel);
     auto vF = fbg::Field(*builder, pvstr, llevel);
     f143_structure::StructureBuilder b(*builder);
@@ -307,24 +274,17 @@ public:
                 ->get();
       b.add_timestamp(ts);
     }
-    b.add_fwdinfo_type(forwarder_internal::fwdinfo_1_t);
-    b.add_fwdinfo(fwdinfo);
     FinishStructureBuffer(*builder, b.Finish());
     return fb;
   }
   void
   config(std::map<std::string, int64_t> const &config_ints,
          std::map<std::string, std::string> const &config_strings) override {
-    auto it = config_ints.find("fwdinfo");
-    if (it != config_ints.end()) {
-      do_fwdinfo = it->second != 0;
-    }
-    it = config_ints.find("llevel");
+    auto it = config_ints.find("llevel");
     if (it != config_ints.end()) {
       llevel = it->second;
     }
   }
-  bool do_fwdinfo = false;
   int llevel = 1000;
 };
 
