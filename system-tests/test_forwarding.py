@@ -8,7 +8,7 @@ from helpers.epics_helpers import change_pv_value
 
 
 CONFIG_TOPIC = "TEST_forwarderConfig"
-
+PREFIX = "SIMPLE:"
 
 def test_config_file_channel_created_correctly(docker_compose):
     """
@@ -17,8 +17,9 @@ def test_config_file_channel_created_correctly(docker_compose):
     :param docker_compose: Test fixture
     :return: none
     """
+
     # Change the PV value, so something is forwarded
-    change_pv_value("SIM:Phs", 10)
+    change_pv_value(PREFIX+"DOUBLE", 10)
     # Wait for PV to be updated
     sleep(5)
 
@@ -28,15 +29,15 @@ def test_config_file_channel_created_correctly(docker_compose):
     # Check the initial value is forwarded
     first_msg = poll_for_valid_message(cons).value()
     log_data_first = LogData.LogData.GetRootAsLogData(first_msg, 0)
-    check_message_pv_name_and_value_type(log_data_first, Value.Value.Double, b'SIM:Phs')
+    check_message_pv_name_and_value_type(log_data_first, Value.Value.Double, b'SIMPLE:DOUBLE')
     check_double_value_and_equality(log_data_first, 0)
 
     # Check the new value is forwarded
     second_msg = poll_for_valid_message(cons).value()
     log_data_second = LogData.LogData.GetRootAsLogData(second_msg, 0)
-    check_message_pv_name_and_value_type(log_data_second, Value.Value.Double, b'SIM:Phs')
+    check_message_pv_name_and_value_type(log_data_second, Value.Value.Double, b'SIMPLE:DOUBLE')
     check_double_value_and_equality(log_data_second, 10)
-
+    change_pv_value(PREFIX+"DOUBLE", 0)
     cons.close()
 
 
@@ -48,7 +49,7 @@ def test_forwarder_sends_pv_updates_single_pv_double(docker_compose):
     :return: none
     """
     data_topic = "TEST_forwarderData_double_pv_update"
-    pvs = ["SIM:Spd"]
+    pvs = [PREFIX+"DOUBLE"]
 
     prod = ProducerWrapper("localhost:9092", CONFIG_TOPIC, data_topic)
     prod.add_config(pvs)
@@ -58,7 +59,7 @@ def test_forwarder_sends_pv_updates_single_pv_double(docker_compose):
     cons = create_consumer()
 
     # Update value
-    change_pv_value("SIM:Spd", 5)
+    change_pv_value(PREFIX+"DOUBLE", 5)
     # Wait for PV to be updated
     sleep(5)
     cons.subscribe([data_topic])
