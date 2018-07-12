@@ -6,6 +6,9 @@ find_package(EPICSV4)
 find_package(Fmt REQUIRED)
 find_package(RdKafka REQUIRED)
 find_package(FlatBuffers REQUIRED)
+find_package(CLI11 REQUIRED)
+find_package(JSONForModernCPP REQUIRED)
+find_package(ConcurrentQueue REQUIRED)
 find_package(StreamingDataTypes COMPONENTS ce9a4745431e54bc45b0c927857a866fa77b84ec)
 find_package(CURL)
 find_package(GraylogLogger)
@@ -14,6 +17,9 @@ find_package(GitCommitExtract)
 
 set(path_include_common
 ${FMT_INCLUDE_DIR}
+${CONCURRENTQUEUE_INCLUDE_DIR}
+${JSONFORMODERNCPP_INCLUDE_DIR}
+${CLI11_INCLUDE_DIR}
 ${RDKAFKA_INCLUDE_DIR}
 ${FLATBUFFERS_INCLUDE_DIR}
 ${CURL_INCLUDE_DIRS}
@@ -33,6 +39,7 @@ ${path_library_epics_pvAccess}
 ${path_library_epics_NT}
 ${RDKAFKA_LIBRARIES}
 ${CURL_LIBRARIES}
+${FETK_EXTRA_LIBRARIES}
 )
 
 if (UNIX)
@@ -148,9 +155,10 @@ endif(WIN32)
 
 target_compile_definitions(${tgt} PRIVATE ${compile_defs_common})
 target_include_directories(${tgt} PRIVATE ${path_include_common})
+target_include_directories(${tgt} SYSTEM PRIVATE ${path_include_common_suppressed_warnings})
 
 if (WIN32)
-    target_link_libraries(${tgt} Ws2_32.lib)
+    target_link_libraries(${tgt} Ws2_32.lib dbghelp.lib)
 endif(WIN32)
 
 if (${GRAYLOGLOGGER_FOUND} AND ${USE_GRAYLOG_LOGGER})
