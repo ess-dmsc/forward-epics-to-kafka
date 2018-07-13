@@ -5,7 +5,7 @@ from helpers.kafka_helpers import create_consumer, poll_for_valid_message
 from helpers.flatbuffer_helpers import check_double_value_and_equality,\
     check_message_pv_name_and_value_type, create_flatbuffers_object
 from helpers.epics_helpers import change_pv_value
-from PVs import *
+from PVs import PVDOUBLE, PVSTR
 
 CONFIG_TOPIC = "TEST_forwarderConfig"
 
