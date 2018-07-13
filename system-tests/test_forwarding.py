@@ -5,15 +5,9 @@ from helpers.kafka_helpers import create_consumer, poll_for_valid_message
 from helpers.flatbuffer_helpers import check_double_value_and_equality,\
     check_message_pv_name_and_value_type, create_flatbuffers_object
 from helpers.epics_helpers import change_pv_value
-
+from PVs import *
 
 CONFIG_TOPIC = "TEST_forwarderConfig"
-
-PVDOUBLE = "SIMPLE:DOUBLE"
-PVSTR = "SIMPLE:STR"
-PVENUM = "SIMPLE:ENUM"
-PVLONG = "SIMPLE:LONG"
-PVBOOL = "SIMPLE:BOOL"
 
 
 def test_config_file_channel_created_correctly(docker_compose):
@@ -24,26 +18,24 @@ def test_config_file_channel_created_correctly(docker_compose):
     :return: none
     """
 
-    pv_name = PVDOUBLE
-
     cons = create_consumer()
     cons.subscribe(['TEST_forwarderData_pv_from_config'])
     # Change the PV value, so something is forwarded
-    change_pv_value(pv_name, 10)
+    change_pv_value(PVDOUBLE, 10)
     # Wait for PV to be updated
     sleep(5)
     # Check the initial value is forwarded
     first_msg = poll_for_valid_message(cons).value()
     log_data_first = LogData.LogData.GetRootAsLogData(first_msg, 0)
-    check_message_pv_name_and_value_type(log_data_first, Value.Value.Double, pv_name)
+    check_message_pv_name_and_value_type(log_data_first, Value.Value.Double, PVDOUBLE)
     check_double_value_and_equality(log_data_first, 0)
 
     # Check the new value is forwarded
     second_msg = poll_for_valid_message(cons).value()
     log_data_second = LogData.LogData.GetRootAsLogData(second_msg, 0)
-    check_message_pv_name_and_value_type(log_data_second, Value.Value.Double, pv_name)
+    check_message_pv_name_and_value_type(log_data_second, Value.Value.Double, PVDOUBLE)
     check_double_value_and_equality(log_data_second, 10)
-    change_pv_value(pv_name, 0)
+    change_pv_value(PVDOUBLE, 0)
     cons.close()
 
 
@@ -55,9 +47,8 @@ def test_forwarder_sends_pv_updates_single_pv_double(docker_compose):
     :return: none
     """
 
-    pv_name = PVDOUBLE
     data_topic = "TEST_forwarderData_double_pv_update"
-    pvs = [pv_name]
+    pvs = [PVDOUBLE]
 
     prod = ProducerWrapper("localhost:9092", CONFIG_TOPIC, data_topic)
     prod.add_config(pvs)
@@ -67,19 +58,19 @@ def test_forwarder_sends_pv_updates_single_pv_double(docker_compose):
     cons = create_consumer()
 
     # Update value
-    change_pv_value(pv_name, 5)
+    change_pv_value(PVDOUBLE, 5)
     # Wait for PV to be updated
     sleep(5)
     cons.subscribe([data_topic])
 
     first_msg = poll_for_valid_message(cons).value()
     log_data_first = LogData.LogData.GetRootAsLogData(first_msg, 0)
-    check_message_pv_name_and_value_type(log_data_first, Value.Value.Double, pv_name)
+    check_message_pv_name_and_value_type(log_data_first, Value.Value.Double, PVDOUBLE)
     check_double_value_and_equality(log_data_first, 0)
 
     second_msg = poll_for_valid_message(cons).value()
     log_data_second = LogData.LogData.GetRootAsLogData(second_msg, 0)
-    check_message_pv_name_and_value_type(log_data_second, Value.Value.Double, pv_name)
+    check_message_pv_name_and_value_type(log_data_second, Value.Value.Double, PVDOUBLE)
     check_double_value_and_equality(log_data_second, 5)
     cons.close()
 
@@ -92,9 +83,8 @@ def test_forwarder_sends_pv_updates_single_pv_string(docker_compose):
     :return: none
     """
 
-    pv_name = PVSTR
     data_topic = "TEST_forwarderData_string_pv_update"
-    pvs = [pv_name]
+    pvs = [PVSTR]
 
     prod = ProducerWrapper("localhost:9092", CONFIG_TOPIC, data_topic)
     prod.add_config(pvs)
@@ -104,7 +94,7 @@ def test_forwarder_sends_pv_updates_single_pv_string(docker_compose):
     cons = create_consumer()
     # Update value
     stop_command = b'stop'
-    change_pv_value(pv_name, stop_command)
+    change_pv_value(PVSTR, stop_command)
 
     # Wait for PV to be updated
     sleep(5)
@@ -116,7 +106,7 @@ def test_forwarder_sends_pv_updates_single_pv_string(docker_compose):
     data_msg = poll_for_valid_message(cons).value()
     log_data = LogData.LogData.GetRootAsLogData(data_msg, 0)
 
-    check_message_pv_name_and_value_type(log_data, Value.Value.String, pv_name)
+    check_message_pv_name_and_value_type(log_data, Value.Value.String, PVSTR)
 
     union_string = String.String()
     union_string.Init(log_data.Value().Bytes, log_data.Value().Pos)
