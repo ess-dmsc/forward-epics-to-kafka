@@ -12,5 +12,5 @@ def test_forwarder_sends_idle_pv_updates(docker_compose_idle_updates):
     for i in range(3):
         msg = poll_for_valid_message(consumer).value()
         log_data_first = LogData.LogData.GetRootAsLogData(msg, 0)
-        check_message_pv_name_and_value_type(log_data_first, Value.Value.Double, b'SIM:ParkAng')
+        check_message_pv_name_and_value_type(log_data_first, Value.Value.Double, b'SIMPLE:DOUBLE')
         check_double_value_and_equality(log_data_first, 0)
