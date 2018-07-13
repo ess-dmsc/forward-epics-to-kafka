@@ -7,4 +7,4 @@
 
 * Install the requirements using pip: `pip install -r system-tests/requirements.txt`
 
-* Run `pytest system-tests/test_example.py`
+* Run `pytest -s system-tests/`
