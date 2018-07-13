@@ -8,8 +8,12 @@ from helpers.epics_helpers import change_pv_value
 
 
 CONFIG_TOPIC = "TEST_forwarderConfig"
-PREFIX = "SIMPLE:"
-ENCODING = 'utf-8'
+
+PVDOUBLE = "SIMPLE:DOUBLE"
+PVSTR = "SIMPLE:STR"
+PVENUM = "SIMPLE:ENUM"
+PVLONG = "SIMPLE:LONG"
+PVBOOL = "SIMPLE:BOOL"
 
 
 def test_config_file_channel_created_correctly(docker_compose):
@@ -20,7 +24,7 @@ def test_config_file_channel_created_correctly(docker_compose):
     :return: none
     """
 
-    pv_name = "{}DOUBLE".format(PREFIX)
+    pv_name = PVDOUBLE
 
     cons = create_consumer()
     cons.subscribe(['TEST_forwarderData_pv_from_config'])
@@ -31,13 +35,13 @@ def test_config_file_channel_created_correctly(docker_compose):
     # Check the initial value is forwarded
     first_msg = poll_for_valid_message(cons).value()
     log_data_first = LogData.LogData.GetRootAsLogData(first_msg, 0)
-    check_message_pv_name_and_value_type(log_data_first, Value.Value.Double, bytes(pv_name, encoding=ENCODING))
+    check_message_pv_name_and_value_type(log_data_first, Value.Value.Double, pv_name)
     check_double_value_and_equality(log_data_first, 0)
 
     # Check the new value is forwarded
     second_msg = poll_for_valid_message(cons).value()
     log_data_second = LogData.LogData.GetRootAsLogData(second_msg, 0)
-    check_message_pv_name_and_value_type(log_data_second, Value.Value.Double, bytes(pv_name, encoding=ENCODING))
+    check_message_pv_name_and_value_type(log_data_second, Value.Value.Double, pv_name)
     check_double_value_and_equality(log_data_second, 10)
     change_pv_value(pv_name, 0)
     cons.close()
@@ -51,7 +55,7 @@ def test_forwarder_sends_pv_updates_single_pv_double(docker_compose):
     :return: none
     """
 
-    pv_name = "{}DOUBLE".format(PREFIX)
+    pv_name = PVDOUBLE
     data_topic = "TEST_forwarderData_double_pv_update"
     pvs = [pv_name]
 
@@ -70,12 +74,12 @@ def test_forwarder_sends_pv_updates_single_pv_double(docker_compose):
 
     first_msg = poll_for_valid_message(cons).value()
     log_data_first = LogData.LogData.GetRootAsLogData(first_msg, 0)
-    check_message_pv_name_and_value_type(log_data_first, Value.Value.Double, bytes(pv_name, encoding=ENCODING))
+    check_message_pv_name_and_value_type(log_data_first, Value.Value.Double, pv_name)
     check_double_value_and_equality(log_data_first, 0)
 
     second_msg = poll_for_valid_message(cons).value()
     log_data_second = LogData.LogData.GetRootAsLogData(second_msg, 0)
-    check_message_pv_name_and_value_type(log_data_second, Value.Value.Double, bytes(pv_name, encoding=ENCODING))
+    check_message_pv_name_and_value_type(log_data_second, Value.Value.Double, pv_name)
     check_double_value_and_equality(log_data_second, 5)
     cons.close()
 
@@ -88,7 +92,7 @@ def test_forwarder_sends_pv_updates_single_pv_string(docker_compose):
     :return: none
     """
 
-    pv_name = "{}STR".format(PREFIX)
+    pv_name = PVSTR
     data_topic = "TEST_forwarderData_string_pv_update"
     pvs = [pv_name]
 
@@ -112,7 +116,7 @@ def test_forwarder_sends_pv_updates_single_pv_string(docker_compose):
     data_msg = poll_for_valid_message(cons).value()
     log_data = LogData.LogData.GetRootAsLogData(data_msg, 0)
 
-    check_message_pv_name_and_value_type(log_data, Value.Value.String, bytes(pv_name, encoding='utf-8'))
+    check_message_pv_name_and_value_type(log_data, Value.Value.String, pv_name)
 
     union_string = String.String()
     union_string.Init(log_data.Value().Bytes, log_data.Value().Pos)
