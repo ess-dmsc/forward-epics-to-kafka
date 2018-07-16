@@ -24,6 +24,7 @@ def check_int_value_and_equality(log_data, expected_value):
     Initialises the log data object from bytes and checks the union table
     and converts to Python int then compares against the expected int value.
     Note: Long PV types will use this as they fit in integer types in the forwarder.
+    Note: Enum PV types will use this
 
     :param log_data: Log data object from the received stream buffer
     :param expected_value: Double value to compare against
