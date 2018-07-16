@@ -1,11 +1,11 @@
 ﻿from helpers.producerwrapper import ProducerWrapper
-from helpers.f142_logdata import LogData, Value, Int, Double, String
+from helpers.f142_logdata import LogData, Value, Int, Double, String, Long
 from time import sleep
 from helpers.kafka_helpers import create_consumer, poll_for_valid_message
 from helpers.flatbuffer_helpers import check_double_value_and_equality,\
-    check_message_pv_name_and_value_type, create_flatbuffers_object
+    check_message_pv_name_and_value_type, create_flatbuffers_object, check_int_value_and_equality
 from helpers.epics_helpers import change_pv_value
-from PVs import PVDOUBLE, PVSTR
+from PVs import PVDOUBLE, PVSTR, PVLONG
 
 CONFIG_TOPIC = "TEST_forwarderConfig"
 
@@ -112,4 +112,41 @@ def test_forwarder_sends_pv_updates_single_pv_string(docker_compose):
     union_string.Init(log_data.Value().Bytes, log_data.Value().Pos)
     assert union_string.Value() == stop_command
 
+    cons.close()
+
+
+def test_forwarder_sends_pv_updates_single_pv_long(docker_compose):
+    """
+    Test the forwarder pushes new PV value when the value is updated.
+
+    NOTE: longs are converted to ints in the forwarder as they will fit in a 32 bit integer
+    :param docker_compose: Test fixture
+    :return: none
+    """
+
+    data_topic = "TEST_forwarderData_long_pv_update"
+    pvs = [PVLONG]
+
+    prod = ProducerWrapper("localhost:9092", CONFIG_TOPIC, data_topic)
+    prod.add_config(pvs)
+    # Wait for config to be pushed
+    sleep(2)
+
+    cons = create_consumer()
+
+    # Update value
+    change_pv_value(PVLONG, 5)
+    # Wait for PV to be updated
+    sleep(5)
+    cons.subscribe([data_topic])
+
+    first_msg = poll_for_valid_message(cons).value()
+    log_data_first = LogData.LogData.GetRootAsLogData(first_msg, 0)
+    check_message_pv_name_and_value_type(log_data_first, Value.Value.Int, PVLONG)
+    check_int_value_and_equality(log_data_first, 0)
+
+    second_msg = poll_for_valid_message(cons).value()
+    log_data_second = LogData.LogData.GetRootAsLogData(second_msg, 0)
+    check_message_pv_name_and_value_type(log_data_second, Value.Value.Int, PVLONG)
+    check_int_value_and_equality(log_data_second, 5)
     cons.close()

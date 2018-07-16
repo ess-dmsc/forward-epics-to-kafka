@@ -1,7 +1,7 @@
 import flatbuffers
 import time
 import math
-from .f142_logdata import LogData, Value, Int, Double
+from .f142_logdata import LogData, Value, Int, Double, Long
 
 
 def check_double_value_and_equality(log_data, expected_value):
@@ -17,6 +17,22 @@ def check_double_value_and_equality(log_data, expected_value):
     union_double.Init(log_data.Value().Bytes, log_data.Value().Pos)
     union_value = union_double.Value()
     assert math.isclose(expected_value, union_value)
+
+
+def check_int_value_and_equality(log_data, expected_value):
+    """
+    Initialises the log data object from bytes and checks the union table
+    and converts to Python int then compares against the expected int value.
+    Note: Long PV types will use this as they fit in integer types in the forwarder.
+
+    :param log_data: Log data object from the received stream buffer
+    :param expected_value: Double value to compare against
+    :return: none
+    """
+    union_int = Int.Int()
+    union_int.Init(log_data.Value().Bytes, log_data.Value().Pos)
+    union_value = union_int.Value()
+    assert expected_value == union_value
 
 
 def check_message_pv_name_and_value_type(log_data, value_type, pv_name):
