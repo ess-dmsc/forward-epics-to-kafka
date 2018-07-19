@@ -76,7 +76,7 @@ void Stream::error_in_epics() { epics_client->errorInEpics(); }
 
 int32_t Stream::fill_conversion_work(
     moodycamel::ConcurrentQueue<std::unique_ptr<ConversionWorkPacket>> &q2,
-    uint32_t max, std::function<void(uint64_t)> on_seq_data) {
+    uint32_t max) {
   uint32_t n0 = 0;
   uint32_t n1 = 0;
   auto BufferSize = emit_queue->size_approx();
@@ -95,7 +95,6 @@ int32_t Stream::fill_conversion_work(
       continue;
     }
     size_t ConversionPathID = 0;
-    on_seq_data(EpicsUpdate->seq_data);
     for (auto &ConversionPath : conversion_paths) {
       auto ConversionPacket = ::make_unique<ConversionWorkPacket>();
       cwp_last[ConversionPathID] = ConversionPacket.get();

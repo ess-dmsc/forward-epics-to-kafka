@@ -53,9 +53,7 @@ public:
 private:
   std::string name;
   std::string channel_name;
-  uint64_t seq = 0;
   EpicsClientInterface *epics_client = nullptr;
-  RangeSet<uint64_t> seq_data_received;
 };
 }
 }
