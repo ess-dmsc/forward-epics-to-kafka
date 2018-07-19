@@ -7,7 +7,6 @@ services:
     depends_on:
       - zookeeper
     hostname: kafka
-    restart: unless-stopped
     ports:
       - "9092:9092"
     environment:
@@ -21,16 +20,15 @@ services:
 
   zookeeper:
     image: zookeeper:3.4
-    restart: unless-stopped
 
   ioc:
-    image: dmscid/lewis:latest
+    image: screamingudder/softioc:latest
+    stdin_open: true
+    tty: true
     network_mode: "host"
     depends_on:
       - zookeeper
       - kafka
-    restart: unless-stopped
-    command: "chopper -p \"epics: {prefix: 'SIM:'}\""
 
   forwarder:
     build: ../
