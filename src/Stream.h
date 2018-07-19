@@ -59,7 +59,7 @@ public:
                     URI uri_kafka_output);
   int32_t fill_conversion_work(
       moodycamel::ConcurrentQueue<std::unique_ptr<ConversionWorkPacket>> &queue,
-      uint32_t max, std::function<void(uint64_t)> on_seq_data);
+      uint32_t max);
   int stop();
   void error_in_epics();
   int status();

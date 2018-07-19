@@ -22,8 +22,6 @@ FwdMonitorRequester::FwdMonitorRequester(
 
 FwdMonitorRequester::~FwdMonitorRequester() {
   CLOG(6, 6, "~FwdMonitorRequester");
-  CLOG(6, 6, "~FwdMonitorRequester  seq_data_received: {}",
-       seq_data_received.to_string());
 }
 
 std::string FwdMonitorRequester::getRequesterName() { return name; }
@@ -62,7 +60,6 @@ void FwdMonitorRequester::monitorEvent(
       break;
     }
 
-    uint64_t seq_data = 0;
     static_assert(sizeof(uint64_t) == sizeof(std::chrono::nanoseconds::rep),
                   "Types not compatible");
     uint64_t ts = std::chrono::duration_cast<std::chrono::nanoseconds>(
@@ -80,17 +77,13 @@ void FwdMonitorRequester::monitorEvent(
         new ::epics::pvData::PVStructure(ele->pvStructurePtr->getStructure()));
     Update->epics_pvstr->copyUnchecked(*ele->pvStructurePtr);
     Monitor->release(ele);
-    Update->seq_fwd = seq;
-    Update->seq_data = seq_data;
     Update->ts_epics_monitor = ts;
     Updates.push_back(Update);
-    seq += 1;
   }
   for (auto &up : Updates) {
-    auto seq_data = up->seq_data;
     auto x = epics_client->emit(up);
     if (x != 0) {
-      LOG(5, "error can not push update {}", seq_data);
+      LOG(5, "error can not push update");
     }
   }
 }

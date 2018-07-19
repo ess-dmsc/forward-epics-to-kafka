@@ -13,4 +13,4 @@ def test_forwarder_sends_fake_pv_updates(docker_compose_fake_epics):
     msg = poll_for_valid_message(consumer).value()
     log_data_first = LogData.LogData.GetRootAsLogData(msg, 0)
     # We should see PV updates in Kafka despite there being no IOC running
-    check_message_pv_name_and_value_type(log_data_first, Value.Value.Double, b'FakePV')
+    check_message_pv_name_and_value_type(log_data_first, Value.Value.Double, "FakePV")
