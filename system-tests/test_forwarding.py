@@ -5,7 +5,7 @@ from helpers.kafka_helpers import create_consumer, poll_for_valid_message
 from helpers.flatbuffer_helpers import check_double_value_and_equality,\
     check_message_pv_name_and_value_type, create_flatbuffers_object, check_int_value_and_equality
 from helpers.epics_helpers import change_pv_value
-from PVs import PVDOUBLE, PVSTR, PVLONG, PVENUM
+from PVs import PVDOUBLE, PVSTR, PVLONG, PVENUM, PVUSHORT
 
 CONFIG_TOPIC = "TEST_forwarderConfig"
 
@@ -186,3 +186,47 @@ def test_forwarder_sends_pv_updates_single_pv_enum(docker_compose):
     log_data_second = LogData.LogData.GetRootAsLogData(second_msg, 0)
     check_message_pv_name_and_value_type(log_data_second, Value.Value.Int, PVENUM)
     check_int_value_and_equality(log_data_second, 1)
+
+
+def test_forwarder_sends_pv_updates_single_pv_ushort(docker_compose):
+    data_topic = "TEST_forwarderData_ushort_pv_update"
+    pvs = [PVUSHORT]
+
+    prod = ProducerWrapper("localhost:9092", CONFIG_TOPIC, data_topic)
+    prod.add_config(pvs)
+    # Wait for config to be pushed
+    sleep(2)
+
+    cons = create_consumer()
+
+    # Update value
+    change_pv_value(PVUSHORT, 1)
+    # Wait for PV to be updated
+    sleep(5)
+    cons.subscribe([data_topic])
+
+    first_msg = poll_for_valid_message(cons).value()
+    log_data_first = LogData.LogData.GetRootAsLogData(first_msg, 0)
+    check_message_pv_name_and_value_type(log_data_first, Value.Value.UShort, PVUSHORT)
+
+
+def test_forwarder_updates_multiple_pv_same_type(docker_compose):
+    data_topic = "TEST_forwarderData_multiple_pv_same"
+
+    pvs = [PVDOUBLE, PVDOUBLE2]
+
+
+def test_forwarder_updates_multiple_pv_different_type(docker_compose):
+    data_topic = "TEST_forwarderData_multiple_pv_different"
+
+    pvs = [PVSTR, PVLONG]
+
+
+def test_forwarder_updates_pv_when_config_changed(docker_compose):
+    data_topic = "TEST_forwarderData_change_config"
+    pvs = [PVSTR, PVLONG]
+    prod = ProducerWrapper("localhost:9092", CONFIG_TOPIC, data_topic)
+    prod.add_config(pvs)
+    prod.add_config([PVDOUBLE])
+
+
