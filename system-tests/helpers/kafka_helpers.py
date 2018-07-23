@@ -15,7 +15,7 @@ def poll_for_valid_message(consumer):
 
 
 def create_consumer():
-    consumer_config = {'bootstrap.servers': 'localhost:9092', 'default.topic.config': {'auto.offset.reset': 'smallest'},
+    consumer_config = {'bootstrap.servers': 'localhost:9092', 'default.topic.config': {'auto.offset.reset': 'earliest'},
                        'group.id': uuid.uuid4()}
     cons = Consumer(**consumer_config)
     return cons

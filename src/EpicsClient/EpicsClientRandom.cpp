@@ -17,8 +17,6 @@ void EpicsClientRandom::generateFakePVUpdate() {
       createFakePVStructure(UniformDistribution(RandomEngine)));
   FakePVUpdate->channel = ChannelInformation.channel_name;
   FakePVUpdate->ts_epics_monitor = getCurrentTimestamp();
-  FakePVUpdate->seq_data = 0;
-  FakePVUpdate->seq_fwd = 0;
 
   emit(std::move(FakePVUpdate));
 }

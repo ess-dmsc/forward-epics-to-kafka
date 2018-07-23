@@ -69,3 +69,4 @@ if (RUN_DOXYGEN)
 configure_file(Doxygen.conf dg.conf)
 add_custom_target(docs COMMAND doxygen dg.conf DEPENDS forward-epics-to-kafka)
 endif()
+

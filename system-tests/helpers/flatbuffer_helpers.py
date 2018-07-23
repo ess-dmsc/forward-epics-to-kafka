@@ -29,7 +29,7 @@ def check_message_pv_name_and_value_type(log_data, value_type, pv_name):
     :return: none
     """
     assert value_type == log_data.ValueType()
-    assert pv_name == log_data.SourceName()
+    assert bytes(pv_name, encoding='utf-8') == log_data.SourceName()
 
 
 def create_flatbuffers_object(file_identifier):
