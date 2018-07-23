@@ -40,18 +40,21 @@ set(FETK_EXTRA_LIBRARIES "" CACHE STRING "Extra Libraries")
 set(FETK_BUILD_TYPE "SHARED" CACHE STRING "Build Type")
 
 if (${FETK_BUILD_TYPE} STREQUAL "STATIC")
-  foreach(flag_var
-        CMAKE_C_FLAGS CMAKE_C_FLAGS_DEBUG CMAKE_C_FLAGS_RELEASE
-        CMAKE_C_FLAGS_MINSIZEREL CMAKE_C_FLAGS_RELWITHDEBINFO
-        CMAKE_CXX_FLAGS CMAKE_CXX_FLAGS_DEBUG CMAKE_CXX_FLAGS_RELEASE
-        CMAKE_CXX_FLAGS_MINSIZEREL CMAKE_CXX_FLAGS_RELWITHDEBINFO)
-    if(${flag_var} MATCHES "/MD")
-      string(REGEX REPLACE "/MD" "/MT" ${flag_var} "${${flag_var}}")
-    endif()
-  endforeach()
-  add_definitions(-DLIBRDKAFKA_STATICLIB -DEPICS_DLL_NO)
+    if(WIN32)
+          foreach(flag_var
+                CMAKE_C_FLAGS CMAKE_C_FLAGS_DEBUG CMAKE_C_FLAGS_RELEASE
+                CMAKE_C_FLAGS_MINSIZEREL CMAKE_C_FLAGS_RELWITHDEBINFO
+                CMAKE_CXX_FLAGS CMAKE_CXX_FLAGS_DEBUG CMAKE_CXX_FLAGS_RELEASE
+                CMAKE_CXX_FLAGS_MINSIZEREL CMAKE_CXX_FLAGS_RELWITHDEBINFO)
+            if(${flag_var} MATCHES "/MD")
+              string(REGEX REPLACE "/MD" "/MT" ${flag_var} "${${flag_var}}")
+            endif()
+          endforeach()
+          add_definitions(-DLIBRDKAFKA_STATICLIB -DEPICS_DLL_NO)
+    elseif(UNIX)
+        MESSAGE(FATAL_ERROR "Static builds are not yet supported on UNIX-based systems.")
+    endif(WIN32)
 endif()
-
 
 # Yes, there exists also FindGTest.
 # Yes, we do want to use this one instead:
