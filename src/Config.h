@@ -16,7 +16,7 @@ namespace Config {
 
 using std::string;
 
-/// Interface to react on configuration messages
+/// Interface to react on configuration messages.
 class Callback {
 public:
   virtual void operator()(string const &msg) = 0;
