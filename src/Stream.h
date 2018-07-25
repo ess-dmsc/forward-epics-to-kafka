@@ -25,9 +25,7 @@ struct ChannelInfo {
   std::string channel_name;
 };
 
-/**
-A combination of a converter and a kafka output destination.
-*/
+/// A combination of a converter and a kafka output destination.
 class ConversionPath {
 public:
   ConversionPath(ConversionPath &&x);
@@ -42,9 +40,7 @@ private:
   std::unique_ptr<KafkaOutput> kafka_output;
 };
 
-/**
-Represents a stream from an EPICS PV through a Converter into a KafkaOutput.
-*/
+/// Represents a stream from an EPICS PV through a Converter into a KafkaOutput.
 class Stream {
 public:
   explicit Stream(
@@ -79,4 +75,4 @@ private:
       emit_queue;
   RangeSet<uint64_t> seq_data_emitted;
 };
-}
+} // namespace Forwarder

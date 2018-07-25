@@ -6,9 +6,7 @@
 
 namespace Forwarder {
 
-/**
-Represents the output sink used by Stream.
-*/
+/// Represents the output sink used by Stream.
 class KafkaOutput {
 public:
   KafkaOutput(KafkaOutput &&pt);
@@ -18,4 +16,4 @@ public:
   std::string topic_name();
   KafkaW::Producer::Topic pt;
 };
-}
+} // namespace Forwarder

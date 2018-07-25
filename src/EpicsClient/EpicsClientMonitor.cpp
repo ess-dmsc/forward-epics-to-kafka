@@ -17,8 +17,8 @@
 namespace Forwarder {
 namespace EpicsClient {
 
-using epics::pvData::PVStructure;
 using epics::pvAccess::Channel;
+using epics::pvData::PVStructure;
 
 using urlock = std::unique_lock<std::recursive_mutex>;
 
@@ -218,14 +218,11 @@ void ChannelRequester::message(std::string const &Message,
       Message.c_str(), getMessageTypeName(MessageType).c_str());
 }
 
-/*
-Seems that channel creation is actually a synchronous operation
-and that this requester callback is called from the same stack
-from which the channel creation was initiated.
-*/
-
 void ChannelRequester::channelCreated(epics::pvData::Status const &Status,
                                       Channel::shared_pointer const &Channel) {
+  // Seems that channel creation is actually a synchronous operation
+  // and that this requester callback is called from the same stack
+  // from which the channel creation was initiated.
   CLOG(7, 7, "ChannelRequester::channelCreated:  (int)status.isOK(): {}",
        (int)Status.isOK());
   if (!Status.isOK() or !Status.isSuccess()) {
@@ -277,5 +274,5 @@ void ChannelRequester::channelStateChange(
     EpicsClientImpl->error_channel_requester();
   }
 }
-}
-}
+} // namespace EpicsClient
+} // namespace Forwarder
