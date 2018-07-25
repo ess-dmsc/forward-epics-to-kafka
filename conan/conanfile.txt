@@ -4,7 +4,7 @@ fmt/3.0.2-dm1@ess-dmsc/stable
 FlatBuffers/1.9.0@ess-dmsc/stable
 librdkafka/0.11.4@ess-dmsc/stable
 graylog-logger/1.0.5-dm1@ess-dmsc/stable
-epics/3.16.1-4.6.0-dm4@ess-dmsc/stable
+epics/3.16.1-4.6.0-dm6@ess-dmsc/stable
 streaming-data-types/d429d55@ess-dmsc/stable
 cli11/1.5.3@bincrafters/stable
 jsonformoderncpp/3.1.0@vthiery/stable
