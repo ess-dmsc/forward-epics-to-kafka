@@ -1,10 +1,8 @@
 #pragma once
 
-/**
-\file
-Manage the running Kafka producer instances.
-Simple load balance over the available producers.
-*/
+/// \file
+/// Manage the running Kafka producer instances.
+/// Simple load balance over the available producers.
 
 #include "uri.h"
 #include <atomic>
@@ -39,4 +37,4 @@ private:
   std::mutex mx_producers_by_host;
   std::map<std::string, std::shared_ptr<KafkaW::Producer>> producers_by_host;
 };
-}
+} // namespace Forwarder

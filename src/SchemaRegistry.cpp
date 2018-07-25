@@ -2,15 +2,13 @@
 
 namespace FlatBufs {
 
-/**
-\class SchemaRegistry
-\brief Lets flatbuffer schema plugins register themself.
-
-See `src/schemas/f142/f142.cxx` the last 10 lines for an example.
-*/
-
+/// Lets flatbuffer schema plugins register themselves.
+///
+/// See `src/schemas/f142/f142.cxx` for an example.
+///
+/// \return A map of schema names and their details
 std::map<std::string, SchemaInfo::ptr> &SchemaRegistry::items() {
   static std::map<std::string, SchemaInfo::ptr> _items;
   return _items;
 }
-}
+} // namespace FlatBufs
