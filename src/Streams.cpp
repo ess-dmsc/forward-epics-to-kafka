@@ -5,7 +5,7 @@ namespace Forwarder {
 
 /// Gets the number of streams.
 ///
-/// \return The number of streams
+/// \return The number of streams.
 size_t Streams::size() { return streams.size(); }
 
 /// Stop the specified channel and remove the stream.
