@@ -34,8 +34,7 @@ static KafkaW::BrokerSettings make_broker_opt(MainOpt const &opt) {
 
 using ulock = std::unique_lock<std::mutex>;
 
-/// \class Main
-/// \brief Main program entry class.
+/// Main program entry class.
 Forwarder::Forwarder(MainOpt &opt)
     : main_opt(opt), kafka_instance_set(InstanceSet::Set(make_broker_opt(opt))),
       conversion_scheduler(this) {
@@ -136,7 +135,7 @@ std::unique_lock<std::mutex> Forwarder::get_lock_converters() {
   return std::unique_lock<std::mutex>(converters_mutex);
 }
 
-/// \brief Main program loop.
+/// Main program loop.
 ///
 /// Start conversion worker threads, poll for commands from Kafka.
 /// When stop flag raised, clear all workers and streams.
