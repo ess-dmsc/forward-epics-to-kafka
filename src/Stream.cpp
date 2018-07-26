@@ -51,7 +51,9 @@ std::string ConversionPath::getKafkaTopicName() const {
   return kafka_output->topic_name();
 }
 
-std::string ConversionPath::getSchemaName() const { converter->schema_name(); }
+std::string ConversionPath::getSchemaName() const {
+  return converter->schema_name();
+}
 
 Stream::Stream(
     ChannelInfo channel_info,
