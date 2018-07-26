@@ -84,7 +84,7 @@ Forwarder::Forwarder(MainOpt &opt)
 
 Forwarder::~Forwarder() {
   LOG(7, "~Main");
-  streams.streams_clear();
+  streams.clearStreams();
   conversion_workers_clear();
   converters_clear();
   InstanceSet::clear();
@@ -166,7 +166,7 @@ void Forwarder::forward_epics_to_kafka() {
       if (config_listener) {
         config_listener->poll(config_cb);
       }
-      streams.check_stream_status();
+      streams.checkStreamStatus();
       t_lf_last = t1;
       do_stats = true;
     }
@@ -195,7 +195,7 @@ void Forwarder::forward_epics_to_kafka() {
   }
   LOG(6, "Main::forward_epics_to_kafka shutting down");
   conversion_workers_clear();
-  streams.streams_clear();
+  streams.clearStreams();
 
   if (PVUpdateTimer != nullptr) {
     PVUpdateTimer->triggerStop();
@@ -215,7 +215,7 @@ void Forwarder::report_status() {
   using nlohmann::json;
   auto Status = json::object();
   auto Streams = json::array();
-  for (auto const &Stream : streams.get_streams()) {
+  for (auto const &Stream : streams.getStreams()) {
     Streams.push_back(Stream->status_json());
   }
   Status["streams"] = Streams;

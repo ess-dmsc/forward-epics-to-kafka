@@ -34,11 +34,11 @@ void ConfigCB::handleCommandAdd(nlohmann::json const &Document) {
 
 void ConfigCB::handleCommandStopChannel(nlohmann::json const &Document) {
   if (auto ChannelMaybe = find<std::string>("channel", Document)) {
-    main.streams.channel_stop(ChannelMaybe.inner());
+    main.streams.stopChannel(ChannelMaybe.inner());
   }
 }
 
-void ConfigCB::handleCommandStopAll() { main.streams.streams_clear(); }
+void ConfigCB::handleCommandStopAll() { main.streams.clearStreams(); }
 
 void ConfigCB::handleCommandExit() { main.stopForwarding(); }
 
