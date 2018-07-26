@@ -34,6 +34,8 @@ public:
   int emit(std::shared_ptr<FlatBufs::EpicsPVUpdate> up);
   std::atomic<uint32_t> transit{0};
   nlohmann::json status_json() const;
+  std::string getKafkaTopicName() const;
+  std::string getSchemaName() const;
 
 private:
   std::shared_ptr<Converter> converter;
@@ -60,6 +62,7 @@ public:
   void error_in_epics();
   int status();
   ChannelInfo const &channel_info() const;
+  std::shared_ptr<EpicsClient::EpicsClientInterface> getEpicsClient();
   size_t emit_queue_size();
   nlohmann::json status_json();
   using mutex = std::mutex;
@@ -74,5 +77,9 @@ private:
       moodycamel::ConcurrentQueue<std::shared_ptr<FlatBufs::EpicsPVUpdate>>>
       emit_queue;
   RangeSet<uint64_t> seq_data_emitted;
+
+  /// We want to be able to add conversion paths after forwarding is running.
+  /// Therefore, we need mutually exclusive access to 'conversion_paths'.
+  mutex conversion_paths_mx;
 };
 } // namespace Forwarder
