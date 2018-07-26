@@ -80,9 +80,8 @@ TEST(StreamsTest,
   ASSERT_EQ(streams.back(), nullptr);
 }
 
-TEST(
-    StreamsTest,
-    back_throws_range_error_when_streams_is_empty_after_streams_cleared) {
+TEST(StreamsTest,
+     back_throws_range_error_when_streams_is_empty_after_streams_cleared) {
   Streams streams;
   streams.add(createStream("hello", "world"));
   streams.add(createStream("world", "hello"));
