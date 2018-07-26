@@ -3,7 +3,7 @@
   "broker-config": "//localhost:9092/TEST_forwarderConfig",
   "streams": [
     {
-      "channel": "SIM:ParkAng",
+      "channel": "SIMPLE:DOUBLE",
       "channel_provider_type": "ca",
       "converter": { "schema": "f142", "topic": "TEST_forwarderData_idle_updates" }
     }

@@ -25,9 +25,7 @@ struct ChannelInfo {
   std::string channel_name;
 };
 
-/**
-A combination of a converter and a kafka output destination.
-*/
+/// A combination of a converter and a kafka output destination.
 class ConversionPath {
 public:
   ConversionPath(ConversionPath &&x);
@@ -44,9 +42,7 @@ private:
   std::unique_ptr<KafkaOutput> kafka_output;
 };
 
-/**
-Represents a stream from an EPICS PV through a Converter into a KafkaOutput.
-*/
+/// Represents a stream from an EPICS PV through a Converter into a KafkaOutput.
 class Stream {
 public:
   explicit Stream(
@@ -61,7 +57,7 @@ public:
                     URI uri_kafka_output);
   int32_t fill_conversion_work(
       moodycamel::ConcurrentQueue<std::unique_ptr<ConversionWorkPacket>> &queue,
-      uint32_t max, std::function<void(uint64_t)> on_seq_data);
+      uint32_t max);
   int stop();
   void error_in_epics();
   int status();
@@ -86,4 +82,4 @@ private:
   /// Therefore, we need mutually exclusive access to 'conversion_paths'.
   mutex conversion_paths_mx;
 };
-}
+} // namespace Forwarder
