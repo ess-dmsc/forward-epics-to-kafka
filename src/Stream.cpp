@@ -48,17 +48,11 @@ nlohmann::json ConversionPath::status_json() const {
 }
 
 std::string ConversionPath::getKafkaTopicName() const {
-  if (kafka_output) {
     return kafka_output->topic_name();
-  }
-  return "nullptr";
 }
 
 std::string ConversionPath::getSchemaName() const {
-  if (converter) {
     converter->schema_name();
-  }
-  return "nullptr";
 }
 
 Stream::Stream(
