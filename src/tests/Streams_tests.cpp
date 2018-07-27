@@ -51,7 +51,7 @@ TEST(StreamsTest, stream_size_is_zero_when_clear_is_called) {
   Streams streams;
   streams.add(createStream("hello", "world"));
   streams.add(createStream("world", "hello"));
-  streams.streams_clear();
+  streams.clearStreams();
   ASSERT_EQ(streams.size(), 0u);
 }
 
@@ -59,7 +59,7 @@ TEST(StreamsTest, stream_size_is_one_stream_is_added_after_clear) {
   Streams streams;
   streams.add(createStream("hello", "world"));
   streams.add(createStream("world", "hello"));
-  streams.streams_clear();
+  streams.clearStreams();
   streams.add(createStream("hello", "hello"));
   ASSERT_EQ(streams.size(), 1u);
 }
@@ -80,13 +80,12 @@ TEST(StreamsTest,
   ASSERT_EQ(streams.back(), nullptr);
 }
 
-TEST(
-    StreamsTest,
-    back_throws_range_error_when_streams_is_empty_after_clear_streams_is_called) {
+TEST(StreamsTest,
+     back_throws_range_error_when_streams_is_empty_after_streams_cleared) {
   Streams streams;
   streams.add(createStream("hello", "world"));
   streams.add(createStream("world", "hello"));
-  streams.streams_clear();
+  streams.clearStreams();
   ASSERT_EQ(streams.back(), nullptr);
 }
 
@@ -94,8 +93,8 @@ TEST(StreamsTest, check_stream_status_on_streams_after_clear_does_nothing) {
   Streams streams;
   streams.add(createStream("hello", "world"));
   streams.add(createStream("world", "hello"));
-  streams.streams_clear();
-  streams.check_stream_status();
+  streams.clearStreams();
+  streams.checkStreamStatus();
   ASSERT_EQ(nullptr, streams.back().get());
 }
 
@@ -105,7 +104,7 @@ TEST(StreamsTest,
   auto s = createStream("hello", "world");
   s.get()->error_in_epics(); // sets status to -1
   streams.add(s);
-  streams.check_stream_status();
+  streams.checkStreamStatus();
   ASSERT_EQ(nullptr, streams.back().get());
 }
 
@@ -120,14 +119,14 @@ TEST(
   s2.get()->error_in_epics(); // sets status to -1
   streams.add(s);
   streams.add(s2);
-  streams.check_stream_status();
+  streams.checkStreamStatus();
   ASSERT_EQ(nullptr, streams.back().get());
   ASSERT_EQ(streams.size(), 0u);
 }
 
 TEST(
     StreamsTest,
-    check_stream_status_with_multiple_streams_with_negative_statuses_removes_all_streams_and_leaves_positive_status_streams) {
+    check_stream_status_with_multiple_streams_removes_streams_with_negative_statuses_only) {
   Streams streams;
 
   auto s = createStream("hello", "world");
@@ -135,7 +134,7 @@ TEST(
   auto s2 = createStream("world", "world");
   streams.add(s);
   streams.add(s2);
-  streams.check_stream_status();
+  streams.checkStreamStatus();
   ASSERT_EQ(s2.get(), streams.back().get());
   ASSERT_EQ(streams.size(), 1u);
 }
@@ -145,7 +144,7 @@ TEST(StreamsTest,
   Streams streams;
   auto s = createStream("hello", "world");
   streams.add(s);
-  streams.channel_stop("world");
+  streams.stopChannel("world");
   ASSERT_EQ(nullptr, streams.back().get());
   ASSERT_EQ(streams.size(), 0u);
 }
@@ -158,7 +157,7 @@ TEST(StreamsTest, channel_stop_removes_all_channels_with_matched_channel_name) {
 
   streams.add(s);
   streams.add(s2);
-  streams.channel_stop("world");
+  streams.stopChannel("world");
   ASSERT_EQ(nullptr, streams.back().get());
   ASSERT_EQ(streams.size(), 0u);
 }
@@ -170,19 +169,36 @@ TEST(StreamsTest,
   auto s2 = createStream("world", "world");
   streams.add(s);
   streams.add(s2);
-  streams.channel_stop("nothelloworld");
+  streams.stopChannel("nothelloworld");
   ASSERT_EQ(s2.get(), streams.back().get());
   ASSERT_EQ(streams.size(), 2u);
 }
 
-TEST(StreamsTest,
-     channel_stop_removes_no_channels_with_no__given_channel_name) {
+TEST(StreamsTest, channel_stop_removes_no_channels_with_no_given_channel_name) {
   Streams streams;
   auto s = createStream("hello", "world");
   auto s2 = createStream("world", "world");
   streams.add(s);
   streams.add(s2);
-  streams.channel_stop("");
+  streams.stopChannel("");
   ASSERT_EQ(s2.get(), streams.back().get());
   ASSERT_EQ(streams.size(), 2u);
+}
+
+TEST(StreamsTest, get_stream_by_name_gets_the_channel_when_it_exists) {
+  Streams streams;
+  std::string name = "stream1";
+  auto s = createStream("some_type", name);
+  streams.add(s);
+  auto answer = streams.getStreamByChannelName(name);
+  ASSERT_EQ(answer->channel_info().channel_name, name);
+}
+
+TEST(StreamsTest, get_stream_by_name_does_not_return_stream_when_not_found) {
+  Streams streams;
+  std::string name = "stream1";
+  auto s = createStream("some_type", name);
+  streams.add(s);
+  auto answer = streams.getStreamByChannelName("incorrect_name");
+  ASSERT_EQ(answer, nullptr);
 }

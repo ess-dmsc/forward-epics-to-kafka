@@ -50,6 +50,5 @@ private:
   Forwarder *main = nullptr;
   size_t sid = 0;
   std::mutex mx;
-  RangeSet<uint64_t> seq_data_enqueued;
 };
 }

@@ -6,7 +6,7 @@
 #include <random>
 
 namespace FlatBufs {
-class EpicsPVUpdate;
+struct EpicsPVUpdate;
 }
 
 namespace Forwarder {

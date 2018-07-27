@@ -22,6 +22,7 @@ class EpicsClientMonitor_impl;
 class EpicsClientMonitor : public EpicsClientInterface {
 public:
   /// Creates a new implementation and stores it as impl.
+  ///
   /// This can then call the functions in the implementation.
   explicit EpicsClientMonitor(
       ChannelInfo &ChannelInfo,
@@ -32,7 +33,7 @@ public:
 
   /// Pushes the PV update onto the emit_queue ring buffer.
   ///
-  ///\param Update An epics PV update holding the pv structure.
+  /// \param Update An epics PV update holding the pv structure.
   int emit(std::shared_ptr<FlatBufs::EpicsPVUpdate> Update) override;
 
   int emitWithoutCaching(std::shared_ptr<FlatBufs::EpicsPVUpdate> Update);
@@ -56,5 +57,5 @@ private:
   std::shared_ptr<FlatBufs::EpicsPVUpdate> CachedUpdate;
   std::atomic<int> status_{0};
 };
-}
-}
+} // namespace EpicsClient
+} // namespace Forwarder

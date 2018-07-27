@@ -47,6 +47,14 @@ nlohmann::json ConversionPath::status_json() const {
   return Document;
 }
 
+std::string ConversionPath::getKafkaTopicName() const {
+  return kafka_output->topic_name();
+}
+
+std::string ConversionPath::getSchemaName() const {
+  return converter->schema_name();
+}
+
 Stream::Stream(
     ChannelInfo channel_info,
     std::shared_ptr<EpicsClient::EpicsClientInterface> client,
@@ -65,9 +73,20 @@ Stream::~Stream() {
 
 int Stream::converter_add(InstanceSet &kset, Converter::sptr conv,
                           URI uri_kafka_output) {
+  ulock(conversion_paths_mx);
   auto pt = kset.producer_topic(uri_kafka_output);
   std::unique_ptr<ConversionPath> cp = ::make_unique<ConversionPath>(
       std::move(conv), ::make_unique<KafkaOutput>(std::move(pt)));
+  for (auto const &ConversionPath : conversion_paths) {
+    if (ConversionPath->getKafkaTopicName() == cp->getKafkaTopicName() &&
+        ConversionPath->getSchemaName() == cp->getSchemaName()) {
+      LOG(5, "Stream with channel name: {}  KafkaTopicName: {}  SchemaName: {} "
+             " already exists.",
+          channel_info_.channel_name, ConversionPath->getKafkaTopicName(),
+          ConversionPath->getSchemaName());
+      return 1;
+    }
+  }
   conversion_paths.push_back(std::move(cp));
   return 0;
 }
@@ -76,7 +95,7 @@ void Stream::error_in_epics() { epics_client->errorInEpics(); }
 
 int32_t Stream::fill_conversion_work(
     moodycamel::ConcurrentQueue<std::unique_ptr<ConversionWorkPacket>> &q2,
-    uint32_t max, std::function<void(uint64_t)> on_seq_data) {
+    uint32_t max) {
   uint32_t n0 = 0;
   uint32_t n1 = 0;
   auto BufferSize = emit_queue->size_approx();
@@ -95,7 +114,6 @@ int32_t Stream::fill_conversion_work(
       continue;
     }
     size_t ConversionPathID = 0;
-    on_seq_data(EpicsUpdate->seq_data);
     for (auto &ConversionPath : conversion_paths) {
       auto ConversionPacket = ::make_unique<ConversionWorkPacket>();
       cwp_last[ConversionPathID] = ConversionPacket.get();
@@ -152,5 +170,9 @@ nlohmann::json Stream::status_json() {
   }
   Document["converters"] = Converters;
   return Document;
+}
+
+std::shared_ptr<EpicsClient::EpicsClientInterface> Stream::getEpicsClient() {
+  return epics_client;
 }
 }
