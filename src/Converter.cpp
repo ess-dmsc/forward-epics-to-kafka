@@ -30,7 +30,7 @@ Converter::create(FlatBufs::SchemaRegistry const &schema_registry,
   return ret;
 }
 
-FlatBufs::FlatbufferMessage::uptr
+std::unique_ptr<FlatBufs::FlatbufferMessage>
 Converter::convert(FlatBufs::EpicsPVUpdate const &up) {
   return conv->convert(up);
 }

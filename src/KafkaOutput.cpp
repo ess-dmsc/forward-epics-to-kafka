@@ -8,7 +8,7 @@ KafkaOutput::KafkaOutput(KafkaOutput &&x) noexcept : pt(std::move(x.pt)) {}
 
 KafkaOutput::KafkaOutput(KafkaW::Producer::Topic &&pt) : pt(std::move(pt)) {}
 
-int KafkaOutput::emit(FlatBufs::FlatbufferMessage::uptr fb) {
+int KafkaOutput::emit(std::unique_ptr<FlatBufs::FlatbufferMessage> fb) {
   if (!fb) {
     CLOG(8, 1, "KafkaOutput::emit  empty fb");
     return -1024;
