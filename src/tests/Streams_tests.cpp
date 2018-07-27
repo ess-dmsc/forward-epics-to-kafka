@@ -1,33 +1,11 @@
 #include "../Stream.h"
 #include "../Streams.h"
 #include "../helper.h"
+#include "TestUtils.h"
 #include <gmock/gmock.h>
 
 using namespace testing;
 using namespace Forwarder;
-
-class FakeEpicsClient : public EpicsClient::EpicsClientInterface {
-public:
-  FakeEpicsClient() = default;
-  int emit(std::shared_ptr<FlatBufs::EpicsPVUpdate> Update) override {
-    return 0;
-  };
-  int stop() override { return 0; };
-  void errorInEpics() override { status_ = -1; };
-  int status() override { return status_; };
-
-private:
-  int status_{0};
-};
-
-std::shared_ptr<Stream> createStream(std::string ProviderType,
-                                     std::string ChannelName) {
-  auto ring = std::make_shared<
-      moodycamel::ConcurrentQueue<std::shared_ptr<FlatBufs::EpicsPVUpdate>>>();
-  auto client = make_unique<FakeEpicsClient>();
-  ChannelInfo ci{std::move(ProviderType), std::move(ChannelName)};
-  return std::make_shared<Stream>(ci, std::move(client), ring);
-}
 
 TEST(StreamsTest, streams_are_empty_on_initialisation) {
   Streams streams;

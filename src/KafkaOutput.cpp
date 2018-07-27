@@ -4,7 +4,7 @@
 
 namespace Forwarder {
 
-KafkaOutput::KafkaOutput(KafkaOutput &&x) : pt(std::move(x.pt)) {}
+KafkaOutput::KafkaOutput(KafkaOutput &&x) noexcept : pt(std::move(x.pt)) {}
 
 KafkaOutput::KafkaOutput(KafkaW::Producer::Topic &&pt) : pt(std::move(pt)) {}
 
@@ -26,4 +26,4 @@ int KafkaOutput::emit(FlatBufs::FlatbufferMessage::uptr fb) {
 }
 
 std::string KafkaOutput::topic_name() { return pt.name(); }
-}
+} // namespace Forwarder

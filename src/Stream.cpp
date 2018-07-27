@@ -8,7 +8,7 @@
 
 namespace Forwarder {
 
-ConversionPath::ConversionPath(ConversionPath &&x)
+ConversionPath::ConversionPath(ConversionPath &&x) noexcept
     : converter(std::move(x.converter)),
       kafka_output(std::move(x.kafka_output)) {}
 
@@ -71,17 +71,18 @@ Stream::~Stream() {
   LOG(6, "seq_data_emitted: {}", seq_data_emitted.to_string());
 }
 
-int Stream::converter_add(InstanceSet &kset, Converter::sptr conv,
-                          URI uri_kafka_output) {
-  ulock(conversion_paths_mx);
-  auto pt = kset.producer_topic(uri_kafka_output);
-  std::unique_ptr<ConversionPath> cp = ::make_unique<ConversionPath>(
-      std::move(conv), ::make_unique<KafkaOutput>(std::move(pt)));
+int Stream::converter_add(KafkaW::Producer::Topic topic,
+                          std::shared_ptr<Converter> conv) {
+  std::unique_lock<std::mutex> lock(conversion_paths_mx);
+  auto cp = ::make_unique<ConversionPath>(
+      std::move(conv), ::make_unique<KafkaOutput>(std::move(topic)));
+
   for (auto const &ConversionPath : conversion_paths) {
     if (ConversionPath->getKafkaTopicName() == cp->getKafkaTopicName() &&
         ConversionPath->getSchemaName() == cp->getSchemaName()) {
-      LOG(5, "Stream with channel name: {}  KafkaTopicName: {}  SchemaName: {} "
-             " already exists.",
+      LOG(5,
+          "Stream with channel name: {}  KafkaTopicName: {}  SchemaName: {} "
+          " already exists.",
           channel_info_.channel_name, ConversionPath->getKafkaTopicName(),
           ConversionPath->getSchemaName());
       return 1;
@@ -175,4 +176,4 @@ nlohmann::json Stream::status_json() {
 std::shared_ptr<EpicsClient::EpicsClientInterface> Stream::getEpicsClient() {
   return epics_client;
 }
-}
+} // namespace Forwarder

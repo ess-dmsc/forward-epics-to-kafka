@@ -28,7 +28,7 @@ struct ChannelInfo {
 /// A combination of a converter and a kafka output destination.
 class ConversionPath {
 public:
-  ConversionPath(ConversionPath &&x);
+  ConversionPath(ConversionPath &&x) noexcept;
   ConversionPath(std::shared_ptr<Converter>, std::unique_ptr<KafkaOutput>);
   ~ConversionPath();
   int emit(std::shared_ptr<FlatBufs::EpicsPVUpdate> up);
@@ -53,8 +53,8 @@ public:
           ring);
   Stream(Stream &&) = delete;
   ~Stream();
-  int converter_add(InstanceSet &kset, std::shared_ptr<Converter> conv,
-                    URI uri_kafka_output);
+  int converter_add(KafkaW::Producer::Topic topic,
+                    std::shared_ptr<Converter> conv);
   int32_t fill_conversion_work(
       moodycamel::ConcurrentQueue<std::unique_ptr<ConversionWorkPacket>> &queue,
       uint32_t max);
@@ -65,8 +65,6 @@ public:
   std::shared_ptr<EpicsClient::EpicsClientInterface> getEpicsClient();
   size_t emit_queue_size();
   nlohmann::json status_json();
-  using mutex = std::mutex;
-  using ulock = std::unique_lock<mutex>;
 
 private:
   /// Each Epics update is converted by each Converter in the list
@@ -80,6 +78,6 @@ private:
 
   /// We want to be able to add conversion paths after forwarding is running.
   /// Therefore, we need mutually exclusive access to 'conversion_paths'.
-  mutex conversion_paths_mx;
+  std::mutex conversion_paths_mx;
 };
 } // namespace Forwarder

@@ -340,7 +340,8 @@ void Forwarder::pushConverterToStream(ConverterSettings const &ConverterInfo,
   if (!ConverterShared) {
     throw MappingAddException("Cannot create a converter");
   }
-  Stream->converter_add(*kafka_instance_set, ConverterShared, TopicURI);
+  auto Topic = kafka_instance_set->producer_topic(std::move(TopicURI));
+  Stream->converter_add(std::move(Topic), ConverterShared);
 }
 
 void Forwarder::addMapping(StreamSettings const &StreamInfo) {

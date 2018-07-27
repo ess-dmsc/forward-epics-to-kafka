@@ -8,10 +8,12 @@ set(sources
     json_tests.cpp
     ConfigParser_tests.cpp
     Streams_tests.cpp
+    Stream_tests.cpp
     CommandHandler_tests.cpp
     EpicsClientMonitor_tests.cpp
     EpicsClientRandom_tests.cpp
     Timer_tests.cpp
+    TestUtils.cpp
     $<TARGET_OBJECTS:__objects>
 )
 add_executable(${tgt} ${sources})
