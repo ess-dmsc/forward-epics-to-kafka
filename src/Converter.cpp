@@ -3,10 +3,10 @@
 
 namespace Forwarder {
 
-Converter::sptr
+std::shared_ptr<Converter>
 Converter::create(FlatBufs::SchemaRegistry const &schema_registry,
                   std::string schema, MainOpt const &main_opt) {
-  auto ret = Converter::sptr(new Converter);
+  auto ret = std::make_shared<Converter>();
   ret->schema = schema;
   auto r1 = schema_registry.items().find(schema);
   if (r1 == schema_registry.items().end()) {

@@ -443,7 +443,8 @@ public:
 /// This class is purely for testing
 class ConverterTestNamed : public MakeFlatBufferFromPVStructure {
 public:
-  std::unique_ptr<FlatBufs::FlatbufferMessage> convert(EpicsPVUpdate const &up) override {
+  std::unique_ptr<FlatBufs::FlatbufferMessage>
+  convert(EpicsPVUpdate const &up) override {
     auto &pvstr = up.epics_pvstr;
 
     {

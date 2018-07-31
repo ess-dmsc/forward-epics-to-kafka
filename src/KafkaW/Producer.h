@@ -60,7 +60,7 @@ public:
   std::function<void(rd_kafka_message_t const *msg)> on_delivery_ok;
   std::function<void(rd_kafka_message_t const *msg)> on_delivery_failed;
   std::function<void(Producer *, rd_kafka_resp_err_t)> on_error;
-  // Currently it's nice to have acces to these two for statistics:
+  // Currently it's nice to have access to these two for statistics:
   BrokerSettings ProducerBrokerSettings;
   rd_kafka_t *RdKafkaPtr = nullptr;
   std::atomic<uint64_t> TotalMessagesProduced{0};

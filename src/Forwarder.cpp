@@ -315,7 +315,7 @@ void Forwarder::pushConverterToStream(ConverterSettings const &ConverterInfo,
   }
   TopicURI.parse(ConverterInfo.Topic);
 
-  Converter::sptr ConverterShared;
+  std::shared_ptr<Converter> ConverterShared;
   if (!ConverterInfo.Name.empty()) {
     auto Lock = get_lock_converters();
     auto ConverterIt = converters.find(ConverterInfo.Name);
