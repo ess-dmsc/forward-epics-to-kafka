@@ -51,7 +51,8 @@ TEST(CommandHandlerTest, add_command_adds_multiple_streams_correctly) {
   ASSERT_EQ(2u, Main.streams.size());
   ASSERT_EQ("my_channel_name", Main.streams[0]->getChannelInfo().channel_name);
   ASSERT_EQ("ca", Main.streams[0]->getChannelInfo().provider_type);
-  ASSERT_EQ("my_channel_name_2", Main.streams[1]->getChannelInfo().channel_name);
+  ASSERT_EQ("my_channel_name_2",
+            Main.streams[1]->getChannelInfo().channel_name);
   ASSERT_EQ("pva", Main.streams[1]->getChannelInfo().provider_type);
 }
 

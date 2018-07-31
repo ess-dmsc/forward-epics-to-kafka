@@ -1,11 +1,11 @@
 #include "Forwarder.h"
 #include "CommandHandler.h"
 #include "Converter.h"
+#include "KafkaOutput.h"
 #include "Stream.h"
 #include "Timer.h"
 #include "helper.h"
 #include "logger.h"
-#include "KafkaOutput.h"
 #include <EpicsClient/EpicsClientInterface.h>
 #include <EpicsClient/EpicsClientMonitor.h>
 #include <EpicsClient/EpicsClientRandom.h>
