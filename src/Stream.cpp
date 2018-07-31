@@ -75,9 +75,8 @@ int Stream::addConverter(std::unique_ptr<ConversionPath> Path) {
   for (auto const &ConversionPath : ConversionPaths) {
     if (ConversionPath->getKafkaTopicName() == Path->getKafkaTopicName() &&
         ConversionPath->getSchemaName() == Path->getSchemaName()) {
-      LOG(5,
-          "Stream with channel name: {}  KafkaTopicName: {}  SchemaName: {} "
-          " already exists.",
+      LOG(5, "Stream with channel name: {}  KafkaTopicName: {}  SchemaName: {} "
+             " already exists.",
           ChannelInfo_.channel_name, ConversionPath->getKafkaTopicName(),
           ConversionPath->getSchemaName());
       return 1;
