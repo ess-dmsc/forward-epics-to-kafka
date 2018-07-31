@@ -48,7 +48,7 @@ TEST(StreamsTest, back_returns_correct_stream_when_streams_are_added) {
   streams.add(createStream("world", "hello"));
   std::shared_ptr<Stream> x = createStream("hello", "hello");
   streams.add(x);
-  ASSERT_EQ(x.get()->channel_info().channel_name,
+  ASSERT_EQ(x->channel_info().channel_name,
             streams.back()->channel_info().channel_name);
 }
 
@@ -92,9 +92,9 @@ TEST(
   Streams streams;
 
   auto s = createStream("hello", "world");
-  s.get()->error_in_epics(); // sets status to -1
+  s->error_in_epics(); // sets status to -1
   auto s2 = createStream("world", "world");
-  s2.get()->error_in_epics(); // sets status to -1
+  s2->error_in_epics(); // sets status to -1
   streams.add(s);
   streams.add(s2);
   streams.checkStreamStatus();
@@ -108,7 +108,7 @@ TEST(
   Streams streams;
 
   auto s = createStream("hello", "world");
-  s.get()->error_in_epics(); // sets status to -1
+  s->error_in_epics(); // sets status to -1
   auto s2 = createStream("world", "world");
   streams.add(s);
   streams.add(s2);

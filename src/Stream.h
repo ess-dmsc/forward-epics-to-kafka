@@ -2,6 +2,7 @@
 
 #include "ConversionWorker.h"
 #include "Kafka.h"
+#include "KafkaOutput.h"
 #include "RangeSet.h"
 #include "SchemaRegistry.h"
 #include "uri.h"
@@ -17,7 +18,6 @@
 namespace Forwarder {
 
 class Converter;
-class KafkaOutput;
 struct ConversionWorkPacket;
 
 struct ChannelInfo {
@@ -34,8 +34,8 @@ public:
   int emit(std::shared_ptr<FlatBufs::EpicsPVUpdate> up);
   std::atomic<uint32_t> transit{0};
   nlohmann::json status_json() const;
-  std::string getKafkaTopicName() const;
-  std::string getSchemaName() const;
+  virtual std::string getKafkaTopicName() const;
+  virtual std::string getSchemaName() const;
 
 private:
   std::shared_ptr<Converter> converter;
@@ -53,8 +53,7 @@ public:
           ring);
   Stream(Stream &&) = delete;
   ~Stream();
-  int converter_add(KafkaW::Producer::Topic topic,
-                    std::shared_ptr<Converter> conv);
+  int converter_add(std::unique_ptr<ConversionPath> cp);
   int32_t fill_conversion_work(
       moodycamel::ConcurrentQueue<std::unique_ptr<ConversionWorkPacket>> &queue,
       uint32_t max);

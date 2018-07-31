@@ -2,7 +2,6 @@
 #include "Converter.h"
 #include "EpicsClient/EpicsClientMonitor.h"
 #include "EpicsPVUpdate.h"
-#include "KafkaOutput.h"
 #include "helper.h"
 #include "logger.h"
 
@@ -71,11 +70,8 @@ Stream::~Stream() {
   LOG(6, "seq_data_emitted: {}", seq_data_emitted.to_string());
 }
 
-int Stream::converter_add(KafkaW::Producer::Topic topic,
-                          std::shared_ptr<Converter> conv) {
+int Stream::converter_add(std::unique_ptr<ConversionPath> cp) {
   std::unique_lock<std::mutex> lock(conversion_paths_mx);
-  auto cp = ::make_unique<ConversionPath>(
-      std::move(conv), ::make_unique<KafkaOutput>(std::move(topic)));
 
   for (auto const &ConversionPath : conversion_paths) {
     if (ConversionPath->getKafkaTopicName() == cp->getKafkaTopicName() &&

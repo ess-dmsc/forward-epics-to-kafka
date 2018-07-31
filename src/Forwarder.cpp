@@ -5,6 +5,7 @@
 #include "Timer.h"
 #include "helper.h"
 #include "logger.h"
+#include "KafkaOutput.h"
 #include <EpicsClient/EpicsClientInterface.h>
 #include <EpicsClient/EpicsClientMonitor.h>
 #include <EpicsClient/EpicsClientRandom.h>
@@ -340,8 +341,13 @@ void Forwarder::pushConverterToStream(ConverterSettings const &ConverterInfo,
   if (!ConverterShared) {
     throw MappingAddException("Cannot create a converter");
   }
+
+  // Create a conversion path then add it
   auto Topic = kafka_instance_set->producer_topic(std::move(TopicURI));
-  Stream->converter_add(std::move(Topic), ConverterShared);
+  auto cp = ::make_unique<ConversionPath>(
+      std::move(ConverterShared), ::make_unique<KafkaOutput>(std::move(Topic)));
+
+  Stream->converter_add(std::move(cp));
 }
 
 void Forwarder::addMapping(StreamSettings const &StreamInfo) {
@@ -354,7 +360,6 @@ void Forwarder::addMapping(StreamSettings const &StreamInfo) {
     } else {
       Stream = findOrAddStream<EpicsClient::EpicsClientMonitor>(ChannelInfo);
     }
-    std::shared_ptr<EpicsClient::EpicsClientInterface> Client;
     if (GenerateFakePVUpdateTimer != nullptr) {
       auto Client = Stream->getEpicsClient();
       auto RandomClient =
