@@ -93,19 +93,22 @@ void Stream::error_in_epics() { epics_client->errorInEpics(); }
 int32_t Stream::fill_conversion_work(
     moodycamel::ConcurrentQueue<std::unique_ptr<ConversionWorkPacket>> &q2,
     uint32_t max) {
-  uint32_t n0 = 0;
-  uint32_t n1 = 0;
+  uint32_t NumDequeued = 0;
+  uint32_t NumQueued = 0;
   auto BufferSize = emit_queue->size_approx();
   auto ConversionPathSize = conversion_paths.size();
-  std::vector<ConversionWorkPacket *> cwp_last(conversion_paths.size());
-  while (n0 < BufferSize && max - n1 >= ConversionPathSize) {
+  std::vector<ConversionWorkPacket *> cwp_last(ConversionPathSize);
+
+  // Add to queue if data still available and queue has enough "space" for all
+  // conversion paths for a single update.
+  while (NumDequeued < BufferSize && max - NumQueued >= ConversionPathSize) {
     std::shared_ptr<FlatBufs::EpicsPVUpdate> EpicsUpdate;
     auto found = emit_queue->try_dequeue(EpicsUpdate);
-    n0 += 1;
     if (!found) {
       CLOG(6, 1, "Conversion worker buffer is empty");
       break;
     }
+    NumDequeued += 1;
     if (!EpicsUpdate) {
       LOG(6, "Empty EPICS PV update");
       continue;
@@ -116,22 +119,22 @@ int32_t Stream::fill_conversion_work(
       cwp_last[ConversionPathID] = ConversionPacket.get();
       ConversionPacket->cp = ConversionPath.get();
       ConversionPacket->up = EpicsUpdate;
-      bool QueuedUnsuccessful = q2.enqueue(std::move(ConversionPacket));
-      if (QueuedUnsuccessful) {
+      bool QueuedSuccessful = q2.enqueue(std::move(ConversionPacket));
+      if (!QueuedSuccessful) {
         CLOG(6, 1, "Conversion work queue is full");
         break;
       }
       ConversionPathID += 1;
-      n1 += 1;
+      NumQueued += 1;
     }
   }
-  if (n1 > 0) {
-    for (uint32_t i1 = 0; i1 < cwp_last.size(); ++i1) {
+  if (NumQueued > 0) {
+    for (uint32_t i1 = 0; i1 < ConversionPathSize; ++i1) {
       cwp_last[i1]->stream = this;
       conversion_paths[i1]->transit++;
     }
   }
-  return n1;
+  return NumQueued;
 }
 
 int Stream::stop() {

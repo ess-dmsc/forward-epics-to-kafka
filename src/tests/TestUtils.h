@@ -21,3 +21,6 @@ private:
 
 std::shared_ptr<Forwarder::Stream> createStream(std::string ProviderType,
                                                 std::string ChannelName);
+
+std::shared_ptr<Forwarder::Stream> createStreamRandom(std::string ProviderType,
+                                                      std::string ChannelName);
