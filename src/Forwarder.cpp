@@ -217,7 +217,7 @@ void Forwarder::report_status() {
   auto Status = json::object();
   auto Streams = json::array();
   for (auto const &Stream : streams.getStreams()) {
-    Streams.push_back(Stream->status_json());
+    Streams.push_back(Stream->getStatusJson());
   }
   Status["streams"] = Streams;
   auto StatusString = Status.dump();
@@ -347,7 +347,7 @@ void Forwarder::pushConverterToStream(ConverterSettings const &ConverterInfo,
   auto cp = ::make_unique<ConversionPath>(
       std::move(ConverterShared), ::make_unique<KafkaOutput>(std::move(Topic)));
 
-  Stream->converter_add(std::move(cp));
+  Stream->addConverter(std::move(cp));
 }
 
 void Forwarder::addMapping(StreamSettings const &StreamInfo) {
