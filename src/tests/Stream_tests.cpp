@@ -122,15 +122,15 @@ TEST(StreamTest, add_conversion_path_twice_is_not_okay) {
 TEST(StreamTest, filling_queue_from_empty_stream_gives_no_data) {
   auto Stream = createStreamRandom("provider", "channel1");
   ConcurrentQueue<std::unique_ptr<ConversionWorkPacket>> queue;
-  int NumEnqueued = Stream->fillConversionQueue(queue, 10);
-  ASSERT_EQ(NumEnqueued, 0);
+  auto NumEnqueued = Stream->fillConversionQueue(queue, 10);
+  ASSERT_EQ(NumEnqueued, 0u);
 }
 
 TEST(StreamTest, filling_queue_from_stream_gives_data) {
   size_t NumEntries = 2;
   auto Stream = createStreamWithEntries(1, NumEntries);
   ConcurrentQueue<std::unique_ptr<ConversionWorkPacket>> queue;
-  int NumEnqueued = Stream->fillConversionQueue(queue, 10);
+  auto NumEnqueued = Stream->fillConversionQueue(queue, 10);
   ASSERT_EQ(NumEnqueued, NumEntries);
 
   // Post test clean up.
@@ -142,7 +142,7 @@ TEST(StreamTest, filling_queue_when_multiple_conversion_paths_gives_data) {
   size_t NumConversions = 2;
   auto Stream = createStreamWithEntries(NumConversions, NumEntries);
   ConcurrentQueue<std::unique_ptr<ConversionWorkPacket>> queue;
-  int NumEnqueued = Stream->fillConversionQueue(queue, 10);
+  auto NumEnqueued = Stream->fillConversionQueue(queue, 10);
   ASSERT_EQ(NumEnqueued, NumConversions * NumEntries);
 
   // Post test clean up.
@@ -156,7 +156,7 @@ TEST(
   ConcurrentQueue<std::unique_ptr<ConversionWorkPacket>> queue;
 
   uint32_t Max = 5;
-  int NumEnqueued = Stream->fillConversionQueue(queue, Max);
+  auto NumEnqueued = Stream->fillConversionQueue(queue, Max);
   ASSERT_EQ(NumEnqueued, Max);
 
   // Post test clean up.
@@ -169,8 +169,8 @@ TEST(StreamTest,
   ConcurrentQueue<std::unique_ptr<ConversionWorkPacket>> queue;
 
   uint32_t Max = 5;
-  int NumEnqueued = Stream->fillConversionQueue(queue, Max);
-  ASSERT_EQ(NumEnqueued, 0);
+  auto NumEnqueued = Stream->fillConversionQueue(queue, Max);
+  ASSERT_EQ(NumEnqueued, 0u);
 
   // Post test clean up.
   clearQueue(queue);
@@ -180,8 +180,8 @@ TEST(StreamTest, filling_queue_when_no_conversions_gives_no_data) {
   auto Stream = createStreamWithEntries(0, 5);
   ConcurrentQueue<std::unique_ptr<ConversionWorkPacket>> queue;
 
-  int NumEnqueued = Stream->fillConversionQueue(queue, 10);
-  ASSERT_EQ(NumEnqueued, 0);
+  auto NumEnqueued = Stream->fillConversionQueue(queue, 10);
+  ASSERT_EQ(NumEnqueued, 0u);
 
   // Post test clean up.
   clearQueue(queue);
