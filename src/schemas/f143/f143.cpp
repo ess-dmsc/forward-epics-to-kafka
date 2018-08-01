@@ -29,9 +29,9 @@ using fmt::print;
 
 namespace fbg {
 
-using std::vector;
-using std::string;
 using fmt::print;
+using std::string;
+using std::vector;
 using namespace f143_structure;
 using epics::pvData::PVStructure;
 typedef struct {
@@ -245,11 +245,12 @@ V_t Field(flatbuffers::FlatBufferBuilder &builder,
           epics::pvData::PVFieldPtr const &field, int level) {
   return Field(builder, field.get(), level);
 }
-}
+} // namespace fbg
 
 class Converter : public MakeFlatBufferFromPVStructure {
 public:
-  FlatBufs::FlatbufferMessage::uptr convert(EpicsPVUpdate const &up) override {
+  std::unique_ptr<FlatBufs::FlatbufferMessage>
+  convert(EpicsPVUpdate const &up) override {
     // Passing initial size:
     auto &pvstr = up.epics_pvstr;
     auto fb = make_unique<FlatBufs::FlatbufferMessage>();
@@ -299,5 +300,5 @@ MakeFlatBufferFromPVStructure::ptr Info::create_converter() {
 
 FlatBufs::SchemaRegistry::Registrar<Info> g_registrar_info("f143",
                                                            Info::ptr(new Info));
-}
-}
+} // namespace f143
+} // namespace FlatBufs

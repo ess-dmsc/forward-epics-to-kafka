@@ -23,8 +23,8 @@ TEST(CommandHandlerTest, add_command_adds_stream_correctly) {
   Config(RawJson);
 
   ASSERT_EQ(1u, Main.streams.size());
-  ASSERT_EQ("my_channel_name", Main.streams[0]->channel_info().channel_name);
-  ASSERT_EQ("ca", Main.streams[0]->channel_info().provider_type);
+  ASSERT_EQ("my_channel_name", Main.streams[0]->getChannelInfo().channel_name);
+  ASSERT_EQ("ca", Main.streams[0]->getChannelInfo().provider_type);
 }
 
 TEST(CommandHandlerTest, add_command_adds_multiple_streams_correctly) {
@@ -49,10 +49,11 @@ TEST(CommandHandlerTest, add_command_adds_multiple_streams_correctly) {
   Config(RawJson);
 
   ASSERT_EQ(2u, Main.streams.size());
-  ASSERT_EQ("my_channel_name", Main.streams[0]->channel_info().channel_name);
-  ASSERT_EQ("ca", Main.streams[0]->channel_info().provider_type);
-  ASSERT_EQ("my_channel_name_2", Main.streams[1]->channel_info().channel_name);
-  ASSERT_EQ("pva", Main.streams[1]->channel_info().provider_type);
+  ASSERT_EQ("my_channel_name", Main.streams[0]->getChannelInfo().channel_name);
+  ASSERT_EQ("ca", Main.streams[0]->getChannelInfo().provider_type);
+  ASSERT_EQ("my_channel_name_2",
+            Main.streams[1]->getChannelInfo().channel_name);
+  ASSERT_EQ("pva", Main.streams[1]->getChannelInfo().provider_type);
 }
 
 TEST(CommandHandlerTest, stop_all_command_removes_all_streams_correctly) {
