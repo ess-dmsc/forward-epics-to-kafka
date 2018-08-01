@@ -1,7 +1,7 @@
 #include "../Stream.h"
 #include "../Streams.h"
 #include "../helper.h"
-#include "TestUtils.h"
+#include "StreamTestUtils.h"
 #include <gmock/gmock.h>
 
 using namespace testing;

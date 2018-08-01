@@ -54,7 +54,7 @@ public:
   Stream(Stream &&) = delete;
   ~Stream();
   int addConverter(std::unique_ptr<ConversionPath> Path);
-  int32_t fillConversionQueue(
+  uint32_t fillConversionQueue(
       moodycamel::ConcurrentQueue<std::unique_ptr<ConversionWorkPacket>> &Queue,
       uint32_t max);
   int stop();

@@ -4,7 +4,7 @@
 #include "../Stream.h"
 #include "../Streams.h"
 #include "../helper.h"
-#include "TestUtils.h"
+#include "StreamTestUtils.h"
 #include <gmock/gmock.h>
 
 using namespace testing;
@@ -34,7 +34,7 @@ std::shared_ptr<Stream> createStreamWithEntries(size_t Conversions,
                                                 size_t Entries) {
   auto Stream = createStreamRandom("provider", "channel");
 
-  for (auto i = 0; i < Conversions; ++i) {
+  for (size_t i = 0; i < Conversions; ++i) {
     auto Path = ::make_unique<FakeConversionPath>("Topic" + std::to_string(i),
                                                   "Schema" + std::to_string(i));
     Stream->addConverter(std::move(Path));
@@ -43,7 +43,7 @@ std::shared_ptr<Stream> createStreamWithEntries(size_t Conversions,
   // Add multiple updates
   auto Client = std::static_pointer_cast<EpicsClient::EpicsClientRandom>(
       Stream->getEpicsClient());
-  for (auto i = 0; i < Entries; ++i) {
+  for (size_t i = 0; i < Entries; ++i) {
     Client->generateFakePVUpdate();
   }
 
@@ -61,7 +61,7 @@ std::shared_ptr<Stream> createStreamWithEntries(size_t Conversions,
 /// \param queue
 void clearQueue(ConcurrentQueue<std::unique_ptr<ConversionWorkPacket>> &queue) {
   std::unique_ptr<ConversionWorkPacket> Data;
-  while (bool Success = queue.try_dequeue(Data)) {
+  while (queue.try_dequeue(Data)) {
     Data.reset();
   }
 }
@@ -94,12 +94,12 @@ TEST(StreamTest, returned_channel_info_contains_correct_values) {
 
 TEST(StreamTest, newly_created_stream_has_empty_queue) {
   auto Stream = createStream("provider", "channel1");
-  ASSERT_EQ(Stream->getQueueSize(), 0);
+  ASSERT_EQ(Stream->getQueueSize(), 0u);
 }
 
 TEST(StreamTest, stream_with_updates_has_non_empty_queue) {
   auto Stream = createStreamWithEntries(1, 2);
-  ASSERT_EQ(Stream->getQueueSize(), 2);
+  ASSERT_EQ(Stream->getQueueSize(), 2u);
 }
 
 TEST(StreamTest, add_conversion_path_once_is_okay) {

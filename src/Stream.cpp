@@ -88,7 +88,7 @@ int Stream::addConverter(std::unique_ptr<ConversionPath> Path) {
 
 void Stream::setEpicsError() { Client->errorInEpics(); }
 
-int32_t Stream::fillConversionQueue(
+uint32_t Stream::fillConversionQueue(
     moodycamel::ConcurrentQueue<std::unique_ptr<ConversionWorkPacket>> &Queue,
     uint32_t max) {
   uint32_t NumDequeued = 0;
