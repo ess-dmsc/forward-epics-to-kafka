@@ -29,10 +29,10 @@ public:
   int poll();
   void log_stats();
   std::vector<KafkaW::ProducerStats> stats_all();
+  InstanceSet(InstanceSet const &&) = delete;
 
 private:
-  InstanceSet(InstanceSet const &&) = delete;
-  InstanceSet(KafkaW::BrokerSettings opt);
+  explicit InstanceSet(KafkaW::BrokerSettings opt);
   KafkaW::BrokerSettings BrokerSettings;
   std::mutex mx_producers_by_host;
   std::map<std::string, std::shared_ptr<KafkaW::Producer>> producers_by_host;

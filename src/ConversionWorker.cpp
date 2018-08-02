@@ -72,7 +72,7 @@ int ConversionScheduler::fill(
   }
   auto sid0 = sid;
   while (nfc < nfm) {
-    auto n1 = main->streams[sid]->fill_conversion_work(queue, nfm - nfc);
+    auto n1 = main->streams[sid]->fillConversionQueue(queue, nfm - nfc);
     if (n1 > 0) {
       CLOG(7, 3, "Give worker {:2}  items: {:3}  stream: {:3}", wid, n1, sid);
     }
