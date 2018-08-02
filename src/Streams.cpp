@@ -9,7 +9,7 @@ void Streams::stopChannel(std::string const &channel) {
   std::unique_lock<std::mutex> lock(streams_mutex);
   streams.erase(std::remove_if(streams.begin(), streams.end(),
                                [&](std::shared_ptr<Stream> s) {
-                                 return (s->channel_info().channel_name ==
+                                 return (s->getChannelInfo().channel_name ==
                                          channel);
                                }),
                 streams.end());
@@ -57,7 +57,7 @@ const std::vector<std::shared_ptr<Stream>> &Streams::getStreams() {
 std::shared_ptr<Stream>
 Streams::getStreamByChannelName(std::string const &channel_name) {
   for (auto const &x : streams) {
-    if (x->channel_info().channel_name == channel_name) {
+    if (x->getChannelInfo().channel_name == channel_name) {
       return x;
     }
   }

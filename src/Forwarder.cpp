@@ -1,6 +1,7 @@
 #include "Forwarder.h"
 #include "CommandHandler.h"
 #include "Converter.h"
+#include "KafkaOutput.h"
 #include "Stream.h"
 #include "Timer.h"
 #include "helper.h"
@@ -216,7 +217,7 @@ void Forwarder::report_status() {
   auto Status = json::object();
   auto Streams = json::array();
   for (auto const &Stream : streams.getStreams()) {
-    Streams.push_back(Stream->status_json());
+    Streams.push_back(Stream->getStatusJson());
   }
   Status["streams"] = Streams;
   auto StatusString = Status.dump();
@@ -315,7 +316,7 @@ void Forwarder::pushConverterToStream(ConverterSettings const &ConverterInfo,
   }
   TopicURI.parse(ConverterInfo.Topic);
 
-  Converter::sptr ConverterShared;
+  std::shared_ptr<Converter> ConverterShared;
   if (!ConverterInfo.Name.empty()) {
     auto Lock = get_lock_converters();
     auto ConverterIt = converters.find(ConverterInfo.Name);
@@ -340,7 +341,13 @@ void Forwarder::pushConverterToStream(ConverterSettings const &ConverterInfo,
   if (!ConverterShared) {
     throw MappingAddException("Cannot create a converter");
   }
-  Stream->converter_add(*kafka_instance_set, ConverterShared, TopicURI);
+
+  // Create a conversion path then add it
+  auto Topic = kafka_instance_set->producer_topic(std::move(TopicURI));
+  auto cp = ::make_unique<ConversionPath>(
+      std::move(ConverterShared), ::make_unique<KafkaOutput>(std::move(Topic)));
+
+  Stream->addConverter(std::move(cp));
 }
 
 void Forwarder::addMapping(StreamSettings const &StreamInfo) {
@@ -353,7 +360,6 @@ void Forwarder::addMapping(StreamSettings const &StreamInfo) {
     } else {
       Stream = findOrAddStream<EpicsClient::EpicsClientMonitor>(ChannelInfo);
     }
-    std::shared_ptr<EpicsClient::EpicsClientInterface> Client;
     if (GenerateFakePVUpdateTimer != nullptr) {
       auto Client = Stream->getEpicsClient();
       auto RandomClient =
