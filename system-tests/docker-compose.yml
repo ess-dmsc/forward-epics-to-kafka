@@ -31,7 +31,7 @@ services:
       - kafka
 
   forwarder:
-    build: ../
+    image: forwarder:latest
     depends_on:
       - kafka
       - ioc

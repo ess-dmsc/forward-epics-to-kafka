@@ -2,6 +2,7 @@ import os.path
 import pytest
 from compose.cli.main import TopLevelCommand, project_from_options
 from confluent_kafka import Producer
+import docker
 
 
 def wait_until_kafka_ready(docker_cmd, docker_options):
@@ -44,8 +45,22 @@ common_options = {"--no-deps": False,
                   "--follow": False,
                   "--timestamps": False,
                   "--tail": "all",
-                  "--detach": True
+                  "--detach": True,
+                  "--build": False
                   }
+
+
+def build_forwarder_image():
+    client = docker.from_env()
+    print("Building Forwarder image")
+    client.images.build(path="../", tag="forwarder:latest", rm=False)
+
+
+def run_containers(cmd, options):
+    print("Running docker-compose up", flush=True)
+    cmd.up(options)
+    print("\nFinished docker-compose up\n", flush=True)
+    wait_until_kafka_ready(cmd, options)
 
 
 @pytest.fixture(scope="module")
@@ -54,19 +69,15 @@ def docker_compose(request):
     :type request: _pytest.python.FixtureRequest
     """
     print("Started preparing test environment...", flush=True)
-    build = False
 
     # Options must be given as long form
     options = common_options
-    options["--build"] = build
     options["--file"] = ["docker-compose.yml"]
 
+    build_forwarder_image()
     project = project_from_options(os.path.dirname(__file__), options)
     cmd = TopLevelCommand(project)
-    print("Running docker-compose up", flush=True)
-    cmd.up(options)
-    print("\nFinished docker-compose up\n", flush=True)
-    wait_until_kafka_ready(cmd, options)
+    run_containers(cmd, options)
 
     def fin():
         cmd.logs(options)
@@ -84,19 +95,15 @@ def docker_compose_fake_epics(request):
     :type request: _pytest.python.FixtureRequest
     """
     print("Started preparing test environment...", flush=True)
-    build = False
 
     # Options must be given as long form
     options = common_options
-    options["--build"] = build
     options["--file"] = ["docker-compose-fake-epics.yml"]
 
+    build_forwarder_image()
     project = project_from_options(os.path.dirname(__file__), options)
     cmd = TopLevelCommand(project)
-    print("Running docker-compose up", flush=True)
-    cmd.up(options)
-    print("\nFinished docker-compose up\n", flush=True)
-    wait_until_kafka_ready(cmd, options)
+    run_containers(cmd, options)
 
     def fin():
         cmd.logs(options)
@@ -114,19 +121,15 @@ def docker_compose_idle_updates(request):
     :type request: _pytest.python.FixtureRequest
     """
     print("Started preparing test environment...", flush=True)
-    build = False
 
     # Options must be given as long form
     options = common_options
-    options["--build"] = build
     options["--file"] = ["docker-compose-idle-updates.yml"]
 
+    build_forwarder_image()
     project = project_from_options(os.path.dirname(__file__), options)
     cmd = TopLevelCommand(project)
-    print("Running docker-compose up", flush=True)
-    cmd.up(options)
-    print("\nFinished docker-compose up\n", flush=True)
-    wait_until_kafka_ready(cmd, options)
+    run_containers(cmd, options)
 
     def fin():
         cmd.logs(options)
@@ -144,19 +147,15 @@ def docker_compose_idle_updates_long_period(request):
     :type request: _pytest.python.FixtureRequest
     """
     print("Started preparing test environment...", flush=True)
-    build = False
 
     # Options must be given as long form
     options = common_options
-    options["--build"] = build
     options["--file"] = ["docker-compose-idle-updates-long-period.yml"]
 
+    build_forwarder_image()
     project = project_from_options(os.path.dirname(__file__), options)
     cmd = TopLevelCommand(project)
-    print("Running docker-compose up", flush=True)
-    cmd.up(options)
-    print("\nFinished docker-compose up\n", flush=True)
-    wait_until_kafka_ready(cmd, options)
+    run_containers(cmd, options)
 
     def fin():
         cmd.logs(options)
