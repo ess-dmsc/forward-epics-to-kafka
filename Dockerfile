@@ -18,7 +18,13 @@ ADD "https://raw.githubusercontent.com/ess-dmsc/docker-ubuntu17.10-build-node/ma
 
 RUN mkdir forwarder
 RUN cd forwarder
-ADD . ../forwarder_src
+
+
+ADD src/ ../forwarder_src/src
+ADD conan/ ../forwarder_src/conan/
+ADD cmake/ ../forwarder_src/cmake/
+ADD CMakeLists.txt ../forwarder_src
+ADD Doxygen.conf ../forwarder_src
 
 RUN cd forwarder && \
     cmake ../forwarder_src && \

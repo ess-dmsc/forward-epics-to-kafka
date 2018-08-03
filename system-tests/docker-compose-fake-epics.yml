@@ -22,7 +22,7 @@ services:
     image: zookeeper:3.4
 
   forwarder:
-    build: ../
+    image: forwarder:latest
     depends_on:
       - kafka
     network_mode: "host"
