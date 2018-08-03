@@ -70,7 +70,6 @@ TEST(EpicsClientRandomTest,
 
   // WHEN we call generateFakePVUpdate
   EpicsClient.generateFakePVUpdate();
-  EpicsClient.generateFakePVUpdate();
 
   // THEN there will be an EpicsPVUpdates in the ring buffer with timestamp
   // fields
