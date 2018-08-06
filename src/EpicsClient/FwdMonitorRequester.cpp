@@ -27,14 +27,16 @@ FwdMonitorRequester::~FwdMonitorRequester() {
 std::string FwdMonitorRequester::getRequesterName() { return name; }
 
 void FwdMonitorRequester::message(std::string const &Message,
-                                  ::epics::pvData::MessageType /* MessageType */) {
+                                  ::epics::pvData::MessageType MessageType) {
+  UNUSED_ARG(MessageType);
   CLOG(7, 7, "FwdMonitorRequester::message: {}:  {}", name, Message.c_str());
 }
 
 void FwdMonitorRequester::monitorConnect(
     ::epics::pvData::Status const &Status,
     ::epics::pvData::Monitor::shared_pointer const &Monitor,
-    ::epics::pvData::StructureConstPtr const & /* Structure */) {
+    ::epics::pvData::StructureConstPtr const &Structure) {
+  UNUSED_ARG(Structure);
   if (!Status.isSuccess()) {
     // NOTE
     // Docs does not say anything about whether we are responsible for any
@@ -88,7 +90,8 @@ void FwdMonitorRequester::monitorEvent(
   }
 }
 
-void FwdMonitorRequester::unlisten(epics::pvData::MonitorPtr const & /* Monitor */) {
+void FwdMonitorRequester::unlisten(epics::pvData::MonitorPtr const &Monitor) {
+  UNUSED_ARG(Monitor);
   CLOG(7, 1, "FwdMonitorRequester::unlisten  {}", name);
 }
 } // namespace EpicsClient

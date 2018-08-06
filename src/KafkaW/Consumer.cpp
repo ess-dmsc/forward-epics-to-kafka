@@ -14,7 +14,7 @@ static std::atomic<int> g_kafka_consumer_instance_count;
   }
 
 Consumer::Consumer(BrokerSettings BrokerSettings)
-    : ConsumerBrokerSettings(BrokerSettings) {
+    : ConsumerBrokerSettings(std::move(BrokerSettings)) {
   init();
   id = g_kafka_consumer_instance_count++;
 }
@@ -40,8 +40,10 @@ void Consumer::logCallback(rd_kafka_t const *rk, int level, char const *fac,
   LOG(Sev(level), "IID: {}  {}  fac: {}", self->id, buf, fac);
 }
 
-void Consumer::errorCallback(rd_kafka_t * /* rk */, int err_i, char const *msg,
+void Consumer::errorCallback(rd_kafka_t *rk, int err_i, char const *msg,
                              void *opaque) {
+  UNUSED_ARG(rk);
+
   auto self = reinterpret_cast<Consumer *>(opaque);
   auto err = static_cast<rd_kafka_resp_err_t>(err_i);
   Sev ll = Sev::Debug;
@@ -55,8 +57,11 @@ void Consumer::errorCallback(rd_kafka_t * /* rk */, int err_i, char const *msg,
       rd_kafka_err2name(err), rd_kafka_err2str(err), msg);
 }
 
-int Consumer::statsCallback(rd_kafka_t * /* rk */, char *json, size_t json_size,
-                            void * /* opaque */) {
+int Consumer::statsCallback(rd_kafka_t *rk, char *json, size_t json_size,
+                            void *opaque) {
+  UNUSED_ARG(rk);
+  UNUSED_ARG(opaque);
+
   LOG(Sev::Debug, "INFO stats_cb {}  {:.{}}", json_size, json, json_size);
   // What does Kafka want us to return from this callback?
   return 0;
@@ -173,11 +178,6 @@ void Consumer::dumpCurrentSubscription() {
 }
 
 PollStatus Consumer::poll() {
-  if (0)
-    dumpCurrentSubscription();
-  if (0)
-    rd_kafka_dump(stdout, RdKafka);
-
   auto ret = PollStatus::Empty();
 
   auto msg =

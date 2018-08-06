@@ -2,7 +2,8 @@
 
 namespace Forwarder {
 
-void FakeSleeper::sleepFor(std::chrono::milliseconds /* Duration */) {
+void FakeSleeper::sleepFor(std::chrono::milliseconds Duration) {
+  UNUSED_ARG(Duration);
   std::unique_lock<std::mutex> Lock(Mutex);
   ConditionVariable.wait(Lock, [this] { return Trigger; });
   Trigger = false;

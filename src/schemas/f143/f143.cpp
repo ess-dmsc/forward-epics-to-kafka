@@ -280,9 +280,10 @@ public:
     return fb;
   }
 
-  void config(std::map<std::string, int64_t> const &config_ints,
-              std::map<std::string, std::string> const & /* config_strings */)
-      override {
+  void
+  config(std::map<std::string, int64_t> const &config_ints,
+         std::map<std::string, std::string> const &config_strings) override {
+    UNUSED_ARG(config_strings);
     auto it = config_ints.find("llevel");
     if (it != config_ints.end()) {
       llevel = it->second;
