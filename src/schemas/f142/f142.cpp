@@ -398,7 +398,7 @@ public:
   ~Converter() override { LOG(3, "~Converter"); }
 
   std::unique_ptr<FlatBufs::FlatbufferMessage>
-  convert(EpicsPVUpdate const &up) override {
+  create(EpicsPVUpdate const &up) override {
     auto &pvstr = up.epics_pvstr;
     auto fb = make_unique<FlatBufs::FlatbufferMessage>();
 
@@ -432,7 +432,7 @@ public:
     return fb;
   }
 
-  std::map<std::string, double> stats() override {
+  std::map<std::string, double> getStats() override {
     return {{"ranges_n", seqs.size()}};
   }
 
@@ -444,7 +444,7 @@ public:
 class ConverterTestNamed : public FlatBufferCreator {
 public:
   std::unique_ptr<FlatBufs::FlatbufferMessage>
-  convert(EpicsPVUpdate const &up) override {
+  create(EpicsPVUpdate const &up) override {
     auto &pvstr = up.epics_pvstr;
 
     {

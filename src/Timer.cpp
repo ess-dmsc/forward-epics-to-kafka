@@ -2,7 +2,7 @@
 
 namespace Forwarder {
 
-void FakeSleeper::sleepFor(std::chrono::milliseconds Duration) {
+void FakeSleeper::sleepFor(std::chrono::milliseconds /* Duration */) {
   std::unique_lock<std::mutex> Lock(Mutex);
   ConditionVariable.wait(Lock, [this] { return Trigger; });
   Trigger = false;
@@ -99,4 +99,4 @@ void Timer::addCallback(CallbackFunction Callback) {
   std::lock_guard<std::mutex> lock(CallbacksMutex);
   Callbacks.push_back(Callback);
 }
-}
+} // namespace Forwarder

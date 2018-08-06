@@ -1,8 +1,8 @@
 #include "../../EpicsPVUpdate.h"
+#include "../../FlatBufferCreator.h"
 #include "../../SchemaRegistry.h"
 #include "../../helper.h"
 #include "../../logger.h"
-#include "../../FlatBufferCreator.h"
 #include "schemas/f143_structure_generated.h"
 
 namespace FlatBufs {
@@ -251,7 +251,7 @@ V_t Field(flatbuffers::FlatBufferBuilder &builder,
 class Converter : public FlatBufferCreator {
 public:
   std::unique_ptr<FlatBufs::FlatbufferMessage>
-  convert(EpicsPVUpdate const &up) override {
+  create(EpicsPVUpdate const &up) override {
     // Passing initial size:
     auto &pvstr = up.epics_pvstr;
     auto fb = make_unique<FlatBufs::FlatbufferMessage>();
@@ -279,9 +279,10 @@ public:
     FinishStructureBuffer(*builder, b.Finish());
     return fb;
   }
-  void
-  config(std::map<std::string, int64_t> const &config_ints,
-         std::map<std::string, std::string> const &config_strings) override {
+
+  void config(std::map<std::string, int64_t> const &config_ints,
+              std::map<std::string, std::string> const & /* config_strings */)
+      override {
     auto it = config_ints.find("llevel");
     if (it != config_ints.end()) {
       llevel = it->second;

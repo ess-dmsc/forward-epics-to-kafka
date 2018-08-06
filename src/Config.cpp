@@ -21,7 +21,7 @@ Listener::Listener(KafkaW::BrokerSettings BrokerSettings, Forwarder::URI uri) {
   impl->consumer.reset(new KafkaW::Consumer(BrokerSettings));
   auto &consumer = *impl->consumer;
   consumer.on_rebalance_assign =
-      [this](rd_kafka_topic_partition_list_t *plist) {
+      [this](rd_kafka_topic_partition_list_t * /* plist */) {
         {
           std::unique_lock<std::mutex> lock(impl->mx);
           impl->connected = 1;

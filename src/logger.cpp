@@ -25,7 +25,7 @@
 int log_level = 3;
 
 // adhoc namespace because it would now collide with ::Logger defined
-// in gralog_logger
+// in graylog_logger
 
 namespace DW {
 
@@ -33,15 +33,15 @@ class Logger {
 public:
   Logger();
   ~Logger();
-  void use_log_file(std::string fname);
-  void log_kafka_gelf_start(std::string broker, std::string topic);
+  void use_log_file(std::string const & fname);
+  void log_kafka_gelf_start(std::string const & address, std::string const & topicname);
   void log_kafka_gelf_stop();
   FILE *log_file = stdout;
   int is_tty = 1;
   void dwlog_inner(int level, int color, char const *file, int line,
                    char const *func, std::string const &s1);
   int prefix_len();
-  void fwd_graylog_logger_enable(std::string address);
+  void fwd_graylog_logger_enable(std::string const & address);
 
 private:
   std::atomic<bool> do_run_kafka{false};
@@ -64,16 +64,16 @@ Logger::~Logger() {
   }
 }
 
-void Logger::use_log_file(std::string fname) {
+void Logger::use_log_file(std::string const & fname) {
   FILE *f1 = fopen(fname.c_str(), "wb");
   log_file = f1;
   is_tty = isatty(fileno(log_file));
 }
 
-void Logger::log_kafka_gelf_start(std::string address, std::string topicname) {
+void Logger::log_kafka_gelf_start(std::string const & address, std::string const & topicname) {
   KafkaW::BrokerSettings BrokerSettings;
   BrokerSettings.Address = address;
-  producer.reset(new KafkaW::Producer(BrokerSettings));
+  producer = std::make_shared<KafkaW::Producer>(BrokerSettings);
   topic.reset(new KafkaW::Producer::Topic(producer, topicname));
   topic->enableCopy();
   thread_poll = std::thread([this] {
@@ -87,7 +87,7 @@ void Logger::log_kafka_gelf_start(std::string address, std::string topicname) {
 
 void Logger::log_kafka_gelf_stop() { do_run_kafka = false; }
 
-void Logger::fwd_graylog_logger_enable(std::string address) {
+void Logger::fwd_graylog_logger_enable(std::string const & address) {
 #ifdef HAVE_GRAYLOG_LOGGER
   auto addr = address;
   int port = 12201;
@@ -101,12 +101,12 @@ void Logger::fwd_graylog_logger_enable(std::string address) {
   Log::AddLogHandler(new GraylogInterface(addr, port));
   do_use_graylog_logger = true;
 #else
-  LOG(0, "ERROR not compiled with support for graylog_logger");
+  LOG(0, "ERROR not compiled with support for graylog_logger {}", address);
 #endif
 }
 
 void Logger::dwlog_inner(int level, int color, char const *file, int line,
-                         char const *func, std::string const &s1) {
+                         char const * /* func */, std::string const &s1) {
   int npre = prefix_len();
   int const n2 = strlen(file);
   if (npre > n2) {
@@ -148,7 +148,7 @@ void Logger::dwlog_inner(int level, int color, char const *file, int line,
     Document["_LINE"] = line;
     auto DocumentString = Document.dump();
     topic->produce((KafkaW::uchar *)DocumentString.c_str(),
-                   DocumentString.size(), true);
+                   DocumentString.size());
   }
 #ifdef HAVE_GRAYLOG_LOGGER
   if (do_use_graylog_logger.load() and level < 7) {
@@ -165,7 +165,7 @@ int Logger::prefix_len() {
 }
 
 static Logger g__logger;
-}
+} // namespace DW
 
 void use_log_file(std::string fname) { DW::g__logger.use_log_file(fname); }
 

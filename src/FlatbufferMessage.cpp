@@ -21,6 +21,4 @@ FlatbufferMessageSlice FlatbufferMessage::message() {
                                                     builder->GetSize()};
   return ret;
 }
-
-void inspect(FlatbufferMessage const &fb) {}
 } // namespace FlatBufs

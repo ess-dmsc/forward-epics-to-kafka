@@ -48,6 +48,9 @@ public:
   void monitorEvent(::epics::pvData::MonitorPtr const &Monitor) override;
 
   /// Logging method.
+  ///
+  /// \param Monitor Not used, used to satisfy inheritance from
+  /// MonitorRequester.
   void unlisten(::epics::pvData::MonitorPtr const &Monitor) override;
 
 private:

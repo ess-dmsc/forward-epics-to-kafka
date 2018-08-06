@@ -9,8 +9,8 @@ void ProducerMsg::deliveryOk() {}
 
 void ProducerMsg::deliveryError() {}
 
-void Producer::cb_delivered(rd_kafka_t *rk, rd_kafka_message_t const *msg,
-                            void *opaque) {
+void Producer::deliveredCallback(rd_kafka_t *rk, rd_kafka_message_t const *msg,
+                                 void *opaque) {
   auto self = reinterpret_cast<Producer *>(opaque);
   if (!msg) {
     LOG(Sev::Error, "IID: {}  ERROR msg should never be null", self->id);
@@ -32,16 +32,13 @@ void Producer::cb_delivered(rd_kafka_t *rk, rd_kafka_message_t const *msg,
     if (auto &cb = self->on_delivery_ok) {
       cb(msg);
     }
-    if (false) {
-      LOG(Sev::Debug, "IID: {}  Ok delivered ({}, p {}, offset {}, len {})",
-          self->id, rd_kafka_name(rk), msg->partition, msg->offset, msg->len);
-    }
+
     ++self->Stats.produce_cb;
   }
 }
 
-void Producer::cb_error(rd_kafka_t *rk, int err_i, char const *msg,
-                        void *opaque) {
+void Producer::errorCallback(rd_kafka_t * /* rk */, int err_i, char const *msg,
+                             void *opaque) {
   auto self = reinterpret_cast<Producer *>(opaque);
   auto err = static_cast<rd_kafka_resp_err_t>(err_i);
   Sev ll = Sev::Warning;
@@ -58,8 +55,8 @@ void Producer::cb_error(rd_kafka_t *rk, int err_i, char const *msg,
       rd_kafka_err2name(err), rd_kafka_err2str(err), msg);
 }
 
-int Producer::cb_stats(rd_kafka_t *rk, char *json, size_t json_len,
-                       void *opaque) {
+int Producer::statsCallback(rd_kafka_t *rk, char *json, size_t json_len,
+                            void *opaque) {
   auto self = reinterpret_cast<Producer *>(opaque);
   LOG(Sev::Debug, "IID: {}  INFO cb_stats {} length {}   {:.{}}", self->id,
       rd_kafka_name(rk), json_len, json, json_len);
@@ -67,15 +64,15 @@ int Producer::cb_stats(rd_kafka_t *rk, char *json, size_t json_len,
   return 0;
 }
 
-void Producer::cb_log(rd_kafka_t const *rk, int level, char const *fac,
-                      char const *buf) {
+void Producer::logCallback(rd_kafka_t const *rk, int /* level */, char const *fac,
+                           char const *buf) {
   auto self = reinterpret_cast<Producer *>(rd_kafka_opaque(rk));
   LOG(Sev::Debug, "IID: {}  {}  fac: {}", self->id, buf, fac);
 }
 
-void Producer::cb_throttle(rd_kafka_t *rk, char const *broker_name,
-                           int32_t broker_id, int throttle_time_ms,
-                           void *opaque) {
+void Producer::throttleCallback(rd_kafka_t * /* rk */, char const *broker_name,
+                                int32_t broker_id, int throttle_time_ms,
+                                void *opaque) {
   auto self = reinterpret_cast<Producer *>(opaque);
   LOG(Sev::Debug, "IID: {}  INFO cb_throttle  broker_id: {}  broker_name: {}  "
                   "throttle_time_ms: {}",
@@ -124,11 +121,11 @@ Producer::Producer(BrokerSettings ProducerBrokerSettings)
 
   rd_kafka_conf_t *conf = 0;
   conf = rd_kafka_conf_new();
-  rd_kafka_conf_set_dr_msg_cb(conf, Producer::cb_delivered);
-  rd_kafka_conf_set_error_cb(conf, Producer::cb_error);
-  rd_kafka_conf_set_stats_cb(conf, Producer::cb_stats);
-  rd_kafka_conf_set_log_cb(conf, Producer::cb_log);
-  rd_kafka_conf_set_throttle_cb(conf, Producer::cb_throttle);
+  rd_kafka_conf_set_dr_msg_cb(conf, Producer::deliveredCallback);
+  rd_kafka_conf_set_error_cb(conf, Producer::errorCallback);
+  rd_kafka_conf_set_stats_cb(conf, Producer::statsCallback);
+  rd_kafka_conf_set_log_cb(conf, Producer::logCallback);
+  rd_kafka_conf_set_throttle_cb(conf, Producer::throttleCallback);
 
   rd_kafka_conf_set_opaque(conf, this);
   LOG(Sev::Debug, "Producer opaque: {}", (void *)this);

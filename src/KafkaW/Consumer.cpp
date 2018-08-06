@@ -34,29 +34,29 @@ Consumer::~Consumer() {
   }
 }
 
-void Consumer::cb_log(rd_kafka_t const *rk, int level, char const *fac,
-                      char const *buf) {
+void Consumer::logCallback(rd_kafka_t const *rk, int level, char const *fac,
+                           char const *buf) {
   auto self = reinterpret_cast<Consumer *>(rd_kafka_opaque(rk));
   LOG(Sev(level), "IID: {}  {}  fac: {}", self->id, buf, fac);
 }
 
-void Consumer::cb_error(rd_kafka_t *rk, int err_i, char const *msg,
-                        void *opaque) {
+void Consumer::errorCallback(rd_kafka_t * /* rk */, int err_i, char const *msg,
+                             void *opaque) {
   auto self = reinterpret_cast<Consumer *>(opaque);
   auto err = static_cast<rd_kafka_resp_err_t>(err_i);
   Sev ll = Sev::Debug;
   if (err == RD_KAFKA_RESP_ERR__TRANSPORT) {
     ll = Sev::Warning;
-    // rd_kafka_dump(stdout, rk);
   }
-  LOG(ll, "Kafka cb_error id: {}  broker: {}  errno: {}  errorname: {}  "
-          "errorstring: {}  message: {}",
+  LOG(ll,
+      "Kafka cb_error id: {}  broker: {}  errno: {}  errorname: {}  "
+      "errorstring: {}  message: {}",
       self->id, self->ConsumerBrokerSettings.Address, err_i,
       rd_kafka_err2name(err), rd_kafka_err2str(err), msg);
 }
 
-int Consumer::cb_stats(rd_kafka_t *rk, char *json, size_t json_size,
-                       void *opaque) {
+int Consumer::statsCallback(rd_kafka_t * /* rk */, char *json, size_t json_size,
+                            void * /* opaque */) {
   LOG(Sev::Debug, "INFO stats_cb {}  {:.{}}", json_size, json, json_size);
   // What does Kafka want us to return from this callback?
   return 0;
@@ -69,9 +69,9 @@ static void print_partition_list(rd_kafka_topic_partition_list_t *plist) {
   }
 }
 
-void Consumer::cb_rebalance(rd_kafka_t *rk, rd_kafka_resp_err_t err,
-                            rd_kafka_topic_partition_list_t *plist,
-                            void *opaque) {
+void Consumer::rebalanceCallback(rd_kafka_t *rk, rd_kafka_resp_err_t err,
+                                 rd_kafka_topic_partition_list_t *plist,
+                                 void *opaque) {
   rd_kafka_resp_err_t err2;
   auto self = static_cast<Consumer *>(opaque);
   switch (err) {
@@ -119,10 +119,10 @@ void Consumer::init() {
   auto conf = rd_kafka_conf_new();
   ConsumerBrokerSettings.apply(conf);
 
-  rd_kafka_conf_set_log_cb(conf, Consumer::cb_log);
-  rd_kafka_conf_set_error_cb(conf, Consumer::cb_error);
-  rd_kafka_conf_set_stats_cb(conf, Consumer::cb_stats);
-  rd_kafka_conf_set_rebalance_cb(conf, Consumer::cb_rebalance);
+  rd_kafka_conf_set_log_cb(conf, Consumer::logCallback);
+  rd_kafka_conf_set_error_cb(conf, Consumer::errorCallback);
+  rd_kafka_conf_set_stats_cb(conf, Consumer::statsCallback);
+  rd_kafka_conf_set_rebalance_cb(conf, Consumer::rebalanceCallback);
   rd_kafka_conf_set_consume_cb(conf, nullptr);
   rd_kafka_conf_set_opaque(conf, this);
 
@@ -208,4 +208,4 @@ PollStatus Consumer::poll() {
   }
   return PollStatus::Err();
 }
-}
+} // namespace KafkaW
