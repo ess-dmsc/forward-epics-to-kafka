@@ -2,7 +2,7 @@
 
 #include "FlatbufferMessage.h"
 #include "MainOpt.h"
-#include "MakeFlatBufferFromPVStructure.h"
+#include "FlatBufferCreator.h"
 #include "SchemaRegistry.h"
 #include <map>
 #include <string>
@@ -21,6 +21,6 @@ public:
 
 private:
   std::string schema;
-  FlatBufs::MakeFlatBufferFromPVStructure::ptr conv;
+  std::unique_ptr<FlatBufs::FlatBufferCreator> conv;
 };
 } // namespace Forwarder

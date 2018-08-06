@@ -1,0 +1,14 @@
+#include "FlatBufferCreator.h"
+
+namespace FlatBufs {
+
+FlatBufferCreator::~FlatBufferCreator() {}
+
+void FlatBufferCreator::config(
+    std::map<std::string, int64_t> const &config_ints,
+    std::map<std::string, std::string> const &config_strings) {}
+
+std::map<std::string, double> FlatBufferCreator::stats() {
+  return {};
+}
+}

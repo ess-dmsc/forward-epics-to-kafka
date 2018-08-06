@@ -10,11 +10,9 @@ namespace FlatBufs {
 struct EpicsPVUpdate;
 
 /// Interface for flat buffer creators for the different schemas
-class MakeFlatBufferFromPVStructure {
+class FlatBufferCreator {
 public:
-  typedef std::unique_ptr<MakeFlatBufferFromPVStructure> ptr;
-  typedef std::shared_ptr<MakeFlatBufferFromPVStructure> sptr;
-  virtual ~MakeFlatBufferFromPVStructure();
+  virtual ~FlatBufferCreator();
   virtual std::unique_ptr<FlatbufferMessage>
   convert(EpicsPVUpdate const &up) = 0;
   virtual void config(std::map<std::string, int64_t> const &config_ints,

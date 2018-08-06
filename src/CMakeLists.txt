@@ -71,7 +71,7 @@ set(INCLUDES
     FlatbufferMessage.h
     FlatbufferMessageSlice.h
     Forwarder.h
-    MakeFlatBufferFromPVStructure.h
+        FlatBufferCreator.h
     git_commit_current.h
     helper.h
     json.h
@@ -110,7 +110,7 @@ set(SOURCES
     Config.cpp
     FlatbufferMessage.cpp
     SchemaRegistry.cpp
-    MakeFlatBufferFromPVStructure.cpp
+        FlatBufferCreator.cpp
     uri.cpp
     json.cpp
     Converter.cpp

@@ -2,6 +2,7 @@
 #include "../../SchemaRegistry.h"
 #include "../../helper.h"
 #include "../../logger.h"
+#include "../../FlatBufferCreator.h"
 #include "schemas/f143_structure_generated.h"
 
 namespace FlatBufs {
@@ -247,7 +248,7 @@ V_t Field(flatbuffers::FlatBufferBuilder &builder,
 }
 } // namespace fbg
 
-class Converter : public MakeFlatBufferFromPVStructure {
+class Converter : public FlatBufferCreator {
 public:
   std::unique_ptr<FlatBufs::FlatbufferMessage>
   convert(EpicsPVUpdate const &up) override {
@@ -291,11 +292,11 @@ public:
 
 class Info : public SchemaInfo {
 public:
-  MakeFlatBufferFromPVStructure::ptr create_converter() override;
+  std::unique_ptr<FlatBufferCreator> create_converter() override;
 };
 
-MakeFlatBufferFromPVStructure::ptr Info::create_converter() {
-  return MakeFlatBufferFromPVStructure::ptr(new Converter);
+std::unique_ptr<FlatBufferCreator> Info::create_converter() {
+  return make_unique<Converter>();
 }
 
 FlatBufs::SchemaRegistry::Registrar<Info> g_registrar_info("f143",
