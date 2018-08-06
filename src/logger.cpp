@@ -108,7 +108,6 @@ void Logger::fwd_graylog_logger_enable(std::string const & address) {
 void Logger::dwlog_inner(int level, int color, char const *file, int line,
                          char const * func, std::string const &s1) {
   UNUSED_ARG(func);
-
   int npre = prefix_len();
   int const n2 = strlen(file);
   if (npre > n2) {

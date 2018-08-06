@@ -43,7 +43,6 @@ void Consumer::logCallback(rd_kafka_t const *rk, int level, char const *fac,
 void Consumer::errorCallback(rd_kafka_t *rk, int err_i, char const *msg,
                              void *opaque) {
   UNUSED_ARG(rk);
-
   auto self = reinterpret_cast<Consumer *>(opaque);
   auto err = static_cast<rd_kafka_resp_err_t>(err_i);
   Sev ll = Sev::Debug;
@@ -61,7 +60,6 @@ int Consumer::statsCallback(rd_kafka_t *rk, char *json, size_t json_size,
                             void *opaque) {
   UNUSED_ARG(rk);
   UNUSED_ARG(opaque);
-
   LOG(Sev::Debug, "INFO stats_cb {}  {:.{}}", json_size, json, json_size);
   // What does Kafka want us to return from this callback?
   return 0;
