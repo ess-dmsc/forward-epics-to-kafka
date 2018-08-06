@@ -12,27 +12,30 @@ class EpicsClientMonitor;
 /// and creating callbacks.
 class FwdMonitorRequester : public ::epics::pvData::MonitorRequester {
 public:
-  /// Sets the Requester ID, channel name and pointer to epics client.
+  /// The constructor.
+  ///
+  /// \param EpicsClientMonitor The PV monitor.
+  /// \param ChannelName The PV name.
   FwdMonitorRequester(EpicsClientInterface *EpicsClientMonitor,
                       const std::string &ChannelName);
 
   ~FwdMonitorRequester() override;
 
-  /// returns the requester ID.
+  /// \return The requester name.
   std::string getRequesterName() override;
 
   /// Logging function from MonitorRequester.
   ///
-  ///\param Message The logging message.
-  ///\param MessageType The PV message type.
+  /// \param Message The logging message.
+  /// \param MessageType The PV message type.
   void message(std::string const &Message,
                ::epics::pvData::MessageType MessageType) override;
 
   /// Checks the epics monitor is connected and no errors are returned.
   ///
-  ///\param Status The status of the internal epics monitor.
-  ///\param Monitor Reference to the epics monitor.
-  ///\param Structure The PV structure.
+  /// \param Status The status of the internal epics monitor.
+  /// \param Monitor Reference to the epics monitor.
+  /// \param Structure The PV structure.
   void
   monitorConnect(::epics::pvData::Status const &Status,
                  ::epics::pvData::Monitor::shared_pointer const &Monitor,
@@ -43,7 +46,7 @@ public:
   /// The callbacks produce epics pv update instances which are then added to
   /// emit_queue via emit()
   ///
-  ///\param pointer to the epics monitor loop.
+  /// \param pointer to the epics monitor loop.
   void monitorEvent(::epics::pvData::MonitorPtr const &Monitor) override;
 
   /// Logging method.
