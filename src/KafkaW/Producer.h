@@ -37,9 +37,9 @@ class Producer {
 public:
   typedef ProducerTopic Topic;
   typedef ProducerMsg Msg;
-  Producer(BrokerSettings ProducerBrokerSettings_);
+  explicit Producer(BrokerSettings ProducerBrokerSettings_);
   Producer(Producer const &) = delete;
-  Producer(Producer &&x);
+  Producer(Producer &&x) noexcept;
   ~Producer();
   void pollWhileOutputQueueFilled();
   void poll();
@@ -56,7 +56,7 @@ public:
 
   /// The error callback for Kafka.
   ///
-  /// \param rk The Kafka handle (not used).
+  /// \param rk The Kafka handle.
   /// \param err_i The error code.
   /// \param reason The error string.
   /// \param opaque The opaque object.
@@ -76,7 +76,7 @@ public:
   /// The log callback for Kafka.
   ///
   /// \param rk The Kafka handle.
-  /// \param level The log level (not used).
+  /// \param level The log level.
   /// \param fac ?
   /// \param buf The message buffer.
   static void logCallback(rd_kafka_t const *rk, int level, char const *fac,
@@ -84,7 +84,7 @@ public:
 
   /// The throttle callback for Kafka.
   ///
-  /// \param rk The Kafka handle (not used).
+  /// \param rk The Kafka handle.
   /// \param broker_name The broker name.
   /// \param broker_id  The broker id.
   /// \param throttle_time_ms The throttle time in milliseconds.
@@ -105,4 +105,4 @@ public:
 private:
   int id = 0;
 };
-}
+} // namespace KafkaW

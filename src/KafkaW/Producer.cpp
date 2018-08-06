@@ -37,8 +37,9 @@ void Producer::deliveredCallback(rd_kafka_t *rk, rd_kafka_message_t const *msg,
   }
 }
 
-void Producer::errorCallback(rd_kafka_t * /* rk */, int err_i, char const *msg,
+void Producer::errorCallback(rd_kafka_t *rk, int err_i, char const *msg,
                              void *opaque) {
+  UNUSED_ARG(rk);
   auto self = reinterpret_cast<Producer *>(opaque);
   auto err = static_cast<rd_kafka_resp_err_t>(err_i);
   Sev ll = Sev::Warning;
@@ -49,8 +50,9 @@ void Producer::errorCallback(rd_kafka_t * /* rk */, int err_i, char const *msg,
     if (self->on_error)
       self->on_error(self, err);
   }
-  LOG(ll, "Kafka cb_error id: {}  broker: {}  errno: {}  errorname: {}  "
-          "errorstring: {}  message: {}",
+  LOG(ll,
+      "Kafka cb_error id: {}  broker: {}  errno: {}  errorname: {}  "
+      "errorstring: {}  message: {}",
       self->id, self->ProducerBrokerSettings.Address, err_i,
       rd_kafka_err2name(err), rd_kafka_err2str(err), msg);
 }
@@ -64,18 +66,21 @@ int Producer::statsCallback(rd_kafka_t *rk, char *json, size_t json_len,
   return 0;
 }
 
-void Producer::logCallback(rd_kafka_t const *rk, int /* level */, char const *fac,
+void Producer::logCallback(rd_kafka_t const *rk, int level, char const *fac,
                            char const *buf) {
+  UNUSED_ARG(level);
   auto self = reinterpret_cast<Producer *>(rd_kafka_opaque(rk));
   LOG(Sev::Debug, "IID: {}  {}  fac: {}", self->id, buf, fac);
 }
 
-void Producer::throttleCallback(rd_kafka_t * /* rk */, char const *broker_name,
+void Producer::throttleCallback(rd_kafka_t *rk, char const *broker_name,
                                 int32_t broker_id, int throttle_time_ms,
                                 void *opaque) {
+  UNUSED_ARG(rk);
   auto self = reinterpret_cast<Producer *>(opaque);
-  LOG(Sev::Debug, "IID: {}  INFO cb_throttle  broker_id: {}  broker_name: {}  "
-                  "throttle_time_ms: {}",
+  LOG(Sev::Debug,
+      "IID: {}  INFO cb_throttle  broker_id: {}  broker_name: {}  "
+      "throttle_time_ms: {}",
       self->id, broker_id, broker_name, throttle_time_ms);
 }
 
@@ -119,7 +124,7 @@ Producer::Producer(BrokerSettings ProducerBrokerSettings)
   std::vector<char> errstr;
   errstr.resize(512);
 
-  rd_kafka_conf_t *conf = 0;
+  rd_kafka_conf_t *conf = nullptr;
   conf = rd_kafka_conf_new();
   rd_kafka_conf_set_dr_msg_cb(conf, Producer::deliveredCallback);
   rd_kafka_conf_set_error_cb(conf, Producer::errorCallback);
@@ -150,7 +155,7 @@ Producer::Producer(BrokerSettings ProducerBrokerSettings)
   }
 }
 
-Producer::Producer(Producer &&x) {
+Producer::Producer(Producer &&x) noexcept {
   using std::swap;
   swap(RdKafkaPtr, x.RdKafkaPtr);
   swap(on_delivery_ok, x.on_delivery_ok);
@@ -197,4 +202,4 @@ ProducerStats::ProducerStats(ProducerStats const &x) {
   produced_bytes = x.produced_bytes.load();
   out_queue = x.out_queue.load();
 }
-}
+} // namespace KafkaW

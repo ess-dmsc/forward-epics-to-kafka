@@ -40,17 +40,17 @@ private:
 
   /// The statistics callback for Kafka.
   ///
-  /// \param rk The Kafka handle (not used).
+  /// \param rk The Kafka handle.
   /// \param json The statistics data in JSON format.
   /// \param json_size The size of the JSON string.
-  /// \param opaque The opaque (not used).
+  /// \param opaque The opaque.
   /// \return The error code.
   static int statsCallback(rd_kafka_t *rk, char *json, size_t json_size,
                            void *opaque);
 
   /// Error callback method for Kafka.
   ///
-  /// \param rk The Kafka handle (not used).
+  /// \param rk The Kafka handle.
   /// \param err_i The error code.
   /// \param reason The error string.
   /// \param opaque The opaque object.

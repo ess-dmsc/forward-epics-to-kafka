@@ -24,7 +24,7 @@ public:
   /// Logging function from MonitorRequester.
   ///
   ///\param Message The logging message.
-  ///\param MessageType Not used, satisfies inheritance from MonitorRequester.
+  ///\param MessageType The PV message type.
   void message(std::string const &Message,
                ::epics::pvData::MessageType MessageType) override;
 
@@ -32,8 +32,7 @@ public:
   ///
   ///\param Status The status of the internal epics monitor.
   ///\param Monitor Reference to the epics monitor.
-  ///\param Structure Not used, used to satisfy inheritance from
-  /// MonitorRequester.
+  ///\param Structure The PV structure.
   void
   monitorConnect(::epics::pvData::Status const &Status,
                  ::epics::pvData::Monitor::shared_pointer const &Monitor,
@@ -49,8 +48,7 @@ public:
 
   /// Logging method.
   ///
-  /// \param Monitor Not used, used to satisfy inheritance from
-  /// MonitorRequester.
+  /// \param Monitor The PV monitor.
   void unlisten(::epics::pvData::MonitorPtr const &Monitor) override;
 
 private:
