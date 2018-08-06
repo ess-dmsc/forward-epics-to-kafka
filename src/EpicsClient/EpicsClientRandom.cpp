@@ -44,7 +44,7 @@ EpicsClientRandom::createFakePVStructure(double Value) const {
   auto currentTimestamp = getCurrentTimestamp();
   auto currentTimestampSeconds = currentTimestamp / 1000000000L;
   auto currentTimestampNanosecondsComponent =
-      currentTimestamp - currentTimestampSeconds;
+      currentTimestamp - (currentTimestampSeconds * 1000000000L);
   auto Timestamp =
       FakePVStructure->getSubField<epics::pvData::PVStructure>("timeStamp");
   auto TimestampSeconds =
