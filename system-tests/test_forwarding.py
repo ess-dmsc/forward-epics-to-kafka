@@ -38,7 +38,7 @@ def test_config_file_channel_created_correctly(docker_compose):
 
     change_pv_value(PVDOUBLE, 0)
     prod.stop_all()
-    sleep(3)
+    sleep(5)
     cons.close()
 
 
@@ -72,6 +72,10 @@ def test_forwarder_sends_pv_updates_single_pv_double(docker_compose):
     second_msg = poll_for_valid_message(cons)
     check_message_pv_name_and_value_type(second_msg, Value.Double, PVDOUBLE)
     check_double_value_and_equality(second_msg, 5)
+
+    change_pv_value(PVDOUBLE, 0)
+    prod.stop_all()
+    sleep(3)
     cons.close()
 
 
@@ -111,6 +115,9 @@ def test_forwarder_sends_pv_updates_single_pv_string(docker_compose):
     union_string.Init(data_msg.Value().Bytes, data_msg.Value().Pos)
     assert union_string.Value() == stop_command
 
+    change_pv_value(PVSTR, "")
+    prod.stop_all()
+    sleep(3)
     cons.close()
 
 
@@ -146,6 +153,10 @@ def test_forwarder_sends_pv_updates_single_pv_long(docker_compose):
     second_msg = poll_for_valid_message(cons)
     check_message_pv_name_and_value_type(second_msg, Value.Int, PVLONG)
     check_int_value_and_equality(second_msg, 5)
+
+    change_pv_value(PVLONG, 0)
+    prod.stop_all()
+    sleep(3)
     cons.close()
 
 
@@ -181,6 +192,10 @@ def test_forwarder_sends_pv_updates_single_pv_enum(docker_compose):
     second_msg = poll_for_valid_message(cons)
     check_message_pv_name_and_value_type(second_msg, Value.Int, PVENUM)
     check_int_value_and_equality(second_msg, 1)
+
+    change_pv_value(PVENUM, "INIT")
+    prod.stop_all()
+    sleep(3)
     cons.close()
 
 
