@@ -1,5 +1,5 @@
 ﻿from helpers.producerwrapper import ProducerWrapper
-from helpers.f142_logdata import LogData, Int, Double, String, Long
+from helpers.f142_logdata import Int, Double, String, Long
 from helpers.f142_logdata.Value import Value
 from time import sleep
 from helpers.kafka_helpers import create_consumer, poll_for_valid_message
@@ -19,7 +19,7 @@ def test_config_file_channel_created_correctly(docker_compose):
     :return: none
     """
 
-    prod  = ProducerWrapper("localhost:9092", CONFIG_TOPIC, "TEST_forwarderData_pv_from_config")
+    prod = ProducerWrapper("localhost:9092", CONFIG_TOPIC, "TEST_forwarderData_pv_from_config")
     cons = create_consumer()
     cons.subscribe(['TEST_forwarderData_pv_from_config'])
     # Change the PV value, so something is forwarded
@@ -27,16 +27,14 @@ def test_config_file_channel_created_correctly(docker_compose):
     # Wait for PV to be updated
     sleep(5)
     # Check the initial value is forwarded
-    first_msg = poll_for_valid_message(cons).value()
-    log_data_first = LogData.LogData.GetRootAsLogData(first_msg, 0)
-    check_message_pv_name_and_value_type(log_data_first, Value.Double, PVDOUBLE)
-    check_double_value_and_equality(log_data_first, 0)
+    first_msg = poll_for_valid_message(cons)
+    check_message_pv_name_and_value_type(first_msg, Value.Double, PVDOUBLE)
+    check_double_value_and_equality(first_msg, 0)
 
     # Check the new value is forwarded
-    second_msg = poll_for_valid_message(cons).value()
-    log_data_second = LogData.LogData.GetRootAsLogData(second_msg, 0)
-    check_message_pv_name_and_value_type(log_data_second, Value.Double, PVDOUBLE)
-    check_double_value_and_equality(log_data_second, 10)
+    second_msg = poll_for_valid_message(cons)
+    check_message_pv_name_and_value_type(second_msg, Value.Double, PVDOUBLE)
+    check_double_value_and_equality(second_msg, 10)
 
     change_pv_value(PVDOUBLE, 0)
     prod.stop_all()
@@ -67,15 +65,13 @@ def test_forwarder_sends_pv_updates_single_pv_double(docker_compose):
     # Wait for PV to be updated
     sleep(5)
 
-    first_msg = poll_for_valid_message(cons).value()
-    log_data_first = LogData.LogData.GetRootAsLogData(first_msg, 0)
-    check_message_pv_name_and_value_type(log_data_first, Value.Double, PVDOUBLE)
-    check_double_value_and_equality(log_data_first, 0)
+    first_msg = poll_for_valid_message(cons)
+    check_message_pv_name_and_value_type(first_msg, Value.Double, PVDOUBLE)
+    check_double_value_and_equality(first_msg, 0)
 
-    second_msg = poll_for_valid_message(cons).value()
-    log_data_second = LogData.LogData.GetRootAsLogData(second_msg, 0)
-    check_message_pv_name_and_value_type(log_data_second, Value.Double, PVDOUBLE)
-    check_double_value_and_equality(log_data_second, 5)
+    second_msg = poll_for_valid_message(cons)
+    check_message_pv_name_and_value_type(second_msg, Value.Double, PVDOUBLE)
+    check_double_value_and_equality(second_msg, 5)
     cons.close()
 
 
@@ -105,15 +101,14 @@ def test_forwarder_sends_pv_updates_single_pv_string(docker_compose):
     cons.subscribe([data_topic])
 
     # Poll for empty update - initial value of SIMPLE:STR is nothing
-    poll_for_valid_message(cons).value()
+    poll_for_valid_message(cons)
     # Poll for message which should contain forwarded PV update
-    data_msg = poll_for_valid_message(cons).value()
-    log_data = LogData.LogData.GetRootAsLogData(data_msg, 0)
+    data_msg = poll_for_valid_message(cons)
 
-    check_message_pv_name_and_value_type(log_data, Value.String, PVSTR)
+    check_message_pv_name_and_value_type(data_msg, Value.String, PVSTR)
 
     union_string = String.String()
-    union_string.Init(log_data.Value().Bytes, log_data.Value().Pos)
+    union_string.Init(data_msg.Value().Bytes, data_msg.Value().Pos)
     assert union_string.Value() == stop_command
 
     cons.close()
@@ -144,15 +139,13 @@ def test_forwarder_sends_pv_updates_single_pv_long(docker_compose):
     sleep(5)
     cons.subscribe([data_topic])
 
-    first_msg = poll_for_valid_message(cons).value()
-    log_data_first = LogData.LogData.GetRootAsLogData(first_msg, 0)
-    check_message_pv_name_and_value_type(log_data_first, Value.Int, PVLONG)
-    check_int_value_and_equality(log_data_first, 0)
+    first_msg = poll_for_valid_message(cons)
+    check_message_pv_name_and_value_type(first_msg, Value.Int, PVLONG)
+    check_int_value_and_equality(first_msg, 0)
 
-    second_msg = poll_for_valid_message(cons).value()
-    log_data_second = LogData.LogData.GetRootAsLogData(second_msg, 0)
-    check_message_pv_name_and_value_type(log_data_second, Value.Int, PVLONG)
-    check_int_value_and_equality(log_data_second, 5)
+    second_msg = poll_for_valid_message(cons)
+    check_message_pv_name_and_value_type(second_msg, Value.Int, PVLONG)
+    check_int_value_and_equality(second_msg, 5)
     cons.close()
 
 
@@ -181,15 +174,13 @@ def test_forwarder_sends_pv_updates_single_pv_enum(docker_compose):
     sleep(5)
     cons.subscribe([data_topic])
 
-    first_msg = poll_for_valid_message(cons).value()
-    log_data_first = LogData.LogData.GetRootAsLogData(first_msg, 0)
-    check_message_pv_name_and_value_type(log_data_first, Value.Int, PVENUM)
-    check_int_value_and_equality(log_data_first, 0)
+    first_msg = poll_for_valid_message(cons)
+    check_message_pv_name_and_value_type(first_msg, Value.Int, PVENUM)
+    check_int_value_and_equality(first_msg, 0)
 
-    second_msg = poll_for_valid_message(cons).value()
-    log_data_second = LogData.LogData.GetRootAsLogData(second_msg, 0)
-    check_message_pv_name_and_value_type(log_data_second, Value.Int, PVENUM)
-    check_int_value_and_equality(log_data_second, 1)
+    second_msg = poll_for_valid_message(cons)
+    check_message_pv_name_and_value_type(second_msg, Value.Int, PVENUM)
+    check_int_value_and_equality(second_msg, 1)
     cons.close()
 
 
@@ -207,12 +198,10 @@ def test_forwarder_updates_multiple_pvs(docker_compose):
     sleep(2)
 
     first_msg = poll_for_valid_message(cons).value()
-    log_data_first = LogData.LogData.GetRootAsLogData(first_msg, 0)
-    check_message_pv_name_and_value_type(log_data_first, Value.String, PVSTR)
+    check_message_pv_name_and_value_type(first_msg, Value.String, PVSTR)
 
     second_msg = poll_for_valid_message(cons).value()
-    log_data_second = LogData.LogData.GetRootAsLogData(second_msg, 0)
-    check_message_pv_name_and_value_type(log_data_second, Value.Int, PVLONG)
+    check_message_pv_name_and_value_type(second_msg, Value.Int, PVLONG)
     cons.close()
 
 
@@ -229,13 +218,11 @@ def test_forwarder_updates_pv_when_config_changed_from_one_pv(docker_compose):
     cons.subscribe([data_topic])
     sleep(2)
 
-    first_msg = poll_for_valid_message(cons).value()
-    log_data_first = LogData.LogData.GetRootAsLogData(first_msg, 0)
-    check_message_pv_name_and_value_type(log_data_first, Value.Int, PVLONG)
+    first_msg = poll_for_valid_message(cons)
+    check_message_pv_name_and_value_type(first_msg, Value.Int, PVLONG)
 
-    second_msg = poll_for_valid_message(cons).value()
-    log_data_second = LogData.LogData.GetRootAsLogData(second_msg, 0)
-    check_message_pv_name_and_value_type(log_data_second, Value.Double, PVDOUBLE)
+    second_msg = poll_for_valid_message(cons)
+    check_message_pv_name_and_value_type(second_msg, Value.Double, PVDOUBLE)
     cons.close()
 
 
@@ -258,6 +245,5 @@ def test_forwarder_updates_pv_when_config_changed_from_two_pvs(docker_compose):
     poll_for_valid_message(cons)
     poll_for_valid_message(cons)
 
-    first_msg = poll_for_valid_message(cons).value()
-    log_data_first = LogData.LogData.GetRootAsLogData(first_msg, 0)
-    check_message_pv_name_and_value_type(log_data_first, Value.Double, PVDOUBLE)
+    first_msg = poll_for_valid_message(cons)
+    check_message_pv_name_and_value_type(first_msg, Value.Double, PVDOUBLE)

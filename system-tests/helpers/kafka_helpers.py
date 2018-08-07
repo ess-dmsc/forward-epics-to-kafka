@@ -1,5 +1,6 @@
 from confluent_kafka import Consumer
 import uuid
+from helpers.f142_logdata import LogData
 
 
 def poll_for_valid_message(consumer):
@@ -11,7 +12,7 @@ def poll_for_valid_message(consumer):
     """
     msg = consumer.poll()
     assert not msg.error()
-    return msg
+    return LogData.LogData.GetRootAsLogData(msg.value(), 0)
 
 
 def create_consumer(offset_reset="earliest"):

@@ -11,11 +11,10 @@ def test_forwarder_does_not_send_pv_update_more_than_once_when_periodic_update_i
     data_topic = "TEST_forwarderData_idle_updates"
     consumer.subscribe([data_topic])
     sleep(3)
-    msg = poll_for_valid_message(consumer).value()
-    log_data_first = LogData.LogData.GetRootAsLogData(msg, 0)
-    check_message_pv_name_and_value_type(log_data_first, Value.Value.Double, PVDOUBLE)
-    check_double_value_and_equality(log_data_first, 0)
+    msg = poll_for_valid_message(consumer)
+    check_message_pv_name_and_value_type(msg, Value.Value.Double, PVDOUBLE)
+    check_double_value_and_equality(msg, 0)
 
     with raises(AssertionError):
         # AssertionError because there are no more messages to poll
-        msg = poll_for_valid_message(consumer).value()
+        msg = poll_for_valid_message(consumer)
