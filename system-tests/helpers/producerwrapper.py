@@ -68,5 +68,12 @@ class ProducerWrapper:
         """
         data = self.converter.remove_forwarder_configuration(pvs)
         for pv in data:
-            print("Sending data {}".format(data))
-            self.producer.produce(self.topic, key=pv, value="")
+            print("Sending data {}".format(pv))
+            self.producer.produce(self.topic, value=pv)
+
+    def stop_all(self):
+        """
+
+        :return:
+        """
+        self.producer.produce(self.topic, value="{\"cmd\": \"stop_all\"}")
