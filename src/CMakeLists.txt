@@ -128,6 +128,7 @@ set(tgt __objects)
 add_library(${tgt} OBJECT ${SOURCES} ${INCLUDES})
 target_include_directories(${tgt} PRIVATE ${path_include_common})
 target_include_directories(${tgt} SYSTEM PRIVATE ${path_include_common_suppressed_warnings})
+target_compile_options(${tgt} PRIVATE -Wall -Wextra -Werror)
 
 if (WIN32)
     # Skip xxd_generate and git_commit_current
@@ -171,8 +172,6 @@ elseif(NOT GRAYLOGLOGGER_FOUND AND USE_GRAYLOG_LOGGER)
 endif()
 
 target_link_libraries(${tgt} ${libraries_common})
-
-
 
 if (have_gtest)
 add_subdirectory(tests)
