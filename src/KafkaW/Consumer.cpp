@@ -49,9 +49,8 @@ void Consumer::errorCallback(rd_kafka_t *rk, int err_i, char const *msg,
   if (err == RD_KAFKA_RESP_ERR__TRANSPORT) {
     ll = Sev::Warning;
   }
-  LOG(ll,
-      "Kafka cb_error id: {}  broker: {}  errno: {}  errorname: {}  "
-      "errorstring: {}  message: {}",
+  LOG(ll, "Kafka cb_error id: {}  broker: {}  errno: {}  errorname: {}  "
+          "errorstring: {}  message: {}",
       self->id, self->ConsumerBrokerSettings.Address, err_i,
       rd_kafka_err2name(err), rd_kafka_err2str(err), msg);
 }

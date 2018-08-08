@@ -50,9 +50,8 @@ void Producer::errorCallback(rd_kafka_t *rk, int err_i, char const *msg,
     if (self->on_error)
       self->on_error(self, err);
   }
-  LOG(ll,
-      "Kafka cb_error id: {}  broker: {}  errno: {}  errorname: {}  "
-      "errorstring: {}  message: {}",
+  LOG(ll, "Kafka cb_error id: {}  broker: {}  errno: {}  errorname: {}  "
+          "errorstring: {}  message: {}",
       self->id, self->ProducerBrokerSettings.Address, err_i,
       rd_kafka_err2name(err), rd_kafka_err2str(err), msg);
 }
@@ -78,9 +77,8 @@ void Producer::throttleCallback(rd_kafka_t *rk, char const *broker_name,
                                 void *opaque) {
   UNUSED_ARG(rk);
   auto self = reinterpret_cast<Producer *>(opaque);
-  LOG(Sev::Debug,
-      "IID: {}  INFO cb_throttle  broker_id: {}  broker_name: {}  "
-      "throttle_time_ms: {}",
+  LOG(Sev::Debug, "IID: {}  INFO cb_throttle  broker_id: {}  broker_name: {}  "
+                  "throttle_time_ms: {}",
       self->id, broker_id, broker_name, throttle_time_ms);
 }
 
