@@ -24,8 +24,8 @@ static std::atomic<SignalHandler *> g__SignalHandler;
 
 class SignalHandler {
 public:
-  SignalHandler(std::shared_ptr<Forwarder::Forwarder> MainPtr_)
-      : MainPtr(MainPtr_) {
+  explicit SignalHandler(std::shared_ptr<Forwarder::Forwarder> MainPtr_)
+      : MainPtr(std::move(MainPtr_)) {
     g__SignalHandler.store(this);
     std::signal(SIGINT, handleSignal);
     std::signal(SIGTERM, handleSignal);
@@ -35,7 +35,10 @@ public:
     std::signal(SIGTERM, SIG_DFL);
     g__SignalHandler.store(nullptr);
   }
-  void handle(int Signal) { MainPtr->stopForwardingDueToSignal(); }
+  void handle(int Signal) {
+    UNUSED_ARG(Signal);
+    MainPtr->stopForwardingDueToSignal();
+  }
 
 private:
   std::shared_ptr<Forwarder::Forwarder> MainPtr;
