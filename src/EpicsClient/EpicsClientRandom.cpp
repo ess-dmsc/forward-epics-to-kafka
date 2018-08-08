@@ -26,12 +26,37 @@ EpicsClientRandom::createFakePVStructure(double Value) const {
   auto FieldCreator = epics::pvData::getFieldCreate();
   auto PVDataCreator = epics::pvData::getPVDataCreate();
   auto PVFieldBuilder = FieldCreator->createFieldBuilder();
-  auto Structure =
-      PVFieldBuilder->add("value", epics::pvData::pvDouble)->createStructure();
+  auto PVTimestampFieldBuilder = FieldCreator->createFieldBuilder();
+
+  PVTimestampFieldBuilder->add("secondsPastEpoch", epics::pvData::pvLong);
+  PVTimestampFieldBuilder->add("nanoseconds", epics::pvData::pvInt);
+  auto TimestampStructure = PVTimestampFieldBuilder->createStructure();
+
+  PVFieldBuilder->add("value", epics::pvData::pvDouble);
+  PVFieldBuilder->add("timeStamp", TimestampStructure);
+  auto Structure = PVFieldBuilder->createStructure();
   auto FakePVStructure = PVDataCreator->createPVStructure(Structure);
   epics::pvData::PVDoublePtr FakePVDouble =
       FakePVStructure->getSubField<epics::pvData::PVDouble>("value");
   FakePVDouble->put(Value);
+
+  // Populate timestamp
+  auto currentTimestamp = getCurrentTimestamp();
+  auto currentTimestampSeconds = currentTimestamp / 1000000000L;
+  auto currentTimestampNanosecondsComponent =
+      currentTimestamp - (currentTimestampSeconds * 1000000000L);
+  auto Timestamp =
+      FakePVStructure->getSubField<epics::pvData::PVStructure>("timeStamp");
+  auto TimestampSeconds =
+      Timestamp->getSubField<epics::pvData::PVScalarValue<int64_t>>(
+          "secondsPastEpoch");
+  TimestampSeconds->put(static_cast<int64_t>(currentTimestampSeconds));
+  auto TimestampNanoseconds =
+      Timestamp->getSubField<epics::pvData::PVScalarValue<int32_t>>(
+          "nanoseconds");
+  TimestampNanoseconds->put(
+      static_cast<int32_t>(currentTimestampNanosecondsComponent));
+
   return FakePVStructure;
 }
 
