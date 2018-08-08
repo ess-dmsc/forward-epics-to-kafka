@@ -71,7 +71,7 @@ set(INCLUDES
     FlatbufferMessage.h
     FlatbufferMessageSlice.h
     Forwarder.h
-    MakeFlatBufferFromPVStructure.h
+    FlatBufferCreator.h
     git_commit_current.h
     helper.h
     json.h
@@ -110,7 +110,7 @@ set(SOURCES
     Config.cpp
     FlatbufferMessage.cpp
     SchemaRegistry.cpp
-    MakeFlatBufferFromPVStructure.cpp
+    FlatBufferCreator.cpp
     uri.cpp
     json.cpp
     Converter.cpp
@@ -129,12 +129,15 @@ add_library(${tgt} OBJECT ${SOURCES} ${INCLUDES})
 target_include_directories(${tgt} PRIVATE ${path_include_common})
 target_include_directories(${tgt} SYSTEM PRIVATE ${path_include_common_suppressed_warnings})
 
+
 if (WIN32)
+    target_compile_options(${tgt} PRIVATE /W4)
     # Skip xxd_generate and git_commit_current
     add_dependencies(${tgt} flatbuffers_generate)
     set_target_properties(xxd_generate PROPERTIES EXCLUDE_FROM_ALL TRUE)
     set_target_properties(git_commit_current PROPERTIES EXCLUDE_FROM_ALL TRUE)
 else()
+    target_compile_options(${tgt} PRIVATE -Wall -Wextra -Werror)
     add_dependencies(${tgt} flatbuffers_generate xxd_generate git_commit_current)
 endif(WIN32)
 
@@ -171,8 +174,6 @@ elseif(NOT GRAYLOGLOGGER_FOUND AND USE_GRAYLOG_LOGGER)
 endif()
 
 target_link_libraries(${tgt} ${libraries_common})
-
-
 
 if (have_gtest)
 add_subdirectory(tests)

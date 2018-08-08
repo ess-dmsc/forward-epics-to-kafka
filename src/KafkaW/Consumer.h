@@ -12,7 +12,7 @@ class Inspect;
 
 class Consumer {
 public:
-  Consumer(BrokerSettings opt);
+  explicit Consumer(BrokerSettings opt);
   Consumer(Consumer &&) = delete;
   Consumer(Consumer const &) = delete;
   ~Consumer();
@@ -28,16 +28,45 @@ public:
 
 private:
   BrokerSettings ConsumerBrokerSettings;
-  static void cb_log(rd_kafka_t const *rk, int level, char const *fac,
-                     char const *buf);
-  static int cb_stats(rd_kafka_t *rk, char *json, size_t json_size,
-                      void *opaque);
-  static void cb_error(rd_kafka_t *rk, int err_i, char const *reason,
-                       void *opaque);
-  static void cb_rebalance(rd_kafka_t *rk, rd_kafka_resp_err_t err,
-                           rd_kafka_topic_partition_list_t *plist,
+
+  /// The log callback for Kafka.
+  ///
+  /// \param rk The Kafka handle.
+  /// \param level The log level.
+  /// \param fac ?
+  /// \param buf The message buffer.
+  static void logCallback(rd_kafka_t const *rk, int level, char const *fac,
+                          char const *buf);
+
+  /// The statistics callback for Kafka.
+  ///
+  /// \param rk The Kafka handle.
+  /// \param json The statistics data in JSON format.
+  /// \param json_size The size of the JSON string.
+  /// \param opaque The opaque.
+  /// \return The error code.
+  static int statsCallback(rd_kafka_t *rk, char *json, size_t json_size,
                            void *opaque);
+
+  /// Error callback method for Kafka.
+  ///
+  /// \param rk The Kafka handle.
+  /// \param err_i The error code.
+  /// \param reason The error string.
+  /// \param opaque The opaque object.
+  static void errorCallback(rd_kafka_t *rk, int err_i, char const *reason,
+                            void *opaque);
+
+  /// The rebalance callback for Kafka.
+  ///
+  /// \param rk The Kafka handle.
+  /// \param err The error response.
+  /// \param plist The partition list.
+  /// \param opaque The opaque object.
+  static void rebalanceCallback(rd_kafka_t *rk, rd_kafka_resp_err_t err,
+                                rd_kafka_topic_partition_list_t *plist,
+                                void *opaque);
   rd_kafka_topic_partition_list_t *PartitionList = nullptr;
   int id = 0;
 };
-}
+} // namespace KafkaW

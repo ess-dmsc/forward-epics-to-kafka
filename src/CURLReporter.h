@@ -1,5 +1,8 @@
 #pragma once
 
+#include <fmt/format.h>
+#include <logger.h>
+#include <string>
 #if HAVE_CURL
 #include <curl/curl.h>
 #endif
@@ -52,7 +55,10 @@ CURLReporter::CURLReporter() {}
 CURLReporter::~CURLReporter() {}
 
 void CURLReporter::send(fmt::MemoryWriter &MemoryWriter,
-                        std::string const &URL) {}
+                        std::string const &URL) {
+  UNUSED_ARG(MemoryWriter);
+  UNUSED_ARG(URL);
+}
 
 #endif
-}
+} // namespace Forwarder
