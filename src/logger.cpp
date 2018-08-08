@@ -33,15 +33,16 @@ class Logger {
 public:
   Logger();
   ~Logger();
-  void use_log_file(std::string const & fname);
-  void log_kafka_gelf_start(std::string const & address, std::string const & topicname);
+  void use_log_file(std::string const &fname);
+  void log_kafka_gelf_start(std::string const &address,
+                            std::string const &topicname);
   void log_kafka_gelf_stop();
   FILE *log_file = stdout;
   int is_tty = 1;
   void dwlog_inner(int level, int color, char const *file, int line,
                    char const *func, std::string const &s1);
   int prefix_len();
-  void fwd_graylog_logger_enable(std::string const & address);
+  void fwd_graylog_logger_enable(std::string const &address);
 
 private:
   std::atomic<bool> do_run_kafka{false};
@@ -64,13 +65,14 @@ Logger::~Logger() {
   }
 }
 
-void Logger::use_log_file(std::string const & fname) {
+void Logger::use_log_file(std::string const &fname) {
   FILE *f1 = fopen(fname.c_str(), "wb");
   log_file = f1;
   is_tty = isatty(fileno(log_file));
 }
 
-void Logger::log_kafka_gelf_start(std::string const & address, std::string const & topicname) {
+void Logger::log_kafka_gelf_start(std::string const &address,
+                                  std::string const &topicname) {
   KafkaW::BrokerSettings BrokerSettings;
   BrokerSettings.Address = address;
   producer = std::make_shared<KafkaW::Producer>(BrokerSettings);
@@ -87,7 +89,7 @@ void Logger::log_kafka_gelf_start(std::string const & address, std::string const
 
 void Logger::log_kafka_gelf_stop() { do_run_kafka = false; }
 
-void Logger::fwd_graylog_logger_enable(std::string const & address) {
+void Logger::fwd_graylog_logger_enable(std::string const &address) {
 #ifdef HAVE_GRAYLOG_LOGGER
   auto addr = address;
   int port = 12201;
@@ -106,7 +108,7 @@ void Logger::fwd_graylog_logger_enable(std::string const & address) {
 }
 
 void Logger::dwlog_inner(int level, int color, char const *file, int line,
-                         char const * func, std::string const &s1) {
+                         char const *func, std::string const &s1) {
   UNUSED_ARG(func);
   int npre = prefix_len();
   int const n2 = strlen(file);

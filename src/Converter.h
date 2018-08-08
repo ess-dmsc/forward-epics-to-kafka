@@ -1,8 +1,8 @@
 #pragma once
 
+#include "FlatBufferCreator.h"
 #include "FlatbufferMessage.h"
 #include "MainOpt.h"
-#include "FlatBufferCreator.h"
 #include "SchemaRegistry.h"
 #include <map>
 #include <string>

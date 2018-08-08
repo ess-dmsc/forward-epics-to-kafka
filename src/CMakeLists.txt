@@ -128,14 +128,16 @@ set(tgt __objects)
 add_library(${tgt} OBJECT ${SOURCES} ${INCLUDES})
 target_include_directories(${tgt} PRIVATE ${path_include_common})
 target_include_directories(${tgt} SYSTEM PRIVATE ${path_include_common_suppressed_warnings})
-target_compile_options(${tgt} PRIVATE -Wall -Wextra -Werror)
+
 
 if (WIN32)
+    target_compile_options(${tgt} PRIVATE /W4)
     # Skip xxd_generate and git_commit_current
     add_dependencies(${tgt} flatbuffers_generate)
     set_target_properties(xxd_generate PROPERTIES EXCLUDE_FROM_ALL TRUE)
     set_target_properties(git_commit_current PROPERTIES EXCLUDE_FROM_ALL TRUE)
 else()
+    target_compile_options(${tgt} PRIVATE -Wall -Wextra -Werror)
     add_dependencies(${tgt} flatbuffers_generate xxd_generate git_commit_current)
 endif(WIN32)
 
