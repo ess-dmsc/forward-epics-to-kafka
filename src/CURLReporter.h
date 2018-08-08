@@ -33,8 +33,6 @@ CURLReporter::~CURLReporter() { curl_global_cleanup(); }
 
 void CURLReporter::send(fmt::MemoryWriter &MemoryWriter,
                         std::string const &URL) {
-  UNUSED_ARG(MemoryWriter);
-  UNUSED_ARG(URL);
   CURL *curl;
   CURLcode res;
   curl = curl_easy_init();
@@ -57,7 +55,10 @@ CURLReporter::CURLReporter() {}
 CURLReporter::~CURLReporter() {}
 
 void CURLReporter::send(fmt::MemoryWriter &MemoryWriter,
-                        std::string const &URL) {}
+                        std::string const &URL) {
+  UNUSED_ARG(MemoryWriter);
+  UNUSED_ARG(URL);
+}
 
 #endif
 } // namespace Forwarder
