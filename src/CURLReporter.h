@@ -1,5 +1,8 @@
 #pragma once
 
+#include <fmt/format.h>
+#include <logger.h>
+#include <string>
 #if HAVE_CURL
 #include <curl/curl.h>
 #endif
@@ -30,6 +33,8 @@ CURLReporter::~CURLReporter() { curl_global_cleanup(); }
 
 void CURLReporter::send(fmt::MemoryWriter &MemoryWriter,
                         std::string const &URL) {
+  UNUSED_ARG(MemoryWriter);
+  UNUSED_ARG(URL);
   CURL *curl;
   CURLcode res;
   curl = curl_easy_init();
@@ -55,4 +60,4 @@ void CURLReporter::send(fmt::MemoryWriter &MemoryWriter,
                         std::string const &URL) {}
 
 #endif
-}
+} // namespace Forwarder
