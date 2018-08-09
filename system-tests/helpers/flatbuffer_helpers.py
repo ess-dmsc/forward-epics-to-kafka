@@ -9,7 +9,7 @@ ValueTypes = {
 
 def check_expected_values(log_data, value_type, pv_name, expected_value=None):
     """
-    Checks the message name (PV) and value type (type of PV).
+    Checks the message name (PV) and value type (type of PV), and, optionally, the value.
 
     :param log_data: Log data object from the received stream buffer
     :param value_type: Flatbuffers value type
