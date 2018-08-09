@@ -1,5 +1,6 @@
 from confluent_kafka import Consumer
 import uuid
+from helpers.f142_logdata import LogData
 
 
 def poll_for_valid_message(consumer):
@@ -11,11 +12,11 @@ def poll_for_valid_message(consumer):
     """
     msg = consumer.poll()
     assert not msg.error()
-    return msg
+    return LogData.LogData.GetRootAsLogData(msg.value(), 0)
 
 
-def create_consumer():
-    consumer_config = {'bootstrap.servers': 'localhost:9092', 'default.topic.config': {'auto.offset.reset': 'earliest'},
+def create_consumer(offset_reset="earliest"):
+    consumer_config = {'bootstrap.servers': 'localhost:9092', 'default.topic.config': {'auto.offset.reset': offset_reset},
                        'group.id': uuid.uuid4()}
     cons = Consumer(**consumer_config)
     return cons
