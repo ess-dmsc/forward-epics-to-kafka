@@ -2,7 +2,7 @@
 from helpers.f142_logdata.Value import Value
 from time import sleep
 from helpers.kafka_helpers import create_consumer, poll_for_valid_message
-from helpers.flatbuffer_helpers import check_expected_values
+from helpers.flatbuffer_helpers import check_expected_values, check_expected_values_multiple
 from helpers.epics_helpers import change_pv_value
 from PVs import PVDOUBLE, PVSTR, PVLONG, PVENUM
 
@@ -198,19 +198,23 @@ def test_forwarder_updates_multiple_pvs(docker_compose):
     cons.subscribe([data_topic])
     sleep(2)
 
-    first_msg = poll_for_valid_message(cons).value()
-    check_expected_values(first_msg, Value.String, PVSTR)
+    expected_values = {PVSTR: (Value.String, b''), PVLONG: (Value.Int, 0)}
 
-    second_msg = poll_for_valid_message(cons).value()
-    check_expected_values(second_msg, Value.Int, PVLONG)
+    first_msg = poll_for_valid_message(cons)
+    second_msg = poll_for_valid_message(cons)
+    messages = [first_msg, second_msg]
+
+    check_expected_values_multiple(messages, expected_values)
+
+    prod.stop_all()
+    sleep(3)
     cons.close()
 
 
 def test_forwarder_updates_pv_when_config_changed_from_one_pv(docker_compose):
     data_topic = "TEST_forwarderData_change_config"
-    pvs = [PVLONG]
     prod = ProducerWrapper("localhost:9092", CONFIG_TOPIC, data_topic)
-    prod.add_config(pvs)
+    prod.add_config([PVLONG])
     prod.add_config([PVDOUBLE])
 
     sleep(2)
@@ -219,11 +223,16 @@ def test_forwarder_updates_pv_when_config_changed_from_one_pv(docker_compose):
     cons.subscribe([data_topic])
     sleep(2)
 
-    first_msg = poll_for_valid_message(cons)
-    check_expected_values(first_msg, Value.Int, PVLONG)
+    expected_values = {PVLONG: (Value.Int, 0), PVDOUBLE: (Value.Double, 0)}
 
+    first_msg = poll_for_valid_message(cons)
     second_msg = poll_for_valid_message(cons)
-    check_expected_values(second_msg, Value.Double, PVDOUBLE)
+    messages = [first_msg, second_msg]
+
+    check_expected_values_multiple(messages, expected_values)
+
+    prod.stop_all()
+    sleep(3)
     cons.close()
 
 
@@ -243,8 +252,12 @@ def test_forwarder_updates_pv_when_config_changed_from_two_pvs(docker_compose):
 
     poll_for_valid_message(cons)
     poll_for_valid_message(cons)
-    poll_for_valid_message(cons)
-    poll_for_valid_message(cons)
 
-    first_msg = poll_for_valid_message(cons)
-    check_expected_values(first_msg, Value.Double, PVDOUBLE)
+    expected_values = {PVSTR: (Value.String, b''), PVLONG: (Value.Int, 0), PVDOUBLE: (Value.Double, 0)}
+
+    messages = [poll_for_valid_message(cons), poll_for_valid_message(cons), poll_for_valid_message(cons)]
+    check_expected_values_multiple(messages, expected_values)
+
+    prod.stop_all()
+    sleep(3)
+    cons.close()
