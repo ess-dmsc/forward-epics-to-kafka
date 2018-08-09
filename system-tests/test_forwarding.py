@@ -14,7 +14,7 @@ def test_config_file_channel_created_correctly(docker_compose):
     Test that the channel defined in the config file is created.
 
     :param docker_compose: Test fixture
-    :return: none
+    :return: None
     """
 
     prod = ProducerWrapper("localhost:9092", CONFIG_TOPIC, "TEST_forwarderData_pv_from_config")
@@ -43,7 +43,7 @@ def test_forwarder_sends_pv_updates_single_pv_double(docker_compose):
     Test the forwarder pushes new PV value when the value is updated.
 
     :param docker_compose: Test fixture
-    :return: none
+    :return: None
     """
 
     data_topic = "TEST_forwarderData_double_pv_update"
@@ -78,7 +78,7 @@ def test_forwarder_sends_pv_updates_single_pv_string(docker_compose):
     Test the forwarder pushes new PV value when the value is updated.
 
     :param docker_compose: Test fixture
-    :return: none
+    :return: None
     """
 
     data_topic = "TEST_forwarderData_string_pv_update"
@@ -98,7 +98,7 @@ def test_forwarder_sends_pv_updates_single_pv_string(docker_compose):
     sleep(5)
     cons.subscribe([data_topic])
 
-    # Poll for empty update - initial value of SIMPLE:STR is nothing
+    # Poll for empty update - initial value of PVSTR is nothing
     poll_for_valid_message(cons)
     # Poll for message which should contain forwarded PV update
     data_msg = poll_for_valid_message(cons)
@@ -117,7 +117,7 @@ def test_forwarder_sends_pv_updates_single_pv_long(docker_compose):
 
     NOTE: longs are converted to ints in the forwarder as they will fit in a 32 bit integer
     :param docker_compose: Test fixture
-    :return: none
+    :return: None
     """
 
     data_topic = "TEST_forwarderData_long_pv_update"
@@ -152,9 +152,9 @@ def test_forwarder_sends_pv_updates_single_pv_enum(docker_compose):
     """
     Test the forwarder pushes new PV value when the value is updated.
 
-    NOTE: longs are converted to ints in the forwarder as they will fit in a 32 bit integer
+    NOTE: Enums are converted to Ints in the forwarder.
     :param docker_compose: Test fixture
-    :return: none
+    :return: None
     """
 
     data_topic = "TEST_forwarderData_enum_pv_update"

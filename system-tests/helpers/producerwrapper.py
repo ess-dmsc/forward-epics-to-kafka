@@ -73,7 +73,8 @@ class ProducerWrapper:
 
     def stop_all(self):
         """
+        Sends a stop_all command to the forwarder to clear all configuration.
 
-        :return:
+        :return: None
         """
         self.producer.produce(self.topic, value="{\"cmd\": \"stop_all\"}")
