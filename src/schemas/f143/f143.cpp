@@ -1,4 +1,5 @@
 #include "../../EpicsPVUpdate.h"
+#include "../../FlatBufferCreator.h"
 #include "../../SchemaRegistry.h"
 #include "../../helper.h"
 #include "../../logger.h"
@@ -247,10 +248,10 @@ V_t Field(flatbuffers::FlatBufferBuilder &builder,
 }
 } // namespace fbg
 
-class Converter : public MakeFlatBufferFromPVStructure {
+class Converter : public FlatBufferCreator {
 public:
   std::unique_ptr<FlatBufs::FlatbufferMessage>
-  convert(EpicsPVUpdate const &up) override {
+  create(EpicsPVUpdate const &up) override {
     // Passing initial size:
     auto &pvstr = up.epics_pvstr;
     auto fb = make_unique<FlatBufs::FlatbufferMessage>();
@@ -278,9 +279,11 @@ public:
     FinishStructureBuffer(*builder, b.Finish());
     return fb;
   }
+
   void
   config(std::map<std::string, int64_t> const &config_ints,
          std::map<std::string, std::string> const &config_strings) override {
+    UNUSED_ARG(config_strings);
     auto it = config_ints.find("llevel");
     if (it != config_ints.end()) {
       llevel = it->second;
@@ -291,11 +294,11 @@ public:
 
 class Info : public SchemaInfo {
 public:
-  MakeFlatBufferFromPVStructure::ptr create_converter() override;
+  std::unique_ptr<FlatBufferCreator> create_converter() override;
 };
 
-MakeFlatBufferFromPVStructure::ptr Info::create_converter() {
-  return MakeFlatBufferFromPVStructure::ptr(new Converter);
+std::unique_ptr<FlatBufferCreator> Info::create_converter() {
+  return make_unique<Converter>();
 }
 
 FlatBufs::SchemaRegistry::Registrar<Info> g_registrar_info("f143",

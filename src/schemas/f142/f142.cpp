@@ -387,7 +387,7 @@ Value_t make_Value(flatbuffers::FlatBufferBuilder &builder,
   return {Value::NONE, 0};
 }
 
-class Converter : public MakeFlatBufferFromPVStructure {
+class Converter : public FlatBufferCreator {
 public:
   Converter() {
 #ifdef TRACK_SEQ_DATA
@@ -398,7 +398,7 @@ public:
   ~Converter() override { LOG(3, "~Converter"); }
 
   std::unique_ptr<FlatBufs::FlatbufferMessage>
-  convert(EpicsPVUpdate const &up) override {
+  create(EpicsPVUpdate const &up) override {
     auto &pvstr = up.epics_pvstr;
     auto fb = make_unique<FlatBufs::FlatbufferMessage>();
 
@@ -432,7 +432,7 @@ public:
     return fb;
   }
 
-  std::map<std::string, double> stats() override {
+  std::map<std::string, double> getStats() override {
     return {{"ranges_n", seqs.size()}};
   }
 
@@ -441,10 +441,10 @@ public:
 };
 
 /// This class is purely for testing
-class ConverterTestNamed : public MakeFlatBufferFromPVStructure {
+class ConverterTestNamed : public FlatBufferCreator {
 public:
   std::unique_ptr<FlatBufs::FlatbufferMessage>
-  convert(EpicsPVUpdate const &up) override {
+  create(EpicsPVUpdate const &up) override {
     auto &pvstr = up.epics_pvstr;
 
     {
@@ -494,20 +494,20 @@ public:
 
 class Info : public SchemaInfo {
 public:
-  MakeFlatBufferFromPVStructure::ptr create_converter() override;
+  std::unique_ptr<FlatBufferCreator> create_converter() override;
 };
 
-MakeFlatBufferFromPVStructure::ptr Info::create_converter() {
-  return MakeFlatBufferFromPVStructure::ptr(new Converter);
+std::unique_ptr<FlatBufferCreator> Info::create_converter() {
+  return make_unique<Converter>();
 }
 
 class InfoNamedConverter : public SchemaInfo {
 public:
-  MakeFlatBufferFromPVStructure::ptr create_converter() override;
+  std::unique_ptr<FlatBufferCreator> create_converter() override;
 };
 
-MakeFlatBufferFromPVStructure::ptr InfoNamedConverter::create_converter() {
-  return MakeFlatBufferFromPVStructure::ptr(new ConverterTestNamed);
+std::unique_ptr<FlatBufferCreator> InfoNamedConverter::create_converter() {
+  return make_unique<ConverterTestNamed>();
 }
 
 FlatBufs::SchemaRegistry::Registrar<Info> g_registrar_info("f142",

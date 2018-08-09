@@ -1,5 +1,5 @@
 #pragma once
-#include "MakeFlatBufferFromPVStructure.h"
+#include "FlatBufferCreator.h"
 #include "logger.h"
 #include <map>
 #include <memory>
@@ -10,7 +10,7 @@ namespace FlatBufs {
 class SchemaInfo {
 public:
   typedef std::unique_ptr<SchemaInfo> ptr;
-  virtual MakeFlatBufferFromPVStructure::ptr create_converter() = 0;
+  virtual std::unique_ptr<FlatBufferCreator> create_converter() = 0;
 };
 
 class SchemaRegistry {

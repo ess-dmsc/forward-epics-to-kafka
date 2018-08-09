@@ -23,6 +23,8 @@
 
 #endif
 
+#define UNUSED_ARG(x) (void)x;
+
 extern int log_level;
 
 // These severity level correspond to the RFC3164 (syslog) severity levels

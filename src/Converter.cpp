@@ -32,10 +32,10 @@ Converter::create(FlatBufs::SchemaRegistry const &schema_registry,
 
 std::unique_ptr<FlatBufs::FlatbufferMessage>
 Converter::convert(FlatBufs::EpicsPVUpdate const &up) {
-  return conv->convert(up);
+  return conv->create(up);
 }
 
-std::map<std::string, double> Converter::stats() { return conv->stats(); }
+std::map<std::string, double> Converter::stats() { return conv->getStats(); }
 
 std::string Converter::schema_name() const { return schema; }
 } // namespace Forwarder

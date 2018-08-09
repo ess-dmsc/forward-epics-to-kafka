@@ -52,6 +52,4 @@ private:
   friend class f142::Converter;
   friend class f142::ConverterTestNamed;
 };
-
-void inspect(FlatbufferMessage const &fb);
 } // namespace FlatBufs
