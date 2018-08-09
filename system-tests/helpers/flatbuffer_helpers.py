@@ -25,7 +25,7 @@ def check_expected_values(log_data, value_type, pv_name, expected_value=None):
         assert expected_value == union_val.Value()
 
 
-def check_expected_values_multiple(message_list, expected_values):
+def check_multiple_expected_values(message_list, expected_values):
     """
     Checks for expected PV values in multiple messages.
     Note: not order/time-specific, and requires PVs to have different names.

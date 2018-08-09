@@ -2,7 +2,7 @@
 from helpers.f142_logdata.Value import Value
 from time import sleep
 from helpers.kafka_helpers import create_consumer, poll_for_valid_message
-from helpers.flatbuffer_helpers import check_expected_values, check_expected_values_multiple
+from helpers.flatbuffer_helpers import check_expected_values, check_multiple_expected_values
 from helpers.epics_helpers import change_pv_value
 from PVs import PVDOUBLE, PVSTR, PVLONG, PVENUM
 
@@ -204,7 +204,7 @@ def test_forwarder_updates_multiple_pvs(docker_compose):
     second_msg = poll_for_valid_message(cons)
     messages = [first_msg, second_msg]
 
-    check_expected_values_multiple(messages, expected_values)
+    check_multiple_expected_values(messages, expected_values)
 
     prod.stop_all()
     sleep(3)
@@ -229,7 +229,7 @@ def test_forwarder_updates_pv_when_config_changed_from_one_pv(docker_compose):
     second_msg = poll_for_valid_message(cons)
     messages = [first_msg, second_msg]
 
-    check_expected_values_multiple(messages, expected_values)
+    check_multiple_expected_values(messages, expected_values)
 
     prod.stop_all()
     sleep(3)
@@ -256,7 +256,7 @@ def test_forwarder_updates_pv_when_config_changed_from_two_pvs(docker_compose):
     expected_values = {PVSTR: (Value.String, b''), PVLONG: (Value.Int, 0), PVDOUBLE: (Value.Double, 0)}
 
     messages = [poll_for_valid_message(cons), poll_for_valid_message(cons), poll_for_valid_message(cons)]
-    check_expected_values_multiple(messages, expected_values)
+    check_multiple_expected_values(messages, expected_values)
 
     prod.stop_all()
     sleep(3)
