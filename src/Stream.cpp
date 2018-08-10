@@ -16,7 +16,7 @@ ConversionPath::ConversionPath(std::shared_ptr<Converter> conv,
     : converter(conv), kafka_output(std::move(ko)) {}
 
 ConversionPath::~ConversionPath() {
-  LOG(7, "~ConversionPath");
+  LOG(Sev::Debug, "~ConversionPath");
   while (true) {
     auto x = transit.load();
     if (x == 0)
@@ -66,7 +66,7 @@ Stream::~Stream() {
   CLOG(7, 2, "~Stream");
   stop();
   CLOG(7, 2, "~Stop DONE");
-  LOG(6, "SeqDataEmitted: {}", SeqDataEmitted.to_string());
+  LOG(Sev::Info, "SeqDataEmitted: {}", SeqDataEmitted.to_string());
 }
 
 int Stream::addConverter(std::unique_ptr<ConversionPath> Path) {
@@ -75,7 +75,7 @@ int Stream::addConverter(std::unique_ptr<ConversionPath> Path) {
   for (auto const &ConversionPath : ConversionPaths) {
     if (ConversionPath->getKafkaTopicName() == Path->getKafkaTopicName() &&
         ConversionPath->getSchemaName() == Path->getSchemaName()) {
-      LOG(5, "Stream with channel name: {}  KafkaTopicName: {}  SchemaName: {} "
+      LOG(Sev::Notice, "Stream with channel name: {}  KafkaTopicName: {}  SchemaName: {} "
              " already exists.",
           ChannelInfo_.channel_name, ConversionPath->getKafkaTopicName(),
           ConversionPath->getSchemaName());
@@ -108,7 +108,7 @@ uint32_t Stream::fillConversionQueue(
     }
     NumDequeued += 1;
     if (!EpicsUpdate) {
-      LOG(6, "Empty EPICS PV update");
+      LOG(Sev::Info, "Empty EPICS PV update");
       continue;
     }
     size_t ConversionPathID = 0;

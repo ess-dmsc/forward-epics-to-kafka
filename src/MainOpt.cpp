@@ -63,7 +63,7 @@ void MainOpt::parse_json_file(std::string ConfigurationFile) {
 ConfigSettings MainOpt::parse_document(const std::string &filepath) {
   std::ifstream ifs(filepath);
   if (!ifs.is_open()) {
-    LOG(3, "Could not open JSON file")
+    LOG(Sev::Error, "Could not open JSON file")
   }
 
   std::stringstream buffer;
@@ -133,7 +133,7 @@ std::pair<int, std::unique_ptr<MainOpt>> parse_opt(int argc, char **argv) {
   } catch (CLI::CallForHelp const &e) {
     ret.first = 1;
   } catch (CLI::ParseError const &e) {
-    LOG(3, "Can not parse command line options: {}", e.what());
+    LOG(Sev::Error, "Can not parse command line options: {}", e.what());
     ret.first = 1;
   }
   if (ret.first == 1) {
@@ -144,7 +144,7 @@ std::pair<int, std::unique_ptr<MainOpt>> parse_opt(int argc, char **argv) {
     try {
       opt.parse_json_file(opt.ConfigurationFile);
     } catch (std::exception const &e) {
-      LOG(4, "Can not parse configuration file: {}", e.what());
+      LOG(Sev::Warning, "Can not parse configuration file: {}", e.what());
       ret.first = 1;
       return ret;
     }
@@ -159,7 +159,7 @@ void MainOpt::init_logger() {
   if (!KafkaGELFAddress.empty()) {
     Forwarder::URI uri(KafkaGELFAddress);
     log_kafka_gelf_start(uri.host, uri.topic);
-    LOG(3, "Enabled kafka_gelf: //{}/{}", uri.host, uri.topic);
+    LOG(Sev::Error, "Enabled kafka_gelf: //{}/{}", uri.host, uri.topic);
   }
   if (!GraylogLoggerAddress.empty()) {
     fwd_graylog_logger_enable(GraylogLoggerAddress);

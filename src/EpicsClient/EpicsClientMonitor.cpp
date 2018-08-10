@@ -58,7 +58,7 @@ public:
       LOG(7, "monitoringStart:  want to start but we have no channel");
       return -1;
     }
-    LOG(7, "monitoringStart");
+    LOG(Sev::Debug, "monitoringStart");
     // Leaving it empty seems to be the full channel, including name.  That's
     // good.
     // Can also specify subfields, e.g. "value, timeStamp"  or also
@@ -83,7 +83,7 @@ public:
   /// Stops the EPICS monitor loop in monitor_requester and resets the pointer.
   int monitoringStop() {
     RLOCK();
-    LOG(7, "monitoringStop");
+    LOG(Sev::Debug, "monitoringStop");
     if (monitor) {
       monitor->stop();
       monitor->destroy();
@@ -95,7 +95,7 @@ public:
 
   /// Logs that the channel has been destroyed and stops monitoring.
   int channelDestroyed() {
-    LOG(4, "channelDestroyed()");
+    LOG(Sev::Warning, "channelDestroyed()");
     monitoringStop();
     return 0;
   }
@@ -128,7 +128,7 @@ public:
   }
 
   /// Logging function.
-  static void error_channel_requester() { LOG(4, "error_channel_requester()"); }
+  static void error_channel_requester() { LOG(Sev::Warning, "error_channel_requester()"); }
 
   epics::pvData::MonitorRequester::shared_pointer monitor_requester;
   epics::pvAccess::ChannelProvider::shared_pointer provider;
@@ -214,7 +214,7 @@ std::string ChannelRequester::getRequesterName() { return "ChannelRequester"; }
 
 void ChannelRequester::message(std::string const &Message,
                                epics::pvData::MessageType MessageType) {
-  LOG(4, "Message for: {}  msg: {}  msgtype: {}", getRequesterName().c_str(),
+  LOG(Sev::Warning, "Message for: {}  msg: {}  msgtype: {}", getRequesterName().c_str(),
       Message.c_str(), getMessageTypeName(MessageType).c_str());
 }
 
@@ -258,7 +258,7 @@ void ChannelRequester::channelStateChange(
   if (ConnectionState == Channel::CONNECTED) {
     CLOG(7, 7, "Epics channel connected");
     if (log_level >= 9) {
-      LOG(9, "ChannelRequester::channelStateChange  channelinfo: {}",
+      LOG(Sev::Debug, "ChannelRequester::channelStateChange  channelinfo: {}",
           channelInfo(Channel));
     }
     EpicsClientImpl->monitoringStart();

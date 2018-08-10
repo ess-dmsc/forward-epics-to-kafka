@@ -128,14 +128,14 @@ void ConfigParser::extractKafkaBrokerSettings(ConfigSettings &Settings) {
         }
         if (Property.value().is_string()) {
           auto Value = Property.value().get<std::string>();
-          LOG(6, "kafka broker config {}: {}", Key, Value);
+          LOG(Sev::Info, "kafka broker config {}: {}", Key, Value);
           Settings.BrokerSettings.ConfigurationStrings[Key] = Value;
         } else if (Property.value().is_number()) {
           auto Value = Property.value().get<int64_t>();
-          LOG(6, "kafka broker config {}: {}", Key, Value);
+          LOG(Sev::Info, "kafka broker config {}: {}", Key, Value);
           Settings.BrokerSettings.ConfigurationIntegers[Key] = Value;
         } else {
-          LOG(3, "can not understand option: {}", Key);
+          LOG(Sev::Error, "can not understand option: {}", Key);
         }
       }
     }

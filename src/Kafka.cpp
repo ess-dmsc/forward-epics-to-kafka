@@ -8,7 +8,7 @@ static std::shared_ptr<InstanceSet> kset;
 
 sptr<InstanceSet> InstanceSet::Set(KafkaW::BrokerSettings BrokerSettings) {
   std::unique_lock<std::mutex> lock(mx);
-  LOG(4, "Kafka InstanceSet with rdkafka version: {}", rd_kafka_version_str());
+  LOG(Sev::Warning, "Kafka InstanceSet with rdkafka version: {}", rd_kafka_version_str());
   if (!kset) {
     BrokerSettings.PollTimeoutMS = 0;
     kset.reset(new InstanceSet(BrokerSettings));
@@ -41,7 +41,7 @@ static void prod_delivery_failed(rd_kafka_message_t const *msg) {
 }
 
 KafkaW::Producer::Topic InstanceSet::producer_topic(Forwarder::URI uri) {
-  LOG(7, "InstanceSet::producer_topic  for:  {}, {}", uri.host_port, uri.topic);
+  LOG(Sev::Debug, "InstanceSet::producer_topic  for:  {}, {}", uri.host_port, uri.topic);
   auto host_port = uri.host_port;
   auto it = producers_by_host.find(host_port);
   if (it != producers_by_host.end()) {
@@ -72,7 +72,7 @@ void InstanceSet::log_stats() {
   std::unique_lock<std::mutex> lock(mx_producers_by_host);
   for (auto const &m : producers_by_host) {
     auto &p = m.second;
-    LOG(6, "Broker: {}  total: {}  outq: {}", m.first, p->TotalMessagesProduced,
+    LOG(Sev::Info, "Broker: {}  total: {}  outq: {}", m.first, p->TotalMessagesProduced,
         p->outputQueueLength());
   }
 }

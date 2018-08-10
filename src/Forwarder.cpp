@@ -48,11 +48,11 @@ Forwarder::Forwarder(MainOpt &opt)
 
   bool use_config = true;
   if (main_opt.MainSettings.BrokerConfig.topic.empty()) {
-    LOG(3, "Name for configuration topic is empty");
+    LOG(Sev::Error, "Name for configuration topic is empty");
     use_config = false;
   }
   if (main_opt.MainSettings.BrokerConfig.host.empty()) {
-    LOG(3, "Host for configuration topic broker is empty");
+    LOG(Sev::Error, "Host for configuration topic broker is empty");
     use_config = false;
   }
   if (use_config) {
@@ -69,7 +69,7 @@ Forwarder::Forwarder(MainOpt &opt)
     try {
       addMapping(Stream);
     } catch (std::exception &e) {
-      LOG(4, "Could not add mapping: {}  {}", Stream.Name, e.what());
+      LOG(Sev::Warning, "Could not add mapping: {}  {}", Stream.Name, e.what());
     }
   }
 
@@ -84,7 +84,7 @@ Forwarder::Forwarder(MainOpt &opt)
 }
 
 Forwarder::~Forwarder() {
-  LOG(7, "~Main");
+  LOG(Sev::Debug, "~Main");
   streams.clearStreams();
   conversion_workers_clear();
   converters_clear();
@@ -192,9 +192,9 @@ void Forwarder::forward_epics_to_kafka() {
     }
   }
   if (isStopDueToSignal(ForwardingRunFlag.load())) {
-    LOG(6, "Forwarder stopping due to signal.");
+    LOG(Sev::Info, "Forwarder stopping due to signal.");
   }
-  LOG(6, "Main::forward_epics_to_kafka shutting down");
+  LOG(Sev::Info, "Main::forward_epics_to_kafka shutting down");
   conversion_workers_clear();
   streams.clearStreams();
 
@@ -208,7 +208,7 @@ void Forwarder::forward_epics_to_kafka() {
     GenerateFakePVUpdateTimer->waitForStop();
   }
 
-  LOG(6, "ForwardingStatus::STOPPED");
+  LOG(Sev::Info, "ForwardingStatus::STOPPED");
   forwarding_status.store(ForwardingStatus::STOPPED);
 }
 
@@ -226,9 +226,9 @@ void Forwarder::report_status() {
     auto StatusStringShort =
         StatusString.substr(0, 1000) +
         fmt::format(" ... {} chars total ...", StatusStringSize);
-    LOG(7, "status: {}", StatusStringShort);
+    LOG(Sev::Debug, "status: {}", StatusStringShort);
   } else {
-    LOG(7, "status: {}", StatusString);
+    LOG(Sev::Debug, "status: {}", StatusString);
   }
   status_producer_topic->produce((KafkaW::uchar *)StatusString.c_str(),
                                  StatusString.size());
@@ -244,7 +244,7 @@ void Forwarder::report_stats(int dt) {
   b1 %= 1024;
   auto b3 = b2 / 1024;
   b2 %= 1024;
-  LOG(6, "dt: {:4}  m: {:4}.{:03}  b: {:3}.{:03}.{:03}", dt, m2, m1, b3, b2,
+  LOG(Sev::Info, "dt: {:4}  m: {:4}.{:03}  b: {:3}.{:03}.{:03}", dt, m2, m1, b3, b2,
       b1);
   if (CURLReporter::HaveCURL && !main_opt.InfluxURI.empty()) {
     int i1 = 0;
@@ -266,7 +266,7 @@ void Forwarder::report_stats(int dt) {
     }
     {
       auto lock = get_lock_converters();
-      LOG(6, "N converters: {}", converters.size());
+      LOG(Sev::Info, "N converters: {}", converters.size());
       i1 = 0;
       for (auto &c : converters) {
         auto stats = c.second.lock()->stats();
