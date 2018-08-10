@@ -91,8 +91,7 @@ def test_forwarder_sends_pv_updates_single_pv_string(docker_compose):
 
     cons = create_consumer()
     # Update value
-    stop_command = b'stop'
-    change_pv_value(PVSTR, stop_command)
+    change_pv_value(PVSTR, "stop")
 
     # Wait for PV to be updated
     sleep(5)
@@ -103,9 +102,9 @@ def test_forwarder_sends_pv_updates_single_pv_string(docker_compose):
     # Poll for message which should contain forwarded PV update
     data_msg = poll_for_valid_message(cons)
 
-    check_expected_values(data_msg, Value.String, PVSTR, stop_command)
+    check_expected_values(data_msg, Value.String, PVSTR, b'stop')
 
-    change_pv_value(PVSTR, "")
+    change_pv_value(PVSTR, "\"\"")
     prod.stop_all()
     sleep(3)
     cons.close()

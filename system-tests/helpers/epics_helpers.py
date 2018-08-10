@@ -1,4 +1,4 @@
-from epics import caput
+import docker
 
 
 def change_pv_value(pvname, value):
@@ -9,4 +9,6 @@ def change_pv_value(pvname, value):
     :param value: PV value to change to
     :return: none
     """
-    caput(pvname, value, wait=True)
+    client = docker.from_env()
+    container = client.containers.get("forwarder_ioc_1")
+    container.exec_run("caput {} {}".format(pvname, value), privileged=True)
