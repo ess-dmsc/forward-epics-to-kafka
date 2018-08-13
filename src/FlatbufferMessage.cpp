@@ -14,7 +14,7 @@ FlatbufferMessage::FlatbufferMessage(uint32_t initial_size)
 
 FlatbufferMessageSlice FlatbufferMessage::message() {
   if (!builder) {
-    CLOG(8, 1, "builder no longer available");
+    LOG(Sev::Debug, "builder no longer available");
     return {nullptr, 0};
   }
   auto ret = decltype(FlatbufferMessage::message()){builder->GetBufferPointer(),

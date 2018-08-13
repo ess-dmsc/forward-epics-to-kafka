@@ -137,7 +137,7 @@ void Consumer::init() {
   rd_kafka_set_log_level(RdKafka, 4);
 
   LOG(Sev::Info, "New Kafka consumer {} with brokers: {}",
-      rd_kafka_name(RdKafka), ConsumerBrokerSettings.Address.c_str());
+      rd_kafka_name(RdKafka), ConsumerBrokerSettings.Address);
   if (rd_kafka_brokers_add(RdKafka, ConsumerBrokerSettings.Address.c_str()) ==
       0) {
     LOG(Sev::Error, "could not add brokers");

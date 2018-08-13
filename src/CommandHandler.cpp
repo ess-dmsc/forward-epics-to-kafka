@@ -10,14 +10,15 @@ namespace Forwarder {
 ConfigCB::ConfigCB(Forwarder &main) : main(main) {}
 
 void ConfigCB::operator()(std::string const &msg) {
-  LOG(7, "Command received: {}", msg);
+  LOG(Sev::Debug, "Command received: {}", msg);
   try {
     handleCommand(msg);
   } catch (nlohmann::json::parse_error const &e) {
-    LOG(3, "Could not parse command. Command was {}. Exception was: {}", msg,
+    LOG(Sev::Error,
+        "Could not parse command. Command was {}. Exception was: {}", msg,
         e.what());
   } catch (...) {
-    LOG(3, "Could not handle command: {}", msg);
+    LOG(Sev::Error, "Could not handle command: {}", msg);
   }
 }
 
@@ -57,7 +58,7 @@ void ConfigCB::handleCommand(std::string const &Msg) {
   } else if (Command == "exit") {
     handleCommandExit();
   } else {
-    LOG(6, "Cannot understand command: {}", Command);
+    LOG(Sev::Info, "Cannot understand command: {}", Command);
   }
 }
 

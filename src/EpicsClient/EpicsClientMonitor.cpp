@@ -30,7 +30,9 @@ class EpicsClientMonitor_impl {
 public:
   explicit EpicsClientMonitor_impl(EpicsClientInterface *epics_client)
       : epics_client(epics_client) {}
-  ~EpicsClientMonitor_impl() { CLOG(7, 7, "EpicsClientMonitor_implor_impl"); }
+  ~EpicsClientMonitor_impl() {
+    LOG(Sev::Debug, "EpicsClientMonitor_implor_impl");
+  }
 
   /// Starts the EPICS channel access provider loop and the monitor requester
   /// loop for monitoring EPICS PVs.
@@ -41,7 +43,7 @@ public:
       provider = ::epics::pvAccess::getChannelProviderRegistry()->getProvider(
           epics_channel_provider_type);
       if (!provider) {
-        CLOG(3, 1, "Can not initialize provider");
+        LOG(Sev::Error, "Can not initialize provider");
         return 1;
       }
       channel_requester.reset(new ChannelRequester(this));
@@ -58,7 +60,7 @@ public:
       LOG(7, "monitoringStart:  want to start but we have no channel");
       return -1;
     }
-    LOG(7, "monitoringStart");
+    LOG(Sev::Debug, "monitoringStart");
     // Leaving it empty seems to be the full channel, including name.  That's
     // good.
     // Can also specify subfields, e.g. "value, timeStamp"  or also
@@ -74,7 +76,7 @@ public:
         new FwdMonitorRequester(epics_client, channel_name));
     monitor = channel->createMonitor(monitor_requester, pvreq);
     if (!monitor) {
-      CLOG(3, 1, "could not create EPICS monitor instance");
+      LOG(Sev::Warning, "could not create EPICS monitor instance");
       return -2;
     }
     return 0;
@@ -83,7 +85,7 @@ public:
   /// Stops the EPICS monitor loop in monitor_requester and resets the pointer.
   int monitoringStop() {
     RLOCK();
-    LOG(7, "monitoringStop");
+    LOG(Sev::Debug, "monitoringStop");
     if (monitor) {
       monitor->stop();
       monitor->destroy();
@@ -95,7 +97,7 @@ public:
 
   /// Logs that the channel has been destroyed and stops monitoring.
   int channelDestroyed() {
-    LOG(4, "channelDestroyed()");
+    LOG(Sev::Warning, "channelDestroyed()");
     monitoringStop();
     return 0;
   }
@@ -128,7 +130,9 @@ public:
   }
 
   /// Logging function.
-  static void error_channel_requester() { LOG(4, "error_channel_requester()"); }
+  static void error_channel_requester() {
+    LOG(Sev::Warning, "error_channel_requester()");
+  }
 
   epics::pvData::MonitorRequester::shared_pointer monitor_requester;
   epics::pvAccess::ChannelProvider::shared_pointer provider;
@@ -148,7 +152,7 @@ EpicsClientMonitor::EpicsClientMonitor(
         Ring)
     : EmitQueue(Ring) {
   Impl.reset(new EpicsClientMonitor_impl(this));
-  CLOG(7, 7, "channel_name: {}", ChannelInfo.channel_name);
+  LOG(Sev::Debug, "channel_name: {}", ChannelInfo.channel_name);
   Impl->channel_name = ChannelInfo.channel_name;
   if (Impl->init(ChannelInfo.provider_type) != 0) {
     Impl.reset();
@@ -157,7 +161,7 @@ EpicsClientMonitor::EpicsClientMonitor(
 }
 
 EpicsClientMonitor::~EpicsClientMonitor() {
-  CLOG(7, 6, "EpicsClientMonitorMonitor");
+  LOG(Sev::Debug, "EpicsClientMonitorMonitor");
 }
 
 int EpicsClientMonitor::stop() { return Impl->stop(); }
@@ -177,7 +181,7 @@ void EpicsClientMonitor::emitCachedValue() {
 int EpicsClientMonitor::emitWithoutCaching(
     std::shared_ptr<FlatBufs::EpicsPVUpdate> Update) {
   if (!Update) {
-    CLOG(6, 1, "empty update?");
+    LOG(Sev::Info, "empty update?");
     // should never happen, ignore
     return 1;
   }
@@ -214,8 +218,8 @@ std::string ChannelRequester::getRequesterName() { return "ChannelRequester"; }
 
 void ChannelRequester::message(std::string const &Message,
                                epics::pvData::MessageType MessageType) {
-  LOG(4, "Message for: {}  msg: {}  msgtype: {}", getRequesterName().c_str(),
-      Message.c_str(), getMessageTypeName(MessageType).c_str());
+  LOG(Sev::Warning, "Message for: {}  msg: {}  msgtype: {}", getRequesterName(),
+      Message, getMessageTypeName(MessageType));
 }
 
 void ChannelRequester::channelCreated(epics::pvData::Status const &Status,
@@ -223,23 +227,22 @@ void ChannelRequester::channelCreated(epics::pvData::Status const &Status,
   // Seems that channel creation is actually a synchronous operation
   // and that this requester callback is called from the same stack
   // from which the channel creation was initiated.
-  CLOG(7, 7, "ChannelRequester::channelCreated:  (int)status.isOK(): {}",
-       (int)Status.isOK());
+  LOG(Sev::Debug, "ChannelRequester::channelCreated:  (int)status.isOK(): {}",
+      (int)Status.isOK());
   if (!Status.isOK() or !Status.isSuccess()) {
     // quick fix until decided on logging system..
     std::ostringstream s1;
     s1 << Status;
-    CLOG(4, 5, "WARNING ChannelRequester::channelCreated:  {}",
-         s1.str().c_str());
+    LOG(Sev::Warning, "WARNING ChannelRequester::channelCreated:  {}",
+        s1.str());
   }
   if (!Status.isSuccess()) {
     std::ostringstream s1;
     s1 << Status;
-    CLOG(3, 2, "ChannelRequester::channelCreated:  failure: {}",
-         s1.str().c_str());
+    LOG(Sev::Error, "ChannelRequester::channelCreated:  failure: {}", s1.str());
     if (Channel) {
       std::string cname = Channel->getChannelName();
-      CLOG(3, 2, "  failure is in channel: {}", cname.c_str());
+      LOG(Sev::Error, "  failure is in channel: {}", cname);
     }
     EpicsClientImpl->error_channel_requester();
   }
@@ -248,29 +251,30 @@ void ChannelRequester::channelCreated(epics::pvData::Status const &Status,
 void ChannelRequester::channelStateChange(
     Channel::shared_pointer const &Channel,
     Channel::ConnectionState ConnectionState) {
-  CLOG(7, 7, "channel state change: {}", channelStateName(ConnectionState));
+  LOG(Sev::Debug, "channel state change: {}",
+      channelStateName(ConnectionState));
   if (!Channel) {
-    CLOG(2, 2, "no channel, even though we should have.  state: {}",
-         channelStateName(ConnectionState));
+    LOG(Sev::Error, "no channel, even though we should have.  state: {}",
+        channelStateName(ConnectionState));
     EpicsClientImpl->error_channel_requester();
     return;
   }
   if (ConnectionState == Channel::CONNECTED) {
-    CLOG(7, 7, "Epics channel connected");
+    LOG(Sev::Debug, "Epics channel connected");
     if (log_level >= 9) {
-      LOG(9, "ChannelRequester::channelStateChange  channelinfo: {}",
+      LOG(Sev::Debug, "ChannelRequester::channelStateChange  channelinfo: {}",
           channelInfo(Channel));
     }
     EpicsClientImpl->monitoringStart();
   } else if (ConnectionState == Channel::DISCONNECTED) {
-    CLOG(7, 6, "Epics channel disconnect");
+    LOG(Sev::Debug, "Epics channel disconnect");
     EpicsClientImpl->monitoringStop();
   } else if (ConnectionState == Channel::DESTROYED) {
-    CLOG(7, 6, "Epics channel destroyed");
+    LOG(Sev::Debug, "Epics channel destroyed");
     EpicsClientImpl->channelDestroyed();
   } else {
-    CLOG(3, 3, "Unhandled channel state change: {} {}", ConnectionState,
-         channelStateName(ConnectionState));
+    LOG(Sev::Error, "Unhandled channel state change: {} {}", ConnectionState,
+        channelStateName(ConnectionState));
     EpicsClientImpl->error_channel_requester();
   }
 }
