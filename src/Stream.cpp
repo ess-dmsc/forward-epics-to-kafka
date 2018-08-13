@@ -21,7 +21,7 @@ ConversionPath::~ConversionPath() {
     auto x = transit.load();
     if (x == 0)
       break;
-    CLOG(7, 1, "~ConversionPath  still has transit {}", transit);
+    LOG(Sev::Debug, "~ConversionPath  still has transit {}", transit);
     sleep_ms(1000);
   }
 }
@@ -29,7 +29,7 @@ ConversionPath::~ConversionPath() {
 int ConversionPath::emit(std::shared_ptr<FlatBufs::EpicsPVUpdate> up) {
   auto fb = converter->convert(*up);
   if (fb == nullptr) {
-    CLOG(6, 1, "empty converted flat buffer");
+    LOG(Sev::Info, "empty converted flat buffer");
     return 1;
   }
   kafka_output->emit(std::move(fb));
@@ -63,9 +63,9 @@ Stream::Stream(
       OutputQueue(std::move(Queue)) {}
 
 Stream::~Stream() {
-  CLOG(7, 2, "~Stream");
+  LOG(Sev::Debug, "~Stream");
   stop();
-  CLOG(7, 2, "~Stop DONE");
+  LOG(Sev::Debug, "~Stop DONE");
   LOG(Sev::Info, "SeqDataEmitted: {}", SeqDataEmitted.to_string());
 }
 
@@ -104,7 +104,7 @@ uint32_t Stream::fillConversionQueue(
     std::shared_ptr<FlatBufs::EpicsPVUpdate> EpicsUpdate;
     auto found = OutputQueue->try_dequeue(EpicsUpdate);
     if (!found) {
-      CLOG(6, 1, "Conversion worker buffer is empty");
+      LOG(Sev::Info, "Conversion worker buffer is empty");
       break;
     }
     NumDequeued += 1;
@@ -120,7 +120,7 @@ uint32_t Stream::fillConversionQueue(
       ConversionPacket->up = EpicsUpdate;
       bool QueuedSuccessful = Queue.enqueue(std::move(ConversionPacket));
       if (!QueuedSuccessful) {
-        CLOG(6, 1, "Conversion work queue is full");
+        LOG(Sev::Info, "Conversion work queue is full");
         break;
       }
       ConversionPathID += 1;

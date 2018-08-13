@@ -20,18 +20,18 @@ std::unique_ptr<EpicsClientFactoryInit> EpicsClientFactoryInit::factory_init() {
 }
 
 EpicsClientFactoryInit::EpicsClientFactoryInit() {
-  CLOG(7, 7, "EpicsClientFactoryInit");
+  LOG(Sev::Debug, "EpicsClientFactoryInit");
   ulock lock(MutexLock);
   auto c = Count++;
   if (c == 0) {
-    CLOG(6, 6, "START  Epics factories");
+    LOG(Sev::Info, "START  Epics factories");
     ::epics::pvAccess::ClientFactory::start();
     ::epics::pvAccess::ca::CAClientFactory::start();
   }
 }
 
 EpicsClientFactoryInit::~EpicsClientFactoryInit() {
-  CLOG(7, 7, "~EpicsClientFactoryInit");
+  LOG(Sev::Debug, "~EpicsClientFactoryInit");
   ulock lock(MutexLock);
   auto c = --Count;
   if (c < 0) {
@@ -42,7 +42,7 @@ EpicsClientFactoryInit::~EpicsClientFactoryInit() {
     c = 0;
   }
   if (c == 0) {
-    CLOG(7, 6, "STOP   Epics factories");
+    LOG(Sev::Debug, "STOP   Epics factories");
     ::epics::pvAccess::ClientFactory::stop();
     ::epics::pvAccess::ca::CAClientFactory::stop();
   }

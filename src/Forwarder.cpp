@@ -108,7 +108,7 @@ void Forwarder::createFakePVUpdateTimerIfRequired() {
 }
 
 int Forwarder::conversion_workers_clear() {
-  CLOG(7, 1, "Main::conversion_workers_clear()  begin");
+  LOG(Sev::Debug, "Main::conversion_workers_clear()  begin");
   std::unique_lock<std::mutex> lock(conversion_workers_mx);
   if (!conversion_workers.empty()) {
     for (auto &x : conversion_workers) {
@@ -116,7 +116,7 @@ int Forwarder::conversion_workers_clear() {
     }
     conversion_workers.clear();
   }
-  CLOG(7, 1, "Main::conversion_workers_clear()  end");
+  LOG(Sev::Debug, "Main::conversion_workers_clear()  end");
   return 0;
 }
 
@@ -186,7 +186,7 @@ void Forwarder::forward_epics_to_kafka() {
       report_stats(dt.count());
     }
     if (dt >= Dt) {
-      CLOG(3, 1, "slow main loop: {}", dt.count());
+      LOG(Sev::Error, "slow main loop: {}", dt.count());
     } else {
       std::this_thread::sleep_for(Dt - dt);
     }

@@ -17,11 +17,11 @@ FwdMonitorRequester::FwdMonitorRequester(
   static std::atomic<uint32_t> __id{0};
   auto id = __id++;
   name = fmt::format("FwdMonitorRequester-{}", id);
-  CLOG(7, 6, "FwdMonitorRequester {}", name);
+  LOG(Sev::Debug, "FwdMonitorRequester {}", name);
 }
 
 FwdMonitorRequester::~FwdMonitorRequester() {
-  CLOG(6, 6, "~FwdMonitorRequester");
+  LOG(Sev::Info, "~FwdMonitorRequester");
 }
 
 std::string FwdMonitorRequester::getRequesterName() { return name; }
@@ -29,7 +29,8 @@ std::string FwdMonitorRequester::getRequesterName() { return name; }
 void FwdMonitorRequester::message(std::string const &Message,
                                   ::epics::pvData::MessageType MessageType) {
   UNUSED_ARG(MessageType);
-  CLOG(7, 7, "FwdMonitorRequester::message: {}:  {}", name, Message.c_str());
+  LOG(Sev::Debug, "FwdMonitorRequester::message: {}:  {}", name,
+      Message.c_str());
 }
 
 void FwdMonitorRequester::monitorConnect(
@@ -41,14 +42,14 @@ void FwdMonitorRequester::monitorConnect(
     // NOTE
     // Docs does not say anything about whether we are responsible for any
     // handling of the monitor if non-null?
-    CLOG(3, 2, "monitorConnect is != success for {}", name);
+    LOG(Sev::Error, "monitorConnect is != success for {}", name);
     epics_client->errorInEpics();
   } else {
     if (Status.isOK()) {
-      CLOG(7, 7, "success and OK");
+      LOG(Sev::Debug, "success and OK");
       Monitor->start();
     } else {
-      CLOG(7, 6, "success with warning");
+      LOG(Sev::Debug, "success with warning");
     }
   }
 }
@@ -92,7 +93,7 @@ void FwdMonitorRequester::monitorEvent(
 
 void FwdMonitorRequester::unlisten(epics::pvData::MonitorPtr const &Monitor) {
   UNUSED_ARG(Monitor);
-  CLOG(7, 1, "FwdMonitorRequester::unlisten  {}", name);
+  LOG(Sev::Debug, "FwdMonitorRequester::unlisten  {}", name);
 }
 } // namespace EpicsClient
 } // namespace Forwarder

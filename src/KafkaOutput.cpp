@@ -10,7 +10,7 @@ KafkaOutput::KafkaOutput(KafkaW::Producer::Topic &&pt) : pt(std::move(pt)) {}
 
 int KafkaOutput::emit(std::unique_ptr<FlatBufs::FlatbufferMessage> fb) {
   if (!fb) {
-    CLOG(8, 1, "KafkaOutput::emit  empty fb");
+    LOG(Sev::Debug, "KafkaOutput::emit  empty fb");
     return -1024;
   }
   auto m1 = fb->message();
