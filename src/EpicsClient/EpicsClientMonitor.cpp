@@ -218,9 +218,8 @@ std::string ChannelRequester::getRequesterName() { return "ChannelRequester"; }
 
 void ChannelRequester::message(std::string const &Message,
                                epics::pvData::MessageType MessageType) {
-  LOG(Sev::Warning, "Message for: {}  msg: {}  msgtype: {}",
-      getRequesterName().c_str(), Message.c_str(),
-      getMessageTypeName(MessageType).c_str());
+  LOG(Sev::Warning, "Message for: {}  msg: {}  msgtype: {}", getRequesterName(),
+      Message, getMessageTypeName(MessageType));
 }
 
 void ChannelRequester::channelCreated(epics::pvData::Status const &Status,
@@ -235,16 +234,15 @@ void ChannelRequester::channelCreated(epics::pvData::Status const &Status,
     std::ostringstream s1;
     s1 << Status;
     LOG(Sev::Warning, "WARNING ChannelRequester::channelCreated:  {}",
-        s1.str().c_str());
+        s1.str());
   }
   if (!Status.isSuccess()) {
     std::ostringstream s1;
     s1 << Status;
-    LOG(Sev::Error, "ChannelRequester::channelCreated:  failure: {}",
-        s1.str().c_str());
+    LOG(Sev::Error, "ChannelRequester::channelCreated:  failure: {}", s1.str());
     if (Channel) {
       std::string cname = Channel->getChannelName();
-      LOG(Sev::Error, "  failure is in channel: {}", cname.c_str());
+      LOG(Sev::Error, "  failure is in channel: {}", cname);
     }
     EpicsClientImpl->error_channel_requester();
   }

@@ -29,8 +29,7 @@ std::string FwdMonitorRequester::getRequesterName() { return name; }
 void FwdMonitorRequester::message(std::string const &Message,
                                   ::epics::pvData::MessageType MessageType) {
   UNUSED_ARG(MessageType);
-  LOG(Sev::Debug, "FwdMonitorRequester::message: {}:  {}", name,
-      Message.c_str());
+  LOG(Sev::Debug, "FwdMonitorRequester::message: {}:  {}", name, Message);
 }
 
 void FwdMonitorRequester::monitorConnect(
