@@ -104,6 +104,7 @@ def test_forwarder_sends_pv_updates_single_pv_string(docker_compose):
 
     check_expected_values(data_msg, Value.String, PVSTR, b'stop')
 
+    # We have to use this as the second parameter for caput gets parsed as empty so does not change the value of the PV
     change_pv_value(PVSTR, "\"\"")
     prod.stop_all()
     sleep(3)
