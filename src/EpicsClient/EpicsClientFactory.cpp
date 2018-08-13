@@ -35,8 +35,9 @@ EpicsClientFactoryInit::~EpicsClientFactoryInit() {
   ulock lock(MutexLock);
   auto c = --Count;
   if (c < 0) {
-    LOG(Sev::Emergency, "Reference count {} is not consistent, should never happen, but "
-           "ignoring for now.",
+    LOG(Sev::Emergency,
+        "Reference count {} is not consistent, should never happen, but "
+        "ignoring for now.",
         c);
     c = 0;
   }

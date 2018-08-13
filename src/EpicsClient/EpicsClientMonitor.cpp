@@ -128,7 +128,9 @@ public:
   }
 
   /// Logging function.
-  static void error_channel_requester() { LOG(Sev::Warning, "error_channel_requester()"); }
+  static void error_channel_requester() {
+    LOG(Sev::Warning, "error_channel_requester()");
+  }
 
   epics::pvData::MonitorRequester::shared_pointer monitor_requester;
   epics::pvAccess::ChannelProvider::shared_pointer provider;
@@ -214,8 +216,9 @@ std::string ChannelRequester::getRequesterName() { return "ChannelRequester"; }
 
 void ChannelRequester::message(std::string const &Message,
                                epics::pvData::MessageType MessageType) {
-  LOG(Sev::Warning, "Message for: {}  msg: {}  msgtype: {}", getRequesterName().c_str(),
-      Message.c_str(), getMessageTypeName(MessageType).c_str());
+  LOG(Sev::Warning, "Message for: {}  msg: {}  msgtype: {}",
+      getRequesterName().c_str(), Message.c_str(),
+      getMessageTypeName(MessageType).c_str());
 }
 
 void ChannelRequester::channelCreated(epics::pvData::Status const &Status,

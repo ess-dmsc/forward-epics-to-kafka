@@ -103,7 +103,8 @@ void Logger::fwd_graylog_logger_enable(std::string const &address) {
   Log::AddLogHandler(new GraylogInterface(addr, port));
   do_use_graylog_logger = true;
 #else
-  LOG(Sev::Emergency, "ERROR not compiled with support for graylog_logger {}", address);
+  LOG(Sev::Emergency, "ERROR not compiled with support for graylog_logger {}",
+      address);
 #endif
 }
 

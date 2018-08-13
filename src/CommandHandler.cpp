@@ -14,7 +14,8 @@ void ConfigCB::operator()(std::string const &msg) {
   try {
     handleCommand(msg);
   } catch (nlohmann::json::parse_error const &e) {
-    LOG(Sev::Error, "Could not parse command. Command was {}. Exception was: {}", msg,
+    LOG(Sev::Error,
+        "Could not parse command. Command was {}. Exception was: {}", msg,
         e.what());
   } catch (...) {
     LOG(Sev::Error, "Could not handle command: {}", msg);
