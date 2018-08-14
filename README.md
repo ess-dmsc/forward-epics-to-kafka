@@ -32,7 +32,7 @@ Tooling
 - conan
 - cmake (minimum tested is 2.8.11)
 - C++ compiler with c++11 support
-- Doxygen if you would like to `make docs`
+- Doxygen - CMake variable `RUN_DOXYGEN` needs to be set to `TRUE` and then use `make docs`
 
 
 ### Conan repositories

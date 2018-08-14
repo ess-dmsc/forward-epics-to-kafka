@@ -8,20 +8,14 @@
 #define LOG(level, fmt, ...)                                                   \
   dwlog(static_cast<int>(level), 0, fmt, __FILE__, __LINE__, __FUNCSIG__,      \
         __VA_ARGS__);
-#define CLOG(level, c, fmt, ...)                                               \
-  dwlog(static_cast<int>(level), 0, fmt, __FILE__, __LINE__, __FUNCSIG__,      \
-        __VA_ARGS__);
-
 #else
 
 #define LOG(level, fmt, args...)                                               \
   dwlog(static_cast<int>(level), 0, fmt, __FILE__, __LINE__,                   \
         __PRETTY_FUNCTION__, ##args);
-#define CLOG(level, c, fmt, args...)                                           \
-  dwlog(static_cast<int>(level), 0, fmt, __FILE__, __LINE__,                   \
-        __PRETTY_FUNCTION__, ##args);
-
 #endif
+
+#define UNUSED_ARG(x) (void)x;
 
 extern int log_level;
 

@@ -37,25 +37,61 @@ class Producer {
 public:
   typedef ProducerTopic Topic;
   typedef ProducerMsg Msg;
-  Producer(BrokerSettings ProducerBrokerSettings_);
+  explicit Producer(BrokerSettings ProducerBrokerSettings_);
   Producer(Producer const &) = delete;
-  Producer(Producer &&x);
+  Producer(Producer &&x) noexcept;
   ~Producer();
   void pollWhileOutputQueueFilled();
   void poll();
   uint64_t totalMessagesProduced();
   uint64_t outputQueueLength();
-  static void cb_delivered(rd_kafka_t *rk, rd_kafka_message_t const *msg,
+
+  /// The message delivered callback for Kafka.
+  ///
+  /// \param rk The Kafka handle.
+  /// \param msg The message
+  /// \param opaque The opaque object.
+  static void deliveredCallback(rd_kafka_t *rk, rd_kafka_message_t const *msg,
+                                void *opaque);
+
+  /// The error callback for Kafka.
+  ///
+  /// \param rk The Kafka handle.
+  /// \param err_i The error code.
+  /// \param reason The error string.
+  /// \param opaque The opaque object.
+  static void errorCallback(rd_kafka_t *rk, int err_i, char const *reason,
+                            void *opaque);
+
+  /// The statistics callback for Kafka.
+  ///
+  /// \param rk The Kafka handle.
+  /// \param json The statistics data in JSON format.
+  /// \param json_size The size of the JSON string.
+  /// \param opaque The opaque.
+  /// \return The error code.
+  static int statsCallback(rd_kafka_t *rk, char *json, size_t json_len,
                            void *opaque);
-  static void cb_error(rd_kafka_t *rk, int err_i, char const *reason,
-                       void *opaque);
-  static int cb_stats(rd_kafka_t *rk, char *json, size_t json_len,
-                      void *opaque);
-  static void cb_log(rd_kafka_t const *rk, int level, char const *fac,
-                     char const *buf);
-  static void cb_throttle(rd_kafka_t *rk, char const *broker_name,
-                          int32_t broker_id, int throttle_time_ms,
-                          void *opaque);
+
+  /// The log callback for Kafka.
+  ///
+  /// \param rk The Kafka handle.
+  /// \param level The log level.
+  /// \param fac ?
+  /// \param buf The message buffer.
+  static void logCallback(rd_kafka_t const *rk, int level, char const *fac,
+                          char const *buf);
+
+  /// The throttle callback for Kafka.
+  ///
+  /// \param rk The Kafka handle.
+  /// \param broker_name The broker name.
+  /// \param broker_id  The broker id.
+  /// \param throttle_time_ms The throttle time in milliseconds.
+  /// \param opaque The opaque.
+  static void throttleCallback(rd_kafka_t *rk, char const *broker_name,
+                               int32_t broker_id, int throttle_time_ms,
+                               void *opaque);
   rd_kafka_t *getRdKafkaPtr() const;
   std::function<void(rd_kafka_message_t const *msg)> on_delivery_ok;
   std::function<void(rd_kafka_message_t const *msg)> on_delivery_failed;
@@ -69,4 +105,4 @@ public:
 private:
   int id = 0;
 };
-}
+} // namespace KafkaW

@@ -52,8 +52,15 @@ common_options = {"--no-deps": False,
 
 def build_forwarder_image():
     client = docker.from_env()
-    print("Building Forwarder image")
-    client.images.build(path="../", tag="forwarder:latest", rm=False)
+    print("Building Forwarder image", flush=True)
+    build_args = {}
+    if "http_proxy" in os.environ:
+        build_args["http_proxy"] = os.environ["http_proxy"]
+    if "https_proxy" in os.environ:
+        build_args["https_proxy"] = os.environ["https_proxy"]
+    image, logs = client.images.build(path="../", tag="forwarder:latest", rm=False, buildargs=build_args)
+    for item in logs:
+        print(item, flush=True)
 
 
 def run_containers(cmd, options):
@@ -61,6 +68,25 @@ def run_containers(cmd, options):
     cmd.up(options)
     print("\nFinished docker-compose up\n", flush=True)
     wait_until_kafka_ready(cmd, options)
+
+
+def build_and_run(options, request):
+    build_forwarder_image()
+    project = project_from_options(os.path.dirname(__file__), options)
+    cmd = TopLevelCommand(project)
+    run_containers(cmd, options)
+
+    def fin():
+        cmd.logs(options)
+        # Stop the containers then remove them and their volumes (--volumes option)
+        print("containers stopping", flush=True)
+        options["--timeout"] = 30
+        cmd.down(options)
+        print("containers stopped", flush=True)
+
+    # Using a finalizer rather than yield in the fixture means
+    # that the containers will be brought down even if tests fail
+    request.addfinalizer(fin)
 
 
 @pytest.fixture(scope="module")
@@ -74,19 +100,7 @@ def docker_compose(request):
     options = common_options
     options["--file"] = ["docker-compose.yml"]
 
-    build_forwarder_image()
-    project = project_from_options(os.path.dirname(__file__), options)
-    cmd = TopLevelCommand(project)
-    run_containers(cmd, options)
-
-    def fin():
-        cmd.logs(options)
-        # Stop the containers then remove them and their volumes (--volumes option)
-        cmd.down(options)
-
-    # Using a finalizer rather than yield in the fixture means
-    # that the containers will be brought down even if tests fail
-    request.addfinalizer(fin)
+    build_and_run(options, request)
 
 
 @pytest.fixture(scope="module")
@@ -100,19 +114,7 @@ def docker_compose_fake_epics(request):
     options = common_options
     options["--file"] = ["docker-compose-fake-epics.yml"]
 
-    build_forwarder_image()
-    project = project_from_options(os.path.dirname(__file__), options)
-    cmd = TopLevelCommand(project)
-    run_containers(cmd, options)
-
-    def fin():
-        cmd.logs(options)
-        # Stop the containers then remove them and their volumes (--volumes option)
-        cmd.down(options)
-
-    # Using a finalizer rather than yield in the fixture means
-    # that the containers will be brought down even if tests fail
-    request.addfinalizer(fin)
+    build_and_run(options, request)
 
 
 @pytest.fixture(scope="module")
@@ -126,19 +128,7 @@ def docker_compose_idle_updates(request):
     options = common_options
     options["--file"] = ["docker-compose-idle-updates.yml"]
 
-    build_forwarder_image()
-    project = project_from_options(os.path.dirname(__file__), options)
-    cmd = TopLevelCommand(project)
-    run_containers(cmd, options)
-
-    def fin():
-        cmd.logs(options)
-        # Stop the containers then remove them and their volumes (--volumes option)
-        cmd.down(options)
-
-    # Using a finalizer rather than yield in the fixture means
-    # that the containers will be brought down even if tests fail
-    request.addfinalizer(fin)
+    build_and_run(options, request)
 
 
 @pytest.fixture(scope="module")
@@ -152,16 +142,4 @@ def docker_compose_idle_updates_long_period(request):
     options = common_options
     options["--file"] = ["docker-compose-idle-updates-long-period.yml"]
 
-    build_forwarder_image()
-    project = project_from_options(os.path.dirname(__file__), options)
-    cmd = TopLevelCommand(project)
-    run_containers(cmd, options)
-
-    def fin():
-        cmd.logs(options)
-        # Stop the containers then remove them and their volumes (--volumes option)
-        cmd.down(options)
-
-    # Using a finalizer rather than yield in the fixture means
-    # that the containers will be brought down even if tests fail
-    request.addfinalizer(fin)
+    build_and_run(options, request)

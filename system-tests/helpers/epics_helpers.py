@@ -1,4 +1,4 @@
-from epics import caput
+import docker
 
 
 def change_pv_value(pvname, value):
@@ -9,4 +9,12 @@ def change_pv_value(pvname, value):
     :param value: PV value to change to
     :return: none
     """
-    caput(pvname, value, wait=True)
+    container = False
+    client = docker.from_env()
+    for item in client.containers.list():
+        if "_ioc_1" in item.name:
+            container = item
+            break
+    if not container:
+        raise Exception("IOC Container not found")
+    container.exec_run("caput {} {}".format(pvname, value), privileged=True)

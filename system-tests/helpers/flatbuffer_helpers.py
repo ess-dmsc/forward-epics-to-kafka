@@ -1,56 +1,45 @@
-import flatbuffers
-import time
-import math
-from .f142_logdata import LogData, Value, Int, Double
+from helpers.f142_logdata import Int, Double, String, Long, Value
+
+ValueTypes = {
+    Value.Value.Int: Int.Int,
+    Value.Value.Double: Double.Double,
+    Value.Value.String: String.String,
+}
 
 
-def check_double_value_and_equality(log_data, expected_value):
+def check_expected_values(log_data, value_type, pv_name, expected_value=None):
     """
-    Initialises the log data object from bytes and checks the union table
-    and converts to Python Double then compares against the expected Double value.
-
-    :param log_data: Log data object from the received stream buffer
-    :param expected_value: Double value to compare against
-    :return: none
-    """
-    union_double = Double.Double()
-    union_double.Init(log_data.Value().Bytes, log_data.Value().Pos)
-    union_value = union_double.Value()
-    assert math.isclose(expected_value, union_value)
-
-
-def check_message_pv_name_and_value_type(log_data, value_type, pv_name):
-    """
-    Checks the message name (PV) and value type (type of PV).
+    Checks the message name (PV) and value type (type of PV), and, optionally, the value.
 
     :param log_data: Log data object from the received stream buffer
     :param value_type: Flatbuffers value type
     :param pv_name: Byte encoded string of the PV/channel name
-    :return: none
+    :param expected_value: The expected PV value from the flatbuffers message
+    :return: None
     """
     assert value_type == log_data.ValueType()
     assert bytes(pv_name, encoding='utf-8') == log_data.SourceName()
+    if expected_value is not None:
+        union_val = ValueTypes[value_type]()
+        union_val.Init(log_data.Value().Bytes, log_data.Value().Pos)
+        assert expected_value == union_val.Value()
 
 
-def create_flatbuffers_object(file_identifier):
+def check_multiple_expected_values(message_list, expected_values):
     """
-    Create a sample flatbuffers buffer.
+    Checks for expected PV values in multiple messages.
+    Note: not order/time-specific, and requires PVs to have different names.
 
-    :param file_identifier: The flatbuffers schema ID
-    :return: The constructed buffer
+    :param message_list: A list of flatbuffers objects
+    :param expected_values:  A dict with PV names as keys for expected value types and values
+    :return: None
     """
-    builder = flatbuffers.Builder(512)
-    source_name = builder.CreateString("test")
-    Int.IntStart(builder)
-    Int.IntAddValue(builder, 2)
-    int1 = Int.IntEnd(builder)
-    LogData.LogDataStart(builder)
-    LogData.LogDataAddSourceName(builder, source_name)
-    LogData.LogDataAddValueType(builder, Value.Value().Int)
-    LogData.LogDataAddValue(builder, int1)
-    LogData.LogDataAddTimestamp(builder, int(time.time()))
-    end_offset = LogData.LogDataEnd(builder)
-    builder.Finish(end_offset)
-    buf = builder.Output()
-    buf[4:8] = bytes(file_identifier, encoding="utf-8")
-    return buf
+    used_pv_names = []
+    for log_data in message_list:
+        name = str(log_data.SourceName(), encoding='utf-8')
+        assert name in expected_values.keys() and name not in used_pv_names
+        used_pv_names.append(name)
+        assert expected_values[name][0] == log_data.ValueType()
+        union_val = ValueTypes[log_data.ValueType()]()
+        union_val.Init(log_data.Value().Bytes, log_data.Value().Pos)
+        assert expected_values[name][1] == union_val.Value()

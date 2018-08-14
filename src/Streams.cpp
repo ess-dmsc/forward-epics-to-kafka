@@ -16,7 +16,7 @@ void Streams::stopChannel(std::string const &channel) {
 }
 
 void Streams::clearStreams() {
-  CLOG(7, 1, "Main::clearStreams()  begin");
+  LOG(Sev::Debug, "Main::clearStreams()  begin");
   std::unique_lock<std::mutex> lock(streams_mutex);
   if (!streams.empty()) {
     for (auto x : streams) {
@@ -26,7 +26,7 @@ void Streams::clearStreams() {
     std::this_thread::sleep_for(std::chrono::milliseconds(1000));
     streams.clear();
   }
-  CLOG(7, 1, "Main::clearStreams()  end");
+  LOG(Sev::Debug, "Main::clearStreams()  end");
 };
 
 void Streams::checkStreamStatus() {

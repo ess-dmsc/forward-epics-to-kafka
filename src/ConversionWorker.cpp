@@ -74,7 +74,8 @@ int ConversionScheduler::fill(
   while (nfc < nfm) {
     auto n1 = main->streams[sid]->fillConversionQueue(queue, nfm - nfc);
     if (n1 > 0) {
-      CLOG(7, 3, "Give worker {:2}  items: {:3}  stream: {:3}", wid, n1, sid);
+      LOG(Sev::Debug, "Give worker {:2}  items: {:3}  stream: {:3}", wid, n1,
+          sid);
     }
     nfc += n1;
     sid += 1;
@@ -87,5 +88,7 @@ int ConversionScheduler::fill(
   return nfc;
 }
 
-ConversionScheduler::~ConversionScheduler() { LOG(6, "~ConversionScheduler"); }
+ConversionScheduler::~ConversionScheduler() {
+  LOG(Sev::Info, "~ConversionScheduler");
+}
 }

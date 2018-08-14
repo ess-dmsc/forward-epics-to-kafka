@@ -15,6 +15,7 @@ namespace Forwarder {
 class Sleeper {
 public:
   virtual void sleepFor(std::chrono::milliseconds Duration) = 0;
+  virtual ~Sleeper() = default;
 };
 
 /// Wraps this_thread::sleep_for.

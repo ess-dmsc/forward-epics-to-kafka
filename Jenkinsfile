@@ -7,6 +7,18 @@ eee_os = "centos7"
 epics_dir = "/opt/epics"
 epics_profile_file = "/etc/profile.d/ess_epics_env.sh"
 
+// Set number of old builds to keep.
+properties([[
+    $class: 'BuildDiscarderProperty',
+    strategy: [
+        $class: 'LogRotator',
+        artifactDaysToKeepStr: '',
+        artifactNumToKeepStr: '10',
+        daysToKeepStr: '',
+        numToKeepStr: ''
+    ]
+]]);
+
 images = [
         'centos7': [
                 'name': 'essdmscdm/centos7-build-node:3.0.0',
@@ -333,6 +345,28 @@ def get_win10_pipeline() {
   }  // return
 }  // def
 
+def get_system_tests_pipeline() {
+    return {
+        node('integration-test') {
+        cleanWs()
+        dir("${project}") {
+        stage("System tests: Checkout") {
+          checkout scm
+        }  // stage
+        stage("System tests: Install requirements") {
+        sh """scl enable rh-python35 -- python -m pip install --user --upgrade pip
+        scl enable rh-python35 -- python -m pip install --user -r system-tests/requirements.txt
+        """
+        }  // stage
+        stage("System tests: Run") {
+        sh """cd system-tests/
+        scl enable rh-python35 -- python -m pytest -s ./
+        """
+        }  // stage
+      } // dir
+      }  // node
+    }  // return
+}  // def
 
 node('docker && eee') {
     cleanWs()
@@ -353,6 +387,10 @@ node('docker && eee') {
       builders[image_key] = get_pipeline(image_key)
     }
     builders['windows10'] = get_win10_pipeline()
+
+    if ( env.CHANGE_ID ) {
+        builders['system tests'] = get_system_tests_pipeline()
+    }
 
     parallel builders
 

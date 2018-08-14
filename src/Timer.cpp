@@ -3,6 +3,7 @@
 namespace Forwarder {
 
 void FakeSleeper::sleepFor(std::chrono::milliseconds Duration) {
+  UNUSED_ARG(Duration);
   std::unique_lock<std::mutex> Lock(Mutex);
   ConditionVariable.wait(Lock, [this] { return Trigger; });
   Trigger = false;
@@ -53,8 +54,9 @@ void Timer::timerLoop() {
 
 void Timer::waitForPreviousIterationToComplete() {
   if (!IterationComplete) {
-    LOG(3, "Timer could not execute callbacks within specified iteration "
-           "period");
+    LOG(Sev::Error,
+        "Timer could not execute callbacks within specified iteration "
+        "period");
     std::unique_lock<std::mutex> Lock(IterationCompleteMutex);
     IterationCompleteCV.wait(Lock,
                              [this] { return IterationComplete == true; });
@@ -99,4 +101,4 @@ void Timer::addCallback(CallbackFunction Callback) {
   std::lock_guard<std::mutex> lock(CallbacksMutex);
   Callbacks.push_back(Callback);
 }
-}
+} // namespace Forwarder

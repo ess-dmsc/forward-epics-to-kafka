@@ -10,13 +10,13 @@ Converter::create(FlatBufs::SchemaRegistry const &schema_registry,
   ret->schema = schema;
   auto r1 = schema_registry.items().find(schema);
   if (r1 == schema_registry.items().end()) {
-    LOG(3, "can not handle (yet?) schema id {}", schema);
+    LOG(Sev::Error, "can not handle (yet?) schema id {}", schema);
     return nullptr;
   }
   ret->conv = r1->second->create_converter();
   auto &conv = ret->conv;
   if (!conv) {
-    LOG(3, "can not create a converter");
+    LOG(Sev::Error, "can not create a converter");
     return ret;
   }
 
@@ -32,10 +32,10 @@ Converter::create(FlatBufs::SchemaRegistry const &schema_registry,
 
 std::unique_ptr<FlatBufs::FlatbufferMessage>
 Converter::convert(FlatBufs::EpicsPVUpdate const &up) {
-  return conv->convert(up);
+  return conv->create(up);
 }
 
-std::map<std::string, double> Converter::stats() { return conv->stats(); }
+std::map<std::string, double> Converter::stats() { return conv->getStats(); }
 
 std::string Converter::schema_name() const { return schema; }
 } // namespace Forwarder
