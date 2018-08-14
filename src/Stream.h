@@ -30,7 +30,7 @@ class ConversionPath {
 public:
   ConversionPath(ConversionPath &&x) noexcept;
   ConversionPath(std::shared_ptr<Converter>, std::unique_ptr<KafkaOutput>);
-  ~ConversionPath();
+  virtual ~ConversionPath();
   int emit(std::shared_ptr<FlatBufs::EpicsPVUpdate> up);
   std::atomic<uint32_t> transit{0};
   nlohmann::json status_json() const;
