@@ -11,6 +11,7 @@ class SchemaInfo {
 public:
   typedef std::unique_ptr<SchemaInfo> ptr;
   virtual std::unique_ptr<FlatBufferCreator> create_converter() = 0;
+  virtual ~SchemaInfo() = default;
 };
 
 class SchemaRegistry {
