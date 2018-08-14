@@ -1,12 +1,14 @@
 FROM ubuntu:18.04
 
-RUN apt-get update && \
-    apt-get --no-install-recommends -y install cmake g++ git python-pip tzdata vim-common && \
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update -y && \
+    apt-get --no-install-recommends -y install make cmake g++ git python-pip tzdata vim-common && \
     apt-get -y autoremove && \
     apt-get clean all && \
     rm -rf /var/lib/apt/lists/*
 
-RUN pip install --upgrade pip==9.0.3 && \
+RUN pip install --upgrade pip==9.0.3 && pip install setuptools && \
     pip install conan && \
     rm -rf /root/.cache/pip/*
 

@@ -10,5 +10,8 @@ def change_pv_value(pvname, value):
     :return: none
     """
     client = docker.from_env()
-    container = client.containers.get("forwarder_ioc_1")
+    for item in client.containers.list():
+        if "_ioc_1" in item.name:
+            container = item
+            break
     container.exec_run("caput {} {}".format(pvname, value), privileged=True)
