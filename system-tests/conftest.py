@@ -52,7 +52,7 @@ common_options = {"--no-deps": False,
 
 def build_forwarder_image():
     client = docker.from_env()
-    print("Building Forwarder image")
+    print("Building Forwarder image", flush=True)
     client.images.build(path="../", tag="forwarder:latest", rm=False)
 
 
