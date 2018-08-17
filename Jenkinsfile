@@ -7,6 +7,18 @@ eee_os = "centos7"
 epics_dir = "/opt/epics"
 epics_profile_file = "/etc/profile.d/ess_epics_env.sh"
 
+// Set number of old builds to keep.
+properties([[
+    $class: 'BuildDiscarderProperty',
+    strategy: [
+        $class: 'LogRotator',
+        artifactDaysToKeepStr: '',
+        artifactNumToKeepStr: '10',
+        daysToKeepStr: '',
+        numToKeepStr: ''
+    ]
+]]);
+
 images = [
         'centos7': [
                 'name': 'essdmscdm/centos7-build-node:3.0.0',
