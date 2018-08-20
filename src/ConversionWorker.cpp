@@ -88,5 +88,7 @@ int ConversionScheduler::fill(
   return nfc;
 }
 
-ConversionScheduler::~ConversionScheduler() { LOG(Sev::Info, "~ConversionScheduler"); }
+ConversionScheduler::~ConversionScheduler() {
+  LOG(Sev::Info, "~ConversionScheduler");
+}
 }
