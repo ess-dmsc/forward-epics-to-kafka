@@ -83,40 +83,6 @@ TEST(ConfigParserTest, strings_specified_in_converters_are_extracted) {
   ASSERT_EQ("goodbye", f142.ConfigurationStrings.at("some_option2"));
 }
 
-TEST(ConfigParserTest, values_specified_in_multiple_converters_are_extracted) {
-  std::string RawJson = R"({
-                            "converters": {
-                               "f142": {
-                                 "some_option1": 123,
-                                 "some_option2": "goodbye"
-                               },
-                               "f143": {
-                                 "some_option3": "hello",
-                                 "some_option4": 456
-                               }
-                            }
-                           })";
-
-  Forwarder::ConfigParser Config;
-  Config.setJsonFromString(RawJson);
-
-  Forwarder::ConfigSettings Settings = Config.extractConfiguration();
-
-  ASSERT_EQ(2u, Settings.GlobalConverters.size());
-
-  auto &f142 = Settings.GlobalConverters.at("f142");
-  ASSERT_EQ(1u, f142.ConfigurationIntegers.size());
-  ASSERT_EQ(1u, f142.ConfigurationStrings.size());
-  ASSERT_EQ(123, f142.ConfigurationIntegers.at("some_option1"));
-  ASSERT_EQ("goodbye", f142.ConfigurationStrings.at("some_option2"));
-
-  auto &f143 = Settings.GlobalConverters.at("f143");
-  ASSERT_EQ(1u, f143.ConfigurationIntegers.size());
-  ASSERT_EQ(1u, f142.ConfigurationStrings.size());
-  ASSERT_EQ("hello", f143.ConfigurationStrings.at("some_option3"));
-  ASSERT_EQ(456, f143.ConfigurationIntegers.at("some_option4"));
-}
-
 TEST(ConfigParserTest, extracting_status_uri_gives_correct_uri_port_and_topic) {
   std::string RawJson = R"({
                             "status-uri": "//kafkabroker:1234/status_topic"
