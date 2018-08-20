@@ -391,11 +391,11 @@ class Converter : public FlatBufferCreator {
 public:
   Converter() {
 #ifdef TRACK_SEQ_DATA
-    LOG(3, "Converter() with TRACK_SEQ_DATA");
+    LOG(Sev::Error, "Converter() with TRACK_SEQ_DATA");
 #endif
   }
 
-  ~Converter() override { LOG(3, "~Converter"); }
+  ~Converter() override { LOG(Sev::Error, "~Converter"); }
 
   std::unique_ptr<FlatBufs::FlatbufferMessage>
   create(EpicsPVUpdate const &up) override {
