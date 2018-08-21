@@ -119,7 +119,6 @@ set(SOURCES
     Streams.cpp
     schemas/f142/f142.cpp
     ${FMT_SRC}
-    schemas/f143/f143.cpp
     Timer.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/git_commit_current.cpp
 )
