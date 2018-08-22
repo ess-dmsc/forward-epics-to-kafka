@@ -360,8 +360,9 @@ def get_system_tests_pipeline() {
         }  // stage
         stage("System tests: Run") {
         sh """cd system-tests/
-        scl enable rh-python35 -- python -m pytest -s ./
+        scl enable rh-python35 -- python -m pytest -s  --junitxml=./SystemTestsOutput.xml ./
         """
+        junit "./SystemTestsOutput.xml"
         }  // stage
       } // dir
       }  // node
