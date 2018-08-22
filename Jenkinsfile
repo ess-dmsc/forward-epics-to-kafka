@@ -345,6 +345,29 @@ def get_win10_pipeline() {
   }  // return
 }  // def
 
+def get_system_tests_pipeline() {
+    return {
+        node('integration-test') {
+        cleanWs()
+        dir("${project}") {
+        stage("System tests: Checkout") {
+          checkout scm
+        }  // stage
+        stage("System tests: Install requirements") {
+        sh """scl enable rh-python35 -- python -m pip install --user --upgrade pip
+        scl enable rh-python35 -- python -m pip install --user -r system-tests/requirements.txt
+        """
+        }  // stage
+        stage("System tests: Run") {
+        sh """cd system-tests/
+        scl enable rh-python35 -- python -m pytest -s  --junitxml=./SystemTestsOutput.xml ./
+        """
+        junit "system-tests/SystemTestsOutput.xml"
+        }  // stage
+      } // dir
+      }  // node
+    }  // return
+}  // def
 
 node('docker && eee') {
     cleanWs()
@@ -365,6 +388,10 @@ node('docker && eee') {
       builders[image_key] = get_pipeline(image_key)
     }
     builders['windows10'] = get_win10_pipeline()
+
+    if ( env.CHANGE_ID ) {
+        builders['system tests'] = get_system_tests_pipeline()
+    }
 
     parallel builders
 

@@ -2,6 +2,10 @@ FROM ubuntu:18.04
 
 ENV DEBIAN_FRONTEND=noninteractive
 
+ARG http_proxy
+
+ARG https_proxy
+
 RUN apt-get update -y && \
     apt-get --no-install-recommends -y install make cmake g++ git python-pip tzdata vim-common && \
     apt-get -y autoremove && \
@@ -22,15 +26,14 @@ ADD "https://raw.githubusercontent.com/ess-dmsc/docker-ubuntu18.04-build-node/ma
 RUN mkdir forwarder
 RUN cd forwarder
 
-ADD src/ ../forwarder_src/src
-ADD conan/ ../forwarder_src/conan/
-ADD cmake/ ../forwarder_src/cmake/
-ADD CMakeLists.txt ../forwarder_src
-ADD Doxygen.conf ../forwarder_src
+COPY conan/ ../forwarder_src/conan/
+COPY cmake/ ../forwarder_src/cmake/
+COPY CMakeLists.txt ../forwarder_src
+COPY src/ ../forwarder_src/src
 
 RUN cd forwarder && \
     cmake ../forwarder_src && \
-    make -j8 VERBOSE=1
+    make -j4 forward-epics-to-kafka VERBOSE=1
 
 ADD docker_launch.sh /
 CMD ["./docker_launch.sh"]
