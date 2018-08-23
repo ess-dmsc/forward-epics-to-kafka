@@ -1,4 +1,4 @@
-
+﻿
 version: '2'
 
 services:
@@ -21,13 +21,22 @@ services:
   zookeeper:
     image: zookeeper:3.4
 
+  ioc:
+    image: screamingudder/softioc:latest
+    stdin_open: true
+    tty: true
+    network_mode: "host"
+    depends_on:
+      - zookeeper
+      - kafka
+
   forwarder:
     image: forwarder:latest
     depends_on:
       - kafka
+      - ioc
     network_mode: "host"
     volumes:
-      - ./forwarder_config_fake_epics.json:/forwarder_config_fake_epics.json
+      - ../config-files/forwarder_config.json:/forwarder_config.json
     environment:
-      CONFIG_FILE: "/forwarder_config_fake_epics.json"
-      FAKE_PV_PERIOD_MS: "1000"
+      CONFIG_FILE: "/forwarder_config.json"

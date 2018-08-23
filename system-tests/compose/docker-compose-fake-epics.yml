@@ -21,23 +21,13 @@ services:
   zookeeper:
     image: zookeeper:3.4
 
-  ioc:
-    image: screamingudder/softioc:latest
-    stdin_open: true
-    tty: true
-    network_mode: "host"
-    depends_on:
-          - zookeeper
-          - kafka
-
   forwarder:
     image: forwarder:latest
     depends_on:
       - kafka
-      - ioc
     network_mode: "host"
     volumes:
-      - ./forwarder_config_idle_updates.json:/forwarder_config_idle_updates.json
+      - ../config-files/forwarder_config_fake_epics.json:/forwarder_config_fake_epics.json
     environment:
-      CONFIG_FILE: "/forwarder_config_idle_updates.json"
-      IDLE_PV_UPDATE_PERIOD: "30000"
+      CONFIG_FILE: "../config-files/forwarder_config_fake_epics.json"
+      FAKE_PV_PERIOD_MS: "1000"

@@ -98,7 +98,7 @@ def docker_compose(request):
 
     # Options must be given as long form
     options = common_options
-    options["--file"] = ["docker-compose.yml"]
+    options["--file"] = ["compose/docker-compose.yml"]
 
     build_and_run(options, request)
 
@@ -112,7 +112,7 @@ def docker_compose_fake_epics(request):
 
     # Options must be given as long form
     options = common_options
-    options["--file"] = ["docker-compose-fake-epics.yml"]
+    options["--file"] = ["compose/docker-compose-fake-epics.yml"]
 
     build_and_run(options, request)
 
@@ -126,7 +126,7 @@ def docker_compose_idle_updates(request):
 
     # Options must be given as long form
     options = common_options
-    options["--file"] = ["docker-compose-idle-updates.yml"]
+    options["--file"] = ["compose/docker-compose-idle-updates.yml"]
 
     build_and_run(options, request)
 
@@ -140,6 +140,6 @@ def docker_compose_idle_updates_long_period(request):
 
     # Options must be given as long form
     options = common_options
-    options["--file"] = ["docker-compose-idle-updates-long-period.yml"]
+    options["--file"] = ["compose/docker-compose-idle-updates-long-period.yml"]
 
     build_and_run(options, request)
