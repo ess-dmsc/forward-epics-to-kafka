@@ -29,5 +29,5 @@ services:
     volumes:
       - ../config-files/forwarder_config_fake_epics.json:/forwarder_config_fake_epics.json
     environment:
-      CONFIG_FILE: "../config-files/forwarder_config_fake_epics.json"
+      CONFIG_FILE: "/forwarder_config_fake_epics.json"
       FAKE_PV_PERIOD_MS: "1000"
