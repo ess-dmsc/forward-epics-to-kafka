@@ -2,7 +2,7 @@ from helpers.kafka_helpers import create_consumer, poll_for_valid_message
 from helpers.f142_logdata import LogData, Value, Double
 from helpers.flatbuffer_helpers import check_expected_values
 from time import sleep
-from PVs import PVDOUBLE
+from helpers.PVs import PVDOUBLE
 
 
 def test_forwarder_sends_idle_pv_updates(docker_compose_idle_updates):

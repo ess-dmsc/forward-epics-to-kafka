@@ -1,4 +1,4 @@
-
+﻿
 version: '2'
 
 services:
@@ -27,8 +27,8 @@ services:
     tty: true
     network_mode: "host"
     depends_on:
-          - zookeeper
-          - kafka
+      - zookeeper
+      - kafka
 
   forwarder:
     image: forwarder:latest
@@ -37,7 +37,6 @@ services:
       - ioc
     network_mode: "host"
     volumes:
-      - ./forwarder_config_idle_updates.json:/forwarder_config_idle_updates.json
+      - ../config-files/forwarder_config.json:/forwarder_config.json
     environment:
-      CONFIG_FILE: "/forwarder_config_idle_updates.json"
-      IDLE_PV_UPDATE_PERIOD: "30000"
+      CONFIG_FILE: "/forwarder_config.json"

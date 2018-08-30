@@ -27,7 +27,7 @@ services:
       - kafka
     network_mode: "host"
     volumes:
-      - ./forwarder_config_fake_epics.json:/forwarder_config_fake_epics.json
+      - ../config-files/forwarder_config_fake_epics.json:/forwarder_config_fake_epics.json
     environment:
       CONFIG_FILE: "/forwarder_config_fake_epics.json"
       FAKE_PV_PERIOD_MS: "1000"
