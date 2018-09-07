@@ -7,97 +7,10 @@
 
 namespace Forwarder {
 
-void ConfigParser::setJsonFromString(std::string RawJson) {
-  Json = nlohmann::json::parse(RawJson);
-
-  if (Json.is_null()) {
-    throw std::runtime_error("Cannot parse configuration file as JSON");
-  }
-}
-
 ConfigSettings ConfigParser::extractConfiguration() {
   ConfigSettings Settings;
-
-  extractBrokerConfig(Settings);
-  extractBrokers(Settings);
-  extractConversionThreads(Settings);
-  extractConversionWorkerQueueSize(Settings);
-  extractMainPollInterval(Settings);
-  extractStatusUri(Settings);
-  extractKafkaBrokerSettings(Settings);
   extractStreamSettings(Settings);
-  extractGlobalConverters(Settings);
-
   return Settings;
-}
-
-void ConfigParser::extractBrokerConfig(ConfigSettings &Settings) {
-  if (auto x = find<std::string>("broker-config", Json)) {
-    Settings.BrokerConfig = x.inner();
-  }
-}
-
-void ConfigParser::extractBrokers(ConfigSettings &Settings) {
-  if (auto x = find<std::string>("broker", Json)) {
-    setBrokers(x.inner(), Settings);
-  } else {
-    // If not specified then use default
-    setBrokers("localhost:9092", Settings);
-  }
-}
-
-void ConfigParser::extractConversionThreads(ConfigSettings &Settings) {
-  if (auto x = find<size_t>("conversion-threads", Json)) {
-    Settings.ConversionThreads = x.inner();
-  }
-}
-
-void ConfigParser::extractConversionWorkerQueueSize(ConfigSettings &Settings) {
-  if (auto x = find<size_t>("conversion-worker-queue-size", Json)) {
-    Settings.ConversionWorkerQueueSize = x.inner();
-  }
-}
-
-void ConfigParser::extractMainPollInterval(ConfigSettings &Settings) {
-  if (auto x = find<int32_t>("main-poll-interval", Json)) {
-    Settings.MainPollInterval = x.inner();
-  }
-}
-
-void ConfigParser::extractGlobalConverters(ConfigSettings &Settings) {
-  using nlohmann::json;
-
-  if (auto ConvertersMaybe = find<json>("converters", Json)) {
-    auto const &Converters = ConvertersMaybe.inner();
-    if (Converters.is_object()) {
-      for (auto It = Converters.begin(); It != Converters.end(); ++It) {
-        KafkaBrokerSettings BrokerSettings{};
-        for (auto SettingIt = It.value().begin(); SettingIt != It.value().end();
-             ++SettingIt) {
-          if (SettingIt.value().is_number()) {
-            BrokerSettings.ConfigurationIntegers[SettingIt.key()] =
-                SettingIt.value().get<int64_t>();
-          }
-
-          if (SettingIt.value().is_string()) {
-            BrokerSettings.ConfigurationStrings[SettingIt.key()] =
-                SettingIt.value().get<std::string>();
-          }
-        }
-        Settings.GlobalConverters[It.key()] = BrokerSettings;
-      }
-    }
-  }
-}
-
-void ConfigParser::extractStatusUri(ConfigSettings &Settings) {
-  if (auto x = find<std::string>("status-uri", Json)) {
-    auto URIString = x.inner();
-    URI URI;
-    URI.port = 9092;
-    URI.parse(URIString);
-    Settings.StatusReportURI = URI;
-  }
 }
 
 void ConfigParser::setBrokers(std::string const &Brokers,
@@ -109,36 +22,6 @@ void ConfigParser::setBrokers(std::string const &Brokers,
     u1.require_host_slashes = false;
     u1.parse(x);
     Settings.Brokers.push_back(u1);
-  }
-}
-
-void ConfigParser::extractKafkaBrokerSettings(ConfigSettings &Settings) {
-  using nlohmann::json;
-
-  if (auto KafkaMaybe = find<json>("kafka", Json)) {
-    auto Kafka = KafkaMaybe.inner();
-    if (auto BrokerMaybe = find<json>("broker", Kafka)) {
-      auto Broker = BrokerMaybe.inner();
-      for (auto Property = Broker.begin(); Property != Broker.end();
-           ++Property) {
-        auto const Key = Property.key();
-        if (Key.find("___") == 0) {
-          // Skip this property
-          continue;
-        }
-        if (Property.value().is_string()) {
-          auto Value = Property.value().get<std::string>();
-          LOG(Sev::Info, "kafka broker config {}: {}", Key, Value);
-          Settings.BrokerSettings.ConfigurationStrings[Key] = Value;
-        } else if (Property.value().is_number()) {
-          auto Value = Property.value().get<int64_t>();
-          LOG(Sev::Info, "kafka broker config {}: {}", Key, Value);
-          Settings.BrokerSettings.ConfigurationIntegers[Key] = Value;
-        } else {
-          LOG(Sev::Error, "can not understand option: {}", Key);
-        }
-      }
-    }
   }
 }
 

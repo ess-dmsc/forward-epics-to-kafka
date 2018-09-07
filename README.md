@@ -122,27 +122,6 @@ Run
 ./tests/tests
 ```
 
-#### Tests with actual traffic
-
-The tests which involve actual EPICS and Kafka traffic are disabled by default.
-They can be run with:
-
-```
-./tests/tests -- --gtest_filter=Remote
-```
-
-Please note that you probably have to specify your broker, so a more complete
-command looks like:
-
-```
-./tests/tests --broker //<host> --broker-config //<host>/tmp-commands -- --gtest_filter=Remote\*
-```
-
-Please note also that you need to have an EPICS PV running:
-- Normative Types Array Double, name: `forwarder_test_nt_array_double`
-- Normative Types Array Int32, name: `forwarder_test_nt_array_int32`
-and they need to update during the runtime of the test.
-
 #### [Running System tests (link)](https://github.com/ess-dmsc/forward-epics-to-kafka/blob/master/system-tests/README.md)
 
 
@@ -265,12 +244,18 @@ The forwarding can be also set up with a configuration file:
 ./forward-epics-to-kafka --config-file <your-file>
 ```
 
-with e.g:
+with an `ini` file for command line options:
+
+```ini
+broker = "//kafkabroker:9092"
+status-topic = "//kafkabroker:9092/the_status_topic"
+streams-json = ./streams.json
+```
+
+and/or a `json` file for the list of streams to add: 
 
 ```json
 {
-	"broker": "//kafkabroker:9092",
-	"status-uri": "//kafkabroker:9092/the_status_topic",
 	"streams": [
 		{
 			"channel": "Epics_PV_name",
@@ -279,34 +264,6 @@ with e.g:
 	]
 }
 ```
-
-All entries in the configuration file are optional.
-The following keys can be set in the configuration file at the top level.
-Given are the defaults.
-
-- `broker` (string)
-  - `//localhost:9092`
-  - Default Kafka host to send the converted data to.
-
-- `broker-config` (string)
-  - `//localhost:9092/forward_epics_to_kafka_commands`
-  - URI of the Kafka topic which should be monitored for commands.
-
-- `status-uri` (string)
-  - `(empty)`
-  - URI of the Kafka topic where it should produce status messages.
-
-- `conversion-threads` (int)
-  - 1
-  - Number of worker threads for the EPICS to FlatBuffers conversion.
-
-- `conversion-worker-queue-size` (int)
-  - 1024
-  - Maximum queue size of each conversion worker thread.
-
-- `main-poll-interval` (int, milliseconds)
-  - 500
-  - Interval for main loop maintenance tasks.
 
 
 

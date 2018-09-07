@@ -100,9 +100,10 @@ std::pair<int, std::unique_ptr<MainOpt>> parse_opt(int argc, char **argv) {
                   "  https://github.com/ess-dmsc/forward-epics-to-kafka\n\n",
                   GIT_COMMIT)};
   std::string BrokerDataDefault;
-  App.add_option("--config-file", opt.ConfigurationFile,
-                 "Configuration JSON file");
+  App.set_config("-c,--config-file", "", "Read configuration from an ini file",
+                                                 false);
   App.add_option("--log-file", opt.LogFilename, "Log filename");
+  App.add_option("--streams-json", opt.ConfigurationFile, "Json file for streams to add");
   App.add_option("--broker", BrokerDataDefault, "Default broker for data");
   App.add_option("--kafka-gelf", opt.KafkaGELFAddress,
                  "Kafka GELF logging //broker[:port]/topic");
@@ -111,10 +112,10 @@ std::pair<int, std::unique_ptr<MainOpt>> parse_opt(int argc, char **argv) {
   App.add_option("--influx-url", opt.InfluxURI, "Address for Influx logging");
   App.add_option("-v,--verbose", log_level, "Syslog logging level", true)
       ->check(CLI::Range(1, 7));
-  addOption(App, "--broker-config", opt.MainSettings.BrokerConfig,
+  addOption(App, "--config-topic", opt.MainSettings.BrokerConfig,
             "<//host[:port]/topic> Kafka host/topic to listen for commands on",
             true);
-  addOption(App, "--status-uri", opt.MainSettings.StatusReportURI,
+  addOption(App, "--status-topic", opt.MainSettings.StatusReportURI,
             "<//host[:port][/topic]> Kafka broker/topic to publish status "
             "updates on");
   App.add_option("--pv-update-period", opt.PeriodMS,

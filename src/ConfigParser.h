@@ -70,15 +70,7 @@ private:
   void extractMappingInfo(nlohmann::json const &Mapping, std::string &Channel,
                           std::string &Protocol);
   ConverterSettings extractConverterSettings(nlohmann::json const &Mapping);
-  void extractBrokerConfig(ConfigSettings &Settings);
-  void extractBrokers(ConfigSettings &Settings);
-  void extractConversionThreads(ConfigSettings &Settings);
-  void extractConversionWorkerQueueSize(ConfigSettings &Settings);
-  void extractMainPollInterval(ConfigSettings &Settings);
-  void extractStatusUri(ConfigSettings &Settings);
-  void extractKafkaBrokerSettings(ConfigSettings &Settings);
   void extractStreamSettings(ConfigSettings &Settings);
-  void extractGlobalConverters(ConfigSettings &Settings);
   std::atomic<uint32_t> ConverterIndex{0};
 };
 } // namespace Forwarder
