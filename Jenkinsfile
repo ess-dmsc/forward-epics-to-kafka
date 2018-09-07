@@ -348,10 +348,6 @@ def get_win10_pipeline() {
 def get_system_tests_pipeline() {
     return {
         node('integration-test') {
-            sh """
-            docker stop \$(docker ps -aq) | grep -E 'kafka|event-producer|zookeeper|filewriter|forwarder' || true
-            docker rm \$(docker ps -aq) | grep -E 'kafka|event-producer|zookeeper|filewriter|forwarder' || true
-            """
             cleanWs()
             dir("${project}") {
                 stage("System tests: Checkout") {
@@ -367,6 +363,11 @@ def get_system_tests_pipeline() {
                     scl enable rh-python35 -- python -m pytest -s  --junitxml=./SystemTestsOutput.xml ./
                     """
                     junit "system-tests/SystemTestsOutput.xml"
+                }  // stage
+                stage("System tests: Cleanup") {
+                    sh """docker stop \$(\$(docker ps -aq) | grep -E 'kafka|zookeeper|softioc|forwarder') || true
+                    docker rm \$(\$(docker ps -aq) | grep -E 'kafka|zookeeper|softioc|forwarder') || true
+                    """
                 }  // stage
             } // dir
         }  // node
