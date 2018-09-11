@@ -75,7 +75,7 @@ void ConfigParser::extractMappingInfo(nlohmann::json const &Mapping,
   }
 
   if (auto ChannelProviderTypeMaybe =
-      find<std::string>("channel_provider_type", Mapping)) {
+          find<std::string>("channel_provider_type", Mapping)) {
     Protocol = ChannelProviderTypeMaybe.inner();
   } else {
     // Default is pva
