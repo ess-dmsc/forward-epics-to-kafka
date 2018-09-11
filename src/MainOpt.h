@@ -17,7 +17,7 @@ struct MainOpt {
   std::string GraylogLoggerAddress = "";
   std::string InfluxURI = "";
   std::string LogFilename;
-  std::string ConfigurationFile;
+  std::string StreamsFile;
   uint32_t PeriodMS = 0;
   uint32_t FakePVPeriodMS = 0;
   uint64_t teamid = 0;

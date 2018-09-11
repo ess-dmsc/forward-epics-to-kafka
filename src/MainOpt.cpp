@@ -47,7 +47,7 @@ void MainOpt::parse_json_file(std::string ConfigurationFile) {
   if (ConfigurationFile.empty()) {
     throw std::runtime_error("Name of configuration file is empty");
   }
-  this->ConfigurationFile = ConfigurationFile;
+  this->StreamsFile = ConfigurationFile;
 
   // Parse the JSON configuration and extract parameters.
   // These parameters take precedence over what is given on the
@@ -77,7 +77,7 @@ ConfigSettings MainOpt::parse_document(const std::string &filepath) {
 }
 
 /// Add a URI valued option to the given App.
-static void addOption(CLI::App &App, std::string const &Name,
+CLI::Option *addOption(CLI::App &App, std::string const &Name,
                       Forwarder::URI &URIArg, std::string const &Description,
                       bool Defaulted = false) {
   CLI::callback_t Fun = [&URIArg](CLI::results_t Results) {
@@ -90,6 +90,7 @@ static void addOption(CLI::App &App, std::string const &Name,
     Opt->set_default_str(std::string("//") + URIArg.host_port + "/" +
                          URIArg.topic);
   }
+  return Opt;
 }
 
 std::pair<int, std::unique_ptr<MainOpt>> parse_opt(int argc, char **argv) {
@@ -102,7 +103,8 @@ std::pair<int, std::unique_ptr<MainOpt>> parse_opt(int argc, char **argv) {
   std::string BrokerDataDefault;
   App.set_config("-c,--config-file", "", "Read configuration from an ini file");
   App.add_option("--log-file", opt.LogFilename, "Log filename");
-  App.add_option("--streams-json", opt.ConfigurationFile, "Json file for streams to add");
+  App.add_option("--streams-json", opt.StreamsFile,
+                 "Json file for streams to add")->check(CLI::ExistingFile);
   App.add_option("--broker", BrokerDataDefault, "Default broker for data");
   App.add_option("--kafka-gelf", opt.KafkaGELFAddress,
                  "Kafka GELF logging //broker[:port]/topic");
@@ -113,7 +115,8 @@ std::pair<int, std::unique_ptr<MainOpt>> parse_opt(int argc, char **argv) {
       ->check(CLI::Range(1, 7));
   addOption(App, "--config-topic", opt.MainSettings.BrokerConfig,
             "<//host[:port]/topic> Kafka host/topic to listen for commands on",
-            true);
+            true)
+      ->required();
   addOption(App, "--status-topic", opt.MainSettings.StatusReportURI,
             "<//host[:port][/topic]> Kafka broker/topic to publish status "
             "updates on");
@@ -140,9 +143,9 @@ std::pair<int, std::unique_ptr<MainOpt>> parse_opt(int argc, char **argv) {
     std::cout << App.help();
     return ret;
   }
-  if (!opt.ConfigurationFile.empty()) {
+  if (!opt.StreamsFile.empty()) {
     try {
-      opt.parse_json_file(opt.ConfigurationFile);
+      opt.parse_json_file(opt.StreamsFile);
     } catch (std::exception const &e) {
       LOG(Sev::Warning, "Can not parse configuration file: {}", e.what());
       ret.first = 1;
