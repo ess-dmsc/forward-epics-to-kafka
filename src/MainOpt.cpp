@@ -100,8 +100,7 @@ std::pair<int, std::unique_ptr<MainOpt>> parse_opt(int argc, char **argv) {
                   "  https://github.com/ess-dmsc/forward-epics-to-kafka\n\n",
                   GIT_COMMIT)};
   std::string BrokerDataDefault;
-  App.set_config("-c,--config-file", "", "Read configuration from an ini file",
-                                                 false);
+  App.set_config("-c,--config-file", "", "Read configuration from an ini file");
   App.add_option("--log-file", opt.LogFilename, "Log filename");
   App.add_option("--streams-json", opt.ConfigurationFile, "Json file for streams to add");
   App.add_option("--broker", BrokerDataDefault, "Default broker for data");

@@ -7,6 +7,14 @@
 
 namespace Forwarder {
 
+void ConfigParser::setJsonFromString(std::string RawJson) {
+  Json = nlohmann::json::parse(RawJson);
+
+  if (Json.is_null()) {
+    throw std::runtime_error("Cannot parse configuration file as JSON");
+  }
+}
+
 ConfigSettings ConfigParser::extractConfiguration() {
   ConfigSettings Settings;
   extractStreamSettings(Settings);
@@ -67,7 +75,7 @@ void ConfigParser::extractMappingInfo(nlohmann::json const &Mapping,
   }
 
   if (auto ChannelProviderTypeMaybe =
-          find<std::string>("channel_provider_type", Mapping)) {
+      find<std::string>("channel_provider_type", Mapping)) {
     Protocol = ChannelProviderTypeMaybe.inner();
   } else {
     // Default is pva
