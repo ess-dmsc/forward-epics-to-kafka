@@ -1,4 +1,5 @@
 ﻿{
+  "cmd": "add",
   "streams": [
     {
       "channel": "SIMPLE:DOUBLE",
