@@ -24,15 +24,15 @@ ADD "https://raw.githubusercontent.com/ess-dmsc/docker-ubuntu18.04-build-node/ma
 ADD "https://raw.githubusercontent.com/ess-dmsc/docker-ubuntu18.04-build-node/master/files/default_profile" "/root/.conan/profiles/default"
 
 RUN mkdir forwarder
-RUN cd forwarder
 
 COPY conan/ ../forwarder_src/conan/
+RUN cd forwarder && conan install --build=outdated ../forwarder_src/conan/conanfile.txt
 COPY cmake/ ../forwarder_src/cmake/
 COPY CMakeLists.txt ../forwarder_src
 COPY src/ ../forwarder_src/src
 
 RUN cd forwarder && \
-    cmake ../forwarder_src && \
+    cmake -DCONAN="MANUAL" ../forwarder_src && \
     make -j4 forward-epics-to-kafka VERBOSE=1
 
 ADD docker_launch.sh /
