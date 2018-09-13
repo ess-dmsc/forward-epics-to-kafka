@@ -43,19 +43,8 @@ std::string MainOpt::brokers_as_comma_list() const {
   return s1;
 }
 
-void MainOpt::parse_json_file(std::string ConfigurationFile) {
-  if (ConfigurationFile.empty()) {
-    throw std::runtime_error("Name of configuration file is empty");
-  }
-  this->StreamsFile = ConfigurationFile;
-
-  // Parse the JSON configuration and extract parameters.
-  // These parameters take precedence over what is given on the
-  // command line.
-  MainSettings.StreamsInfo = parse_document(ConfigurationFile).StreamsInfo;
-}
-
-ConfigSettings MainOpt::parse_document(const std::string &filepath) {
+std::vector<StreamSettings>
+MainOpt::parseStreamsJson(const std::string &filepath) {
   std::ifstream ifs(filepath);
   if (!ifs.is_open()) {
     LOG(Sev::Error, "Could not open JSON file")
@@ -66,9 +55,8 @@ ConfigSettings MainOpt::parse_document(const std::string &filepath) {
 
   ConfigParser Config;
   Config.setJsonFromString(buffer.str());
-  Config.extractStreamInfo();
 
-  return Config.extractStreamInfo();
+  return Config.extractStreamInfo().StreamsInfo;
 }
 
 /// Add a URI valued option to the given App.
@@ -142,7 +130,7 @@ std::pair<int, std::unique_ptr<MainOpt>> parse_opt(int argc, char **argv) {
   }
   if (!opt.StreamsFile.empty()) {
     try {
-      opt.parse_json_file(opt.StreamsFile);
+      opt.MainSettings.StreamsInfo = opt.parseStreamsJson(opt.StreamsFile);
     } catch (std::exception const &e) {
       LOG(Sev::Warning, "Can not parse configuration file: {}", e.what());
       ret.first = 1;

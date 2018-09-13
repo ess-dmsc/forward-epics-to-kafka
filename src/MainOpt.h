@@ -23,13 +23,10 @@ struct MainOpt {
   std::vector<char> Hostname;
   FlatBufs::SchemaRegistry schema_registry;
   KafkaW::BrokerSettings broker_opt;
-  void parse_json_file(std::string ConfigurationFile);
   MainOpt();
   void set_broker(std::string &Broker);
   void init_logger();
-
-private:
-  ConfigSettings parse_document(const std::string &filepath);
+  std::vector<StreamSettings> parseStreamsJson(const std::string &filepath);
 };
 
 std::pair<int, std::unique_ptr<MainOpt>> parse_opt(int argc, char **argv);
