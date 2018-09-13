@@ -113,6 +113,9 @@ std::pair<int, std::unique_ptr<MainOpt>> parse_opt(int argc, char **argv) {
                  "instead of forwarding real "
                  "PV updates from EPICS",
                  true);
+  App.add_option("--conversion-threads", opt.MainSettings.ConversionThreads, "Conversion threads", true)
+  App.add_option("--conversion-worker-queue-size", opt.MainSettings.ConversionWorkerQueueSize, "Conversion worker queue size", true)
+  App.add_option("--main-poll-interval", opt.MainSettings.MainPollInterval ,"Main Poll interval", true)
   App.set_config("-c,--config-file", "", "Read configuration from an ini file",
                  false);
 
