@@ -1,5 +1,4 @@
 {
-  "cmd": "add",
   "streams": [
     {
       "channel": "FakePV",

@@ -52,12 +52,7 @@ void MainOpt::parse_json_file(std::string ConfigurationFile) {
   // Parse the JSON configuration and extract parameters.
   // These parameters take precedence over what is given on the
   // command line.
-  MainSettings = parse_document(ConfigurationFile);
-
-  broker_opt.ConfigurationStrings =
-      MainSettings.BrokerSettings.ConfigurationStrings;
-  broker_opt.ConfigurationIntegers =
-      MainSettings.BrokerSettings.ConfigurationIntegers;
+  MainSettings.StreamsInfo = parse_document(ConfigurationFile).StreamsInfo;
 }
 
 ConfigSettings MainOpt::parse_document(const std::string &filepath) {
@@ -71,9 +66,9 @@ ConfigSettings MainOpt::parse_document(const std::string &filepath) {
 
   ConfigParser Config;
   Config.setJsonFromString(buffer.str());
-  Config.extractConfiguration();
+  Config.extractStreamInfo();
 
-  return Config.extractConfiguration();
+  return Config.extractStreamInfo();
 }
 
 /// Add a URI valued option to the given App.
@@ -101,7 +96,6 @@ std::pair<int, std::unique_ptr<MainOpt>> parse_opt(int argc, char **argv) {
                   "  https://github.com/ess-dmsc/forward-epics-to-kafka\n\n",
                   GIT_COMMIT)};
   std::string BrokerDataDefault;
-  App.set_config("-c,--config-file", "", "Read configuration from an ini file");
   App.add_option("--log-file", opt.LogFilename, "Log filename");
   App.add_option("--streams-json", opt.StreamsFile,
                  "Json file for streams to add")
@@ -131,6 +125,8 @@ std::pair<int, std::unique_ptr<MainOpt>> parse_opt(int argc, char **argv) {
                  "instead of forwarding real "
                  "PV updates from EPICS",
                  true);
+  App.set_config("-c,--config-file", "", "Read configuration from an ini file",
+                 false);
 
   try {
     App.parse(argc, argv);
@@ -153,6 +149,8 @@ std::pair<int, std::unique_ptr<MainOpt>> parse_opt(int argc, char **argv) {
       return ret;
     }
   }
+  LOG(Sev::Info, "-------config topic = {}-------",
+      opt.MainSettings.BrokerConfig.topic)
   if (!BrokerDataDefault.empty()) {
     opt.set_broker(BrokerDataDefault);
   }

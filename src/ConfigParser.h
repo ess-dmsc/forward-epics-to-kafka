@@ -57,7 +57,7 @@ public:
   /// Extract the configuration information from the JSON.
   ///
   /// \return The extracted settings.
-  ConfigSettings extractConfiguration();
+  ConfigSettings extractStreamInfo();
 
   /// Set the broker(s) where the forwarded data will be written.
   ///
@@ -70,7 +70,6 @@ private:
   void extractMappingInfo(nlohmann::json const &Mapping, std::string &Channel,
                           std::string &Protocol);
   ConverterSettings extractConverterSettings(nlohmann::json const &Mapping);
-  void extractStreamSettings(ConfigSettings &Settings);
   std::atomic<uint32_t> ConverterIndex{0};
 };
 } // namespace Forwarder

@@ -32,7 +32,7 @@ TEST(ConfigParserTest, no_converters_specified_has_no_side_effects) {
   Forwarder::ConfigParser Config;
   Config.setJsonFromString(RawJson);
 
-  Forwarder::ConfigSettings Settings = Config.extractConfiguration();
+  Forwarder::ConfigSettings Settings = Config.extractStreamInfo();
 
   ASSERT_EQ(0u, Settings.GlobalConverters.size());
 }
@@ -49,7 +49,7 @@ TEST(ConfigParserTest, extracting_streams_setting_gets_channel_and_protocol) {
 
   Forwarder::ConfigParser Config;
   Config.setJsonFromString(RawJson);
-  Forwarder::ConfigSettings Settings = Config.extractConfiguration();
+  Forwarder::ConfigSettings Settings = Config.extractStreamInfo();
 
   ASSERT_EQ(1u, Settings.StreamsInfo.size());
 
@@ -76,7 +76,7 @@ TEST(ConfigParserTest,
 
   Forwarder::ConfigParser Config;
   Config.setJsonFromString(RawJson);
-  Forwarder::ConfigSettings Settings = Config.extractConfiguration();
+  Forwarder::ConfigSettings Settings = Config.extractStreamInfo();
 
   ASSERT_EQ(2u, Settings.StreamsInfo.size());
 
@@ -101,7 +101,7 @@ TEST(ConfigParserTest,
 
   Forwarder::ConfigParser Config;
   Config.setJsonFromString(RawJson);
-  Forwarder::ConfigSettings Settings = Config.extractConfiguration();
+  Forwarder::ConfigSettings Settings = Config.extractStreamInfo();
 
   ASSERT_EQ(1u, Settings.StreamsInfo.size());
 
@@ -129,7 +129,7 @@ TEST(ConfigParserTest, extracting_streams_setting_gets_converter_info) {
 
   Forwarder::ConfigParser Config;
   Config.setJsonFromString(RawJson);
-  Forwarder::ConfigSettings Settings = Config.extractConfiguration();
+  Forwarder::ConfigSettings Settings = Config.extractStreamInfo();
 
   auto Converter = Settings.StreamsInfo.at(0).Converters.at(0);
 
@@ -154,7 +154,7 @@ TEST(ConfigParserTest, extracting_converter_info_with_no_name_gets_auto_named) {
 
   Forwarder::ConfigParser Config;
   Config.setJsonFromString(RawJson);
-  Forwarder::ConfigSettings Settings = Config.extractConfiguration();
+  Forwarder::ConfigSettings Settings = Config.extractStreamInfo();
 
   auto Converter = Settings.StreamsInfo.at(0).Converters.at(0);
 
@@ -178,7 +178,7 @@ TEST(ConfigParserTest, extracting_converter_info_with_no_topic_throws) {
   Forwarder::ConfigParser Config;
   Config.setJsonFromString(RawJson);
 
-  ASSERT_ANY_THROW(Config.extractConfiguration());
+  ASSERT_ANY_THROW(Config.extractStreamInfo());
 }
 
 TEST(ConfigParserTest, extracting_converter_info_with_no_schema_throws) {
@@ -197,5 +197,5 @@ TEST(ConfigParserTest, extracting_converter_info_with_no_schema_throws) {
   Forwarder::ConfigParser Config;
   Config.setJsonFromString(RawJson);
 
-  ASSERT_ANY_THROW(Config.extractConfiguration());
+  ASSERT_ANY_THROW(Config.extractStreamInfo());
 }

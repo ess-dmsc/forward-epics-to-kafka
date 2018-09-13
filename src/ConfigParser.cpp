@@ -15,25 +15,8 @@ void ConfigParser::setJsonFromString(std::string RawJson) {
   }
 }
 
-ConfigSettings ConfigParser::extractConfiguration() {
+ConfigSettings ConfigParser::extractStreamInfo() {
   ConfigSettings Settings;
-  extractStreamSettings(Settings);
-  return Settings;
-}
-
-void ConfigParser::setBrokers(std::string const &Brokers,
-                              ConfigSettings &Settings) {
-  Settings.Brokers.clear();
-  auto a = split(Brokers, ",");
-  for (auto &x : a) {
-    URI u1;
-    u1.require_host_slashes = false;
-    u1.parse(x);
-    Settings.Brokers.push_back(u1);
-  }
-}
-
-void ConfigParser::extractStreamSettings(ConfigSettings &Settings) {
   using nlohmann::json;
   if (auto StreamsMaybe = find<json>("streams", Json)) {
     auto Streams = StreamsMaybe.inner();
@@ -58,6 +41,19 @@ void ConfigParser::extractStreamSettings(ConfigSettings &Settings) {
         Settings.StreamsInfo.push_back(Stream);
       }
     }
+  }
+  return Settings;
+}
+
+void ConfigParser::setBrokers(std::string const &Brokers,
+                              ConfigSettings &Settings) {
+  Settings.Brokers.clear();
+  auto a = split(Brokers, ",");
+  for (auto &x : a) {
+    URI u1;
+    u1.require_host_slashes = false;
+    u1.parse(x);
+    Settings.Brokers.push_back(u1);
   }
 }
 
