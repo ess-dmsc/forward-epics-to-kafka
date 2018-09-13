@@ -37,52 +37,6 @@ TEST(ConfigParserTest, no_converters_specified_has_no_side_effects) {
   ASSERT_EQ(0u, Settings.GlobalConverters.size());
 }
 
-TEST(ConfigParserTest, ints_specified_in_converters_are_extracted) {
-  std::string RawJson = R"({
-                            "converters": {
-                               "f142": {
-                                 "some_option1": 123,
-                                 "some_option2": 456
-                               }
-                            }
-                           })";
-
-  Forwarder::ConfigParser Config;
-  Config.setJsonFromString(RawJson);
-
-  Forwarder::ConfigSettings Settings = Config.extractConfiguration();
-
-  ASSERT_EQ(1u, Settings.GlobalConverters.size());
-
-  auto &f142 = Settings.GlobalConverters.at("f142");
-  ASSERT_EQ(2u, f142.ConfigurationIntegers.size());
-  ASSERT_EQ(123, f142.ConfigurationIntegers.at("some_option1"));
-  ASSERT_EQ(456, f142.ConfigurationIntegers.at("some_option2"));
-}
-
-TEST(ConfigParserTest, strings_specified_in_converters_are_extracted) {
-  std::string RawJson = R"({
-                            "converters": {
-                               "f142": {
-                                 "some_option1": "hello",
-                                 "some_option2": "goodbye"
-                               }
-                            }
-                           })";
-
-  Forwarder::ConfigParser Config;
-  Config.setJsonFromString(RawJson);
-
-  Forwarder::ConfigSettings Settings = Config.extractConfiguration();
-
-  ASSERT_EQ(1u, Settings.GlobalConverters.size());
-
-  auto &f142 = Settings.GlobalConverters.at("f142");
-  ASSERT_EQ(2u, f142.ConfigurationStrings.size());
-  ASSERT_EQ("hello", f142.ConfigurationStrings.at("some_option1"));
-  ASSERT_EQ("goodbye", f142.ConfigurationStrings.at("some_option2"));
-}
-
 TEST(ConfigParserTest, extracting_streams_setting_gets_channel_and_protocol) {
   std::string RawJson = R"({
                             "streams": [

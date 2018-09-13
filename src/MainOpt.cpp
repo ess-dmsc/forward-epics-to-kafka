@@ -78,8 +78,8 @@ ConfigSettings MainOpt::parse_document(const std::string &filepath) {
 
 /// Add a URI valued option to the given App.
 CLI::Option *addOption(CLI::App &App, std::string const &Name,
-                      Forwarder::URI &URIArg, std::string const &Description,
-                      bool Defaulted = false) {
+                       Forwarder::URI &URIArg, std::string const &Description,
+                       bool Defaulted = false) {
   CLI::callback_t Fun = [&URIArg](CLI::results_t Results) {
     URIArg.parse(Results[0]);
     return true;
@@ -104,7 +104,8 @@ std::pair<int, std::unique_ptr<MainOpt>> parse_opt(int argc, char **argv) {
   App.set_config("-c,--config-file", "", "Read configuration from an ini file");
   App.add_option("--log-file", opt.LogFilename, "Log filename");
   App.add_option("--streams-json", opt.StreamsFile,
-                 "Json file for streams to add")->check(CLI::ExistingFile);
+                 "Json file for streams to add")
+      ->check(CLI::ExistingFile);
   App.add_option("--broker", BrokerDataDefault, "Default broker for data");
   App.add_option("--kafka-gelf", opt.KafkaGELFAddress,
                  "Kafka GELF logging //broker[:port]/topic");
