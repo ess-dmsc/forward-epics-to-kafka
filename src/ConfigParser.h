@@ -12,7 +12,7 @@ namespace Forwarder {
 
 /// Holder for the Kafka brokers settings defined in the configuration file.
 struct KafkaBrokerSettings {
-  std::map<std::string, int64_t> ConfigurationIntegers;
+  std::map<std::string, int> ConfigurationIntegers;
   std::map<std::string, std::string> ConfigurationStrings;
 };
 

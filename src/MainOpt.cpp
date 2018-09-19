@@ -76,6 +76,46 @@ CLI::Option *addOption(CLI::App &App, std::string const &Name,
   return Opt;
 }
 
+CLI::Option *SetKeyValueOptions(CLI::App &App, const std::string &Name,
+                                const std::string &Description, bool Defaulted,
+                                const CLI::callback_t &Fun) {
+  CLI::Option *Opt = App.add_option(Name, Fun, Description, Defaulted);
+  const auto RequireEvenNumberOfPairs = -2;
+  Opt->set_custom_option("KEY VALUE", RequireEvenNumberOfPairs);
+  return Opt;
+}
+
+CLI::Option *addKafkaOption(CLI::App &App, std::string const &Name,
+                            std::map<std::string, std::string> &ConfigMap,
+                            std::string const &Description,
+                            bool Defaulted = false) {
+  CLI::callback_t Fun = [&ConfigMap](CLI::results_t Results) {
+    for (size_t i = 0; i < Results.size() / 2; i++) {
+      ConfigMap[Results.at(i * 2)] = Results.at(i * 2 + 1);
+    }
+    return true;
+  };
+  return SetKeyValueOptions(App, Name, Description, Defaulted, Fun);
+}
+
+CLI::Option *addKafkaOption(CLI::App &App, std::string const &Name,
+                            std::map<std::string, int> &ConfigMap,
+                            std::string const &Description,
+                            bool Defaulted = false) {
+  CLI::callback_t Fun = [&ConfigMap](CLI::results_t Results) {
+    for (size_t i = 0; i < Results.size() / 2; i++) {
+      try {
+        ConfigMap[Results.at(i * 2)] = std::stol(Results.at(i * 2 + 1));
+      } catch (std::invalid_argument e) {
+        throw std::runtime_error(
+            fmt::format("Argument {} is not an int", Results.at(i * 2)));
+      }
+    }
+    return true;
+  };
+  return SetKeyValueOptions(App, Name, Description, Defaulted, Fun);
+}
+
 std::pair<int, std::unique_ptr<MainOpt>> parse_opt(int argc, char **argv) {
   std::pair<int, std::unique_ptr<MainOpt>> ret{0, make_unique<MainOpt>()};
   auto &opt = *ret.second;
@@ -120,6 +160,12 @@ std::pair<int, std::unique_ptr<MainOpt>> parse_opt(int argc, char **argv) {
                  "Conversion worker queue size", true);
   App.add_option("--main-poll-interval", opt.MainSettings.MainPollInterval,
                  "Main Poll interval", true);
+  addKafkaOption(App, "-S",
+                 opt.MainSettings.BrokerSettings.ConfigurationStrings,
+                 "LibRDKafka option (String value)");
+  addKafkaOption(App, "-I",
+                 opt.MainSettings.BrokerSettings.ConfigurationIntegers,
+                 "LibRDKafka option (Integer value)");
   App.set_config("-c,--config-file", "", "Read configuration from an ini file",
                  false);
 
