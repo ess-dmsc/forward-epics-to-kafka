@@ -46,13 +46,10 @@ struct ConfigSettings {
 /// Class responsible for parsing the JSON configuration information.
 class ConfigParser {
 public:
-  /// Constructor.
-  ConfigParser() = default;
-
-  /// Set the JSON string to be parsed.
+  /// Constructor
   ///
   /// \param RawJson The JSON to be parsed.
-  void setJsonFromString(std::string RawJson);
+  explicit ConfigParser(const std::string &RawJson);
 
   /// Extract the configuration information from the JSON.
   ///

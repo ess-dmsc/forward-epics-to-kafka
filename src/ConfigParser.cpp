@@ -7,7 +7,7 @@
 
 namespace Forwarder {
 
-void ConfigParser::setJsonFromString(std::string RawJson) {
+ConfigParser::ConfigParser(const std::string &RawJson) {
   Json = nlohmann::json::parse(RawJson);
 
   if (Json.is_null()) {

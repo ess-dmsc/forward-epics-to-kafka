@@ -32,13 +32,13 @@ void MainOpt::set_broker(std::string &Broker) {
 
 std::string MainOpt::brokers_as_comma_list() const {
   std::string CommaList;
-  int i1 = 0;
+  bool MultipleBrokers = false;
   for (auto &Broker : MainSettings.Brokers) {
-    if (i1) {
+    if (MultipleBrokers) {
       CommaList += ",";
     }
     CommaList += Broker.host_port;
-    ++i1;
+    MultipleBrokers = true;
   }
   return CommaList;
 }
@@ -53,8 +53,7 @@ MainOpt::parseStreamsJson(const std::string &filepath) {
   std::stringstream buffer;
   buffer << ifs.rdbuf();
 
-  ConfigParser Config;
-  Config.setJsonFromString(buffer.str());
+  ConfigParser Config(buffer.str());
 
   return Config.extractStreamInfo().StreamsInfo;
 }
