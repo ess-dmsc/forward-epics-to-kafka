@@ -31,16 +31,16 @@ void MainOpt::set_broker(std::string &Broker) {
 }
 
 std::string MainOpt::brokers_as_comma_list() const {
-  std::string s1;
+  std::string CommaList;
   int i1 = 0;
-  for (auto &x : MainSettings.Brokers) {
+  for (auto &Broker : MainSettings.Brokers) {
     if (i1) {
-      s1 += ",";
+      CommaList += ",";
     }
-    s1 += x.host_port;
+    CommaList += Broker.host_port;
     ++i1;
   }
-  return s1;
+  return CommaList;
 }
 
 std::vector<StreamSettings>
