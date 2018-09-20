@@ -42,6 +42,28 @@ TEST(ConfigParserTest, trying_to_parse_invalid_json_throws) {
   ASSERT_ANY_THROW(Forwarder::ConfigParser Config(RawJson));
 }
 
+TEST(ConfigParserTest, no_streams_object_throws) {
+  std::string RawJson = R"({
+                            "streams": [1]
+                           })";
+
+  Forwarder::ConfigParser Config(RawJson);
+
+  ASSERT_THROW(Forwarder::ConfigSettings Settings = Config.extractStreamInfo(),
+               Forwarder::MappingAddException);
+}
+
+TEST(ConfigParserTest, no_channel_found_throws) {
+  std::string RawJson = R"({
+                            "streams": [{"a": "b"}]
+                           })";
+
+  Forwarder::ConfigParser Config(RawJson);
+
+  ASSERT_THROW(Forwarder::ConfigSettings Settings = Config.extractStreamInfo(),
+               Forwarder::MappingAddException);
+}
+
 TEST(ConfigParserTest, no_converters_specified_has_no_side_effects) {
   std::string RawJson = "{}";
 
@@ -206,4 +228,36 @@ TEST(ConfigParserTest, extracting_converter_info_with_no_schema_throws) {
   Forwarder::ConfigParser Config(RawJson);
 
   ASSERT_ANY_THROW(Config.extractStreamInfo());
+}
+
+TEST(
+    ConfigParserTest,
+    extracting_converter_info_with_schema_array_appends_to_converter_settings) {
+  std::string RawJson = R"({
+                            "streams": [
+                               {
+                                 "channel": "my_channel_name",
+                                 "channel_provider_type": "ca",
+                                 "converter": [
+                                    {
+                                      "topic": "Kafka_topic_name",
+                                      "schema" : "f142"
+                                    },
+                                    {
+                                      "topic": "Another_topic",
+                                      "schema" : "f142"
+                                    }
+                                 ]
+                               }
+                            ]
+                           })";
+
+  Forwarder::ConfigParser Config(RawJson);
+  Forwarder::ConfigSettings Settings = Config.extractStreamInfo();
+
+  auto Converter1 = Settings.StreamsInfo.at(0).Converters.at(0);
+  auto Converter2 = Settings.StreamsInfo.at(0).Converters.at(1);
+
+  ASSERT_EQ("Kafka_topic_name", Converter1.Topic);
+  ASSERT_EQ("Another_topic", Converter2.Topic);
 }
