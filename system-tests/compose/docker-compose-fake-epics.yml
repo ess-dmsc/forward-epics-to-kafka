@@ -32,4 +32,3 @@ services:
 
     environment:
       CONFIG_FILE: "/forwarder_config_fake_epics.ini"
-      FAKE_PV_PERIOD_MS: "1000"

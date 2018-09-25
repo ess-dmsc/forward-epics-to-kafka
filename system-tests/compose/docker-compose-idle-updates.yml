@@ -41,4 +41,3 @@ services:
       - ../config-files/forwarder_config_idle_updates.json:/forwarder_config_idle_updates.json
     environment:
       CONFIG_FILE: "/forwarder_config_idle_updates.ini"
-      IDLE_PV_UPDATE_PERIOD: "1000"
