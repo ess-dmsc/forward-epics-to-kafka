@@ -1,6 +1,4 @@
 ﻿{
-  "broker": "//localhost:9092",
-  "broker-config": "//localhost:9092/TEST_forwarderConfig",
   "streams": [
     {
       "channel": "SIMPLE:DOUBLE",

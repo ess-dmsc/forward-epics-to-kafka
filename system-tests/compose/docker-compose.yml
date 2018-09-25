@@ -37,6 +37,7 @@ services:
       - ioc
     network_mode: "host"
     volumes:
+      - ../config-files/forwarder_config.ini:/forwarder_config.ini
       - ../config-files/forwarder_config.json:/forwarder_config.json
     environment:
-      CONFIG_FILE: "/forwarder_config.json"
+      CONFIG_FILE: "/forwarder_config.ini"

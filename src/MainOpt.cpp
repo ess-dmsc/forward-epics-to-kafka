@@ -31,36 +31,20 @@ void MainOpt::set_broker(std::string &Broker) {
 }
 
 std::string MainOpt::brokers_as_comma_list() const {
-  std::string s1;
-  int i1 = 0;
-  for (auto &x : MainSettings.Brokers) {
-    if (i1) {
-      s1 += ",";
+  std::string CommaList;
+  bool MultipleBrokers = false;
+  for (auto &Broker : MainSettings.Brokers) {
+    if (MultipleBrokers) {
+      CommaList += ",";
     }
-    s1 += x.host_port;
-    ++i1;
+    CommaList += Broker.host_port;
+    MultipleBrokers = true;
   }
-  return s1;
+  return CommaList;
 }
 
-void MainOpt::parse_json_file(std::string ConfigurationFile) {
-  if (ConfigurationFile.empty()) {
-    throw std::runtime_error("Name of configuration file is empty");
-  }
-  this->ConfigurationFile = ConfigurationFile;
-
-  // Parse the JSON configuration and extract parameters.
-  // These parameters take precedence over what is given on the
-  // command line.
-  MainSettings = parse_document(ConfigurationFile);
-
-  broker_opt.ConfigurationStrings =
-      MainSettings.BrokerSettings.ConfigurationStrings;
-  broker_opt.ConfigurationIntegers =
-      MainSettings.BrokerSettings.ConfigurationIntegers;
-}
-
-ConfigSettings MainOpt::parse_document(const std::string &filepath) {
+std::vector<StreamSettings>
+MainOpt::parseStreamsJson(const std::string &filepath) {
   std::ifstream ifs(filepath);
   if (!ifs.is_open()) {
     LOG(Sev::Error, "Could not open JSON file")
@@ -69,17 +53,15 @@ ConfigSettings MainOpt::parse_document(const std::string &filepath) {
   std::stringstream buffer;
   buffer << ifs.rdbuf();
 
-  ConfigParser Config;
-  Config.setJsonFromString(buffer.str());
-  Config.extractConfiguration();
+  ConfigParser Config(buffer.str());
 
-  return Config.extractConfiguration();
+  return Config.extractStreamInfo().StreamsInfo;
 }
 
 /// Add a URI valued option to the given App.
-static void addOption(CLI::App &App, std::string const &Name,
-                      Forwarder::URI &URIArg, std::string const &Description,
-                      bool Defaulted = false) {
+CLI::Option *addOption(CLI::App &App, std::string const &Name,
+                       Forwarder::URI &URIArg, std::string const &Description,
+                       bool Defaulted = false) {
   CLI::callback_t Fun = [&URIArg](CLI::results_t Results) {
     URIArg.parse(Results[0]);
     return true;
@@ -90,6 +72,47 @@ static void addOption(CLI::App &App, std::string const &Name,
     Opt->set_default_str(std::string("//") + URIArg.host_port + "/" +
                          URIArg.topic);
   }
+  return Opt;
+}
+
+CLI::Option *SetKeyValueOptions(CLI::App &App, const std::string &Name,
+                                const std::string &Description, bool Defaulted,
+                                const CLI::callback_t &Fun) {
+  CLI::Option *Opt = App.add_option(Name, Fun, Description, Defaulted);
+  const auto RequireEvenNumberOfPairs = -2;
+  Opt->set_custom_option("KEY VALUE", RequireEvenNumberOfPairs);
+  return Opt;
+}
+
+CLI::Option *addKafkaOption(CLI::App &App, std::string const &Name,
+                            std::map<std::string, std::string> &ConfigMap,
+                            std::string const &Description,
+                            bool Defaulted = false) {
+  CLI::callback_t Fun = [&ConfigMap](CLI::results_t Results) {
+    for (size_t i = 0; i < Results.size() / 2; i++) {
+      ConfigMap[Results.at(i * 2)] = Results.at(i * 2 + 1);
+    }
+    return true;
+  };
+  return SetKeyValueOptions(App, Name, Description, Defaulted, Fun);
+}
+
+CLI::Option *addKafkaOption(CLI::App &App, std::string const &Name,
+                            std::map<std::string, int> &ConfigMap,
+                            std::string const &Description,
+                            bool Defaulted = false) {
+  CLI::callback_t Fun = [&ConfigMap](CLI::results_t Results) {
+    for (size_t i = 0; i < Results.size() / 2; i++) {
+      try {
+        ConfigMap[Results.at(i * 2)] = std::stol(Results.at(i * 2 + 1));
+      } catch (std::invalid_argument e) {
+        throw std::runtime_error(
+            fmt::format("Argument {} is not an int", Results.at(i * 2)));
+      }
+    }
+    return true;
+  };
+  return SetKeyValueOptions(App, Name, Description, Defaulted, Fun);
 }
 
 std::pair<int, std::unique_ptr<MainOpt>> parse_opt(int argc, char **argv) {
@@ -100,9 +123,10 @@ std::pair<int, std::unique_ptr<MainOpt>> parse_opt(int argc, char **argv) {
                   "  https://github.com/ess-dmsc/forward-epics-to-kafka\n\n",
                   GIT_COMMIT)};
   std::string BrokerDataDefault;
-  App.add_option("--config-file", opt.ConfigurationFile,
-                 "Configuration JSON file");
   App.add_option("--log-file", opt.LogFilename, "Log filename");
+  App.add_option("--streams-json", opt.StreamsFile,
+                 "Json file for streams to add")
+      ->check(CLI::ExistingFile);
   App.add_option("--broker", BrokerDataDefault, "Default broker for data");
   App.add_option("--kafka-gelf", opt.KafkaGELFAddress,
                  "Kafka GELF logging //broker[:port]/topic");
@@ -111,10 +135,11 @@ std::pair<int, std::unique_ptr<MainOpt>> parse_opt(int argc, char **argv) {
   App.add_option("--influx-url", opt.InfluxURI, "Address for Influx logging");
   App.add_option("-v,--verbose", log_level, "Syslog logging level", true)
       ->check(CLI::Range(1, 7));
-  addOption(App, "--broker-config", opt.MainSettings.BrokerConfig,
+  addOption(App, "--config-topic", opt.MainSettings.BrokerConfig,
             "<//host[:port]/topic> Kafka host/topic to listen for commands on",
-            true);
-  addOption(App, "--status-uri", opt.MainSettings.StatusReportURI,
+            true)
+      ->required();
+  addOption(App, "--status-topic", opt.MainSettings.StatusReportURI,
             "<//host[:port][/topic]> Kafka broker/topic to publish status "
             "updates on");
   App.add_option("--pv-update-period", opt.PeriodMS,
@@ -127,6 +152,21 @@ std::pair<int, std::unique_ptr<MainOpt>> parse_opt(int argc, char **argv) {
                  "instead of forwarding real "
                  "PV updates from EPICS",
                  true);
+  App.add_option("--conversion-threads", opt.MainSettings.ConversionThreads,
+                 "Conversion threads", true);
+  App.add_option("--conversion-worker-queue-size",
+                 opt.MainSettings.ConversionWorkerQueueSize,
+                 "Conversion worker queue size", true);
+  App.add_option("--main-poll-interval", opt.MainSettings.MainPollInterval,
+                 "Main Poll interval", true);
+  addKafkaOption(App, "-S",
+                 opt.MainSettings.BrokerSettings.ConfigurationStrings,
+                 "LibRDKafka option (String value)");
+  addKafkaOption(App, "-I",
+                 opt.MainSettings.BrokerSettings.ConfigurationIntegers,
+                 "LibRDKafka option (Integer value)");
+  App.set_config("-c,--config-file", "", "Read configuration from an ini file",
+                 false);
 
   try {
     App.parse(argc, argv);
@@ -140,9 +180,9 @@ std::pair<int, std::unique_ptr<MainOpt>> parse_opt(int argc, char **argv) {
     std::cout << App.help();
     return ret;
   }
-  if (!opt.ConfigurationFile.empty()) {
+  if (!opt.StreamsFile.empty()) {
     try {
-      opt.parse_json_file(opt.ConfigurationFile);
+      opt.MainSettings.StreamsInfo = opt.parseStreamsJson(opt.StreamsFile);
     } catch (std::exception const &e) {
       LOG(Sev::Warning, "Can not parse configuration file: {}", e.what());
       ret.first = 1;

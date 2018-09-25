@@ -12,7 +12,7 @@ namespace Forwarder {
 
 /// Holder for the Kafka brokers settings defined in the configuration file.
 struct KafkaBrokerSettings {
-  std::map<std::string, int64_t> ConfigurationIntegers;
+  std::map<std::string, int> ConfigurationIntegers;
   std::map<std::string, std::string> ConfigurationStrings;
 };
 
@@ -46,18 +46,15 @@ struct ConfigSettings {
 /// Class responsible for parsing the JSON configuration information.
 class ConfigParser {
 public:
-  /// Constructor.
-  ConfigParser() = default;
-
-  /// Set the JSON string to be parsed.
+  /// Constructor
   ///
   /// \param RawJson The JSON to be parsed.
-  void setJsonFromString(std::string RawJson);
+  explicit ConfigParser(const std::string &RawJson);
 
   /// Extract the configuration information from the JSON.
   ///
   /// \return The extracted settings.
-  ConfigSettings extractConfiguration();
+  ConfigSettings extractStreamInfo();
 
   /// Set the broker(s) where the forwarded data will be written.
   ///
@@ -70,15 +67,6 @@ private:
   void extractMappingInfo(nlohmann::json const &Mapping, std::string &Channel,
                           std::string &Protocol);
   ConverterSettings extractConverterSettings(nlohmann::json const &Mapping);
-  void extractBrokerConfig(ConfigSettings &Settings);
-  void extractBrokers(ConfigSettings &Settings);
-  void extractConversionThreads(ConfigSettings &Settings);
-  void extractConversionWorkerQueueSize(ConfigSettings &Settings);
-  void extractMainPollInterval(ConfigSettings &Settings);
-  void extractStatusUri(ConfigSettings &Settings);
-  void extractKafkaBrokerSettings(ConfigSettings &Settings);
-  void extractStreamSettings(ConfigSettings &Settings);
-  void extractGlobalConverters(ConfigSettings &Settings);
   std::atomic<uint32_t> ConverterIndex{0};
 };
 } // namespace Forwarder
