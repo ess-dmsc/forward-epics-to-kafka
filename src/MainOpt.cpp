@@ -189,8 +189,6 @@ std::pair<int, std::unique_ptr<MainOpt>> parse_opt(int argc, char **argv) {
       return ret;
     }
   }
-  LOG(Sev::Info, "-------config topic = {}-------",
-      opt.MainSettings.BrokerConfig.topic)
   if (!BrokerDataDefault.empty()) {
     opt.set_broker(BrokerDataDefault);
   }
