@@ -12,7 +12,6 @@ namespace FlatBufs {
 
 namespace f142 {
 class Converter;
-class ConverterTestNamed;
 } // namespace f142
 
 /// Holds the flatbuffer until it has been sent.
@@ -50,6 +49,5 @@ private:
   friend class Kafka;
   // Only here for some specific tests:
   friend class f142::Converter;
-  friend class f142::ConverterTestNamed;
 };
 } // namespace FlatBufs
