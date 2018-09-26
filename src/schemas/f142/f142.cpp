@@ -16,29 +16,6 @@
 namespace FlatBufs {
 namespace f142 {
 
-using std::string;
-
-#define STRINGIFY2(x) #x
-#define STRINGIFY(x) STRINGIFY2(x)
-
-template <typename T> char const *type_name();
-// template <> char const * type_name<uint32_t>() { return "uint32_t"; }
-// Unstringification not possible, so not possible to give white space..
-#define M(x)                                                                   \
-  template <> char const *type_name<x>() { return STRINGIFY(x); }
-M(int8_t)
-M(uint8_t)
-M(int16_t)
-M(uint16_t)
-M(int32_t)
-M(uint32_t)
-M(int64_t)
-M(uint64_t)
-M(float)
-M(double)
-M(string)
-#undef M
-
 typedef struct {
   Value type;
   flatbuffers::Offset<void> off;
@@ -173,7 +150,6 @@ public:
 
 template <typename T0> class Make_ScalarArray {
 public:
-
   // clang-format off
   using T1 =
       typename std::conditional<std::is_same<T0, epics::pvData::boolean>::value, ArrayByteBuilder,
@@ -222,7 +198,8 @@ public:
   static Value_t convert(flatbuffers::FlatBufferBuilder *Builder,
                          epics::pvData::PVScalar *PVScalarValue) {
     auto PVScalarString =
-        dynamic_cast<epics::pvData::PVScalarValue<std::string> *>(PVScalarValue);
+        dynamic_cast<epics::pvData::PVScalarValue<std::string> *>(
+            PVScalarValue);
     std::string Value = PVScalarString->get();
     auto FlatbufferedValueString =
         Builder->CreateString(Value.data(), Value.size());
@@ -236,8 +213,7 @@ public:
 } // end namespace PVStructureToFlatBufferN
 
 Value_t make_Value_scalar(flatbuffers::FlatBufferBuilder &builder,
-                          epics::pvData::PVScalar *field,
-                          Statistics &Stats) {
+                          epics::pvData::PVScalar *field, Statistics &Stats) {
   using S = epics::pvData::ScalarType;
   using namespace epics::pvData;
   using namespace PVStructureToFlatBufferN;
@@ -275,7 +251,7 @@ Value_t make_Value_scalar(flatbuffers::FlatBufferBuilder &builder,
 
 Value_t make_Value_array(flatbuffers::FlatBufferBuilder &builder,
                          epics::pvData::PVScalarArray *field, uint8_t opts,
-                         Statistics &statistics) {
+                         Statistics &Stats) {
   using S = epics::pvData::ScalarType;
   using namespace epics::pvData;
   using namespace PVStructureToFlatBufferN;
@@ -304,7 +280,7 @@ Value_t make_Value_array(flatbuffers::FlatBufferBuilder &builder,
   case S::pvDouble:
     return Make_ScalarArray<double>::convert(&builder, field, opts);
   case S::pvString:
-    ++statistics.err_not_implemented_yet;
+    ++Stats.err_not_implemented_yet;
     break;
   }
   return {Value::NONE, 0};
@@ -343,8 +319,8 @@ Value_t make_Value(flatbuffers::FlatBufferBuilder &Builder,
         statistics);
   case PVType::scalarArray:
     return make_Value_array(
-        Builder, dynamic_cast<epics::pvData::PVScalarArray *>(ValueField.get()), opts,
-        statistics);
+        Builder, dynamic_cast<epics::pvData::PVScalarArray *>(ValueField.get()),
+        opts, statistics);
   case PVType::structure: {
     // supported so far:
     // NTEnum:  we currently send the index value.  full enum identifier is
@@ -352,11 +328,10 @@ Value_t make_Value(flatbuffers::FlatBufferBuilder &Builder,
     // is decided how we store on nexus side.
     release_deleter<epics::pvData::PVStructure> del;
     del.do_delete = false;
-    epics::pvData::PVStructurePtr p1(
-        PVStructureField.get(), del);
+    epics::pvData::PVStructurePtr p1(PVStructureField.get(), del);
     if (epics::nt::NTEnum::isCompatible(p1)) {
-      auto findex =
-          ((epics::pvData::PVStructure *)(ValueField.get()))->getSubField("index");
+      auto findex = ((epics::pvData::PVStructure *)(ValueField.get()))
+                        ->getSubField("index");
       return make_Value_scalar(
           Builder, dynamic_cast<epics::pvData::PVScalar *>(findex.get()),
           statistics);
@@ -396,15 +371,16 @@ public:
 
     if (auto PVTimeStamp =
             PVStructure->getSubField<epics::pvData::PVStructure>("timeStamp")) {
-      uint64_t TimeStamp = (uint64_t)PVTimeStamp
-                        ->getSubField<epics::pvData::PVScalarValue<int64_t>>(
-                            "secondsPastEpoch")
-                        ->get();
+      uint64_t TimeStamp =
+          (uint64_t)PVTimeStamp
+              ->getSubField<epics::pvData::PVScalarValue<int64_t>>(
+                  "secondsPastEpoch")
+              ->get();
       TimeStamp *= 1000000000;
       TimeStamp += PVTimeStamp
-                ->getSubField<epics::pvData::PVScalarValue<int32_t>>(
-                    "nanoseconds")
-                ->get();
+                       ->getSubField<epics::pvData::PVScalarValue<int32_t>>(
+                           "nanoseconds")
+                       ->get();
       LogDataBuilder.add_timestamp(TimeStamp);
     } else {
       ++Stats.err_timestamp_not_available;

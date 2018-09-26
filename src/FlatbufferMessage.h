@@ -41,13 +41,5 @@ public:
 
   std::unique_ptr<flatbuffers::FlatBufferBuilder> builder;
   FlatbufferMessage(FlatbufferMessage const &) = delete;
-
-private:
-  // Used for performance tests, please do not touch.
-  uint64_t seq = 0;
-  uint32_t fwdix = 0;
-  friend class Kafka;
-  // Only here for some specific tests:
-  friend class f142::Converter;
 };
 } // namespace FlatBufs
