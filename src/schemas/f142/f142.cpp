@@ -170,24 +170,24 @@ public:
       typename std::conditional<std::is_same<T0, epics::pvData::boolean>::value,
                                 signed char, T0>::type;
 
-  static Value_t convert(flatbuffers::FlatBufferBuilder *builder,
-                         epics::pvData::PVScalarArray *field_, uint8_t opts) {
+  static Value_t convert(flatbuffers::FlatBufferBuilder *Builder,
+                         epics::pvData::PVScalarArray *field_, bool opts) {
     auto field = static_cast<epics::pvData::PVValueArray<T0> *>(field_);
     field->setImmutable();
     auto svec = field->view();
     auto nlen = svec.size();
 
     flatbuffers::Offset<flatbuffers::Vector<T3>> val;
-    if (opts == 1) {
+    if (opts) {
       T0 *p1 = nullptr;
       val =
-          builder->CreateUninitializedVector(nlen, sizeof(T0), (uint8_t **)&p1);
+          Builder->CreateUninitializedVector(nlen, sizeof(T0), (uint8_t **)&p1);
       memcpy(p1, svec.data(), nlen * sizeof(T0));
     } else {
-      val = builder->CreateVector((T3 *)svec.data(), nlen);
+      val = Builder->CreateVector((T3 *)svec.data(), nlen);
     }
 
-    T1 pv_builder(*builder);
+    T1 pv_builder(*Builder);
     pv_builder.add_value(val);
     return {BuilderType_to_Enum_Value<T1>::v(), pv_builder.Finish().Union()};
   }
@@ -250,7 +250,7 @@ Value_t make_Value_scalar(flatbuffers::FlatBufferBuilder &builder,
 }
 
 Value_t make_Value_array(flatbuffers::FlatBufferBuilder &builder,
-                         epics::pvData::PVScalarArray *field, uint8_t opts,
+                         epics::pvData::PVScalarArray *field, bool opts,
                          Statistics &Stats) {
   using S = epics::pvData::ScalarType;
   using namespace epics::pvData;
@@ -298,7 +298,7 @@ public:
 
 Value_t make_Value(flatbuffers::FlatBufferBuilder &Builder,
                    epics::pvData::PVStructurePtr const &PVStructureField,
-                   uint8_t opts, Statistics &statistics) {
+                   bool opts, Statistics &statistics) {
   if (!PVStructureField) {
     return {Value::NONE, 0};
   }
@@ -362,7 +362,7 @@ public:
     auto Builder = FlatbufferMessage->builder.get();
     // this is the field type ID string: up.pvstr->getStructure()->getID()
     auto PVName = Builder->CreateString(PVUpdate.channel);
-    auto Value = make_Value(*Builder, PVStructure, 1, Stats);
+    auto Value = make_Value(*Builder, PVStructure, true, Stats);
 
     LogDataBuilder LogDataBuilder(*Builder);
     LogDataBuilder.add_source_name(PVName);
@@ -398,6 +398,58 @@ public:
   Statistics Stats;
 };
 
+/// This class is purely for testing
+class ConverterTestNamed : public FlatBufferCreator {
+public:
+  std::unique_ptr<FlatBufs::FlatbufferMessage>
+  create(EpicsPVUpdate const &up) override {
+    auto &pvstr = up.epics_pvstr;
+
+    {
+      // epics madness
+      auto f1 = pvstr->getSubField<epics::pvData::PVField>("value");
+      if (f1) {
+        auto f2 = f1->getField();
+        auto ft = f2->getType();
+        if (ft == epics::pvData::Type::scalarArray) {
+          auto f3 = pvstr->getSubField<epics::pvData::PVScalarArray>("value");
+          auto f4 = f3->getScalarArray();
+          if (f4->getElementType() == epics::pvData::ScalarType::pvInt) {
+            had_int32 += 1;
+          }
+          if (f4->getElementType() == epics::pvData::ScalarType::pvDouble) {
+            had_double += 1;
+          }
+        }
+      }
+    }
+
+    auto fb = make_unique<FlatBufs::FlatbufferMessage>();
+    auto builder = fb->builder.get();
+    using uchar = unsigned char;
+    static_assert(sizeof(uchar) == 1, "");
+    {
+      uint32_t *p1 = nullptr;
+      auto fba = builder->CreateUninitializedVector(2, 4, (uint8_t **)&p1);
+      p1[0] = had_int32.load();
+      p1[1] = had_double.load();
+      ArrayUIntBuilder b2(*builder);
+      b2.add_value(fba);
+      auto fbval = b2.Finish().Union();
+      auto n = builder->CreateString(up.channel);
+      LogDataBuilder b(*builder);
+      b.add_source_name(n);
+      b.add_value_type(Value::ArrayUInt);
+      b.add_value(fbval);
+      FinishLogDataBuffer(*builder, b.Finish());
+      return fb;
+    }
+  }
+
+  std::atomic<uint32_t> had_int32{0};
+  std::atomic<uint32_t> had_double{0};
+};
+
 class Info : public SchemaInfo {
 public:
   std::unique_ptr<FlatBufferCreator> create_converter() override;
@@ -407,7 +459,19 @@ std::unique_ptr<FlatBufferCreator> Info::create_converter() {
   return make_unique<Converter>();
 }
 
+class InfoNamedConverter : public SchemaInfo {
+public:
+  std::unique_ptr<FlatBufferCreator> create_converter() override;
+};
+
+std::unique_ptr<FlatBufferCreator> InfoNamedConverter::create_converter() {
+  return make_unique<ConverterTestNamed>();
+}
+
 FlatBufs::SchemaRegistry::Registrar<Info> g_registrar_info("f142",
                                                            Info::ptr(new Info));
+FlatBufs::SchemaRegistry::Registrar<Info>
+    g_registrar_info_test_named_converter("f142-test-named-converter",
+                                          Info::ptr(new InfoNamedConverter));
 } // namespace f142
 } // namespace FlatBufs
