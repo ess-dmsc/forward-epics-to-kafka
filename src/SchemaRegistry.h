@@ -20,11 +20,13 @@ class SchemaRegistry {
 public:
   static std::map<std::string, SchemaInfo::ptr> &Items();
 
-  static void registrate(std::string FlatbufferID, SchemaInfo::ptr &&SchemaInfoPtr) {
+  static void registrate(std::string FlatbufferID,
+                         SchemaInfo::ptr &&SchemaInfoPtr) {
     auto &SchemaMap = Items();
     if (SchemaMap.find(FlatbufferID) != SchemaMap.end()) {
-      auto ErrorString = fmt::format("ERROR schema handler for [{:.{}}] exists already",
-                           FlatbufferID.data(), FlatbufferID.size());
+      auto ErrorString =
+          fmt::format("ERROR schema handler for [{:.{}}] exists already",
+                      FlatbufferID.data(), FlatbufferID.size());
       throw std::runtime_error(ErrorString);
     }
     SchemaMap[FlatbufferID] = std::move(SchemaInfoPtr);
@@ -33,7 +35,8 @@ public:
   template <typename T> class Registrar {
   public:
     Registrar(std::string FlatbufferID, SchemaInfo::ptr &&SchemaInfoPtr) {
-      SchemaRegistry::registrate(std::move(FlatbufferID), std::move(SchemaInfoPtr));
+      SchemaRegistry::registrate(std::move(FlatbufferID),
+                                 std::move(SchemaInfoPtr));
     }
   };
 };
