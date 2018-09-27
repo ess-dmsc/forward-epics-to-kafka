@@ -212,8 +212,8 @@ public:
 
 } // end namespace PVStructureToFlatBufferN
 
-Value_t make_Value_scalar(flatbuffers::FlatBufferBuilder &builder,
-                          epics::pvData::PVScalar *field, Statistics &Stats) {
+Value_t makeValueScalar(flatbuffers::FlatBufferBuilder &builder,
+                        epics::pvData::PVScalar *field, Statistics &Stats) {
   using S = epics::pvData::ScalarType;
   using namespace epics::pvData;
   using namespace PVStructureToFlatBufferN;
@@ -249,9 +249,9 @@ Value_t make_Value_scalar(flatbuffers::FlatBufferBuilder &builder,
   return {Value::NONE, 0};
 }
 
-Value_t make_Value_array(flatbuffers::FlatBufferBuilder &builder,
-                         epics::pvData::PVScalarArray *field, bool opts,
-                         Statistics &Stats) {
+Value_t makeValueArray(flatbuffers::FlatBufferBuilder &builder,
+                       epics::pvData::PVScalarArray *field, bool opts,
+                       Statistics &Stats) {
   using S = epics::pvData::ScalarType;
   using namespace epics::pvData;
   using namespace PVStructureToFlatBufferN;
@@ -296,9 +296,9 @@ public:
   bool do_delete;
 };
 
-Value_t make_Value(flatbuffers::FlatBufferBuilder &Builder,
-                   epics::pvData::PVStructurePtr const &PVStructureField,
-                   bool opts, Statistics &statistics) {
+Value_t makeValue(flatbuffers::FlatBufferBuilder &Builder,
+                  epics::pvData::PVStructurePtr const &PVStructureField,
+                  bool opts, Statistics &Stats) {
   if (!PVStructureField) {
     return {Value::NONE, 0};
   }
@@ -314,27 +314,27 @@ Value_t make_Value(flatbuffers::FlatBufferBuilder &Builder,
   using PVType = epics::pvData::Type;
   switch (ValueType) {
   case PVType::scalar:
-    return make_Value_scalar(
+    return makeValueScalar(
         Builder, dynamic_cast<epics::pvData::PVScalar *>(ValueField.get()),
-        statistics);
+        Stats);
   case PVType::scalarArray:
-    return make_Value_array(
+    return makeValueArray(
         Builder, dynamic_cast<epics::pvData::PVScalarArray *>(ValueField.get()),
-        opts, statistics);
+        opts, Stats);
   case PVType::structure: {
     // supported so far:
     // NTEnum:  we currently send the index value.  full enum identifier is
     // coming when it
     // is decided how we store on nexus side.
-    release_deleter<epics::pvData::PVStructure> del;
-    del.do_delete = false;
-    epics::pvData::PVStructurePtr p1(PVStructureField.get(), del);
+    release_deleter<epics::pvData::PVStructure> PointerDeleter;
+    PointerDeleter.do_delete = false;
+    epics::pvData::PVStructurePtr p1(PVStructureField.get(), PointerDeleter);
     if (epics::nt::NTEnum::isCompatible(p1)) {
-      auto findex = ((epics::pvData::PVStructure *)(ValueField.get()))
-                        ->getSubField("index");
-      return make_Value_scalar(
-          Builder, dynamic_cast<epics::pvData::PVScalar *>(findex.get()),
-          statistics);
+      auto IndexField = ((epics::pvData::PVStructure *)(ValueField.get()))
+                            ->getSubField("index");
+      return makeValueScalar(
+          Builder, dynamic_cast<epics::pvData::PVScalar *>(IndexField.get()),
+          Stats);
     }
     break;
   }
@@ -362,7 +362,7 @@ public:
     auto Builder = FlatbufferMessage->builder.get();
     // this is the field type ID string: up.pvstr->getStructure()->getID()
     auto PVName = Builder->CreateString(PVUpdate.channel);
-    auto Value = make_Value(*Builder, PVStructure, true, Stats);
+    auto Value = makeValue(*Builder, PVStructure, true, Stats);
 
     LogDataBuilder LogDataBuilder(*Builder);
     LogDataBuilder.add_source_name(PVName);
@@ -398,80 +398,16 @@ public:
   Statistics Stats;
 };
 
-/// This class is purely for testing
-class ConverterTestNamed : public FlatBufferCreator {
-public:
-  std::unique_ptr<FlatBufs::FlatbufferMessage>
-  create(EpicsPVUpdate const &up) override {
-    auto &pvstr = up.epics_pvstr;
-
-    {
-      // epics madness
-      auto f1 = pvstr->getSubField<epics::pvData::PVField>("value");
-      if (f1) {
-        auto f2 = f1->getField();
-        auto ft = f2->getType();
-        if (ft == epics::pvData::Type::scalarArray) {
-          auto f3 = pvstr->getSubField<epics::pvData::PVScalarArray>("value");
-          auto f4 = f3->getScalarArray();
-          if (f4->getElementType() == epics::pvData::ScalarType::pvInt) {
-            had_int32 += 1;
-          }
-          if (f4->getElementType() == epics::pvData::ScalarType::pvDouble) {
-            had_double += 1;
-          }
-        }
-      }
-    }
-
-    auto fb = make_unique<FlatBufs::FlatbufferMessage>();
-    auto builder = fb->builder.get();
-    using uchar = unsigned char;
-    static_assert(sizeof(uchar) == 1, "");
-    {
-      uint32_t *p1 = nullptr;
-      auto fba = builder->CreateUninitializedVector(2, 4, (uint8_t **)&p1);
-      p1[0] = had_int32.load();
-      p1[1] = had_double.load();
-      ArrayUIntBuilder b2(*builder);
-      b2.add_value(fba);
-      auto fbval = b2.Finish().Union();
-      auto n = builder->CreateString(up.channel);
-      LogDataBuilder b(*builder);
-      b.add_source_name(n);
-      b.add_value_type(Value::ArrayUInt);
-      b.add_value(fbval);
-      FinishLogDataBuffer(*builder, b.Finish());
-      return fb;
-    }
-  }
-
-  std::atomic<uint32_t> had_int32{0};
-  std::atomic<uint32_t> had_double{0};
-};
-
 class Info : public SchemaInfo {
 public:
-  std::unique_ptr<FlatBufferCreator> create_converter() override;
+  std::unique_ptr<FlatBufferCreator> createConverter() override;
 };
 
-std::unique_ptr<FlatBufferCreator> Info::create_converter() {
+std::unique_ptr<FlatBufferCreator> Info::createConverter() {
   return make_unique<Converter>();
-}
-
-class InfoNamedConverter : public SchemaInfo {
-public:
-  std::unique_ptr<FlatBufferCreator> create_converter() override;
-};
-
-std::unique_ptr<FlatBufferCreator> InfoNamedConverter::create_converter() {
-  return make_unique<ConverterTestNamed>();
 }
 
 FlatBufs::SchemaRegistry::Registrar<Info> g_registrar_info("f142",
                                                            Info::ptr(new Info));
-FlatBufs::SchemaRegistry::Registrar<Info>
-    g_registrar_info_test_named_converter("f142-test-named-converter",
-                                          Info::ptr(new InfoNamedConverter));
 } // namespace f142
 } // namespace FlatBufs
