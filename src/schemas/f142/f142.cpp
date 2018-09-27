@@ -380,11 +380,11 @@ public:
 
     if (auto PVTimeStamp =
             PVStructure->getSubField<epics::pvData::PVStructure>("timeStamp")) {
-      uint64_t TimeStamp =
-          (uint64_t)PVTimeStamp
+      uint64_t TimeStamp = static_cast<uint64_t>(
+          PVTimeStamp
               ->getSubField<epics::pvData::PVScalarValue<int64_t>>(
                   "secondsPastEpoch")
-              ->get();
+              ->get());
       TimeStamp *= 1000000000;
       TimeStamp += PVTimeStamp
                        ->getSubField<epics::pvData::PVScalarValue<int32_t>>(
