@@ -8,8 +8,8 @@ Converter::create(FlatBufs::SchemaRegistry const &schema_registry,
                   std::string schema, MainOpt const &main_opt) {
   auto ret = std::make_shared<Converter>();
   ret->schema = schema;
-  auto r1 = schema_registry.Items().find(schema);
-  if (r1 == schema_registry.Items().end()) {
+  auto r1 = schema_registry.items().find(schema);
+  if (r1 == schema_registry.items().end()) {
     LOG(Sev::Error, "can not handle (yet?) schema id {}", schema);
     return nullptr;
   }

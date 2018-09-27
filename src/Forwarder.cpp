@@ -295,8 +295,8 @@ void Forwarder::pushConverterToStream(ConverterSettings const &ConverterInfo,
                                       std::shared_ptr<Stream> &Stream) {
 
   // Check schema exists
-  auto r1 = main_opt.schema_registry.Items().find(ConverterInfo.Schema);
-  if (r1 == main_opt.schema_registry.Items().end()) {
+  auto r1 = main_opt.schema_registry.items().find(ConverterInfo.Schema);
+  if (r1 == main_opt.schema_registry.items().end()) {
     throw MappingAddException(fmt::format(
         "Cannot handle flatbuffer schema id {}", ConverterInfo.Schema));
   }
