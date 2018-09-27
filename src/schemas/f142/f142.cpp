@@ -17,8 +17,8 @@ namespace FlatBufs {
 namespace f142 {
 
 typedef struct {
-  Value type;
-  flatbuffers::Offset<void> off;
+  Value Type;
+  flatbuffers::Offset<void> Offset;
 } Value_t;
 
 struct Statistics {
@@ -123,7 +123,7 @@ struct BuilderType_to_Enum_Value<ArrayDoubleBuilder> : public Enum_Value_Base {
 template <typename T0> class Make_Scalar {
 public:
   // clang-format off
-  using T1 =
+  using ScalarType =
     typename std::conditional<std::is_same<T0, epics::pvData::boolean>::value, ByteBuilder,
     typename std::conditional<std::is_same<T0,   int8_t>::value, ByteBuilder,
     typename std::conditional<std::is_same<T0,  int16_t>::value, ShortBuilder,
@@ -139,19 +139,21 @@ public:
   // clang-format on
 
   static Value_t convert(flatbuffers::FlatBufferBuilder *Builder,
-                         epics::pvData::PVScalar *field_) {
-    auto field = static_cast<epics::pvData::PVScalarValue<T0> *>(field_);
-    T1 pv_builder(*Builder);
-    T0 Value = field->get();
-    pv_builder.add_value(Value);
-    return {BuilderType_to_Enum_Value<T1>::v(), pv_builder.Finish().Union()};
+                         epics::pvData::PVScalar *ValueSubField) {
+    auto ValueField =
+        static_cast<epics::pvData::PVScalarValue<T0> *>(ValueSubField);
+    ScalarType PVBuilder(*Builder);
+    T0 Value = ValueField->get();
+    PVBuilder.add_value(Value);
+    return {BuilderType_to_Enum_Value<ScalarType>::v(),
+            PVBuilder.Finish().Union()};
   }
 };
 
 template <typename T0> class Make_ScalarArray {
 public:
   // clang-format off
-  using T1 =
+  using ArrayType =
       typename std::conditional<std::is_same<T0, epics::pvData::boolean>::value, ArrayByteBuilder,
       typename std::conditional<std::is_same<T0, int8_t>::value, ArrayByteBuilder,
       typename std::conditional<std::is_same<T0, int16_t>::value, ArrayShortBuilder,
@@ -166,30 +168,34 @@ public:
       std::nullptr_t>::type>::type>::type>::type>::type>::type>::type>::type>::type>::type>::type;
   // clang-format on
 
-  using T3 =
+  using BooleanType =
       typename std::conditional<std::is_same<T0, epics::pvData::boolean>::value,
                                 signed char, T0>::type;
 
   static Value_t convert(flatbuffers::FlatBufferBuilder *Builder,
-                         epics::pvData::PVScalarArray *field_, bool opts) {
-    auto field = static_cast<epics::pvData::PVValueArray<T0> *>(field_);
-    field->setImmutable();
-    auto svec = field->view();
-    auto nlen = svec.size();
+                         epics::pvData::PVScalarArray *ValueSubField,
+                         bool UseMemCpy) {
+    auto ValueField =
+        static_cast<epics::pvData::PVValueArray<T0> *>(ValueSubField);
+    ValueField->setImmutable();
+    auto Value = ValueField->view();
+    auto ValueSize = Value.size();
 
-    flatbuffers::Offset<flatbuffers::Vector<T3>> val;
-    if (opts) {
-      T0 *p1 = nullptr;
-      val =
-          Builder->CreateUninitializedVector(nlen, sizeof(T0), (uint8_t **)&p1);
-      memcpy(p1, svec.data(), nlen * sizeof(T0));
+    flatbuffers::Offset<flatbuffers::Vector<BooleanType>> VectorValue;
+    if (UseMemCpy) {
+      T0 *VectorPointer = nullptr;
+      VectorValue = Builder->CreateUninitializedVector(
+          ValueSize, sizeof(T0), (uint8_t **)&VectorPointer);
+      memcpy(VectorPointer, Value.data(), ValueSize * sizeof(T0));
     } else {
-      val = Builder->CreateVector((T3 *)svec.data(), nlen);
+      VectorValue =
+          Builder->CreateVector((BooleanType *)Value.data(), ValueSize);
     }
 
-    T1 pv_builder(*Builder);
-    pv_builder.add_value(val);
-    return {BuilderType_to_Enum_Value<T1>::v(), pv_builder.Finish().Union()};
+    ArrayType PVBuilder(*Builder);
+    PVBuilder.add_value(VectorValue);
+    return {BuilderType_to_Enum_Value<ArrayType>::v(),
+            PVBuilder.Finish().Union()};
   }
 };
 
@@ -249,36 +255,39 @@ Value_t makeValueScalar(flatbuffers::FlatBufferBuilder &builder,
   return {Value::NONE, 0};
 }
 
-Value_t makeValueArray(flatbuffers::FlatBufferBuilder &builder,
-                       epics::pvData::PVScalarArray *field, bool opts,
-                       Statistics &Stats) {
+Value_t makeValueArray(flatbuffers::FlatBufferBuilder &Builder,
+                       epics::pvData::PVScalarArray *ScalarArrayField,
+                       bool opts, Statistics &Stats) {
   using S = epics::pvData::ScalarType;
   using namespace epics::pvData;
   using namespace PVStructureToFlatBufferN;
-  switch (field->getScalarArray()->getElementType()) {
+  switch (ScalarArrayField->getScalarArray()->getElementType()) {
   case S::pvBoolean:
-    return Make_ScalarArray<epics::pvData::boolean>::convert(&builder, field,
-                                                             opts);
+    return Make_ScalarArray<epics::pvData::boolean>::convert(
+        &Builder, ScalarArrayField, opts);
   case S::pvByte:
-    return Make_ScalarArray<int8_t>::convert(&builder, field, opts);
+    return Make_ScalarArray<int8_t>::convert(&Builder, ScalarArrayField, opts);
   case S::pvShort:
-    return Make_ScalarArray<int16_t>::convert(&builder, field, opts);
+    return Make_ScalarArray<int16_t>::convert(&Builder, ScalarArrayField, opts);
   case S::pvInt:
-    return Make_ScalarArray<int32_t>::convert(&builder, field, opts);
+    return Make_ScalarArray<int32_t>::convert(&Builder, ScalarArrayField, opts);
   case S::pvLong:
-    return Make_ScalarArray<int64_t>::convert(&builder, field, opts);
+    return Make_ScalarArray<int64_t>::convert(&Builder, ScalarArrayField, opts);
   case S::pvUByte:
-    return Make_ScalarArray<uint8_t>::convert(&builder, field, opts);
+    return Make_ScalarArray<uint8_t>::convert(&Builder, ScalarArrayField, opts);
   case S::pvUShort:
-    return Make_ScalarArray<uint16_t>::convert(&builder, field, opts);
+    return Make_ScalarArray<uint16_t>::convert(&Builder, ScalarArrayField,
+                                               opts);
   case S::pvUInt:
-    return Make_ScalarArray<uint32_t>::convert(&builder, field, opts);
+    return Make_ScalarArray<uint32_t>::convert(&Builder, ScalarArrayField,
+                                               opts);
   case S::pvULong:
-    return Make_ScalarArray<uint64_t>::convert(&builder, field, opts);
+    return Make_ScalarArray<uint64_t>::convert(&Builder, ScalarArrayField,
+                                               opts);
   case S::pvFloat:
-    return Make_ScalarArray<float>::convert(&builder, field, opts);
+    return Make_ScalarArray<float>::convert(&Builder, ScalarArrayField, opts);
   case S::pvDouble:
-    return Make_ScalarArray<double>::convert(&builder, field, opts);
+    return Make_ScalarArray<double>::convert(&Builder, ScalarArrayField, opts);
   case S::pvString:
     ++Stats.err_not_implemented_yet;
     break;
@@ -288,12 +297,12 @@ Value_t makeValueArray(flatbuffers::FlatBufferBuilder &builder,
 
 template <typename T> class release_deleter {
 public:
-  release_deleter() : do_delete(true) {}
+  release_deleter() : Delete(true) {}
   void operator()(T *ptr) {
-    if (do_delete)
+    if (Delete)
       delete ptr;
   }
-  bool do_delete;
+  bool Delete;
 };
 
 Value_t makeValue(flatbuffers::FlatBufferBuilder &Builder,
@@ -327,7 +336,7 @@ Value_t makeValue(flatbuffers::FlatBufferBuilder &Builder,
     // coming when it
     // is decided how we store on nexus side.
     release_deleter<epics::pvData::PVStructure> PointerDeleter;
-    PointerDeleter.do_delete = false;
+    PointerDeleter.Delete = false;
     epics::pvData::PVStructurePtr p1(PVStructureField.get(), PointerDeleter);
     if (epics::nt::NTEnum::isCompatible(p1)) {
       auto IndexField = ((epics::pvData::PVStructure *)(ValueField.get()))
@@ -366,8 +375,8 @@ public:
 
     LogDataBuilder LogDataBuilder(*Builder);
     LogDataBuilder.add_source_name(PVName);
-    LogDataBuilder.add_value_type(Value.type);
-    LogDataBuilder.add_value(Value.off);
+    LogDataBuilder.add_value_type(Value.Type);
+    LogDataBuilder.add_value(Value.Offset);
 
     if (auto PVTimeStamp =
             PVStructure->getSubField<epics::pvData::PVStructure>("timeStamp")) {

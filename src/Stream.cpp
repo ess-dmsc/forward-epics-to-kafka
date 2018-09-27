@@ -156,7 +156,7 @@ nlohmann::json Stream::getStatusJson() {
   Document["channel_name"] = ChannelInfo.channel_name;
   Document["getQueueSize"] = getQueueSize();
   {
-    std::unique_lock<std::mutex> lock(SeqDataEmitted.mx);
+    std::unique_lock<std::mutex> lock(SeqDataEmitted.Mutex);
     auto const &Set = SeqDataEmitted.set;
     auto Last = Set.rbegin();
     if (Last != Set.rend()) {

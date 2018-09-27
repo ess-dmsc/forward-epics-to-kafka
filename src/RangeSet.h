@@ -59,7 +59,7 @@ template <typename T> inline void minmax(T *mm, T const &x) {
 template <typename T> class RangeSet {
 public:
   void insert(T k) {
-    std::unique_lock<std::mutex> lock(mx);
+    std::unique_lock<std::mutex> lock(Mutex);
     set.emplace(k, k);
     while (true) {
       auto a1 = std::adjacent_find(set.begin(), set.end(), is_gapless<T>);
@@ -77,12 +77,12 @@ public:
   }
 
   size_t size() {
-    std::unique_lock<std::mutex> lock(mx);
+    std::unique_lock<std::mutex> lock(Mutex);
     return set.size();
   }
 
   std::string to_string() {
-    std::unique_lock<std::mutex> lock(mx);
+    std::unique_lock<std::mutex> lock(Mutex);
     fmt::MemoryWriter mw;
     mw.write("[");
     int i1 = 0;
@@ -102,5 +102,5 @@ public:
   }
 
   std::set<Range<T>> set;
-  std::mutex mx;
+  std::mutex Mutex;
 };
