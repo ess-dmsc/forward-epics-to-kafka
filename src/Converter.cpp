@@ -13,7 +13,7 @@ Converter::create(FlatBufs::SchemaRegistry const &schema_registry,
     LOG(Sev::Error, "can not handle (yet?) schema id {}", schema);
     return nullptr;
   }
-  ret->conv = r1->second->create_converter();
+  ret->conv = r1->second->createConverter();
   auto &conv = ret->conv;
   if (!conv) {
     LOG(Sev::Error, "can not create a converter");
