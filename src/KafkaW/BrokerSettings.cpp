@@ -33,7 +33,7 @@ void BrokerSettings::apply(rd_kafka_conf_t *RdKafkaConfiguration) {
     if (RD_KAFKA_CONF_OK !=
         rd_kafka_conf_set(RdKafkaConfiguration, c.first.c_str(), s1.c_str(),
                           ErrorString.data(), ErrorString.size())) {
-      LOG(Sev::Warning, "error setting config: {} = {}", c.first, s1);
+      LOG(Sev::Warning, "Failure setting config: {} = {}", c.first, s1);
     }
   }
   for (auto &c : ConfigurationStrings) {
@@ -42,7 +42,7 @@ void BrokerSettings::apply(rd_kafka_conf_t *RdKafkaConfiguration) {
                                               c.first.c_str(), c.second.c_str(),
                                               ErrorString.data(),
                                               ErrorString.size())) {
-      LOG(Sev::Warning, "error setting config: {} = {}", c.first, c.second);
+      LOG(Sev::Warning, "Failure setting config: {} = {}", c.first, c.second);
     }
   }
 }
