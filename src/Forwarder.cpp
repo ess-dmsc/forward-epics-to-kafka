@@ -57,7 +57,7 @@ Forwarder::Forwarder(MainOpt &opt)
   }
   if (use_config) {
     KafkaW::BrokerSettings bopt;
-    bopt.ConfigurationStrings["group.id"] =
+    bopt.KafkaConfiguration["group.id"] =
         fmt::format("forwarder-command-listener--pid{}", getpid());
     config_listener.reset(
         new Config::Listener{bopt, main_opt.MainSettings.BrokerConfig});

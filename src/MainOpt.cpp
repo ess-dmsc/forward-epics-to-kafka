@@ -159,12 +159,8 @@ std::pair<int, std::unique_ptr<MainOpt>> parse_opt(int argc, char **argv) {
                  "Conversion worker queue size", true);
   App.add_option("--main-poll-interval", opt.MainSettings.MainPollInterval,
                  "Main Poll interval", true);
-  addKafkaOption(App, "-S",
-                 opt.MainSettings.BrokerSettings.ConfigurationStrings,
-                 "LibRDKafka option (String value)");
-  addKafkaOption(App, "-I",
-                 opt.MainSettings.BrokerSettings.ConfigurationIntegers,
-                 "LibRDKafka option (Integer value)");
+  addKafkaOption(App, "-S,--kafka-config", opt.MainSettings.KafkaConfiguration,
+                 "LibRDKafka options");
   App.set_config("-c,--config-file", "", "Read configuration from an ini file",
                  false);
 

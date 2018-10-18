@@ -16,7 +16,6 @@ public:
   void apply(rd_kafka_conf_t *RdKafkaConfiguration);
   std::string Address;
   int PollTimeoutMS = 100;
-  std::map<std::string, int64_t> ConfigurationIntegers;
-  std::map<std::string, std::string> ConfigurationStrings;
+  std::map<std::string, std::string> KafkaConfiguration;
 };
 }

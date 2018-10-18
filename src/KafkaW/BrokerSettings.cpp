@@ -6,43 +6,34 @@
 namespace KafkaW {
 
 BrokerSettings::BrokerSettings() {
-  ConfigurationIntegers = {
-      {"metadata.request.timeout.ms", 2 * 1000},
-      {"socket.timeout.ms", 2 * 1000},
-      {"message.max.bytes", 23 * 1024 * 1024},
-      {"fetch.message.max.bytes", 23 * 1024 * 1024},
-      {"receive.message.max.bytes", 23 * 1024 * 1024},
-      {"queue.buffering.max.messages", 100 * 1000},
-      {"queue.buffering.max.ms", 50},
-      {"queue.buffering.max.kbytes", 800 * 1024},
-      {"batch.num.messages", 100 * 1000},
-      {"coordinator.query.interval.ms", 2 * 1000},
-      {"heartbeat.interval.ms", 500},
-      {"statistics.interval.ms", 600 * 1000},
-  };
-  ConfigurationStrings = {
+  KafkaConfiguration = {
       {"api.version.request", "true"},
+      {"metadata.request.timeout.ms", "2000"}, // 2 Secs
+      {"socket.timeout.ms", "2000"},
+      {"message.max.bytes", "24117248"}, // 23 MiB
+      {"fetch.message.max.bytes", "24117248"},
+      {"receive.message.max.bytes", "24117248"},
+      {"queue.buffering.max.messages", "100000"},
+      {"queue.buffering.max.ms", "50"},
+      {"queue.buffering.max.kbytes", "819200"}, // 781.25 MiB
+      {"batch.num.messages", "100000"},
+      {"coordinator.query.interval.ms", "2000"},
+      {"heartbeat.interval.ms", "500"},     // 0.5 Secs
+      {"statistics.interval.ms", "600000"}, // 1 Min
   };
 }
 
 void BrokerSettings::apply(rd_kafka_conf_t *RdKafkaConfiguration) {
   std::vector<char> ErrorString(256);
-  for (auto &c : ConfigurationIntegers) {
-    auto s1 = fmt::format("{:d}", c.second);
-    LOG(Sev::Debug, "set config: {} = {}", c.first, s1);
+  for (const auto &ConfigurationItem : KafkaConfiguration) {
+    LOG(Sev::Debug, "set config: {} = {}", ConfigurationItem.first,
+        ConfigurationItem.second);
     if (RD_KAFKA_CONF_OK !=
-        rd_kafka_conf_set(RdKafkaConfiguration, c.first.c_str(), s1.c_str(),
-                          ErrorString.data(), ErrorString.size())) {
-      LOG(Sev::Warning, "error setting config: {} = {}", c.first, s1);
-    }
-  }
-  for (auto &c : ConfigurationStrings) {
-    LOG(Sev::Debug, "set config: {} = {}", c.first, c.second);
-    if (RD_KAFKA_CONF_OK != rd_kafka_conf_set(RdKafkaConfiguration,
-                                              c.first.c_str(), c.second.c_str(),
-                                              ErrorString.data(),
-                                              ErrorString.size())) {
-      LOG(Sev::Warning, "error setting config: {} = {}", c.first, c.second);
+        rd_kafka_conf_set(RdKafkaConfiguration, ConfigurationItem.first.c_str(),
+                          ConfigurationItem.second.c_str(), ErrorString.data(),
+                          ErrorString.size())) {
+      LOG(Sev::Warning, "error setting config: {} = {}",
+          ConfigurationItem.first, ConfigurationItem.second);
     }
   }
 }
