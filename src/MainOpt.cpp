@@ -125,9 +125,10 @@ std::pair<int, std::unique_ptr<MainOpt>> parse_opt(int argc, char **argv) {
   std::string BrokerDataDefault;
   App.add_option("--log-file", opt.LogFilename, "Log filename");
   App.add_option("--streams-json", opt.StreamsFile,
-                 "Json file for streams to add")
+                 "Json file for streams to add.")
       ->check(CLI::ExistingFile);
-  App.add_option("--broker", BrokerDataDefault, "Default broker for data");
+  App.add_option("--broker", BrokerDataDefault, "Default broker for data")
+      ->required();
   App.add_option("--kafka-gelf", opt.KafkaGELFAddress,
                  "Kafka GELF logging //broker[:port]/topic");
   App.add_option("--graylog-logger-address", opt.GraylogLoggerAddress,

@@ -264,7 +264,7 @@ and/or a `json` file for the list of streams to add:
 	]
 }
 ```
-
+ All command line options should be passed through the command line or by using a `.ini`. The JSON file was previously responsible for some options however these are now available through the command line. This does mean separate files are required, however there is more distinction between streams and command line options. The JSON will also look similar to any command messages received through Kafka.
 
 
 ### Forwarding a PV through Multiple Converters
