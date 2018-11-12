@@ -181,6 +181,7 @@ def docker_formatting(image_key) {
         sh "docker exec ${container_name(image_key)} ${custom_sh} -c \"${script}\""
         // Copy changes back out then push
         sh "docker cp ${container_name(image_key)}:/home/jenkins/${project} ${project}"
+        sh "cd ${project}"
         sh "git add -u"
         sh "git commit -m \"AUTO CLANG FORMAT\""
         sh "git push"
