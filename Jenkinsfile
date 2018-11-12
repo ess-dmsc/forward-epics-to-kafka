@@ -182,7 +182,7 @@ def docker_formatting(image_key) {
         // Copy changes back out then push
         sh "docker cp -a ${container_name(image_key)}:/home/jenkins/${project} ${project}-test"
         sh "ls"
-        sh "cd ${project}-test && git status -s && git add -u && git commit -m \"AUTO CLANG FORMAT\" && git push origin HEAD:{BRANCH_NAME}"
+        sh "cd ${project}-test && git status -s && git add -u && git commit -m \"AUTO CLANG FORMAT\" && git push origin HEAD:${BRANCH_NAME}"
         sh "rm -rf ${project}-test"
     } catch (e) {
         failure_function(e, "Check formatting step for (${container_name(image_key)}) failed")
