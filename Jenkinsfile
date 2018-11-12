@@ -13,28 +13,16 @@ properties([[
     strategy: [
         $class: 'LogRotator',
         artifactDaysToKeepStr: '',
-        artifactNumToKeepStr: '10',
+        artifactNumToKeepStr: '3',
         daysToKeepStr: '',
         numToKeepStr: ''
     ]
 ]]);
 
 images = [
-        'centos7': [
-                'name': 'essdmscdm/centos7-build-node:3.0.0',
-                'sh'  : '/usr/bin/scl enable rh-python35 devtoolset-6 -- /bin/bash -e'
-        ],
         'centos7-release': [
                 'name': 'essdmscdm/centos7-build-node:3.0.0',
                 'sh'  : '/usr/bin/scl enable rh-python35 devtoolset-6 -- /bin/bash -e'
-        ],
-        'debian9'    : [
-                'name': 'essdmscdm/debian9-build-node:2.2.0',
-                'sh'  : 'bash -e'
-        ],
-        'ubuntu1804'  : [
-                'name': 'essdmscdm/ubuntu18.04-build-node:1.1.0',
-                'sh'  : 'bash -e'
         ]
 ]
 
@@ -308,76 +296,7 @@ def get_pipeline(image_key) {
     }
 }
 
-def get_win10_pipeline() {
-  return {
-    node('windows10') {
-      // Use custom location to avoid Win32 path length issues
-      ws('c:\\jenkins\\') {
-      cleanWs()
-      dir("${project}") {
-        stage("win10: Checkout") {
-          checkout scm
-        }  // stage
-
-	stage("win10: Setup") {
-          bat """if exist _build rd /q /s _build
-	    mkdir _build
-	    xcopy /y conan\\conanfile_win32.txt conan\\conanfile.txt
-	    """
-	} // stage
-        stage("win10: Install") {
-          bat """cd _build
-	    conan.exe \
-            install ..\\conan\\conanfile.txt  \
-            --settings build_type=Release \
-            --build=outdated"""
-        }  // stage
-
-	 stage("win10: Build") {
-           bat """cd _build
-	     cmake .. -G \"Visual Studio 15 2017 Win64\" -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTS=FALSE
-	     cmake --build .
-	     """
-        }  // stage
-      }  // dir
-      }
-    }  // node
-  }  // return
-}  // def
-
-def get_system_tests_pipeline() {
-    return {
-        node('integration-test') {
-            cleanWs()
-            dir("${project}") {
-                try{
-                    stage("System tests: Checkout") {
-                        checkout scm
-                    }  // stage
-                    stage("System tests: Install requirements") {
-                        sh """scl enable rh-python35 -- python -m pip install --user --upgrade pip
-                        scl enable rh-python35 -- python -m pip install --user -r system-tests/requirements.txt
-                        """
-                    }  // stage
-                    stage("System tests: Run") {
-                        sh """cd system-tests/
-                        scl enable rh-python35 -- python -m pytest -s  --junitxml=./SystemTestsOutput.xml ./
-                        """
-                        junit "system-tests/SystemTestsOutput.xml"
-                    }  // stage
-                }finally {
-                    stage("System tests: Cleanup") {
-                        sh """docker stop \$(\$(docker ps -aq) | grep -E 'kafka|zookeeper|softioc|forwarder') || true
-                        docker rm \$(\$(docker ps -aq) | grep -E 'kafka|zookeeper|softioc|forwarder') || true
-                        """
-                    }  // stage
-                }
-            } // dir
-        }  // node
-    }  // return
-}  // def
-
-node('docker && eee') {
+node('docker') {
     cleanWs()
 
     stage('Checkout') {
@@ -394,11 +313,6 @@ node('docker && eee') {
     for (x in images.keySet()) {
       def image_key = x
       builders[image_key] = get_pipeline(image_key)
-    }
-    builders['windows10'] = get_win10_pipeline()
-
-    if ( env.CHANGE_ID ) {
-        builders['system tests'] = get_system_tests_pipeline()
     }
 
     parallel builders
