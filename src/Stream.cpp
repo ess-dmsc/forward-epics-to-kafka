@@ -37,13 +37,13 @@ int ConversionPath::emit(std::shared_ptr<FlatBufs::EpicsPVUpdate> up) {
 }
 
 nlohmann::json ConversionPath::status_json() const {
-  using nlohmann::json;
-  auto Document = json::object();
-  Document["schema"] = converter->schema_name();
-  Document["broker"] =
-      kafka_output->pt.Producer_->ProducerBrokerSettings.Address;
-  Document["topic"] = kafka_output->topic_name();
-  return Document;
+using nlohmann::json;
+auto Document = json::object();
+Document["schema"] = converter->schema_name();
+Document["broker"] =
+    kafka_output->pt.Producer_->ProducerBrokerSettings.Address;
+Document["topic"] = kafka_output->topic_name();
+return Document;
 }
 
 std::string ConversionPath::getKafkaTopicName() const {
