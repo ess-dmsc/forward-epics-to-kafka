@@ -178,6 +178,7 @@ def docker_formatting(image_key) {
                     find . \\\\( -name '*.cpp' -or -name '*.cxx' -or -name '*.h' -or -name '*.hpp' \\\\) \\
                         -exec clang-format -i {} +
                   """
+        sh "printenv"
         sh "docker exec ${container_name(image_key)} ${custom_sh} -c \"${script}\""
         // Copy changes back out then push
         sh "docker cp -a ${container_name(image_key)}:/home/jenkins/${project} ${project}-test"
