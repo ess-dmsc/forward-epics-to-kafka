@@ -180,7 +180,7 @@ def docker_formatting(image_key) {
                   """
         sh "docker exec ${container_name(image_key)} ${custom_sh} -c \"${script}\""
         // Copy changes back out then push
-        sh "docker cp -r ${container_name(image_key)}:/home/jenkins/${project} ${project}"
+        sh "docker cp -R ${container_name(image_key)}:/home/jenkins/${project} ${project}"
         sh "cd ${project} && git add -u && git commit -m \"AUTO CLANG FORMAT\" && git push"
     } catch (e) {
         failure_function(e, "Check formatting step for (${container_name(image_key)}) failed")
