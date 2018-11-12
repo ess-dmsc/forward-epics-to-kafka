@@ -182,6 +182,7 @@ def docker_formatting(image_key) {
         sh "pwd"
         sh "ls"
         sh "cd ${project}"
+        sh "pwd"
         sh "ls -al"
         // Copy changes back out then push
         //sh "docker cp ${container_name(image_key)}:/home/jenkins/${project} ${project}"
