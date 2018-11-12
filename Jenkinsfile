@@ -177,11 +177,13 @@ def docker_formatting(image_key) {
                     cd ${project}
                     find . \\\\( -name '*.cpp' -or -name '*.cxx' -or -name '*.h' -or -name '*.hpp' \\\\) \\
                         -exec clang-format -i {} +
-                    git add -u
-                    git commit -m "AUTO CLANG FORMAT"
-                    git push
                   """
         sh "docker exec ${container_name(image_key)} ${custom_sh} -c \"${script}\""
+        # Copy changes back out then push
+        sh "docker cp ${container_name(image_key)}:/home/jenkins/${project} ${project}"
+        sh "git add -u"
+        sh "git commit -m \"AUTO CLANG FORMAT\""
+        sh "git push"
     } catch (e) {
         failure_function(e, "Check formatting step for (${container_name(image_key)}) failed")
     }
