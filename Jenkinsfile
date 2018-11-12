@@ -178,7 +178,7 @@ def docker_formatting(image_key) {
                     find . \\\\( -name '*.cpp' -or -name '*.cxx' -or -name '*.h' -or -name '*.hpp' \\\\) \\
                         -exec clang-format -i {} +
                     git add -u
-                    git commit -m "<<AUTO CLANG FORMAT>>"
+                    git commit -m "AUTO CLANG FORMAT"
                     git push
                   """
         sh "docker exec ${container_name(image_key)} ${custom_sh} -c \"${script}\""
