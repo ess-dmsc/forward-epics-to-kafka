@@ -16,7 +16,7 @@ public:
   /// The callback entry-point.
   ///
   /// \param msg The message to handle.
-void operator()(std::string const &msg) override;
+  void operator()(std::string const &msg) override;
 
   /// Extract the command type from the message.
   ///
