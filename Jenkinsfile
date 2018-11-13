@@ -170,6 +170,11 @@ def docker_test(image_key, test_dir) {
 }
 
 def docker_formatting(image_key) {
+    if (!env.CHANGE_ID) {
+        // Ignore non-PRs
+        return
+    }
+
     try {
         def custom_sh = images[image_key]['sh']
         def script = """
@@ -201,9 +206,7 @@ def docker_formatting(image_key) {
                      """
         } // withCredentials
     } catch (e) {
-        println("HELLO")
-        println(e.getMessage())
-        sh 'env'
+        // Okay to fail as there could be no badly formatted files to commit
     } finally {
         // Clean up
         try {
