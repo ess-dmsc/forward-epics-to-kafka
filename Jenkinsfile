@@ -178,12 +178,29 @@ def docker_formatting(image_key) {
                     find . \\\\( -name '*.cpp' -or -name '*.cxx' -or -name '*.h' -or -name '*.hpp' \\\\) \\
                         -exec clang-format -i {} +
                   """
-        sh "docker exec ${container_name(image_key)} ${custom_sh} -c \"${script}\""
-        // Copy changes back out then push
-        sh "docker cp -a ${container_name(image_key)}:/home/jenkins/${project} ${project}-test"
-        sh "ls"
-        sh "cd ${project}-test && git status -s && git add -u && git commit -m \"AUTO CLANG FORMAT\" && git push origin HEAD:${BRANCH_NAME}"
-        sh "rm -rf ${project}-test"
+                sh """
+                  docker exec ${container_name(image_key)} ${custom_sh} -c \"${script}\"
+                  docker cp -a ${container_name(image_key)}:/home/jenkins/${project} ${project}-test
+                  cd ${project}-test
+                  git config user.email 'dm-jenkins-integration@esss.se'
+                  git config user.name 'cow-bot'
+                  git status -s
+                  git add -u
+                  git commit -m \"AUTO CLANG FORMAT\"
+                  """
+                withCredentials([
+                          usernamePassword(
+                            credentialsId: 'cow-bot-username',
+                            usernameVariable: 'USERNAME',
+                            passwordVariable: 'PASSWORD'
+                          )
+                        ]) {
+                          sh "git push origin HEAD:${BRANCH_NAME}"
+                } // withCredentials
+                sh """
+                    cd ..
+                    rm -rf ${project}-test
+                    """
     } catch (e) {
         failure_function(e, "Check formatting step for (${container_name(image_key)}) failed")
     }
