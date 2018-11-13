@@ -197,7 +197,7 @@ def docker_formatting(image_key) {
                         ]) {
                           sh """
                           cd ${project}-test
-                          sh "../push-repo ${USERNAME} ${PASSWORD} ${BRANCH_NAME}"
+                          sh "./push-repo ${USERNAME} ${PASSWORD} ${BRANCH_NAME}"
                           """
                 } // withCredentials
                 sh """
