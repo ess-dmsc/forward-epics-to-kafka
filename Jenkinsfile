@@ -209,7 +209,6 @@ def docker_formatting(image_key) {
         // Okay to fail as there could be no badly formatted files to commit
     } finally {
         // Clean up
-        sh "env"
         try {
             sh "rm -rf ${project}-test"
         } catch (e) {
