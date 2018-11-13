@@ -15,153 +15,47 @@
 - Conversion to FlatBuffers is distributed over threads
 - The same converter instance can be [shared](#share-converter-instance-between-channels)
   between different channels
-
-
-## Installation
-
-### Requirements
-
-These libraries are expected in the ESS dev default locations or set via
-environment variables (see `src/CMakeLists.txt`):
-
-- EPICSv4
-- `streaming-data-types`, easiest if cloned parallel to this repository.
-  <https://github.com/ess-dmsc/streaming-data-types>
-
-Tooling
-- conan
-- cmake (minimum tested is 2.8.11)
-- C++ compiler with c++11 support
-- Doxygen - CMake variable `RUN_DOXYGEN` needs to be set to `TRUE` and then use `make docs`
-
-
-### Conan repositories
-
-The following remote repositories are required to be configured:
-
-- https://api.bintray.com/conan/ess-dmsc/conan
-- https://api.bintray.com/conan/conan-community/conan
-
-You can add them by running
-
-```
-conan remote add <local-name> <remote-url>
-```
-
-where `<local-name>` must be substituted by a locally unique name. Configured
-remotes can be listed with `conan remote list`.
-
-
-### Build
-
-Assuming you have `make`:
-
-```
-cmake <path-to-source> [-DCONAN_DISABLE=TRUE]
-make
-make docs  # optional
-```
-
-To skip building the tests target pass cmake `-DBUILD_TESTS=FALSE`
-
-#### Running on macOS
-
-When using Conan on macOS, due to the way paths to dependencies are handled,
-the `activate_run.sh` file must be sourced before running the application. The
-`deactivate_run.sh` can be sourced to undo the changes afterwards. This has not
-been tested yet, and it is possible that EPICS libraries cannot be found.
-Please report any issues you encounter when running this setup.
-
-
-#### Dependencies in custom locations
-
-The `forward-epics-to-kafka` follows standard `CMake` conventions.
-You can use the standard `CMAKE_INCLUDE_PATH`, `CMAKE_LIBRARY_PATH` and
-`CMAKE_PROGRAM_PATH` to point `CMake` into the right direction.
-It will prefer dependencies found there over those in the system directories.
-
-We of course also support the ESS EPICS installation scheme.
-To that end, we use as specified in the ESS wiki:
-- `EPICS_V4_BASE_VERSION`
-- `EPICS_BASES_PATH`
-- `EPICS_HOST_ARCH`
-- `EPICS_MODULES_PATH`
-
-
-#### Fully non-standard dependencies
-
-If you like full control over the dependencies:
-
-Here follows an example where all dependencies are in non-standard locations.
-Also EPICS is a custom build from source.
-No additional environment variables are needed.
-Only a few basic dependencies (like PCRE) are in standard locations.
-
-```
-export D1=$HOME/software/;
-export EPICS_MODULES_PATH=$D1/epics/EPICS-CPP-4.6.0;
-export EPICS_HOST_ARCH=darwin-x86;
-cmake \
--DREQUIRE_GTEST=1 \
--DCMAKE_INCLUDE_PATH="$D1/fmt;$D1/rapidjson/include;$D1/flatbuffers/include;$D1/librdkafka/include;$D1/googletest;$D1/epics/base-3.16.0.1/include" \
--DCMAKE_LIBRARY_PATH="$D1/librdkafka/lib;$D1/epics/base-3.16.0.1/lib/$EPICS_HOST_ARCH" \
--DCMAKE_PROGRAM_PATH="$D1/flatbuffers/bin" \
-<path-to-forward-epics-to-kafka-repository>
-```
-
-Note that in this example, there is no need for `EPICS_V4_BASE_VERSION`
-or `EPICS_BASES_PATH` because we give them explicitly in `CMAKE_*_PATH`.
-
-
-
-### Tests
-
-Run
-
-```
-./tests/tests
-```
-
-#### [Running System tests (link)](https://github.com/ess-dmsc/forward-epics-to-kafka/blob/master/system-tests/README.md)
-
-
-## Performance
-
-Some more thorough figures are to be included here, but we have forwarded
-about 200MB/s without problems for extended periods of time.
-Higher bandwidth has been done, but not yet tested over long time periods.
-
-### Conversion bandwidth
-
-If we run as usual except that we do not actually write to Kafka, tests show
-on my quite standard 4 core desktop PC a flatbuffer conversion rate of about
-2.8 GB/s. with all cores at a ~80% usage.
-These numbers are of course very rough estimates and depend on a lot of
-factors.  For systematic tests are to be done.
-
-### Update Frequency
-
-Note that EPICS is not made for very high frequency updates as it will discard updates if there are too many.
-
-That being said, a process variable updated at 10 kHz containing 2048 doubles,
-with 3 EPICS to flatbuffer converters attached and therefore producing 460MB/s
-of data works just fine, utilizing about 30% of each core on a reasonable desktop machine.
-
-Higher frequency updates over EPICS should be batched into a PV structure which can hold multiple events at a time, such as a waveform record.
-
-The Forwarder uses the [MDEL](https://epics.anl.gov/EpicsDocumentation/AppDevManuals/RecordRef/Recordref-5.html#MARKER-9-15) monitor specification for monitoring PV updates rather than the ADEL Archive monitoring specification. This means that every PV update is processed rather than just those that exceed the ADEL. 
-
-### Idle PV Updates
-
-To enable the forwarder to publish PV values periodically even if their values have not been updated use the `pv-update-period <MILLISECONDS>` flag. This runs alongside the normal PV monitor so it will push value updates as well as sending values periodically.
-
-By default this is not enabled. 
+  
+  
 
 ## Usage
 
 ```
 forward-epics-to-kafka --help
 ```
+
+
+The forwarder can be also set up with a configuration file:
+
+```bash
+./forward-epics-to-kafka --config-file <your-file>
+```
+
+with an `ini` file for command line options:
+
+```ini
+broker = "//kafkabroker:9092"
+status-topic = "//kafkabroker:9092/the_status_topic"
+streams-json = ./streams.json
+kafka-config=consumer.timeout.ms 501 fetch.message.max.bytes 1234 api.version.request true
+
+```
+
+and/or a `json` file for the list of streams to add: 
+
+```json
+{
+	"streams": [
+		{
+			"channel": "Epics_PV_name",
+			"converter": { "schema": "f142", "topic": "Kafka_topic_name" }
+		}
+	]
+}
+```
+
+All command line options should be passed through the command line or by using a `.ini`. The JSON file was previously responsible for some options however these are now available through the command line. This does mean separate files are required, however there is more distinction between streams and command line options. The JSON will also look similar to any command messages received through Kafka. 
+
 
 ### Commands
 
@@ -236,38 +130,6 @@ Exits the forwarder.
 {"cmd": "exit"}
 ```
 
-### Using a configuration file
-
-The forwarding can be also set up with a configuration file:
-
-```bash
-./forward-epics-to-kafka --config-file <your-file>
-```
-
-with an `ini` file for command line options:
-
-```ini
-broker = "//kafkabroker:9092"
-status-topic = "//kafkabroker:9092/the_status_topic"
-streams-json = ./streams.json
-kafka-config=consumer.timeout.ms 501 fetch.message.max.bytes 1234 api.version.request true
-```
-
-and/or a `json` file for the list of streams to add: 
-
-```json
-{
-	"streams": [
-		{
-			"channel": "Epics_PV_name",
-			"converter": { "schema": "f142", "topic": "Kafka_topic_name" }
-		}
-	]
-}
-```
-
-
-
 ### Forwarding a PV through Multiple Converters
 
 If you pass an array of converters instead, the EPICS PV will be forwarded
@@ -281,18 +143,6 @@ through multiple converters:
   ]
 }
 ```
-
-
-## Adding New Converter Plugins
-
-New converters from EPICS to Flatbuffers can be easily added.
-Please have a look at the last 20 lines of `src/schemas/f142/f142.cxx` on how
-to register your plugin with the SchemaRegistry.
-There is no need to touch existing code at all to register a new plugin,
-but you probably want to add it to `CMakeLists.txt`.
-There will be support for dynamic loading of shared objects also soon.
-Beware that converter instances are used from different threads.  If the
-converter instance has state, it must take care of thread safety itself.
 
 ## Share Converter Instance between Channels
 
@@ -317,6 +167,159 @@ Example:
   ]
 }
 ```
+
+
+## Installation
+
+### Requirements
+
+These libraries are expected in the ESS dev default locations or set via
+environment variables (see `src/CMakeLists.txt`):
+
+- EPICSv4
+- `streaming-data-types`, easiest if cloned parallel to this repository.
+  <https://github.com/ess-dmsc/streaming-data-types>
+
+Tooling
+- Conan
+- Cmake (minimum tested is 2.8.11)
+- C++ compiler with c++11 support
+- Doxygen - CMake variable `RUN_DOXYGEN` needs to be set to `TRUE` and then use `make docs`
+
+
+### Conan repositories
+
+The following remote repositories are required to be configured:
+
+- https://api.bintray.com/conan/ess-dmsc/conan
+- https://api.bintray.com/conan/conan-community/conan
+
+You can add them by running
+
+```
+conan remote add <local-name> <remote-url>
+```
+
+where `<local-name>` must be substituted by a locally unique name. Configured
+remotes can be listed with `conan remote list`.
+
+
+### Build
+
+Assuming you have `make`:
+
+```
+cmake <path-to-source> [-DCONAN_DISABLE=TRUE]
+make
+make docs  # optional
+```
+
+To skip building the tests target pass cmake `-DBUILD_TESTS=FALSE`
+
+#### Running on OSX
+
+When using Conan on OSX, due to the way paths to dependencies are handled,
+the `activate_run.sh` file must be sourced before running the application. The
+`deactivate_run.sh` can be sourced to undo the changes afterwards. This has not
+been tested yet, and it is possible that EPICS libraries cannot be found.
+Please report any issues you encounter when running this setup.
+
+
+#### Dependencies in custom locations
+
+The `forward-epics-to-kafka` follows standard `CMake` conventions.
+You can use the standard `CMAKE_INCLUDE_PATH`, `CMAKE_LIBRARY_PATH` and
+`CMAKE_PROGRAM_PATH` to point `CMake` into the right direction.
+It will prefer dependencies found there over those in the system directories.
+
+We of course also support the ESS EPICS installation scheme.
+To that end, we use as specified in the ESS wiki:
+- `EPICS_V4_BASE_VERSION`
+- `EPICS_BASES_PATH`
+- `EPICS_HOST_ARCH`
+- `EPICS_MODULES_PATH`
+
+
+#### Fully non-standard dependencies
+
+If you like full control over the dependencies:
+
+Here follows an example where all dependencies are in non-standard locations.
+Also EPICS is a custom build from source.
+No additional environment variables are needed.
+Only a few basic dependencies (like PCRE) are in standard locations.
+
+```
+export D1=$HOME/software/;
+export EPICS_MODULES_PATH=$D1/epics/EPICS-CPP-4.6.0;
+export EPICS_HOST_ARCH=darwin-x86;
+cmake \
+-DREQUIRE_GTEST=1 \
+-DCMAKE_INCLUDE_PATH="$D1/fmt;$D1/rapidjson/include;$D1/flatbuffers/include;$D1/librdkafka/include;$D1/googletest;$D1/epics/base-3.16.0.1/include" \
+-DCMAKE_LIBRARY_PATH="$D1/librdkafka/lib;$D1/epics/base-3.16.0.1/lib/$EPICS_HOST_ARCH" \
+-DCMAKE_PROGRAM_PATH="$D1/flatbuffers/bin" \
+<path-to-forward-epics-to-kafka-repository>
+```
+
+Note that in this example, there is no need for `EPICS_V4_BASE_VERSION`
+or `EPICS_BASES_PATH` because we give them explicitly in `CMAKE_*_PATH`.
+
+
+
+## Tests
+
+#### Unit tests
+Run the tests executable:
+
+```
+./tests/tests
+```
+
+#### [Running System tests (link)](https://github.com/ess-dmsc/forward-epics-to-kafka/blob/master/system-tests/README.md)
+
+
+### Update Frequency
+
+Note that EPICS is not made for very high frequency updates as it will discard updates if there are too many.
+
+That being said, a process variable updated at 10 kHz containing 2048 doubles,
+with 3 EPICS to Flatbuffer converters attached and therefore producing 460MB/s
+of data works just fine, utilizing about 30% of each core on a reasonable desktop machine.
+
+Higher frequency updates over EPICS should be batched into a PV structure which can hold multiple events at a time, such as a waveform record.
+
+The Forwarder uses the [MDEL](https://epics.anl.gov/EpicsDocumentation/AppDevManuals/RecordRef/Recordref-5.html#MARKER-9-15) monitor specification for monitoring PV updates rather than the ADEL Archive monitoring specification. This means that every PV update is processed rather than just those that exceed the ADEL. 
+
+#### Idle PV Updates
+
+To enable the forwarder to publish PV values periodically even if their values have not been updated use the `pv-update-period <MILLISECONDS>` flag. This runs alongside the normal PV monitor so it will push value updates as well as sending values periodically.
+
+By default this is not enabled. 
+
+## Performance
+
+Some more thorough figures are to be included here, but we have forwarded
+about 200MB/s without problems for extended periods of time.
+Higher bandwidth has been done, but not yet tested over long time periods.
+
+### Conversion bandwidth
+
+If we run as usual except that we do not actually write to Kafka, tests show
+on my quite standard 4 core desktop PC a Flatbuffer conversion rate of about
+2.8 GB/s. with all cores at a ~80% usage.
+These numbers are of course very rough estimates and depend on a lot of
+factors.  For systematic tests are to be done.
+
+## Adding New Converter Plugins
+
+New converters from EPICS to Flatbuffers can be easily added.
+Please have a look at the last 20 lines of `src/schemas/f142/f142.cxx` on how
+to register your plugin with the SchemaRegistry.
+There is no need to touch existing code at all to register a new plugin,
+but you probably want to add it to `CMakeLists.txt`.
+There will be support for dynamic loading of shared objects also soon.
+Beware that converter instances are used from different threads.  If the
+converter instance has state, it must take care of thread safety itself.
 
 ## Features Requests
 Feel free to create a GitHub issue if you have a feature request or, even better, implement it
