@@ -197,7 +197,7 @@ def docker_formatting(image_key) {
                         ]) {
                           sh """
                           cd ${project}-test
-                          git push origin HEAD:${BRANCH_NAME}
+                          sh "../push-repo ${USERNAME} ${PASSWORD} ${BRANCH_NAME}"
                           """
                 } // withCredentials
                 sh """
