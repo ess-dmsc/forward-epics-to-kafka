@@ -13,7 +13,7 @@ RUN apt-get update -y && \
     rm -rf /var/lib/apt/lists/*
 
 RUN pip install --upgrade pip==9.0.3 && pip install setuptools && \
-    pip install conan && \
+    pip install conan==1.8.2 && \
     rm -rf /root/.cache/pip/*
 
 # Force conan to create .conan directory and profile
