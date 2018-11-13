@@ -200,7 +200,7 @@ def docker_formatting(image_key) {
                         ]) {
                           sh """
                           cd ${project}-test
-                          git push origin
+                          git push https://${USERNAME}:${PASSWORD}@github.com/ess-dmsc/forward-epics-to-kafka.git
                           """
                 } // withCredentials
                 sh """
