@@ -185,9 +185,6 @@ def docker_formatting(image_key) {
                   git config user.email 'dm-jenkins-integration@esss.se'
                   git config user.name 'cow-bot'
                   git status -s
-                  git stash
-                  git checkout ${BRANCH_NAME}
-                  git stash pop
                   git add -u
                   git commit -m \"AUTO CLANG FORMAT\"
                   """
@@ -200,7 +197,7 @@ def docker_formatting(image_key) {
                         ]) {
                           sh """
                           cd ${project}-test
-                          git push https://${USERNAME}:${PASSWORD}@github.com/ess-dmsc/forward-epics-to-kafka.git
+                          git push https://${USERNAME}:${PASSWORD}@github.com/ess-dmsc/forward-epics-to-kafka.git HEAD:{BRANCH_NAME}
                           """
                 } // withCredentials
                 sh """
