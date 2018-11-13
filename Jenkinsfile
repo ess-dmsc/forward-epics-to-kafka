@@ -199,12 +199,19 @@ def docker_formatting(image_key) {
                      cd ${project}-test
                      git push https://${USERNAME}:${PASSWORD}@github.com/ess-dmsc/forward-epics-to-kafka.git HEAD:${BRANCH_NAME}
                      """
+                     sh 'env'
         } // withCredentials
-        sh "rm -rf ${project}-test"
     } catch (e) {
         println("HELLO")
         println(e.getMessage())
         failure_function(e, "Check formatting step for (${container_name(image_key)}) failed")
+    } finally {
+        // Clean up
+        try {
+            sh "rm -rf ${project}-test"
+        } catch (e) {
+            // Can ignore exception
+        }
     }
 }
 
