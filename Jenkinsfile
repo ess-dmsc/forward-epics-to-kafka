@@ -195,10 +195,12 @@ def docker_formatting(image_key) {
                             passwordVariable: 'PASSWORD'
                           )
                         ]) {
-                          sh "git push origin HEAD:${BRANCH_NAME}"
+                          sh """
+                          cd ${project}-test
+                          git push origin HEAD:${BRANCH_NAME}
+                          """
                 } // withCredentials
                 sh """
-                    cd ..
                     rm -rf ${project}-test
                     """
     } catch (e) {
