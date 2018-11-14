@@ -13,7 +13,6 @@ public:
   ConsumerInterface() = default;
   virtual ~ConsumerInterface() = default;
   virtual void addTopic(std::string Topic) = 0;
-  virtual void dumpCurrentSubscription() = 0;
   virtual PollStatus poll() = 0;
 };
 
@@ -25,7 +24,6 @@ public:
   ~Consumer();
   void init();
   void addTopic(std::string Topic) override;
-  void dumpCurrentSubscription() override;
   PollStatus poll() override;
   std::function<void(rd_kafka_topic_partition_list_t *plist)>
       on_rebalance_assign;
@@ -68,12 +66,12 @@ private:
   ///
   /// \param RK The Kafka handle.
   /// \param ERR The error response.
-  /// \param PList The partition list.
+  /// \param PartitionList The partition list.
   /// \param Opaque The opaque object.
   static void rebalanceCallback(rd_kafka_t *RK, rd_kafka_resp_err_t ERR,
-                                rd_kafka_topic_partition_list_t *PList,
+                                rd_kafka_topic_partition_list_t *PartitionList,
                                 void *Opaque);
   rd_kafka_topic_partition_list_t *PartitionList = nullptr;
-  int id = 0;
+  int ID = 0;
 };
 } // namespace KafkaW

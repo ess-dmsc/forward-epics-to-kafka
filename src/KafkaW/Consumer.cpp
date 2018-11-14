@@ -6,17 +6,17 @@ namespace KafkaW {
 
 static std::atomic<int> g_kafka_consumer_instance_count;
 
-#define KERR(rk, err)                                                          \
-  if (err != 0) {                                                              \
-    LOG(Sev::Error, "Kafka {}  error: {}, {}, {}", rd_kafka_name(rk), err,     \
-        rd_kafka_err2name((rd_kafka_resp_err_t)err),                           \
-        rd_kafka_err2str((rd_kafka_resp_err_t)err));                           \
+#define KERR(RK, ERR)                                                          \
+  if (ERR != 0) {                                                              \
+    LOG(Sev::Error, "Kafka {}  error: {}, {}, {}", rd_kafka_name(RK), ERR,     \
+        rd_kafka_err2name((rd_kafka_resp_err_t)ERR),                           \
+        rd_kafka_err2str((rd_kafka_resp_err_t)ERR));                           \
   }
 
 Consumer::Consumer(BrokerSettings BrokerSettings)
     : ConsumerBrokerSettings(std::move(BrokerSettings)) {
   init();
-  id = g_kafka_consumer_instance_count++;
+  ID = g_kafka_consumer_instance_count++;
 }
 
 Consumer::~Consumer() {
@@ -37,7 +37,7 @@ Consumer::~Consumer() {
 void Consumer::logCallback(rd_kafka_t const *RK, int Level, char const *Fac,
                            char const *Buf) {
   auto self = reinterpret_cast<Consumer *>(rd_kafka_opaque(RK));
-  LOG(Sev(Level), "IID: {}  {}  fac: {}", self->id, Buf, Fac);
+  LOG(Sev(Level), "IID: {}  {}  fac: {}", self->ID, Buf, Fac);
 }
 
 void Consumer::errorCallback(rd_kafka_t *RK, int Err_i, char const *msg,
@@ -51,7 +51,7 @@ void Consumer::errorCallback(rd_kafka_t *RK, int Err_i, char const *msg,
   }
   LOG(ll, "Kafka cb_error id: {}  broker: {}  errno: {}  errorname: {}  "
           "errorstring: {}  message: {}",
-      self->id, self->ConsumerBrokerSettings.Address, Err_i,
+      self->ID, self->ConsumerBrokerSettings.Address, Err_i,
       rd_kafka_err2name(err), rd_kafka_err2str(err), msg);
 }
 
@@ -64,50 +64,51 @@ int Consumer::statsCallback(rd_kafka_t *RK, char *Json, size_t Json_size,
   return 0;
 }
 
-static void print_partition_list(rd_kafka_topic_partition_list_t *plist) {
-  for (int i1 = 0; i1 < plist->cnt; ++i1) {
-    auto &x = plist->elems[i1];
+static void
+print_partition_list(rd_kafka_topic_partition_list_t *PartitionList) {
+  for (int i1 = 0; i1 < PartitionList->cnt; ++i1) {
+    auto &x = PartitionList->elems[i1];
     LOG(Sev::Debug, "   {}  {}  {}", x.topic, x.partition, x.offset);
   }
 }
 
 void Consumer::rebalanceCallback(rd_kafka_t *RK, rd_kafka_resp_err_t ERR,
-                                 rd_kafka_topic_partition_list_t *PList,
+                                 rd_kafka_topic_partition_list_t *PartitionList,
                                  void *Opaque) {
-  rd_kafka_resp_err_t err2;
+  rd_kafka_resp_err_t CallbackERR;
   auto self = static_cast<Consumer *>(Opaque);
   switch (ERR) {
   case RD_KAFKA_RESP_ERR__ASSIGN_PARTITIONS:
     LOG(Sev::Debug, "cb_rebalance assign {}", rd_kafka_name(RK));
-    if (auto &cb = self->on_rebalance_start) {
-      cb(PList);
+    if (auto &Callback = self->on_rebalance_start) {
+      Callback(PartitionList);
     }
-    print_partition_list(PList);
-    err2 = rd_kafka_assign(RK, PList);
-    if (err2 != RD_KAFKA_RESP_ERR_NO_ERROR) {
-      LOG(Sev::Notice, "rebalance error: {}  {}", rd_kafka_err2name(err2),
-          rd_kafka_err2str(err2));
+    print_partition_list(PartitionList);
+    CallbackERR = rd_kafka_assign(RK, PartitionList);
+    if (CallbackERR != RD_KAFKA_RESP_ERR_NO_ERROR) {
+      LOG(Sev::Notice, "rebalance error: {}  {}",
+          rd_kafka_err2name(CallbackERR), rd_kafka_err2str(CallbackERR));
     }
-    if (auto &cb = self->on_rebalance_assign) {
-      cb(PList);
+    if (auto &Callback = self->on_rebalance_assign) {
+      Callback(PartitionList);
     }
     break;
   case RD_KAFKA_RESP_ERR__REVOKE_PARTITIONS:
     LOG(Sev::Warning, "cb_rebalance revoke:");
-    print_partition_list(PList);
-    err2 = rd_kafka_assign(RK, nullptr);
-    if (err2 != RD_KAFKA_RESP_ERR_NO_ERROR) {
-      LOG(Sev::Warning, "rebalance error: {}  {}", rd_kafka_err2name(err2),
-          rd_kafka_err2str(err2));
+    print_partition_list(PartitionList);
+    CallbackERR = rd_kafka_assign(RK, nullptr);
+    if (CallbackERR != RD_KAFKA_RESP_ERR_NO_ERROR) {
+      LOG(Sev::Warning, "rebalance error: {}  {}",
+          rd_kafka_err2name(CallbackERR), rd_kafka_err2str(CallbackERR));
     }
     break;
   default:
     LOG(Sev::Info, "cb_rebalance failure and revoke: {}",
         rd_kafka_err2str(ERR));
-    err2 = rd_kafka_assign(RK, nullptr);
-    if (err2 != RD_KAFKA_RESP_ERR_NO_ERROR) {
-      LOG(Sev::Warning, "rebalance error: {}  {}", rd_kafka_err2name(err2),
-          rd_kafka_err2str(err2));
+    CallbackERR = rd_kafka_assign(RK, nullptr);
+    if (CallbackERR != RD_KAFKA_RESP_ERR_NO_ERROR) {
+      LOG(Sev::Warning, "rebalance error: {}  {}",
+          rd_kafka_err2name(CallbackERR), rd_kafka_err2str(CallbackERR));
     }
     break;
   }
@@ -115,22 +116,22 @@ void Consumer::rebalanceCallback(rd_kafka_t *RK, rd_kafka_resp_err_t ERR,
 
 void Consumer::init() {
   // librdkafka API sometimes wants to write errors into a buffer:
-  int const errstr_N = 512;
-  char errstr[errstr_N];
+  int const ERRSTR_N = 512;
+  char ERRSTR[ERRSTR_N];
 
-  auto conf = rd_kafka_conf_new();
-  ConsumerBrokerSettings.apply(conf);
+  auto Configuration = rd_kafka_conf_new();
+  ConsumerBrokerSettings.apply(Configuration);
 
-  rd_kafka_conf_set_log_cb(conf, Consumer::logCallback);
-  rd_kafka_conf_set_error_cb(conf, Consumer::errorCallback);
-  rd_kafka_conf_set_stats_cb(conf, Consumer::statsCallback);
-  rd_kafka_conf_set_rebalance_cb(conf, Consumer::rebalanceCallback);
-  rd_kafka_conf_set_consume_cb(conf, nullptr);
-  rd_kafka_conf_set_opaque(conf, this);
+  rd_kafka_conf_set_log_cb(Configuration, Consumer::logCallback);
+  rd_kafka_conf_set_error_cb(Configuration, Consumer::errorCallback);
+  rd_kafka_conf_set_stats_cb(Configuration, Consumer::statsCallback);
+  rd_kafka_conf_set_rebalance_cb(Configuration, Consumer::rebalanceCallback);
+  rd_kafka_conf_set_consume_cb(Configuration, nullptr);
+  rd_kafka_conf_set_opaque(Configuration, this);
 
-  RdKafka = rd_kafka_new(RD_KAFKA_CONSUMER, conf, errstr, errstr_N);
+  RdKafka = rd_kafka_new(RD_KAFKA_CONSUMER, Configuration, ERRSTR, ERRSTR_N);
   if (!RdKafka) {
-    LOG(Sev::Error, "can not create kafka handle: {}", errstr);
+    LOG(Sev::Error, "can not create kafka handle: {}", ERRSTR);
     throw std::runtime_error("can not create Kafka handle");
   }
 
@@ -154,54 +155,42 @@ void Consumer::addTopic(std::string Topic) {
   LOG(Sev::Info, "Consumer::add_topic  {}", Topic);
   int Partition = RD_KAFKA_PARTITION_UA;
   rd_kafka_topic_partition_list_add(PartitionList, Topic.c_str(), Partition);
-  int err = rd_kafka_subscribe(RdKafka, PartitionList);
-  KERR(RdKafka, err);
-  if (err) {
+  int ERR = rd_kafka_subscribe(RdKafka, PartitionList);
+  KERR(RdKafka, ERR);
+  if (ERR) {
     LOG(Sev::Error, "could not subscribe");
     throw std::runtime_error("can not subscribe");
   }
 }
 
-void Consumer::dumpCurrentSubscription() {
-  rd_kafka_topic_partition_list_t *List = nullptr;
-  rd_kafka_subscription(RdKafka, &List);
-  if (List) {
-    for (int i = 0; i < List->cnt; ++i) {
-      LOG(Sev::Info, "subscribed topics: {}  {}  off {}", List->elems[i].topic,
-          rd_kafka_err2str(List->elems[i].err), List->elems[i].offset);
-    }
-    rd_kafka_topic_partition_list_destroy(List);
-  }
-}
-
 PollStatus Consumer::poll() {
-  auto ret = PollStatus::Empty();
+  auto Ret = PollStatus::Empty();
 
-  auto msg =
+  auto Message =
       rd_kafka_consumer_poll(RdKafka, ConsumerBrokerSettings.PollTimeoutMS);
 
-  if (msg == nullptr) {
+  if (Message == nullptr) {
     return PollStatus::Empty();
   }
 
   static_assert(sizeof(char) == 1, "Failed: sizeof(char) == 1");
   std::unique_ptr<Msg> m2(new Msg);
-  m2->MsgPtr = msg;
-  if (msg->err == RD_KAFKA_RESP_ERR_NO_ERROR) {
+  m2->MsgPtr = Message;
+  if (Message->err == RD_KAFKA_RESP_ERR_NO_ERROR) {
     return PollStatus::newWithMsg(std::move(m2));
-  } else if (msg->err == RD_KAFKA_RESP_ERR__PARTITION_EOF) {
-    // Just an advisory.  msg contains which partition it is.
+  } else if (Message->err == RD_KAFKA_RESP_ERR__PARTITION_EOF) {
+    // Just an advisory.  Message contains which partition it is.
     return PollStatus::EOP();
-  } else if (msg->err == RD_KAFKA_RESP_ERR__ALL_BROKERS_DOWN) {
+  } else if (Message->err == RD_KAFKA_RESP_ERR__ALL_BROKERS_DOWN) {
     LOG(Sev::Error, "RD_KAFKA_RESP_ERR__ALL_BROKERS_DOWN");
-  } else if (msg->err == RD_KAFKA_RESP_ERR__BAD_MSG) {
+  } else if (Message->err == RD_KAFKA_RESP_ERR__BAD_MSG) {
     LOG(Sev::Error, "RD_KAFKA_RESP_ERR__BAD_MSG");
-  } else if (msg->err == RD_KAFKA_RESP_ERR__DESTROY) {
+  } else if (Message->err == RD_KAFKA_RESP_ERR__DESTROY) {
     LOG(Sev::Error, "RD_KAFKA_RESP_ERR__DESTROY");
     // Broker will go away soon
   } else {
-    LOG(Sev::Error, "unhandled msg error: {} {}", rd_kafka_err2name(msg->err),
-        rd_kafka_err2str(msg->err));
+    LOG(Sev::Error, "unhandled Message error: {} {}",
+        rd_kafka_err2name(Message->err), rd_kafka_err2str(Message->err));
   }
   return PollStatus::Err();
 }

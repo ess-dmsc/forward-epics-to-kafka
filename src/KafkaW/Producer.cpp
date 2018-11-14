@@ -22,7 +22,6 @@ void Producer::deliveredCallback(rd_kafka_t *RK, rd_kafka_message_t const *msg,
         self->id, rd_kafka_name(RK), rd_kafka_topic_name(msg->rkt),
         rd_kafka_err2name(msg->err), msg->err, rd_kafka_err2str(msg->err));
     if (msg->err == RD_KAFKA_RESP_ERR__MSG_TIMED_OUT) {
-      // TODO
     }
     if (auto &cb = self->on_delivery_failed) {
       cb(msg);
@@ -45,7 +44,6 @@ void Producer::errorCallback(rd_kafka_t *RK, int Err_i, char const *msg,
   Sev ll = Sev::Warning;
   if (err == RD_KAFKA_RESP_ERR__TRANSPORT) {
     ll = Sev::Error;
-    // rd_kafka_dump(stdout, rk);
   } else {
     if (self->on_error)
       self->on_error(self, err);

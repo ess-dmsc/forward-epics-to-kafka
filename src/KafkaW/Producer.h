@@ -52,7 +52,7 @@ public:
   Producer(Producer const &) = delete;
   Producer(Producer &&x) noexcept;
   ~Producer();
-  void pollWhileOutputQueueFilled();
+  void pollWhileOutputQueueFilled() override;
   void poll();
   uint64_t totalMessagesProduced() override;
   uint64_t outputQueueLength() override;
