@@ -170,17 +170,50 @@ def docker_test(image_key, test_dir) {
 }
 
 def docker_formatting(image_key) {
+    if (!env.CHANGE_ID) {
+        // Ignore non-PRs
+        return
+    }
+
     try {
         def custom_sh = images[image_key]['sh']
         def script = """
-                    clang-format -version
-                    cd ${project}
-                    find . \\\\( -name '*.cpp' -or -name '*.cxx' -or -name '*.h' -or -name '*.hpp' \\\\) \\
-                        -exec clangformatdiff.sh {} +
-                  """
-        sh "docker exec ${container_name(image_key)} ${custom_sh} -c \"${script}\""
+                     clang-format -version
+                     cd ${project}
+                     find . \\\\( -name '*.cpp' -or -name '*.cxx' -or -name '*.h' -or -name '*.hpp' \\\\) \\
+                       -exec clang-format -i {} +
+                     """
+        sh """
+           docker exec ${container_name(image_key)} ${custom_sh} -c \"${script}\"
+           docker cp -a ${container_name(image_key)}:/home/jenkins/${project} ${project}-test
+           cd ${project}-test
+           git config user.email 'dm-jenkins-integration@esss.se'
+           git config user.name 'cow-bot'
+           git status -s
+           git add -u
+           git commit -m \"AUTO CLANG FORMAT\"
+           """
+        withCredentials([
+                  usernamePassword(
+                    credentialsId: 'cow-bot-username',
+                    usernameVariable: 'USERNAME',
+                    passwordVariable: 'PASSWORD'
+                  )
+                ]) {
+                  sh """
+                     cd ${project}-test
+                     git push https://${USERNAME}:${PASSWORD}@github.com/ess-dmsc/forward-epics-to-kafka.git HEAD:${CHANGE_BRANCH}
+                     """
+        } // withCredentials
     } catch (e) {
-        failure_function(e, "Check formatting step for (${container_name(image_key)}) failed")
+        // Okay to fail as there could be no badly formatted files to commit
+    } finally {
+        // Clean up
+        try {
+            sh "rm -rf ${project}-test"
+        } catch (e) {
+            // Can ignore exception
+        }
     }
 }
 
