@@ -10,16 +10,25 @@ namespace KafkaW {
 
 class Inspect;
 
-class Consumer {
+class ConsumerInterface {
+public:
+  ConsumerInterface() = default;
+  virtual ~ConsumerInterface() = default;
+  virtual void addTopic(std::string Topic) = 0;
+  virtual void dumpCurrentSubscription() = 0;
+  virtual PollStatus poll() = 0;
+};
+
+class Consumer : public ConsumerInterface {
 public:
   explicit Consumer(BrokerSettings opt);
   Consumer(Consumer &&) = delete;
   Consumer(Consumer const &) = delete;
   ~Consumer();
   void init();
-  void addTopic(std::string Topic);
-  void dumpCurrentSubscription();
-  PollStatus poll();
+  void addTopic(std::string Topic) override;
+  void dumpCurrentSubscription() override;
+  PollStatus poll() override;
   std::function<void(rd_kafka_topic_partition_list_t *plist)>
       on_rebalance_assign;
   std::function<void(rd_kafka_topic_partition_list_t *plist)>
