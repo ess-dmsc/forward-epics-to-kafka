@@ -2,7 +2,6 @@
 
 #include "Msg.h"
 #include "Producer.h"
-#include "TopicSettings.h"
 #include "logger.h"
 #include <memory>
 #include <string>
