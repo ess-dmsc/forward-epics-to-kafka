@@ -33,7 +33,19 @@ struct ProducerStats {
   ProducerStats(ProducerStats const &);
 };
 
-class Producer {
+
+class ProducerInterface {
+public:
+    ProducerInterface() = default;
+    virtual ~ProducerInterface() =default;
+    virtual void pollWhileOutputQueueFilled()=0;
+    virtual void poll()=0;
+    virtual uint64_t totalMessagesProduced()=0;
+    virtual uint64_t outputQueueLength() =0;
+    virtual rd_kafka_t *getRdKafkaPtr() const=0;
+};
+
+class Producer : public ProducerInterface {
 public:
   typedef ProducerTopic Topic;
   typedef ProducerMsg Msg;
@@ -43,8 +55,8 @@ public:
   ~Producer();
   void pollWhileOutputQueueFilled();
   void poll();
-  uint64_t totalMessagesProduced();
-  uint64_t outputQueueLength();
+  uint64_t totalMessagesProduced()override;
+  uint64_t outputQueueLength() override;
 
   /// The message delivered callback for Kafka.
   ///
@@ -92,16 +104,15 @@ public:
   static void throttleCallback(rd_kafka_t *rk, char const *broker_name,
                                int32_t broker_id, int throttle_time_ms,
                                void *opaque);
-  rd_kafka_t *getRdKafkaPtr() const;
-  std::function<void(rd_kafka_message_t const *msg)> on_delivery_ok;
-  std::function<void(rd_kafka_message_t const *msg)> on_delivery_failed;
-  std::function<void(Producer *, rd_kafka_resp_err_t)> on_error;
-  // Currently it's nice to have access to these two for statistics:
-  BrokerSettings ProducerBrokerSettings;
-  rd_kafka_t *RdKafkaPtr = nullptr;
-  std::atomic<uint64_t> TotalMessagesProduced{0};
-  ProducerStats Stats;
-
+  rd_kafka_t *getRdKafkaPtr() const override;
+    std::function<void(rd_kafka_message_t const *msg)> on_delivery_ok;
+    std::function<void(rd_kafka_message_t const *msg)> on_delivery_failed;
+    std::function<void(ProducerInterface *, rd_kafka_resp_err_t)> on_error;
+    // Currently it's nice to have access to these two for statistics:
+    BrokerSettings ProducerBrokerSettings;
+    rd_kafka_t *RdKafkaPtr = nullptr;
+    std::atomic<uint64_t> TotalMessagesProduced{0};
+    ProducerStats Stats;
 private:
   int id = 0;
 };
