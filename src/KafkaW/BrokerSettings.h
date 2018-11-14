@@ -11,7 +11,6 @@ namespace KafkaW {
 /// Collect options used to connect to the broker.
 
 struct BrokerSettings {
-public:
   BrokerSettings() = default;
   void apply(rd_kafka_conf_t *RdKafkaConfiguration);
   std::string Address;
