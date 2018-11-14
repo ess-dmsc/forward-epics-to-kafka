@@ -37,8 +37,9 @@ Listener::Listener(KafkaW::BrokerSettings BrokerSettings, Forwarder::URI uri) {
 Listener::~Listener() {}
 
 void Listener::poll(Callback &cb) {
-  if (auto m = impl->consumer->poll().isMsg()) {
-    cb({(char *)m->data(), m->size()});
+  auto Message = impl->consumer->poll();
+  if (impl->consumer->poll()->getStatus() == KafkaW::PollStatus::Msg) {
+    cb({(char *)Message->getData(), Message->getSize()});
   }
 }
 

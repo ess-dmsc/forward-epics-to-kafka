@@ -1,7 +1,7 @@
 #pragma once
 
 #include "BrokerSettings.h"
-#include "Msg.h"
+#include "Message.h"
 #include <atomic>
 #include <functional>
 #include <librdkafka/rdkafka.h>
@@ -15,7 +15,7 @@ public:
   virtual ~ProducerMsg() = default;
   virtual void deliveryOk();
   virtual void deliveryError();
-  uchar *data;
+  unsigned char *data;
   uint32_t size;
 };
 

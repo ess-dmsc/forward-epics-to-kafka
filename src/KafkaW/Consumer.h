@@ -1,10 +1,10 @@
 #pragma once
 
 #include "BrokerSettings.h"
-#include "Msg.h"
-#include "PollStatus.h"
+#include "Message.h"
 #include <functional>
 #include <librdkafka/rdkafka.h>
+#include <memory>
 
 namespace KafkaW {
 
@@ -19,7 +19,7 @@ public:
   void init();
   void addTopic(std::string Topic);
   void dumpCurrentSubscription();
-  PollStatus poll();
+  std::unique_ptr<Message> poll();
   std::function<void(rd_kafka_topic_partition_list_t *plist)>
       on_rebalance_assign;
   std::function<void(rd_kafka_topic_partition_list_t *plist)>

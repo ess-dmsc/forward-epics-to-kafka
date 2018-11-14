@@ -1,6 +1,7 @@
 #include "Consumer.h"
 #include "logger.h"
 #include <atomic>
+#include <helper.h>
 
 namespace KafkaW {
 
@@ -174,24 +175,21 @@ void Consumer::dumpCurrentSubscription() {
   }
 }
 
-PollStatus Consumer::poll() {
-  auto ret = PollStatus::Empty();
-
+std::unique_ptr<Message> Consumer::poll() {
   auto msg =
       rd_kafka_consumer_poll(RdKafka, ConsumerBrokerSettings.PollTimeoutMS);
 
   if (msg == nullptr) {
-    return PollStatus::Empty();
+    return make_unique<Message>(PollStatus::Empty);
   }
 
   static_assert(sizeof(char) == 1, "Failed: sizeof(char) == 1");
-  std::unique_ptr<Msg> m2(new Msg);
-  m2->MsgPtr = msg;
   if (msg->err == RD_KAFKA_RESP_ERR_NO_ERROR) {
-    return PollStatus::newWithMsg(std::move(m2));
+    return make_unique<Message>((std::uint8_t *)msg->payload, msg->len,
+                                PollStatus::Msg);
   } else if (msg->err == RD_KAFKA_RESP_ERR__PARTITION_EOF) {
     // Just an advisory.  msg contains which partition it is.
-    return PollStatus::EOP();
+    return make_unique<Message>(PollStatus::EOP);
   } else if (msg->err == RD_KAFKA_RESP_ERR__ALL_BROKERS_DOWN) {
     LOG(Sev::Error, "RD_KAFKA_RESP_ERR__ALL_BROKERS_DOWN");
   } else if (msg->err == RD_KAFKA_RESP_ERR__BAD_MSG) {
@@ -203,6 +201,6 @@ PollStatus Consumer::poll() {
     LOG(Sev::Error, "unhandled msg error: {} {}", rd_kafka_err2name(msg->err),
         rd_kafka_err2str(msg->err));
   }
-  return PollStatus::Err();
+  return make_unique<Message>(PollStatus::Err);
 }
 } // namespace KafkaW
