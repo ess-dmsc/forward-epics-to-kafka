@@ -34,32 +34,32 @@ Consumer::~Consumer() {
   }
 }
 
-void Consumer::logCallback(rd_kafka_t const *rk, int level, char const *fac,
-                           char const *buf) {
-  auto self = reinterpret_cast<Consumer *>(rd_kafka_opaque(rk));
-  LOG(Sev(level), "IID: {}  {}  fac: {}", self->id, buf, fac);
+void Consumer::logCallback(rd_kafka_t const *RK, int Level, char const *Fac,
+                           char const *Buf) {
+  auto self = reinterpret_cast<Consumer *>(rd_kafka_opaque(RK));
+  LOG(Sev(Level), "IID: {}  {}  fac: {}", self->id, Buf, Fac);
 }
 
-void Consumer::errorCallback(rd_kafka_t *rk, int err_i, char const *msg,
-                             void *opaque) {
-  UNUSED_ARG(rk);
-  auto self = reinterpret_cast<Consumer *>(opaque);
-  auto err = static_cast<rd_kafka_resp_err_t>(err_i);
+void Consumer::errorCallback(rd_kafka_t *RK, int Err_i, char const *msg,
+                             void *Opaque) {
+  UNUSED_ARG(RK);
+  auto self = reinterpret_cast<Consumer *>(Opaque);
+  auto err = static_cast<rd_kafka_resp_err_t>(Err_i);
   Sev ll = Sev::Debug;
   if (err == RD_KAFKA_RESP_ERR__TRANSPORT) {
     ll = Sev::Warning;
   }
   LOG(ll, "Kafka cb_error id: {}  broker: {}  errno: {}  errorname: {}  "
           "errorstring: {}  message: {}",
-      self->id, self->ConsumerBrokerSettings.Address, err_i,
+      self->id, self->ConsumerBrokerSettings.Address, Err_i,
       rd_kafka_err2name(err), rd_kafka_err2str(err), msg);
 }
 
-int Consumer::statsCallback(rd_kafka_t *rk, char *json, size_t json_size,
-                            void *opaque) {
-  UNUSED_ARG(rk);
-  UNUSED_ARG(opaque);
-  LOG(Sev::Debug, "INFO stats_cb {}  {:.{}}", json_size, json, json_size);
+int Consumer::statsCallback(rd_kafka_t *RK, char *Json, size_t Json_size,
+                            void *Opaque) {
+  UNUSED_ARG(RK);
+  UNUSED_ARG(Opaque);
+  LOG(Sev::Debug, "INFO stats_cb {}  {:.{}}", Json_size, Json, Json_size);
   // What does Kafka want us to return from this callback?
   return 0;
 }
@@ -71,31 +71,31 @@ static void print_partition_list(rd_kafka_topic_partition_list_t *plist) {
   }
 }
 
-void Consumer::rebalanceCallback(rd_kafka_t *rk, rd_kafka_resp_err_t err,
-                                 rd_kafka_topic_partition_list_t *plist,
-                                 void *opaque) {
+void Consumer::rebalanceCallback(rd_kafka_t *RK, rd_kafka_resp_err_t ERR,
+                                 rd_kafka_topic_partition_list_t *PList,
+                                 void *Opaque) {
   rd_kafka_resp_err_t err2;
-  auto self = static_cast<Consumer *>(opaque);
-  switch (err) {
+  auto self = static_cast<Consumer *>(Opaque);
+  switch (ERR) {
   case RD_KAFKA_RESP_ERR__ASSIGN_PARTITIONS:
-    LOG(Sev::Debug, "cb_rebalance assign {}", rd_kafka_name(rk));
+    LOG(Sev::Debug, "cb_rebalance assign {}", rd_kafka_name(RK));
     if (auto &cb = self->on_rebalance_start) {
-      cb(plist);
+      cb(PList);
     }
-    print_partition_list(plist);
-    err2 = rd_kafka_assign(rk, plist);
+    print_partition_list(PList);
+    err2 = rd_kafka_assign(RK, PList);
     if (err2 != RD_KAFKA_RESP_ERR_NO_ERROR) {
       LOG(Sev::Notice, "rebalance error: {}  {}", rd_kafka_err2name(err2),
           rd_kafka_err2str(err2));
     }
     if (auto &cb = self->on_rebalance_assign) {
-      cb(plist);
+      cb(PList);
     }
     break;
   case RD_KAFKA_RESP_ERR__REVOKE_PARTITIONS:
     LOG(Sev::Warning, "cb_rebalance revoke:");
-    print_partition_list(plist);
-    err2 = rd_kafka_assign(rk, nullptr);
+    print_partition_list(PList);
+    err2 = rd_kafka_assign(RK, nullptr);
     if (err2 != RD_KAFKA_RESP_ERR_NO_ERROR) {
       LOG(Sev::Warning, "rebalance error: {}  {}", rd_kafka_err2name(err2),
           rd_kafka_err2str(err2));
@@ -103,8 +103,8 @@ void Consumer::rebalanceCallback(rd_kafka_t *rk, rd_kafka_resp_err_t err,
     break;
   default:
     LOG(Sev::Info, "cb_rebalance failure and revoke: {}",
-        rd_kafka_err2str(err));
-    err2 = rd_kafka_assign(rk, nullptr);
+        rd_kafka_err2str(ERR));
+    err2 = rd_kafka_assign(RK, nullptr);
     if (err2 != RD_KAFKA_RESP_ERR_NO_ERROR) {
       LOG(Sev::Warning, "rebalance error: {}  {}", rd_kafka_err2name(err2),
           rd_kafka_err2str(err2));

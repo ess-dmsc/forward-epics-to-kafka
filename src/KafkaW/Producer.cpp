@@ -9,9 +9,9 @@ void ProducerMsg::deliveryOk() {}
 
 void ProducerMsg::deliveryError() {}
 
-void Producer::deliveredCallback(rd_kafka_t *rk, rd_kafka_message_t const *msg,
-                                 void *opaque) {
-  auto self = reinterpret_cast<Producer *>(opaque);
+void Producer::deliveredCallback(rd_kafka_t *RK, rd_kafka_message_t const *msg,
+                                 void *Opaque) {
+  auto self = reinterpret_cast<Producer *>(Opaque);
   if (!msg) {
     LOG(Sev::Error, "IID: {}  ERROR msg should never be null", self->id);
     ++self->Stats.produce_cb_fail;
@@ -19,7 +19,7 @@ void Producer::deliveredCallback(rd_kafka_t *rk, rd_kafka_message_t const *msg,
   }
   if (msg->err) {
     LOG(Sev::Error, "IID: {}  ERROR on delivery, {}, topic {}, {} [{}] {}",
-        self->id, rd_kafka_name(rk), rd_kafka_topic_name(msg->rkt),
+        self->id, rd_kafka_name(RK), rd_kafka_topic_name(msg->rkt),
         rd_kafka_err2name(msg->err), msg->err, rd_kafka_err2str(msg->err));
     if (msg->err == RD_KAFKA_RESP_ERR__MSG_TIMED_OUT) {
       // TODO
@@ -37,11 +37,11 @@ void Producer::deliveredCallback(rd_kafka_t *rk, rd_kafka_message_t const *msg,
   }
 }
 
-void Producer::errorCallback(rd_kafka_t *rk, int err_i, char const *msg,
-                             void *opaque) {
-  UNUSED_ARG(rk);
-  auto self = reinterpret_cast<Producer *>(opaque);
-  auto err = static_cast<rd_kafka_resp_err_t>(err_i);
+void Producer::errorCallback(rd_kafka_t *RK, int Err_i, char const *msg,
+                             void *Opaque) {
+  UNUSED_ARG(RK);
+  auto self = reinterpret_cast<Producer *>(Opaque);
+  auto err = static_cast<rd_kafka_resp_err_t>(Err_i);
   Sev ll = Sev::Warning;
   if (err == RD_KAFKA_RESP_ERR__TRANSPORT) {
     ll = Sev::Error;
@@ -52,34 +52,34 @@ void Producer::errorCallback(rd_kafka_t *rk, int err_i, char const *msg,
   }
   LOG(ll, "Kafka cb_error id: {}  broker: {}  errno: {}  errorname: {}  "
           "errorstring: {}  message: {}",
-      self->id, self->ProducerBrokerSettings.Address, err_i,
+      self->id, self->ProducerBrokerSettings.Address, Err_i,
       rd_kafka_err2name(err), rd_kafka_err2str(err), msg);
 }
 
-int Producer::statsCallback(rd_kafka_t *rk, char *json, size_t json_len,
-                            void *opaque) {
-  auto self = reinterpret_cast<Producer *>(opaque);
+int Producer::statsCallback(rd_kafka_t *RK, char *Json, size_t Json_len,
+                            void *Opaque) {
+  auto self = reinterpret_cast<Producer *>(Opaque);
   LOG(Sev::Debug, "IID: {}  INFO cb_stats {} length {}   {:.{}}", self->id,
-      rd_kafka_name(rk), json_len, json, json_len);
+      rd_kafka_name(RK), Json_len, Json, Json_len);
   // What does librdkafka want us to return from this callback?
   return 0;
 }
 
-void Producer::logCallback(rd_kafka_t const *rk, int level, char const *fac,
-                           char const *buf) {
-  UNUSED_ARG(level);
-  auto self = reinterpret_cast<Producer *>(rd_kafka_opaque(rk));
-  LOG(Sev::Debug, "IID: {}  {}  fac: {}", self->id, buf, fac);
+void Producer::logCallback(rd_kafka_t const *RK, int Level, char const *Fac,
+                           char const *Buf) {
+  UNUSED_ARG(Level);
+  auto self = reinterpret_cast<Producer *>(rd_kafka_opaque(RK));
+  LOG(Sev::Debug, "IID: {}  {}  fac: {}", self->id, Buf, Fac);
 }
 
-void Producer::throttleCallback(rd_kafka_t *rk, char const *broker_name,
-                                int32_t broker_id, int throttle_time_ms,
-                                void *opaque) {
-  UNUSED_ARG(rk);
-  auto self = reinterpret_cast<Producer *>(opaque);
+void Producer::throttleCallback(rd_kafka_t *RK, char const *Name,
+                                int32_t Broker_id, int Throttle_time_ms,
+                                void *Opaque) {
+  UNUSED_ARG(RK);
+  auto self = reinterpret_cast<Producer *>(Opaque);
   LOG(Sev::Debug, "IID: {}  INFO cb_throttle  broker_id: {}  broker_name: {}  "
                   "throttle_time_ms: {}",
-      self->id, broker_id, broker_name, throttle_time_ms);
+      self->id, Broker_id, Name, Throttle_time_ms);
 }
 
 Producer::~Producer() {
