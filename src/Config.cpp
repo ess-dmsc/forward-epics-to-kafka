@@ -38,7 +38,7 @@ Listener::~Listener() {}
 
 void Listener::poll(Callback &cb) {
   auto Message = impl->consumer->poll();
-  if (impl->consumer->poll()->getStatus() == KafkaW::PollStatus::Msg) {
+  if (Message->getStatus() == KafkaW::PollStatus::Msg) {
     cb({(char *)Message->getData(), Message->getSize()});
   }
 }
