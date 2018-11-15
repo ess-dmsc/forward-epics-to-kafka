@@ -60,18 +60,19 @@ public:
   /// The message delivered callback for Kafka.
   ///
   /// \param RK The Kafka handle.
-  /// \param Msg The message
+  /// \param Message The message
   /// \param Opaque The opaque object.
-  static void deliveredCallback(rd_kafka_t *RK, rd_kafka_message_t const *Msg,
+  static void deliveredCallback(rd_kafka_t *RK,
+                                rd_kafka_message_t const *Message,
                                 void *Opaque);
 
   /// The error callback for Kafka.
   ///
   /// \param RK The Kafka handle.
   /// \param Err_i The error code.
-  /// \param Reason The error string.
+  /// \param Message The error string.
   /// \param Opaque The opaque object.
-  static void errorCallback(rd_kafka_t *RK, int Err_i, char const *Reason,
+  static void errorCallback(rd_kafka_t *RK, int Err_i, char const *Message,
                             void *Opaque);
 
   /// The statistics callback for Kafka.
