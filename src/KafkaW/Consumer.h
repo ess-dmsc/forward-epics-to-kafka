@@ -21,7 +21,7 @@ public:
   explicit Consumer(BrokerSettings opt);
   Consumer(Consumer &&) = delete;
   Consumer(Consumer const &) = delete;
-  ~Consumer();
+  ~Consumer() override;
   void init();
   void addTopic(std::string Topic) override;
   PollStatus poll() override;
