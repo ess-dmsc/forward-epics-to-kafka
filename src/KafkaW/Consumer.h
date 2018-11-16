@@ -8,8 +8,6 @@
 
 namespace KafkaW {
 
-class Inspect;
-
 class Consumer {
 public:
   explicit Consumer(BrokerSettings opt);
@@ -18,7 +16,6 @@ public:
   ~Consumer();
   void init();
   void addTopic(std::string Topic);
-  void dumpCurrentSubscription();
   PollStatus poll();
   std::function<void(rd_kafka_topic_partition_list_t *plist)>
       on_rebalance_assign;

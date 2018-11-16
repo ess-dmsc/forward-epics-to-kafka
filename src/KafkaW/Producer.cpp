@@ -176,18 +176,9 @@ void Producer::poll() {
   Stats.out_queue = outputQueueLength();
 }
 
-void Producer::pollWhileOutputQueueFilled() {
-  while (outputQueueLength() > 0) {
-    Stats.poll_served +=
-        rd_kafka_poll(RdKafkaPtr, ProducerBrokerSettings.PollTimeoutMS);
-  }
-}
-
 rd_kafka_t *Producer::getRdKafkaPtr() const { return RdKafkaPtr; }
 
 uint64_t Producer::outputQueueLength() { return rd_kafka_outq_len(RdKafkaPtr); }
-
-uint64_t Producer::totalMessagesProduced() { return TotalMessagesProduced; }
 
 ProducerStats::ProducerStats(ProducerStats const &x) {
   produced = x.produced.load();

@@ -41,9 +41,7 @@ public:
   Producer(Producer const &) = delete;
   Producer(Producer &&x) noexcept;
   ~Producer();
-  void pollWhileOutputQueueFilled();
   void poll();
-  uint64_t totalMessagesProduced();
   uint64_t outputQueueLength();
 
   /// The message delivered callback for Kafka.
