@@ -7,20 +7,20 @@ ARG http_proxy
 ARG https_proxy
 
 RUN apt-get update -y && \
-    apt-get --no-install-recommends -y install make cmake g++ git python-pip tzdata vim-common && \
+    apt-get --no-install-recommends -y install build-essential git python-pip cmake tzdata vim  && \
     apt-get -y autoremove && \
     apt-get clean all && \
     rm -rf /var/lib/apt/lists/*
 
 RUN pip install --upgrade pip==9.0.3 && pip install setuptools && \
-    pip install conan==1.8.2 && \
+    pip install conan && \
     rm -rf /root/.cache/pip/*
 
 # Force conan to create .conan directory and profile
 RUN conan profile new default
 
 # Replace the default profile and remotes with the ones from our Ubuntu build node
-ADD "https://raw.githubusercontent.com/ess-dmsc/docker-ubuntu18.04-build-node/master/files/registry.txt" "/root/.conan/registry.txt"
+ADD "https://raw.githubusercontent.com/ess-dmsc/docker-ubuntu18.04-build-node/master/files/registry.json" "/root/.conan/registry.json"
 ADD "https://raw.githubusercontent.com/ess-dmsc/docker-ubuntu18.04-build-node/master/files/default_profile" "/root/.conan/profiles/default"
 
 RUN mkdir forwarder
