@@ -9,10 +9,8 @@ comment:
   status:
     patch:
       default:
-        target: auto
-        threshold: 5
+        enabled: no
     project:
       default:
-        target: auto
-        threshold: 5
+        enabled: no
 
