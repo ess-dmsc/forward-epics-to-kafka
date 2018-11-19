@@ -37,10 +37,10 @@ class ProducerInterface {
 public:
   ProducerInterface() = default;
   virtual ~ProducerInterface() = default;
-  virtual void pollWhileOutputQueueFilled() = 0;
-  virtual void poll() = 0;
-  virtual uint64_t totalMessagesProduced() = 0;
-  virtual uint64_t outputQueueLength() = 0;
+
+    virtual void poll() = 0;
+
+    virtual uint64_t outputQueueLength() = 0;
   virtual rd_kafka_t *getRdKafkaPtr() const = 0;
 };
 
@@ -52,10 +52,10 @@ public:
   Producer(Producer const &) = delete;
   Producer(Producer &&x) noexcept;
   ~Producer() override;
-  void pollWhileOutputQueueFilled() override;
-  void poll();
-  uint64_t totalMessagesProduced() override;
-  uint64_t outputQueueLength() override;
+
+    void poll();
+
+    uint64_t outputQueueLength() override;
 
   /// The message delivered callback for Kafka.
   ///

@@ -67,8 +67,9 @@ int Consumer::statsCallback(rd_kafka_t *RK, char *Json, size_t Json_size,
 static void
 print_partition_list(rd_kafka_topic_partition_list_t *PartitionList) {
   for (int i1 = 0; i1 < PartitionList->cnt; ++i1) {
-    auto &x = PartitionList->elems[i1];
-    LOG(Sev::Debug, "   {}  {}  {}", x.topic, x.partition, x.offset);
+    auto &Partition = PartitionList->elems[i1];
+    LOG(Sev::Debug, "   {}  {}  {}", Partition.topic, Partition.partition,
+        Partition.offset);
   }
 }
 
@@ -116,8 +117,8 @@ void Consumer::rebalanceCallback(rd_kafka_t *RK, rd_kafka_resp_err_t ERR,
 
 void Consumer::init() {
   // librdkafka API sometimes wants to write errors into a buffer:
-  int const ERRSTR_N = 512;
-  char ERRSTR[ERRSTR_N];
+  int const ErrorStringSize = 512;
+  char ErrorStringBuffer[ErrorStringSize];
 
   auto Configuration = rd_kafka_conf_new();
   ConsumerBrokerSettings.apply(Configuration);
@@ -129,9 +130,10 @@ void Consumer::init() {
   rd_kafka_conf_set_consume_cb(Configuration, nullptr);
   rd_kafka_conf_set_opaque(Configuration, this);
 
-  RdKafka = rd_kafka_new(RD_KAFKA_CONSUMER, Configuration, ERRSTR, ERRSTR_N);
+  RdKafka = rd_kafka_new(RD_KAFKA_CONSUMER, Configuration, ErrorStringBuffer,
+                         ErrorStringSize);
   if (!RdKafka) {
-    LOG(Sev::Error, "can not create kafka handle: {}", ERRSTR);
+    LOG(Sev::Error, "can not create kafka handle: {}", ErrorStringBuffer);
     throw std::runtime_error("can not create Kafka handle");
   }
 
