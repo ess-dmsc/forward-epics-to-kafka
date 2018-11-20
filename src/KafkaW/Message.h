@@ -5,7 +5,7 @@
 
 namespace KafkaW {
 
-enum PollStatus {
+enum class PollStatus {
   Msg,
   Err,
   EOP,
