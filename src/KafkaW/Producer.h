@@ -52,9 +52,7 @@ public:
   Producer(Producer const &) = delete;
   Producer(Producer &&x) noexcept;
   ~Producer() override;
-
   void poll();
-
   uint64_t outputQueueLength() override;
 
   /// The message delivered callback for Kafka.
