@@ -10,8 +10,7 @@ namespace KafkaW {
 
 class ProducerTopic;
 
-class ProducerMsg {
-public:
+struct ProducerMsg {
   virtual ~ProducerMsg() = default;
   virtual void deliveryOk();
   virtual void deliveryError();
@@ -33,69 +32,79 @@ struct ProducerStats {
   ProducerStats(ProducerStats const &);
 };
 
-class Producer {
+class ProducerInterface {
+public:
+  ProducerInterface() = default;
+  virtual ~ProducerInterface() = default;
+
+  virtual void poll() = 0;
+
+  virtual uint64_t outputQueueLength() = 0;
+  virtual rd_kafka_t *getRdKafkaPtr() const = 0;
+};
+
+class Producer : public ProducerInterface {
 public:
   typedef ProducerTopic Topic;
   typedef ProducerMsg Msg;
   explicit Producer(BrokerSettings ProducerBrokerSettings_);
   Producer(Producer const &) = delete;
   Producer(Producer &&x) noexcept;
-  ~Producer();
-  void pollWhileOutputQueueFilled();
+  ~Producer() override;
   void poll();
-  uint64_t totalMessagesProduced();
-  uint64_t outputQueueLength();
+  uint64_t outputQueueLength() override;
 
   /// The message delivered callback for Kafka.
   ///
-  /// \param rk The Kafka handle.
-  /// \param msg The message
-  /// \param opaque The opaque object.
-  static void deliveredCallback(rd_kafka_t *rk, rd_kafka_message_t const *msg,
-                                void *opaque);
+  /// \param RK The Kafka handle.
+  /// \param Message The message
+  /// \param Opaque The opaque object.
+  static void deliveredCallback(rd_kafka_t *RK,
+                                rd_kafka_message_t const *Message,
+                                void *Opaque);
 
   /// The error callback for Kafka.
   ///
-  /// \param rk The Kafka handle.
-  /// \param err_i The error code.
-  /// \param reason The error string.
-  /// \param opaque The opaque object.
-  static void errorCallback(rd_kafka_t *rk, int err_i, char const *reason,
-                            void *opaque);
+  /// \param RK The Kafka handle.
+  /// \param Err_i The error code.
+  /// \param Message The error string.
+  /// \param Opaque The opaque object.
+  static void errorCallback(rd_kafka_t *RK, int Err_i, char const *Message,
+                            void *Opaque);
 
   /// The statistics callback for Kafka.
   ///
-  /// \param rk The Kafka handle.
-  /// \param json The statistics data in JSON format.
+  /// \param RK The Kafka handle.
+  /// \param Json The statistics data in JSON format.
   /// \param json_size The size of the JSON string.
-  /// \param opaque The opaque.
+  /// \param Opaque The opaque.
   /// \return The error code.
-  static int statsCallback(rd_kafka_t *rk, char *json, size_t json_len,
-                           void *opaque);
+  static int statsCallback(rd_kafka_t *RK, char *Json, size_t Json_len,
+                           void *Opaque);
 
   /// The log callback for Kafka.
   ///
-  /// \param rk The Kafka handle.
-  /// \param level The log level.
-  /// \param fac ?
-  /// \param buf The message buffer.
-  static void logCallback(rd_kafka_t const *rk, int level, char const *fac,
-                          char const *buf);
+  /// \param RK The Kafka handle.
+  /// \param Level The log level.
+  /// \param Fac ?
+  /// \param Buf The message buffer.
+  static void logCallback(rd_kafka_t const *RK, int Level, char const *Fac,
+                          char const *Buf);
 
   /// The throttle callback for Kafka.
   ///
-  /// \param rk The Kafka handle.
-  /// \param broker_name The broker name.
-  /// \param broker_id  The broker id.
-  /// \param throttle_time_ms The throttle time in milliseconds.
-  /// \param opaque The opaque.
-  static void throttleCallback(rd_kafka_t *rk, char const *broker_name,
-                               int32_t broker_id, int throttle_time_ms,
-                               void *opaque);
-  rd_kafka_t *getRdKafkaPtr() const;
+  /// \param RK The Kafka handle.
+  /// \param Name The broker name.
+  /// \param Broker_id  The broker id.
+  /// \param Throttle_time_ms The throttle time in milliseconds.
+  /// \param Opaque The opaque.
+  static void throttleCallback(rd_kafka_t *RK, char const *Name,
+                               int32_t Broker_id, int Throttle_time_ms,
+                               void *Opaque);
+  rd_kafka_t *getRdKafkaPtr() const override;
   std::function<void(rd_kafka_message_t const *msg)> on_delivery_ok;
   std::function<void(rd_kafka_message_t const *msg)> on_delivery_failed;
-  std::function<void(Producer *, rd_kafka_resp_err_t)> on_error;
+  std::function<void(ProducerInterface *, rd_kafka_resp_err_t)> on_error;
   // Currently it's nice to have access to these two for statistics:
   BrokerSettings ProducerBrokerSettings;
   rd_kafka_t *RdKafkaPtr = nullptr;

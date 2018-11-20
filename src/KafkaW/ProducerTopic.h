@@ -14,10 +14,6 @@ public:
   TopicCreationError() : std::runtime_error("Can not create Kafka topic") {}
 };
 
-enum ProducerTopicError {
-  RDKAFKATOPIC_NOT_INITIALIZED,
-};
-
 class ProducerTopic {
 public:
   ProducerTopic(ProducerTopic &&);
