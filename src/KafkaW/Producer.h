@@ -10,8 +10,7 @@ namespace KafkaW {
 
 class ProducerTopic;
 
-class ProducerMsg {
-public:
+struct ProducerMsg {
   virtual ~ProducerMsg() = default;
   virtual void deliveryOk();
   virtual void deliveryError();
