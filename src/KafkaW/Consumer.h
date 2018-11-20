@@ -8,15 +8,23 @@
 
 namespace KafkaW {
 
-class Consumer {
+class ConsumerInterface {
+public:
+  ConsumerInterface() = default;
+  virtual ~ConsumerInterface() = default;
+  virtual void addTopic(std::string Topic) = 0;
+  virtual PollStatus poll() = 0;
+};
+
+class Consumer : public ConsumerInterface {
 public:
   explicit Consumer(BrokerSettings opt);
   Consumer(Consumer &&) = delete;
   Consumer(Consumer const &) = delete;
-  ~Consumer();
+  ~Consumer() override;
   void init();
-  void addTopic(std::string Topic);
-  PollStatus poll();
+  void addTopic(std::string Topic) override;
+  PollStatus poll() override;
   std::function<void(rd_kafka_topic_partition_list_t *plist)>
       on_rebalance_assign;
   std::function<void(rd_kafka_topic_partition_list_t *plist)>
@@ -28,42 +36,42 @@ private:
 
   /// The log callback for Kafka.
   ///
-  /// \param rk The Kafka handle.
-  /// \param level The log level.
-  /// \param fac ?
-  /// \param buf The message buffer.
-  static void logCallback(rd_kafka_t const *rk, int level, char const *fac,
-                          char const *buf);
+  /// \param RK The Kafka handle.
+  /// \param Level The log level.
+  /// \param Fac ?
+  /// \param Buf The message buffer.
+  static void logCallback(rd_kafka_t const *RK, int Level, char const *Fac,
+                          char const *Buf);
 
   /// The statistics callback for Kafka.
   ///
-  /// \param rk The Kafka handle.
-  /// \param json The statistics data in JSON format.
-  /// \param json_size The size of the JSON string.
-  /// \param opaque The opaque.
+  /// \param RK The Kafka handle.
+  /// \param Json The statistics data in JSON format.
+  /// \param Json_size The size of the JSON string.
+  /// \param Opaque The opaque.
   /// \return The error code.
-  static int statsCallback(rd_kafka_t *rk, char *json, size_t json_size,
-                           void *opaque);
+  static int statsCallback(rd_kafka_t *RK, char *Json, size_t Json_size,
+                           void *Opaque);
 
   /// Error callback method for Kafka.
   ///
-  /// \param rk The Kafka handle.
-  /// \param err_i The error code.
-  /// \param reason The error string.
-  /// \param opaque The opaque object.
-  static void errorCallback(rd_kafka_t *rk, int err_i, char const *reason,
-                            void *opaque);
+  /// \param RK The Kafka handle.
+  /// \param Err_i The error code.
+  /// \param Reason The error string.
+  /// \param Opaque The opaque object.
+  static void errorCallback(rd_kafka_t *RK, int Err_i, char const *Reason,
+                            void *Opaque);
 
   /// The rebalance callback for Kafka.
   ///
-  /// \param rk The Kafka handle.
-  /// \param err The error response.
-  /// \param plist The partition list.
-  /// \param opaque The opaque object.
-  static void rebalanceCallback(rd_kafka_t *rk, rd_kafka_resp_err_t err,
-                                rd_kafka_topic_partition_list_t *plist,
-                                void *opaque);
+  /// \param RK The Kafka handle.
+  /// \param ERR The error response.
+  /// \param PartitionList The partition list.
+  /// \param Opaque The opaque object.
+  static void rebalanceCallback(rd_kafka_t *RK, rd_kafka_resp_err_t ERR,
+                                rd_kafka_topic_partition_list_t *PartitionList,
+                                void *Opaque);
   rd_kafka_topic_partition_list_t *PartitionList = nullptr;
-  int id = 0;
+  int ID = 0;
 };
 } // namespace KafkaW
