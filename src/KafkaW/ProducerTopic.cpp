@@ -61,10 +61,6 @@ int ProducerTopic::produce(uchar *MsgData, size_t MsgSize) {
 }
 
 int ProducerTopic::produce(unique_ptr<Producer::Msg> &Msg) {
-  if (!RdKafkaTopic) {
-    // Should never happen
-    return RDKAFKATOPIC_NOT_INITIALIZED;
-  }
   int x;
   int32_t partition = RD_KAFKA_PARTITION_UA;
   void const *key = nullptr;
