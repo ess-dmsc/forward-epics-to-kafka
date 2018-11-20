@@ -176,8 +176,8 @@ std::unique_ptr<Message> Consumer::poll() {
 
   static_assert(sizeof(char) == 1, "Failed: sizeof(char) == 1");
   if (PollMessage->err == RD_KAFKA_RESP_ERR_NO_ERROR) {
-    return make_unique<Message>((std::uint8_t *)PollMessage->payload, PollMessage->len,
-                                PollStatus::Msg);
+    return make_unique<Message>((std::uint8_t *)PollMessage->payload,
+                                PollMessage->len, PollStatus::Msg);
   } else if (PollMessage->err == RD_KAFKA_RESP_ERR__PARTITION_EOF) {
     // Just an advisory.  msg contains which partition it is.
     return make_unique<Message>(PollStatus::EOP);
@@ -190,7 +190,8 @@ std::unique_ptr<Message> Consumer::poll() {
     // Broker will go away soon
   } else {
     LOG(Sev::Error, "unhandled Message error: {} {}",
-        rd_kafka_err2name(PollMessage->err), rd_kafka_err2str(PollMessage->err));
+        rd_kafka_err2name(PollMessage->err),
+        rd_kafka_err2str(PollMessage->err));
   }
   return make_unique<Message>(PollStatus::Err);
 }
