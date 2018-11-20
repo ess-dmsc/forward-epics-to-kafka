@@ -103,7 +103,6 @@ set(SOURCES
     KafkaW/KafkaW.cpp
     KafkaW/Producer.cpp
     KafkaW/ProducerTopic.cpp
-    KafkaW/TopicSettings.cpp
     ConversionWorker.cpp
     Config.cpp
     FlatbufferMessage.cpp
