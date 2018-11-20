@@ -1,6 +1,7 @@
 #include "Consumer.h"
 #include "logger.h"
 #include <atomic>
+#include <helper.h>
 
 namespace KafkaW {
 
@@ -165,35 +166,33 @@ void Consumer::addTopic(std::string Topic) {
   }
 }
 
-PollStatus Consumer::poll() {
-  auto Ret = PollStatus::Empty();
-
-  auto Message =
+std::unique_ptr<Message> Consumer::poll() {
+  auto PollMessage =
       rd_kafka_consumer_poll(RdKafka, ConsumerBrokerSettings.PollTimeoutMS);
 
-  if (Message == nullptr) {
-    return PollStatus::Empty();
+  if (PollMessage == nullptr) {
+    return make_unique<Message>(PollStatus::Empty);
   }
 
   static_assert(sizeof(char) == 1, "Failed: sizeof(char) == 1");
-  std::unique_ptr<Msg> m2(new Msg);
-  m2->MsgPtr = Message;
-  if (Message->err == RD_KAFKA_RESP_ERR_NO_ERROR) {
-    return PollStatus::newWithMsg(std::move(m2));
-  } else if (Message->err == RD_KAFKA_RESP_ERR__PARTITION_EOF) {
-    // Just an advisory.  Message contains which partition it is.
-    return PollStatus::EOP();
-  } else if (Message->err == RD_KAFKA_RESP_ERR__ALL_BROKERS_DOWN) {
+  if (PollMessage->err == RD_KAFKA_RESP_ERR_NO_ERROR) {
+    return make_unique<Message>((std::uint8_t *)PollMessage->payload,
+                                PollMessage->len, PollStatus::Msg);
+  } else if (PollMessage->err == RD_KAFKA_RESP_ERR__PARTITION_EOF) {
+    // Just an advisory.  msg contains which partition it is.
+    return make_unique<Message>(PollStatus::EOP);
+  } else if (PollMessage->err == RD_KAFKA_RESP_ERR__ALL_BROKERS_DOWN) {
     LOG(Sev::Error, "RD_KAFKA_RESP_ERR__ALL_BROKERS_DOWN");
-  } else if (Message->err == RD_KAFKA_RESP_ERR__BAD_MSG) {
+  } else if (PollMessage->err == RD_KAFKA_RESP_ERR__BAD_MSG) {
     LOG(Sev::Error, "RD_KAFKA_RESP_ERR__BAD_MSG");
-  } else if (Message->err == RD_KAFKA_RESP_ERR__DESTROY) {
+  } else if (PollMessage->err == RD_KAFKA_RESP_ERR__DESTROY) {
     LOG(Sev::Error, "RD_KAFKA_RESP_ERR__DESTROY");
     // Broker will go away soon
   } else {
     LOG(Sev::Error, "unhandled Message error: {} {}",
-        rd_kafka_err2name(Message->err), rd_kafka_err2str(Message->err));
+        rd_kafka_err2name(PollMessage->err),
+        rd_kafka_err2str(PollMessage->err));
   }
-  return PollStatus::Err();
+  return make_unique<Message>(PollStatus::Err);
 }
 } // namespace KafkaW

@@ -45,14 +45,14 @@ ProducerTopic::ProducerTopic(ProducerTopic &&x) {
 }
 
 struct Msg_ : public Producer::Msg {
-  vector<uchar> v;
+  vector<unsigned char> v;
   void finalize() {
     data = v.data();
     size = v.size();
   }
 };
 
-int ProducerTopic::produce(uchar *MsgData, size_t MsgSize) {
+int ProducerTopic::produce(unsigned char *MsgData, size_t MsgSize) {
   auto MsgPtr = new Msg_;
   std::copy(MsgData, MsgData + MsgSize, std::back_inserter(MsgPtr->v));
   MsgPtr->finalize();
