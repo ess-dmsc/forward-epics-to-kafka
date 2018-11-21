@@ -160,7 +160,7 @@ nlohmann::json Stream::getStatusJson() {
     auto const &Set = SeqDataEmitted.set;
     auto Last = Set.rbegin();
     if (Last != Set.rend()) {
-      Document["emitted_max"] = Last->b;
+      Document["emitted_max"] = Last->second;
     }
   }
   auto Converters = json::array();
