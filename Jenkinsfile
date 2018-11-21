@@ -191,7 +191,7 @@ def docker_formatting(image_key) {
            git config user.name 'cow-bot'
            git status -s
            git add -u
-           git commit -m \"AUTO CLANG FORMAT\"
+           git commit -m \"GO FORMAT YOURSELF\"
            """
         withCredentials([
                   usernamePassword(

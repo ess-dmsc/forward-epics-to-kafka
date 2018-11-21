@@ -23,10 +23,7 @@ ProducerTopic::~ProducerTopic() {
 ProducerTopic::ProducerTopic(std::shared_ptr<Producer> Producer,
                              std::string Name_)
     : Producer_(Producer), Name(Name_) {
-  TopicSettings TopicSettings;
   rd_kafka_topic_conf_t *topic_conf = rd_kafka_topic_conf_new();
-  TopicSettings.applySettingsToRdKafkaConf(topic_conf);
-
   RdKafkaTopic =
       rd_kafka_topic_new(Producer_->getRdKafkaPtr(), Name.c_str(), topic_conf);
   if (RdKafkaTopic == nullptr) {
@@ -48,14 +45,14 @@ ProducerTopic::ProducerTopic(ProducerTopic &&x) {
 }
 
 struct Msg_ : public Producer::Msg {
-  vector<uchar> v;
+  vector<unsigned char> v;
   void finalize() {
     data = v.data();
     size = v.size();
   }
 };
 
-int ProducerTopic::produce(uchar *MsgData, size_t MsgSize) {
+int ProducerTopic::produce(unsigned char *MsgData, size_t MsgSize) {
   auto MsgPtr = new Msg_;
   std::copy(MsgData, MsgData + MsgSize, std::back_inserter(MsgPtr->v));
   MsgPtr->finalize();
@@ -64,10 +61,6 @@ int ProducerTopic::produce(uchar *MsgData, size_t MsgSize) {
 }
 
 int ProducerTopic::produce(unique_ptr<Producer::Msg> &Msg) {
-  if (!RdKafkaTopic) {
-    // Should never happen
-    return RDKAFKATOPIC_NOT_INITIALIZED;
-  }
   int x;
   int32_t partition = RD_KAFKA_PARTITION_UA;
   void const *key = nullptr;

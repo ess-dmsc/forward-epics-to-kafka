@@ -1,5 +1,4 @@
 #include "KafkaW.h"
-#include "TopicSettings.h"
 #include <atomic>
 #include <cerrno>
 

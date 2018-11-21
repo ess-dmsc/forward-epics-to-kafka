@@ -230,7 +230,7 @@ void Forwarder::report_status() {
   } else {
     LOG(Sev::Debug, "status: {}", StatusString);
   }
-  status_producer_topic->produce((KafkaW::uchar *)StatusString.c_str(),
+  status_producer_topic->produce((unsigned char *)StatusString.c_str(),
                                  StatusString.size());
 }
 
