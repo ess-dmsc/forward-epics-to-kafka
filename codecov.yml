@@ -5,7 +5,7 @@ comment:
   layout: "header, diff, tree, changes, sunburst"
   require_changes: false
   
-  coverage:
+coverage:
   status:
     patch: off
     project: off
