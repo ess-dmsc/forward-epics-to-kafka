@@ -151,7 +151,7 @@ void Logger::dwlog_inner(int level, int color, char const *file, int line,
     Document["_FILE"] = file;
     Document["_LINE"] = line;
     auto DocumentString = Document.dump();
-    topic->produce((KafkaW::uchar *)DocumentString.c_str(),
+    topic->produce((unsigned char *)DocumentString.c_str(),
                    DocumentString.size());
   }
 #ifdef HAVE_GRAYLOG_LOGGER

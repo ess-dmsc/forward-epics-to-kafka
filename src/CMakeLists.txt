@@ -101,11 +101,8 @@ set(SOURCES
     KafkaW/BrokerSettings.cpp
     KafkaW/Consumer.cpp
     KafkaW/KafkaW.cpp
-    KafkaW/Msg.cpp
-    KafkaW/PollStatus.cpp
     KafkaW/Producer.cpp
     KafkaW/ProducerTopic.cpp
-    KafkaW/TopicSettings.cpp
     ConversionWorker.cpp
     Config.cpp
     FlatbufferMessage.cpp
