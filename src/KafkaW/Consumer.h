@@ -14,6 +14,11 @@ public:
   virtual ~ConsumerInterface() = default;
   virtual void addTopic(std::string Topic) = 0;
   virtual std::unique_ptr<Message> poll() = 0;
+  std::function<void(rd_kafka_topic_partition_list_t *plist)>
+      on_rebalance_assign;
+  std::function<void(rd_kafka_topic_partition_list_t *plist)>
+      on_rebalance_start;
+  rd_kafka_t *RdKafka = nullptr;
 };
 
 class Consumer : public ConsumerInterface {
@@ -25,11 +30,6 @@ public:
   void init();
   void addTopic(std::string Topic) override;
   std::unique_ptr<Message> poll() override;
-  std::function<void(rd_kafka_topic_partition_list_t *plist)>
-      on_rebalance_assign;
-  std::function<void(rd_kafka_topic_partition_list_t *plist)>
-      on_rebalance_start;
-  rd_kafka_t *RdKafka = nullptr;
 
 private:
   BrokerSettings ConsumerBrokerSettings;

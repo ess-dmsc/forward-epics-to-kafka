@@ -150,7 +150,7 @@ void Consumer::init() {
 
   rd_kafka_poll_set_consumer(RdKafka);
 
-  // Allocate some default size.  This is not a limit.
+  // Allocate some default size. This is not a limit.
   PartitionList = rd_kafka_topic_partition_list_new(16);
 }
 

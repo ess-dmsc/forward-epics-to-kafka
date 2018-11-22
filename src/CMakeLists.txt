@@ -118,7 +118,7 @@ set(SOURCES
     ${FMT_SRC}
     Timer.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/git_commit_current.cpp
-)
+        KafkaW/ConsumerFake.h KafkaW/ConsumerFake.cpp)
 
 set(tgt __objects)
 add_library(${tgt} OBJECT ${SOURCES} ${INCLUDES})
