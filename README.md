@@ -34,12 +34,11 @@ The forwarder can be also set up with a configuration file:
 with an `ini` file for command line options:
 
 ```ini
-broker = "//kafkabroker:9092"
-status-topic = "//kafkabroker:9092/the_status_topic"
-streams-json = ./streams.json
+broker="//kafkabroker:9092"
+status-topic="//kafkabroker:9092/the_status_topic"
+streams-json=./streams.json
 kafka-config=consumer.timeout.ms 501 fetch.message.max.bytes 1234 api.version.request true
 verbosity=5
-
 ```
 
 and/or a `json` file for the list of streams to add: 
