@@ -26,8 +26,7 @@ struct Listener_impl;
 
 class Listener {
 public:
-  Listener(KafkaW::BrokerSettings bopt, URI uri,
-           std::unique_ptr<KafkaW::ConsumerInterface> NewConsumer);
+  Listener(URI uri, std::unique_ptr<KafkaW::ConsumerInterface> NewConsumer);
   Listener(Listener const &) = delete;
   ~Listener();
   void poll(Callback &cb);

@@ -14,10 +14,8 @@ struct Listener_impl {
   int connected = 0;
 };
 
-Listener::Listener(KafkaW::BrokerSettings BrokerSettings, URI uri,
+Listener::Listener(URI uri,
                    std::unique_ptr<KafkaW::ConsumerInterface> NewConsumer) {
-  BrokerSettings.Address = uri.host_port;
-  BrokerSettings.PollTimeoutMS = 0;
   impl.reset(new Listener_impl);
   impl->consumer = std::move(NewConsumer);
   auto &consumer = *impl->consumer;

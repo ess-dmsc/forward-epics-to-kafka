@@ -11,7 +11,7 @@ TEST(ListenerTest, successfully_create_listener_and_poll) {
   auto FakeConsumer = make_unique<KafkaW::ConsumerFake>();
 
   Forwarder::URI uri;
-  Forwarder::Config::Listener listener(bopt, uri, std::move(FakeConsumer));
+  Forwarder::Config::Listener listener(uri, std::move(FakeConsumer));
   Forwarder::Forwarder *F;
   Forwarder::ConfigCB config_cb(*F);
   ASSERT_NO_THROW(listener.poll(config_cb));

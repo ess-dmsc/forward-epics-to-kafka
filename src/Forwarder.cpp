@@ -59,9 +59,11 @@ Forwarder::Forwarder(MainOpt &opt)
     KafkaW::BrokerSettings bopt;
     bopt.ConfigurationStrings["group.id"] =
         fmt::format("forwarder-command-listener--pid{}", getpid());
+    bopt.Address = main_opt.MainSettings.BrokerConfig.host_port;
+    bopt.PollTimeoutMS = 0;
     auto NewConsumer = make_unique<KafkaW::Consumer>(bopt);
     config_listener.reset(new Config::Listener{
-        bopt, main_opt.MainSettings.BrokerConfig, std::move(NewConsumer)});
+        main_opt.MainSettings.BrokerConfig, std::move(NewConsumer)});
   }
   createPVUpdateTimerIfRequired();
   createFakePVUpdateTimerIfRequired();
