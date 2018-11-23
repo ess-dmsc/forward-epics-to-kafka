@@ -3,9 +3,10 @@
 #include <iostream>
 namespace KafkaW {
 std::unique_ptr<KafkaW::Message> KafkaW::ConsumerFake::poll() {
-  const uint8_t *tu;
-  std::size_t n = 5;
-  auto Message = make_unique<KafkaW::Message>(tu, n, KafkaW::PollStatus::Msg);
+  const uint8_t Pointer[2] = {1, 2};
+  std::size_t Size = 5;
+  auto Message =
+      make_unique<KafkaW::Message>(Pointer, Size, KafkaW::PollStatus::Msg);
   return Message;
 }
 
