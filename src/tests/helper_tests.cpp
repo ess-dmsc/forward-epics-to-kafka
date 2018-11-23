@@ -94,8 +94,3 @@ TEST(HelperTest, split_adds_multiple_words_before_and_after_characters) {
   ASSERT_EQ(v, std::vector<std::string>(
                    {"some", "longer", "thing", "for", "testing"}));
 }
-
-TEST(Sleep, sleep_ms) {
-  sleep_ms(1);
-  // ;-)
-}
