@@ -1,6 +1,5 @@
 #pragma once
 
-#include "FlatbufferMessageSlice.h"
 #include "KafkaW/KafkaW.h"
 #include <flatbuffers/flatbuffers.h>
 #include <memory>
@@ -37,7 +36,7 @@ public:
   /// Called when actually writing to Kafka.
   ///
   /// \return The underlying data.
-  FlatbufferMessageSlice message();
+  std::pair<uint8_t *, size_t> message();
 
   std::unique_ptr<flatbuffers::FlatBufferBuilder> builder;
   FlatbufferMessage(FlatbufferMessage const &) = delete;

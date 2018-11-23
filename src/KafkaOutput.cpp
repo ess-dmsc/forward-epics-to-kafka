@@ -14,13 +14,13 @@ int KafkaOutput::emit(std::unique_ptr<FlatBufs::FlatbufferMessage> fb) {
     return -1024;
   }
   auto m1 = fb->message();
-  fb->data = m1.data;
-  fb->size = m1.size;
+  fb->data = m1.first;
+  fb->size = m1.second;
   std::unique_ptr<KafkaW::Producer::Msg> msg(fb.release());
   auto x = pt.produce(msg);
   if (x == 0) {
     ++g__total_msgs_to_kafka;
-    g__total_bytes_to_kafka += m1.size;
+    g__total_bytes_to_kafka += m1.second;
   }
   return x;
 }
