@@ -10,8 +10,6 @@
 
 namespace Forwarder {
 
-class Remote_T;
-
 namespace Config {
 
 using std::string;
@@ -30,11 +28,9 @@ public:
   Listener(Listener const &) = delete;
   ~Listener();
   void poll(Callback &cb);
-  void wait_for_connected(std::chrono::milliseconds timeout);
 
 private:
   std::unique_ptr<Listener_impl> impl;
-  friend class Remote_T;
 };
 } // namespace Config
 } // namespace Forwarder

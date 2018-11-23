@@ -40,11 +40,6 @@ void Listener::poll(Callback &cb) {
   }
 }
 
-void Listener::wait_for_connected(std::chrono::milliseconds timeout) {
-  std::unique_lock<std::mutex> lock(impl->mx);
-  impl->cv.wait_for(lock, timeout, [this] { return impl->connected == 1; });
-}
-
 Listener::~Listener() {}
 } // namespace Config
 } // namespace Forwarder
