@@ -15,8 +15,8 @@ public:
   virtual ~FlatBufferCreator() = default;
   virtual std::unique_ptr<FlatbufferMessage>
   create(EpicsPVUpdate const &up) = 0;
-  virtual void config(std::map<std::string, int> const &config_ints,
-                      std::map<std::string, std::string> const &config_strings);
+  virtual void
+  config(std::map<std::string, std::string> const &KafkaConfiguration);
   virtual std::map<std::string, double> getStats();
 };
 } // namespace FlatBufs

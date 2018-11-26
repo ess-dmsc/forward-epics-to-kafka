@@ -10,20 +10,17 @@
 
 namespace Forwarder {
 
-/// Holder for the Kafka brokers settings defined in the configuration file.
-struct KafkaBrokerSettings {
-  std::map<std::string, int> ConfigurationIntegers;
-  std::map<std::string, std::string> ConfigurationStrings;
-};
+/// Holder for the Kafka brokers settings defined in the command line options.
+struct KafkaBrokerSettings {};
 
-/// Holder for the converter settings defined in the configuration file.
+/// Holder for the converter settings defined in the streams configuration file.
 struct ConverterSettings {
   std::string Schema;
   std::string Topic;
   std::string Name;
 };
 
-/// Holder for the stream settings defined in the configuration file.
+/// Holder for the stream settings defined in the streams configuration file.
 struct StreamSettings {
   std::string Name;
   std::string EpicsProtocol;
@@ -38,9 +35,9 @@ struct ConfigSettings {
   size_t ConversionWorkerQueueSize{1024};
   int32_t MainPollInterval{500};
   URI StatusReportURI;
-  KafkaBrokerSettings BrokerSettings;
+  std::map<std::string, std::string> KafkaConfiguration;
   std::vector<StreamSettings> StreamsInfo;
-  std::map<std::string, KafkaBrokerSettings> GlobalConverters;
+  std::map<std::string, std::map<std::string, std::string>> GlobalConverters;
 };
 
 /// Class responsible for parsing the JSON configuration information.
