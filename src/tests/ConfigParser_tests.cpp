@@ -261,3 +261,55 @@ TEST(
   ASSERT_EQ("Kafka_topic_name", Converter1.Topic);
   ASSERT_EQ("Another_topic", Converter2.Topic);
 }
+
+TEST(ConfigParserTest, setBrokers_with_comma) {
+  Forwarder::ConfigSettings Settings;
+  Forwarder::ConfigParser::setBrokers("hello, world!", Settings);
+  Forwarder::URI first("//hello");
+  Forwarder::URI second("//world!");
+  ASSERT_EQ(first.host, Settings.Brokers.at(0).host);
+  ASSERT_EQ(second.host, Settings.Brokers.at(1).host);
+}
+
+TEST(HelperTest,
+     setBrokers_single_item) {
+  Forwarder::ConfigSettings Settings;
+  Forwarder::ConfigParser::setBrokers("abc", Settings);
+  Forwarder::URI first("//abc");
+  ASSERT_EQ(first.host, Settings.Brokers.at(0).host);
+  ASSERT_EQ(1, Settings.Brokers.size());
+}
+
+TEST(
+    HelperTest,
+    setBrokers_with_comma_before_brokers) {
+  Forwarder::ConfigParser Config("");
+  Forwarder::ConfigSettings Settings;
+  Config.setBrokers(",a,b", Settings);
+  ASSERT_EQ(Settings.Brokers, std::vector<std::string>({"a", "b"}));
+}
+
+//TEST(
+//    HelperTest,
+//    split_does_not_split_all_characters_and_returns_vector_of_words_between_split_character) {
+//  Forwarder::ConfigParser Config("");
+//  Forwarder::ConfigSettings Settings;
+//  Config.setBrokers("ac,dc,", Settings);
+//  ASSERT_EQ(Settings.Brokers, std::vector<std::string>({"ac", "dc"}));
+//}
+//
+//TEST(HelperTest,
+//     split_adds_no_blank_characters_with_character_before_and_after_string) {
+//  Forwarder::ConfigParser Config("");
+//  Forwarder::ConfigSettings Settings;
+//  Config.setBrokers(",ac,dc,", Settings);
+//  ASSERT_EQ(Settings.Brokers, std::vector<std::string>({"ac", "dc"}));
+//}
+//
+//TEST(HelperTest, split_adds_multiple_words_before_and_after_characters) {
+//  Forwarder::ConfigParser Config("");
+//  Forwarder::ConfigSettings Settings;
+//  Config.setBrokers(",some,longer,thing,for,testing", Settings);
+//  ASSERT_EQ(Settings.Brokers, std::vector<std::string>(
+//      {"some", "longer", "thing", "for", "testing"}));
+//}

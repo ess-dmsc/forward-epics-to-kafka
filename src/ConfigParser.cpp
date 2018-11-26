@@ -44,8 +44,21 @@ ConfigSettings ConfigParser::extractStreamInfo() {
 void ConfigParser::setBrokers(std::string const &Brokers,
                               ConfigSettings &Settings) {
   Settings.Brokers.clear();
-  auto a = split(Brokers, ",");
-  for (auto &x : a) {
+  std::vector<std::string> ret;
+  std::string::size_type i1 = 0;
+  while (true) {
+    auto i2 = Brokers.find(",", i1);
+    if (i2 == std::string::npos)
+      break;
+    if (i2 > i1) {
+      ret.push_back(Brokers.substr(i1, i2 - i1));
+    }
+    i1 = i2 + 1;
+  }
+  if (i1 != Brokers.size()) {
+    ret.push_back(Brokers.substr(i1));
+  }
+  for (auto &x : ret) {
     URI u1;
     u1.require_host_slashes = false;
     u1.parse(x);
