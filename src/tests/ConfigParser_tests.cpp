@@ -283,10 +283,12 @@ TEST(HelperTest,
 TEST(
     HelperTest,
     setBrokers_with_comma_before_brokers) {
-  Forwarder::ConfigParser Config("");
   Forwarder::ConfigSettings Settings;
-  Config.setBrokers(",a,b", Settings);
-  ASSERT_EQ(Settings.Brokers, std::vector<std::string>({"a", "b"}));
+  Forwarder::ConfigParser::setBrokers(",a,b", Settings);
+  Forwarder::URI first("//a");
+  Forwarder::URI second("//b");
+  ASSERT_EQ(first.host, Settings.Brokers.at(0).host);
+  ASSERT_EQ(second.host, Settings.Brokers.at(1).host);
 }
 
 //TEST(
