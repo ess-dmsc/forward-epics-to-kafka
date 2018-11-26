@@ -400,14 +400,14 @@ def get_system_tests_pipeline() {
                         """
                     }  // stage
                 }finally {
+		    stage("System tests: Cleanup") {
+                        sh """docker stop \$(docker ps -a -q) && docker rm \$(docker ps -a -q) || true
+                        """
+                    }  // stage
                     stage("System tests: Archive") {
                         junit "system-tests/SystemTestsOutput.xml"
                         archiveArtifacts "system-tests/logs/*.log"
                     }
-                    stage("System tests: Cleanup") {
-                        sh """docker stop \$(docker ps -a -q) && docker rm \$(docker ps -a -q) || true
-                        """
-                    }  // stage
                 }
             } // dir
         }  // node
