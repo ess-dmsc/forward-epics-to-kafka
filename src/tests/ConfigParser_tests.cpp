@@ -271,8 +271,7 @@ TEST(ConfigParserTest, setBrokers_with_comma) {
   ASSERT_EQ(second.host, Settings.Brokers.at(1).host);
 }
 
-TEST(HelperTest,
-     setBrokers_single_item) {
+TEST(HelperTest, setBrokers_single_item) {
   Forwarder::ConfigSettings Settings;
   Forwarder::ConfigParser::setBrokers("abc", Settings);
   Forwarder::URI first("//abc");
@@ -280,9 +279,7 @@ TEST(HelperTest,
   ASSERT_EQ(1, Settings.Brokers.size());
 }
 
-TEST(
-    HelperTest,
-    setBrokers_with_comma_before_brokers) {
+TEST(HelperTest, setBrokers_with_comma_before_brokers) {
   Forwarder::ConfigSettings Settings;
   Forwarder::ConfigParser::setBrokers(",a,b", Settings);
   Forwarder::URI first("//a");
@@ -291,16 +288,17 @@ TEST(
   ASSERT_EQ(second.host, Settings.Brokers.at(1).host);
 }
 
-//TEST(
+// TEST(
 //    HelperTest,
-//    split_does_not_split_all_characters_and_returns_vector_of_words_between_split_character) {
+//    split_does_not_split_all_characters_and_returns_vector_of_words_between_split_character)
+//    {
 //  Forwarder::ConfigParser Config("");
 //  Forwarder::ConfigSettings Settings;
 //  Config.setBrokers("ac,dc,", Settings);
 //  ASSERT_EQ(Settings.Brokers, std::vector<std::string>({"ac", "dc"}));
 //}
 //
-//TEST(HelperTest,
+// TEST(HelperTest,
 //     split_adds_no_blank_characters_with_character_before_and_after_string) {
 //  Forwarder::ConfigParser Config("");
 //  Forwarder::ConfigSettings Settings;
@@ -308,7 +306,7 @@ TEST(
 //  ASSERT_EQ(Settings.Brokers, std::vector<std::string>({"ac", "dc"}));
 //}
 //
-//TEST(HelperTest, split_adds_multiple_words_before_and_after_characters) {
+// TEST(HelperTest, split_adds_multiple_words_before_and_after_characters) {
 //  Forwarder::ConfigParser Config("");
 //  Forwarder::ConfigSettings Settings;
 //  Config.setBrokers(",some,longer,thing,for,testing", Settings);
