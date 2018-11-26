@@ -16,7 +16,41 @@ static std::atomic<int> g_kafka_consumer_instance_count;
 
 Consumer::Consumer(BrokerSettings BrokerSettings)
     : ConsumerBrokerSettings(std::move(BrokerSettings)) {
-  init();
+  // librdkafka API sometimes wants to write errors into a buffer:
+  int const ErrorStringSize = 512;
+  char ErrorStringBuffer[ErrorStringSize];
+
+  auto Configuration = rd_kafka_conf_new();
+  ConsumerBrokerSettings.apply(Configuration);
+
+  rd_kafka_conf_set_log_cb(Configuration, Consumer::logCallback);
+  rd_kafka_conf_set_error_cb(Configuration, Consumer::errorCallback);
+  rd_kafka_conf_set_stats_cb(Configuration, Consumer::statsCallback);
+  rd_kafka_conf_set_rebalance_cb(Configuration, Consumer::rebalanceCallback);
+  rd_kafka_conf_set_consume_cb(Configuration, nullptr);
+  rd_kafka_conf_set_opaque(Configuration, this);
+
+  RdKafka = rd_kafka_new(RD_KAFKA_CONSUMER, Configuration, ErrorStringBuffer,
+                         ErrorStringSize);
+  if (!RdKafka) {
+    LOG(Sev::Error, "can not create kafka handle: {}", ErrorStringBuffer);
+    throw std::runtime_error("can not create Kafka handle");
+  }
+
+  rd_kafka_set_log_level(RdKafka, 4);
+
+  LOG(Sev::Info, "New Kafka consumer {} with brokers: {}",
+      rd_kafka_name(RdKafka), ConsumerBrokerSettings.Address);
+  if (rd_kafka_brokers_add(RdKafka, ConsumerBrokerSettings.Address.c_str()) ==
+      0) {
+    LOG(Sev::Error, "could not add brokers");
+    throw std::runtime_error("could not add brokers");
+  }
+
+  rd_kafka_poll_set_consumer(RdKafka);
+
+  // Allocate some default size. This is not a limit.
+  PartitionList = rd_kafka_topic_partition_list_new(16);
   ID = g_kafka_consumer_instance_count++;
 }
 
@@ -114,44 +148,6 @@ void Consumer::rebalanceCallback(rd_kafka_t *RK, rd_kafka_resp_err_t ERR,
     }
     break;
   }
-}
-
-void Consumer::init() {
-  // librdkafka API sometimes wants to write errors into a buffer:
-  int const ErrorStringSize = 512;
-  char ErrorStringBuffer[ErrorStringSize];
-
-  auto Configuration = rd_kafka_conf_new();
-  ConsumerBrokerSettings.apply(Configuration);
-
-  rd_kafka_conf_set_log_cb(Configuration, Consumer::logCallback);
-  rd_kafka_conf_set_error_cb(Configuration, Consumer::errorCallback);
-  rd_kafka_conf_set_stats_cb(Configuration, Consumer::statsCallback);
-  rd_kafka_conf_set_rebalance_cb(Configuration, Consumer::rebalanceCallback);
-  rd_kafka_conf_set_consume_cb(Configuration, nullptr);
-  rd_kafka_conf_set_opaque(Configuration, this);
-
-  RdKafka = rd_kafka_new(RD_KAFKA_CONSUMER, Configuration, ErrorStringBuffer,
-                         ErrorStringSize);
-  if (!RdKafka) {
-    LOG(Sev::Error, "can not create kafka handle: {}", ErrorStringBuffer);
-    throw std::runtime_error("can not create Kafka handle");
-  }
-
-  rd_kafka_set_log_level(RdKafka, 4);
-
-  LOG(Sev::Info, "New Kafka consumer {} with brokers: {}",
-      rd_kafka_name(RdKafka), ConsumerBrokerSettings.Address);
-  if (rd_kafka_brokers_add(RdKafka, ConsumerBrokerSettings.Address.c_str()) ==
-      0) {
-    LOG(Sev::Error, "could not add brokers");
-    throw std::runtime_error("could not add brokers");
-  }
-
-  rd_kafka_poll_set_consumer(RdKafka);
-
-  // Allocate some default size. This is not a limit.
-  PartitionList = rd_kafka_topic_partition_list_new(16);
 }
 
 void Consumer::addTopic(std::string Topic) {

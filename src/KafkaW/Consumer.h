@@ -27,7 +27,6 @@ public:
   Consumer(Consumer &&) = delete;
   Consumer(Consumer const &) = delete;
   ~Consumer() override;
-  void init();
   void addTopic(std::string Topic) override;
   std::unique_ptr<Message> poll() override;
 
