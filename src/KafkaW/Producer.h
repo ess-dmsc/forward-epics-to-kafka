@@ -1,10 +1,10 @@
 #pragma once
 
 #include "BrokerSettings.h"
-#include "Message.h"
+#include "ConsumerMessage.h"
 #include <atomic>
 #include <functional>
-#include <librdkafka/rdkafka.h>
+#include <librdkafka/rdkafkacpp.h>
 
 namespace KafkaW {
 
@@ -40,7 +40,7 @@ public:
   virtual void poll() = 0;
 
   virtual uint64_t outputQueueLength() = 0;
-  virtual rd_kafka_t *getRdKafkaPtr() const = 0;
+  virtual rd_kafka_s *getRdKafkaPtr() const = 0;
 };
 
 class Producer : public ProducerInterface {
@@ -51,7 +51,7 @@ public:
   Producer(Producer const &) = delete;
   Producer(Producer &&x) noexcept;
   ~Producer() override;
-  void poll();
+  void poll() override;
   uint64_t outputQueueLength() override;
 
   /// The message delivered callback for Kafka.

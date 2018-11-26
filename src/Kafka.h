@@ -15,7 +15,6 @@
 
 #include "FlatbufferMessage.h"
 #include "KafkaW/KafkaW.h"
-#include <librdkafka/rdkafka.h>
 
 namespace Forwarder {
 

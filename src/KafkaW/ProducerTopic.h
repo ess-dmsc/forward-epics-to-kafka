@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Message.h"
+#include "ConsumerMessage.h"
 #include "Producer.h"
 #include "logger.h"
 #include <memory>
@@ -22,7 +22,7 @@ public:
   int produce(std::unique_ptr<Producer::Msg> &Msg);
   // Currently it's nice to have access to these for statistics:
   std::shared_ptr<Producer> Producer_;
-  rd_kafka_topic_t *RdKafkaTopic = nullptr;
+  RdKafka::Topic *RdKafkaTopic = nullptr;
   void enableCopy();
   std::string name() const;
 

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "BrokerSettings.h"
-#include "Message.h"
+#include "ConsumerMessage.h"
 #include <functional>
 #include <librdkafka/rdkafka.h>
 #include <memory>
@@ -13,7 +13,7 @@ public:
   ConsumerInterface() = default;
   virtual ~ConsumerInterface() = default;
   virtual void addTopic(std::string Topic) = 0;
-  virtual std::unique_ptr<Message> poll() = 0;
+  virtual std::unique_ptr<ConsumerMessage> poll() = 0;
 };
 
 class Consumer : public ConsumerInterface {
@@ -24,7 +24,7 @@ public:
   ~Consumer() override;
   void init();
   void addTopic(std::string Topic) override;
-  std::unique_ptr<Message> poll() override;
+  std::unique_ptr<ConsumerMessage> poll() override;
   std::function<void(rd_kafka_topic_partition_list_t *plist)>
       on_rebalance_assign;
   std::function<void(rd_kafka_topic_partition_list_t *plist)>

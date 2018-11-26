@@ -21,9 +21,6 @@ public:
 class Converter;
 class Stream;
 class Timer;
-namespace tests {
-class Remote_T;
-}
 
 namespace Config {
 class Listener;
@@ -64,8 +61,6 @@ private:
   void createPVUpdateTimerIfRequired();
   template <typename T>
   std::shared_ptr<Stream> findOrAddStream(ChannelInfo &ChannelInfo);
-  template <typename T>
-  std::shared_ptr<T> getStreamByChannelName(std::string const &ChannelName);
   MainOpt &main_opt;
   std::shared_ptr<InstanceSet> kafka_instance_set;
   std::unique_ptr<Config::Listener> config_listener;
@@ -78,7 +73,6 @@ private:
   std::vector<std::unique_ptr<ConversionWorker>> conversion_workers;
   ConversionScheduler conversion_scheduler;
   friend class ConfigCB;
-  friend class tests::Remote_T;
   friend class ConversionScheduler;
   std::atomic<ForwardingStatus> forwarding_status{ForwardingStatus::NORMAL};
   std::unique_ptr<CURLReporter> curl;

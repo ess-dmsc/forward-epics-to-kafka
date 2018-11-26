@@ -11,22 +11,11 @@ using std::string;
 using std::atomic;
 using std::move;
 
-ProducerTopic::~ProducerTopic() {
-  LOG(Sev::Debug, "~ProducerTopic {}", Name);
-  if (RdKafkaTopic) {
-    LOG(Sev::Debug, "rd_kafka_topic_destroy");
-    rd_kafka_topic_destroy(RdKafkaTopic);
-    RdKafkaTopic = nullptr;
-  }
-}
-
 ProducerTopic::ProducerTopic(std::shared_ptr<Producer> Producer,
                              std::string Name_)
     : Producer_(Producer), Name(Name_) {
-  rd_kafka_topic_conf_t *topic_conf = rd_kafka_topic_conf_new();
-  RdKafkaTopic =
-      rd_kafka_topic_new(Producer_->getRdKafkaPtr(), Name.c_str(), topic_conf);
-  if (RdKafkaTopic == nullptr) {
+  RdKafka::Topic::create(Producer_->getRdKafkaPtr(), Name,
+                         new RdKafka::Conf) if (RdKafkaTopic == nullptr) {
     // Seems like Kafka uses the system error code?
     auto errstr = rd_kafka_err2str(rd_kafka_last_error());
     LOG(Sev::Error, "could not create Kafka topic: {}", errstr);
@@ -61,49 +50,41 @@ int ProducerTopic::produce(unsigned char *MsgData, size_t MsgSize) {
 }
 
 int ProducerTopic::produce(unique_ptr<Producer::Msg> &Msg) {
-  int x;
-  int32_t partition = RD_KAFKA_PARTITION_UA;
+  int32_t partition = -1; // RD_KAFKA_PARTITION_UA
   void const *key = nullptr;
   size_t key_len = 0;
   int msgflags = 0; // 0, RD_KAFKA_MSG_F_COPY, RD_KAFKA_MSG_F_FREE
-  x = rd_kafka_produce(RdKafkaTopic, partition, msgflags, Msg->data, Msg->size,
-                       key, key_len, Msg.get());
 
-  auto &s = Producer_->Stats;
-  if (x != 0) {
-    auto err = rd_kafka_last_error();
-    bool print_err = true;
-    if (err == RD_KAFKA_RESP_ERR__QUEUE_FULL) {
-      ++s.local_queue_full;
-      if (print_err) {
-        LOG(Sev::Warning, "QUEUE_FULL  outq: {}",
-            rd_kafka_outq_len(Producer_->getRdKafkaPtr()));
-      }
-    } else if (err == RD_KAFKA_RESP_ERR_MSG_SIZE_TOO_LARGE) {
-      ++s.msg_too_large;
-      if (print_err) {
-        LOG(Sev::Error, "TOO_LARGE  size: {}", Msg->size);
-      }
-    } else {
-      ++s.produce_fail;
-      if (print_err) {
-        LOG(Sev::Debug, "produce topic {}  partition {}   error: {}  {}",
-            rd_kafka_topic_name(RdKafkaTopic), partition, x,
-            rd_kafka_err2str(err));
-      }
-    }
-  } else {
-    ++s.produced;
-    s.produced_bytes += (uint64_t)Msg->size;
+  auto &ProducerStats = Producer_->Stats;
+
+  switch (RdKafka::Producer::produce(RdKafkaTopic, partition, msgflags,
+                                     Msg->data, Msg->size, key, key_len,
+                                     Msg.get())) {
+  case RdKafka::ERR_NO_ERROR:
+    ++ProducerStats.produced;
+    ProducerStats.produced_bytes += (uint64_t)Msg->size;
     ++Producer_->TotalMessagesProduced;
-    if (log_level >= 8) {
-      LOG(Sev::Debug, "sent to topic {} partition {}",
-          rd_kafka_topic_name(RdKafkaTopic), partition);
-    }
     Msg.release();
-  }
+    return 0;
 
-  return x;
+  case RdKafka::ERR__QUEUE_FULL:
+    ++ProducerStats.local_queue_full;
+    LOG(Sev::Warning, "QUEUE_FULL  outq: {}",
+        Producer_->getRdKafkaPtr().outq_len());
+    break;
+
+  case RdKafka::ERR_MSG_SIZE_TOO_LARGE:
+    ++ProducerStats.msg_too_large;
+    LOG(Sev::Error, "TOO_LARGE  size: {}", Msg->size);
+    break;
+
+  default:
+    ++ProducerStats.produce_fail;
+    LOG(Sev::Debug, "produce topic {}  partition {}   error: {}",
+        RdKafkaTopic->name(), partition, rd_kafka_err2str(err));
+    break;
+  }
+  return 1;
 }
 
 void ProducerTopic::enableCopy() { DoCopyMsg = true; }

@@ -166,21 +166,21 @@ void Consumer::addTopic(std::string Topic) {
   }
 }
 
-std::unique_ptr<Message> Consumer::poll() {
+std::unique_ptr<ConsumerMessage> Consumer::poll() {
   auto PollMessage =
       rd_kafka_consumer_poll(RdKafka, ConsumerBrokerSettings.PollTimeoutMS);
 
   if (PollMessage == nullptr) {
-    return make_unique<Message>(PollStatus::Empty);
+    return make_unique<ConsumerMessage>(PollStatus::Empty);
   }
 
   static_assert(sizeof(char) == 1, "Failed: sizeof(char) == 1");
   if (PollMessage->err == RD_KAFKA_RESP_ERR_NO_ERROR) {
-    return make_unique<Message>((std::uint8_t *)PollMessage->payload,
+    return make_unique<ConsumerMessage>((std::uint8_t *)PollMessage->payload,
                                 PollMessage->len, PollStatus::Msg);
   } else if (PollMessage->err == RD_KAFKA_RESP_ERR__PARTITION_EOF) {
     // Just an advisory.  msg contains which partition it is.
-    return make_unique<Message>(PollStatus::EOP);
+    return make_unique<ConsumerMessage>(PollStatus::EOP);
   } else if (PollMessage->err == RD_KAFKA_RESP_ERR__ALL_BROKERS_DOWN) {
     LOG(Sev::Error, "RD_KAFKA_RESP_ERR__ALL_BROKERS_DOWN");
   } else if (PollMessage->err == RD_KAFKA_RESP_ERR__BAD_MSG) {
@@ -193,6 +193,6 @@ std::unique_ptr<Message> Consumer::poll() {
         rd_kafka_err2name(PollMessage->err),
         rd_kafka_err2str(PollMessage->err));
   }
-  return make_unique<Message>(PollStatus::Err);
+  return make_unique<ConsumerMessage>(PollStatus::Err);
 }
 } // namespace KafkaW

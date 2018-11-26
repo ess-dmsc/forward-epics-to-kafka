@@ -122,7 +122,10 @@ Producer::Producer(BrokerSettings ProducerBrokerSettings)
   std::vector<char> ERRSTR;
   ERRSTR.resize(512);
 
-  rd_kafka_conf_t *Config = nullptr;
+//  rd_kafka_conf_t *Config = nullptr;
+//  RdKafka::Conf Config;
+//  Config.set("", Producer::deliveredCallback);
+
   Config = rd_kafka_conf_new();
   rd_kafka_conf_set_dr_msg_cb(Config, Producer::deliveredCallback);
   rd_kafka_conf_set_error_cb(Config, Producer::errorCallback);

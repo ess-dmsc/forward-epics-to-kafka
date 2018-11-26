@@ -12,11 +12,11 @@ enum class PollStatus {
   Empty,
 };
 
-class Message {
+class ConsumerMessage {
 public:
-  Message(std::uint8_t const *Pointer, size_t Size, PollStatus Status)
+  ConsumerMessage(std::uint8_t const *Pointer, size_t Size, PollStatus Status)
       : DataPointer(Pointer), DataSize(Size), Status(Status) {}
-  explicit Message(PollStatus Status) : Status(Status) {}
+  explicit ConsumerMessage(PollStatus Status) : Status(Status) {}
   std::uint8_t const *getData() const { return DataPointer; };
   PollStatus getStatus() { return Status; }
   size_t getSize() { return DataSize; }
