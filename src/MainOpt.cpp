@@ -133,7 +133,7 @@ std::pair<int, std::unique_ptr<MainOpt>> parse_opt(int argc, char **argv) {
   App.add_option("--graylog-logger-address", opt.GraylogLoggerAddress,
                  "Address for Graylog logging");
   App.add_option("--influx-url", opt.InfluxURI, "Address for Influx logging");
-  App.add_option("-v,--verbose", log_level, "Syslog logging level", true)
+  App.add_option("-v,--verbosity", log_level, "Syslog logging level", true)
       ->check(CLI::Range(1, 7));
   addOption(App, "--config-topic", opt.MainSettings.BrokerConfig,
             "<//host[:port]/topic> Kafka host/topic to listen for commands on",
@@ -159,12 +159,8 @@ std::pair<int, std::unique_ptr<MainOpt>> parse_opt(int argc, char **argv) {
                  "Conversion worker queue size", true);
   App.add_option("--main-poll-interval", opt.MainSettings.MainPollInterval,
                  "Main Poll interval", true);
-  addKafkaOption(App, "-S",
-                 opt.MainSettings.BrokerSettings.ConfigurationStrings,
-                 "LibRDKafka option (String value)");
-  addKafkaOption(App, "-I",
-                 opt.MainSettings.BrokerSettings.ConfigurationIntegers,
-                 "LibRDKafka option (Integer value)");
+  addKafkaOption(App, "-S,--kafka-config", opt.MainSettings.KafkaConfiguration,
+                 "LibRDKafka options");
   App.set_config("-c,--config-file", "", "Read configuration from an ini file",
                  false);
 
