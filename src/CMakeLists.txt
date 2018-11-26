@@ -69,7 +69,7 @@ set(INCLUDES
     CURLReporter.h
     EpicsPVUpdate.h
     FlatbufferMessage.h
-        Forwarder.h
+    Forwarder.h
     FlatBufferCreator.h
     git_commit_current.h
     helper.h
