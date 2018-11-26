@@ -23,8 +23,7 @@ Converter::create(FlatBufs::SchemaRegistry const &schema_registry,
   auto It = main_opt.MainSettings.GlobalConverters.find(schema);
   if (It != main_opt.MainSettings.GlobalConverters.end()) {
     auto GlobalConv = main_opt.MainSettings.GlobalConverters.at(schema);
-    conv->config(GlobalConv.ConfigurationIntegers,
-                 GlobalConv.ConfigurationStrings);
+    conv->config(GlobalConv);
   }
 
   return ret;
