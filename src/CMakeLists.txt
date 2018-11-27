@@ -76,6 +76,14 @@ set(INCLUDES
     helper.h
     json.h
     Kafka.h
+    KafkaW/BrokerSettings.h
+    KafkaW/Consumer.h
+    KafkaW/ConsumerMessage.h
+    KafkaW/KafkaW.h
+    KafkaW/Producer.h
+    KafkaW/ProducerMessage.h
+    KafkaW/ProducerStats.h
+    KafkaW/ProducerTopic.h
     KafkaOutput.h
     logger.h
     MainOpt.h

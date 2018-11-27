@@ -2,6 +2,7 @@
 
 #include "ConsumerMessage.h"
 #include "Producer.h"
+#include "ProducerMessage.h"
 #include "logger.h"
 #include <memory>
 #include <string>
@@ -19,7 +20,7 @@ public:
   ProducerTopic(std::shared_ptr<Producer> Producer_, std::string Name_);
   ~ProducerTopic();
   int produce(unsigned char *MsgData, size_t MsgSize);
-  int produce(std::unique_ptr<Producer::Msg> &Msg);
+  int produce(std::unique_ptr<KafkaW::ProducerMsg> &Msg);
   // Currently it's nice to have access to these for statistics:
   std::shared_ptr<Producer> Producer_;
   RdKafka::Topic *RdKafkaTopic = nullptr;

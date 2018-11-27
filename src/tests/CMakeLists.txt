@@ -13,7 +13,7 @@ set(sources
     EpicsClientMonitor_tests.cpp
     EpicsClientRandom_tests.cpp
     Timer_tests.cpp
-        StreamTestUtils.cpp
+    StreamTestUtils.cpp
     $<TARGET_OBJECTS:__objects>
 )
 add_executable(${tgt} ${sources})

@@ -5,10 +5,6 @@ namespace KafkaW {
 
 static std::atomic<int> g_kafka_producer_instance_count;
 
-void ProducerMsg::deliveryOk() {}
-
-void ProducerMsg::deliveryError() {}
-
 void Producer::deliveredCallback(rd_kafka_t *RK,
                                  rd_kafka_message_t const *Message,
                                  void *Opaque) {

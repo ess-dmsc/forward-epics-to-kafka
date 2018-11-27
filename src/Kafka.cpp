@@ -27,7 +27,7 @@ InstanceSet::InstanceSet(KafkaW::BrokerSettings BrokerSettings)
 
 static void prod_delivery_ok(rd_kafka_message_t const *msg) {
   if (auto x = msg->_private) {
-    auto p = static_cast<KafkaW::Producer::Msg *>(x);
+    auto p = static_cast<KafkaW::ProducerMsg *>(x);
     p->deliveryOk();
     delete p;
   }
@@ -35,7 +35,7 @@ static void prod_delivery_ok(rd_kafka_message_t const *msg) {
 
 static void prod_delivery_failed(rd_kafka_message_t const *msg) {
   if (auto x = msg->_private) {
-    auto p = static_cast<KafkaW::Producer::Msg *>(x);
+    auto p = static_cast<KafkaW::ProducerMsg *>(x);
     p->deliveryError();
     delete p;
   }
