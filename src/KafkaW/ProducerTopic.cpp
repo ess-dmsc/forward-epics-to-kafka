@@ -50,14 +50,13 @@ int ProducerTopic::produce(unsigned char *MsgData, size_t MsgSize) {
 }
 
 int ProducerTopic::produce(unique_ptr<ProducerMsg> &Msg) {
-  int32_t partition = -1; // RD_KAFKA_PARTITION_UA
   void const *key = nullptr;
   size_t key_len = 0;
   int msgflags = 0; // 0, RD_KAFKA_MSG_F_COPY, RD_KAFKA_MSG_F_FREE
 
   auto &ProducerStats = Producer_->Stats;
 
-  switch (RdKafka::Producer::produce(RdKafkaTopic, partition, msgflags,
+  switch (RdKafka::Producer::produce(RdKafkaTopic, RdKafka::Topic::PARTITION_UA, msgflags,
                                      Msg->data, Msg->size, key, key_len,
                                      Msg.get())) {
   case RdKafka::ERR_NO_ERROR:
