@@ -14,16 +14,16 @@ using std::move;
 ProducerTopic::ProducerTopic(std::shared_ptr<Producer> Producer,
                              std::string Name_)
     : Producer_(Producer), Name(Name_) {
-  RdKafka::Topic::create(Producer_->getRdKafkaPtr(), Name,
-                         new RdKafka::Conf) if (RdKafkaTopic == nullptr) {
-    // Seems like Kafka uses the system error code?
-    auto errstr = rd_kafka_err2str(rd_kafka_last_error());
-    LOG(Sev::Error, "could not create Kafka topic: {}", errstr);
+
+  std::string ErrStr;
+  RdKafkaTopic = RdKafka::Topic::create(Producer_->getRdKafkaPtr(), Name,
+                                        new RdKafka::Conf, &ErrStr);
+  if (RdKafkaTopic == nullptr) {
+    LOG(Sev::Error, "could not create Kafka topic: {}", ErrStr);
     throw TopicCreationError();
   }
-  LOG(Sev::Debug, "ctor topic: {}  producer: {}",
-      rd_kafka_topic_name(RdKafkaTopic),
-      rd_kafka_name(Producer_->getRdKafkaPtr()));
+
+  LOG(Sev::Debug, "ctor topic: {}", RdKafkaTopic->name());
 }
 
 ProducerTopic::ProducerTopic(ProducerTopic &&x) {
@@ -33,7 +33,7 @@ ProducerTopic::ProducerTopic(ProducerTopic &&x) {
   std::swap(DoCopyMsg, x.DoCopyMsg);
 }
 
-struct Msg_ : public Producer::Msg {
+struct Msg_ : public ProducerMsg {
   vector<unsigned char> v;
   void finalize() {
     data = v.data();
@@ -45,11 +45,11 @@ int ProducerTopic::produce(unsigned char *MsgData, size_t MsgSize) {
   auto MsgPtr = new Msg_;
   std::copy(MsgData, MsgData + MsgSize, std::back_inserter(MsgPtr->v));
   MsgPtr->finalize();
-  unique_ptr<Producer::Msg> Msg(MsgPtr);
+  unique_ptr<ProducerMsg> Msg(MsgPtr);
   return produce(Msg);
 }
 
-int ProducerTopic::produce(unique_ptr<Producer::Msg> &Msg) {
+int ProducerTopic::produce(unique_ptr<ProducerMsg> &Msg) {
   int32_t partition = -1; // RD_KAFKA_PARTITION_UA
   void const *key = nullptr;
   size_t key_len = 0;
