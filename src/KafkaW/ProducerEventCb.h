@@ -1,10 +1,14 @@
 #pragma once
 #include "logger.h"
+#include <functional>
 #include <librdkafka/rdkafkacpp.h>
 
-class ProducerEventCb : public RdKafka : EventCb {
+namespace KafkaW {
+class ProducerInterface;
+
+class ProducerEventCb : public RdKafka::EventCb {
 public:
-  void event_cb(RdKafka::Event &event) {
+  void event_cb(RdKafka::Event &event) override {
     switch (event.type()) {
     case RdKafka::Event::EVENT_ERROR:
       LOG("Kafka EVENT_ERROR id: {}  broker: {}  errno: {}  errorname: {}  "
@@ -29,5 +33,8 @@ public:
           event.str());
       break;
     }
-  }
+  };
+
+private:
 };
+}
