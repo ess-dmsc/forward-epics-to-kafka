@@ -1,5 +1,6 @@
 #include "Producer.h"
 #include "logger.h"
+#include "ProducerEventCb.h"
 
 namespace KafkaW {
 
@@ -32,50 +33,6 @@ void Producer::deliveredCallback(rd_kafka_t *RK,
 
     ++Self->Stats.produce_cb;
   }
-}
-
-void Producer::errorCallback(rd_kafka_t *RK, int Err_i, char const *Message,
-                             void *Opaque) {
-  UNUSED_ARG(RK);
-  auto Self = reinterpret_cast<Producer *>(Opaque);
-  auto ERR = static_cast<rd_kafka_resp_err_t>(Err_i);
-  Sev Level = Sev::Warning;
-  if (ERR == RD_KAFKA_RESP_ERR__TRANSPORT) {
-    Level = Sev::Error;
-  } else {
-    if (Self->on_error)
-      Self->on_error(Self, ERR);
-  }
-  LOG(Level, "Kafka cb_error id: {}  broker: {}  errno: {}  errorname: {}  "
-             "errorstring: {}  message: {}",
-      Self->id, Self->ProducerBrokerSettings.Address, Err_i,
-      rd_kafka_err2name(ERR), rd_kafka_err2str(ERR), Message);
-}
-
-int Producer::statsCallback(rd_kafka_t *RK, char *Json, size_t Json_len,
-                            void *Opaque) {
-  auto Self = reinterpret_cast<Producer *>(Opaque);
-  LOG(Sev::Debug, "IID: {}  INFO cb_stats {} length {}   {:.{}}", Self->id,
-      rd_kafka_name(RK), Json_len, Json, Json_len);
-  // What does librdkafka want us to return from this callback?
-  return 0;
-}
-
-void Producer::logCallback(rd_kafka_t const *RK, int Level, char const *Fac,
-                           char const *Buf) {
-  UNUSED_ARG(Level);
-  auto self = reinterpret_cast<Producer *>(rd_kafka_opaque(RK));
-  LOG(Sev::Debug, "IID: {}  {}  fac: {}", self->id, Buf, Fac);
-}
-
-void Producer::throttleCallback(rd_kafka_t *RK, char const *Name,
-                                int32_t Broker_id, int Throttle_time_ms,
-                                void *Opaque) {
-  UNUSED_ARG(RK);
-  auto Self = reinterpret_cast<Producer *>(Opaque);
-  LOG(Sev::Debug, "IID: {}  INFO cb_throttle  broker_id: {}  broker_name: {}  "
-                  "throttle_time_ms: {}",
-      Self->id, Broker_id, Name, Throttle_time_ms);
 }
 
 Producer::~Producer() {
@@ -117,17 +74,14 @@ Producer::Producer(BrokerSettings ProducerBrokerSettings)
   // librdkafka API sometimes wants to write errors into a buffer:
   std::vector<char> ERRSTR;
   ERRSTR.resize(512);
+  std::string errstr;
 
-//  rd_kafka_conf_t *Config = nullptr;
-//  RdKafka::Conf Config;
-//  Config.set("", Producer::deliveredCallback);
+  ProducerEventCb eventCallback
 
-  Config = rd_kafka_conf_new();
-  rd_kafka_conf_set_dr_msg_cb(Config, Producer::deliveredCallback);
-  rd_kafka_conf_set_error_cb(Config, Producer::errorCallback);
-  rd_kafka_conf_set_stats_cb(Config, Producer::statsCallback);
-  rd_kafka_conf_set_log_cb(Config, Producer::logCallback);
-  rd_kafka_conf_set_throttle_cb(Config, Producer::throttleCallback);
+  RdKafka::Conf Config;
+  Config.set("dr_cb", &deliveredCallback, errstr);
+  Config.set("event_cb", &eventCallback, errstr);
+
 
   rd_kafka_conf_set_opaque(Config, this);
   LOG(Sev::Debug, "Producer opaque: {}", (void *)this);

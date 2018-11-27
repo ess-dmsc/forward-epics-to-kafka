@@ -6,6 +6,7 @@
 #include <atomic>
 #include <functional>
 #include <librdkafka/rdkafkacpp.h>
+#include <librdkafka/rdkafka.h>
 
 namespace KafkaW {
 
@@ -31,54 +32,6 @@ public:
   ~Producer() override;
   void poll() override;
   uint64_t outputQueueLength() override;
-
-  /// The message delivered callback for Kafka.
-  ///
-  /// \param RK The Kafka handle.
-  /// \param Message The message
-  /// \param Opaque The opaque object.
-  static void deliveredCallback(rd_kafka_t *RK,
-                                rd_kafka_message_t const *Message,
-                                void *Opaque);
-
-  /// The error callback for Kafka.
-  ///
-  /// \param RK The Kafka handle.
-  /// \param Err_i The error code.
-  /// \param Message The error string.
-  /// \param Opaque The opaque object.
-  static void errorCallback(rd_kafka_t *RK, int Err_i, char const *Message,
-                            void *Opaque);
-
-  /// The statistics callback for Kafka.
-  ///
-  /// \param RK The Kafka handle.
-  /// \param Json The statistics data in JSON format.
-  /// \param json_size The size of the JSON string.
-  /// \param Opaque The opaque.
-  /// \return The error code.
-  static int statsCallback(rd_kafka_t *RK, char *Json, size_t Json_len,
-                           void *Opaque);
-
-  /// The log callback for Kafka.
-  ///
-  /// \param RK The Kafka handle.
-  /// \param Level The log level.
-  /// \param Fac ?
-  /// \param Buf The message buffer.
-  static void logCallback(rd_kafka_t const *RK, int Level, char const *Fac,
-                          char const *Buf);
-
-  /// The throttle callback for Kafka.
-  ///
-  /// \param RK The Kafka handle.
-  /// \param Name The broker name.
-  /// \param Broker_id  The broker id.
-  /// \param Throttle_time_ms The throttle time in milliseconds.
-  /// \param Opaque The opaque.
-  static void throttleCallback(rd_kafka_t *RK, char const *Name,
-                               int32_t Broker_id, int Throttle_time_ms,
-                               void *Opaque);
   rd_kafka_t *getRdKafkaPtr() const override;
   std::function<void(rd_kafka_message_t const *msg)> on_delivery_ok;
   std::function<void(rd_kafka_message_t const *msg)> on_delivery_failed;

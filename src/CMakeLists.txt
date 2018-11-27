@@ -81,6 +81,7 @@ set(INCLUDES
     KafkaW/ConsumerMessage.h
     KafkaW/KafkaW.h
     KafkaW/Producer.h
+    KafkaW/ProducerEventCb.h
     KafkaW/ProducerMessage.h
     KafkaW/ProducerStats.h
     KafkaW/ProducerTopic.h
