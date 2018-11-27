@@ -31,6 +31,7 @@ public:
   std::unique_ptr<Message> poll() override;
 
 private:
+  std::shared_ptr<RdKafka::KafkaConsumer> KafkaConsumer;
   BrokerSettings ConsumerBrokerSettings;
 
   /// The log callback for Kafka.

@@ -19,17 +19,17 @@ Listener::Listener(URI uri,
   impl.reset(new Listener_impl);
   impl->consumer = std::move(NewConsumer);
   auto &consumer = *impl->consumer;
-  consumer.on_rebalance_assign =
-      [this](rd_kafka_topic_partition_list_t *plist) {
-        UNUSED_ARG(plist);
-        {
-          std::unique_lock<std::mutex> lock(impl->mx);
-          impl->connected = 1;
-        }
-        impl->cv.notify_all();
-      };
-  consumer.on_rebalance_assign = {};
-  consumer.on_rebalance_start = {};
+  //  consumer.on_rebalance_assign =
+  //      [this](rd_kafka_topic_partition_list_t *plist) {
+  //        UNUSED_ARG(plist);
+  //        {
+  //          std::unique_lock<std::mutex> lock(impl->mx);
+  //          impl->connected = 1;
+  //        }
+  //        impl->cv.notify_all();
+  //      };
+  //  consumer.on_rebalance_assign = {};
+  //  consumer.on_rebalance_start = {};
   consumer.addTopic(uri.topic);
 }
 
