@@ -18,8 +18,8 @@ public:
 
   virtual void poll() = 0;
 
-  virtual uint64_t outputQueueLength() = 0;
-  virtual rd_kafka_s *getRdKafkaPtr() const = 0;
+  virtual int outputQueueLength() = 0;
+  virtual RdKafka::Producer *getRdKafkaPtr() const = 0;
 };
 
 class Producer : public ProducerInterface {
@@ -32,15 +32,15 @@ public:
   void poll() override;
   int outputQueueLength() override;
   RdKafka::Producer *getRdKafkaPtr() const override;
-  std::function<void(rd_kafka_message_t const *msg)> on_delivery_ok;
-  std::function<void(rd_kafka_message_t const *msg)> on_delivery_failed;
+  std::function<void(RdKafka::Message const *msg)> on_delivery_ok;
+  std::function<void(RdKafka::Message const *msg)> on_delivery_failed;
   // Currently it's nice to have access to these two for statistics:
   BrokerSettings ProducerBrokerSettings;
-  RdKafka::Producer *RdKafkaPtr = nullptr;
   std::atomic<uint64_t> TotalMessagesProduced{0};
   ProducerStats Stats;
-
 private:
+
+  RdKafka::Producer *ProducerPtr = nullptr;
   int id = 0;
 };
 } // namespace KafkaW
