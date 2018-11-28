@@ -395,9 +395,11 @@ def get_system_tests_pipeline() {
                     stage("System tests: Run") {
                         sh """docker stop \$(docker ps -a -q) && docker rm \$(docker ps -a -q) || true
                                                 """
-                        sh """cd system-tests/
-                        scl enable rh-python35 -- python -m pytest -s  --junitxml=./SystemTestsOutput.xml ./
-                        """
+			timeout(time: 30, activity: true){     
+                            sh """cd system-tests/
+                            scl enable rh-python35 -- python -m pytest -s  --junitxml=./SystemTestsOutput.xml ./
+                            """
+			}
                     }  // stage
                 }finally {
 		    stage("System tests: Cleanup") {
