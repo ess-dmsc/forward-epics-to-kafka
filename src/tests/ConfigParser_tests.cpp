@@ -271,7 +271,7 @@ TEST(ConfigParserTest, setBrokers_with_comma) {
   ASSERT_EQ(second.host, Settings.Brokers.at(1).host);
 }
 
-TEST(HelperTest, setBrokers_single_item) {
+TEST(ConfigParserTest, setBrokers_single_item) {
   Forwarder::ConfigSettings Settings;
   Forwarder::ConfigParser::setBrokers("abc", Settings);
   Forwarder::URI first("//abc");
@@ -279,7 +279,7 @@ TEST(HelperTest, setBrokers_single_item) {
   ASSERT_EQ(1, Settings.Brokers.size());
 }
 
-TEST(HelperTest, setBrokers_with_comma_before_brokers) {
+TEST(ConfigParserTest, setBrokers_with_comma_before_brokers) {
   Forwarder::ConfigSettings Settings;
   Forwarder::ConfigParser::setBrokers(",a,b", Settings);
   Forwarder::URI first("//a");
@@ -288,28 +288,42 @@ TEST(HelperTest, setBrokers_with_comma_before_brokers) {
   ASSERT_EQ(second.host, Settings.Brokers.at(1).host);
 }
 
-// TEST(
-//    HelperTest,
-//    split_does_not_split_all_characters_and_returns_vector_of_words_between_split_character)
-//    {
-//  Forwarder::ConfigParser Config("");
-//  Forwarder::ConfigSettings Settings;
-//  Config.setBrokers("ac,dc,", Settings);
-//  ASSERT_EQ(Settings.Brokers, std::vector<std::string>({"ac", "dc"}));
-//}
-//
-// TEST(HelperTest,
-//     split_adds_no_blank_characters_with_character_before_and_after_string) {
-//  Forwarder::ConfigParser Config("");
-//  Forwarder::ConfigSettings Settings;
-//  Config.setBrokers(",ac,dc,", Settings);
-//  ASSERT_EQ(Settings.Brokers, std::vector<std::string>({"ac", "dc"}));
-//}
-//
-// TEST(HelperTest, split_adds_multiple_words_before_and_after_characters) {
-//  Forwarder::ConfigParser Config("");
-//  Forwarder::ConfigSettings Settings;
-//  Config.setBrokers(",some,longer,thing,for,testing", Settings);
-//  ASSERT_EQ(Settings.Brokers, std::vector<std::string>(
-//      {"some", "longer", "thing", "for", "testing"}));
-//}
+TEST(
+    ConfigParserTest,
+    setBrokers_does_not_split_all_characters_and_returns_vector_of_words_between_split_character) {
+  Forwarder::ConfigSettings Settings;
+  Forwarder::ConfigParser::setBrokers("ac,dc,", Settings);
+  Forwarder::URI first("//ac");
+  Forwarder::URI second("//dc");
+  ASSERT_EQ(first.host, Settings.Brokers.at(0).host);
+  ASSERT_EQ(second.host, Settings.Brokers.at(1).host);
+}
+
+TEST(
+    ConfigParserTest,
+    setBrokers_adds_no_blank_characters_with_character_before_and_after_string) {
+  Forwarder::ConfigSettings Settings;
+  Forwarder::ConfigParser::setBrokers(",ac,dc,", Settings);
+  Forwarder::URI first("//ac");
+  Forwarder::URI second("//dc");
+  ASSERT_EQ(first.host, Settings.Brokers.at(0).host);
+  ASSERT_EQ(second.host, Settings.Brokers.at(1).host);
+}
+
+TEST(ConfigParserTest,
+     setBrokers_adds_multiple_words_before_and_after_characters) {
+  Forwarder::ConfigSettings Settings;
+  Forwarder::ConfigParser::setBrokers(",some,longer,thing,for,testing",
+                                      Settings);
+  Forwarder::URI first("//some");
+  Forwarder::URI second("//longer");
+  Forwarder::URI third("//thing");
+  Forwarder::URI fourth("//for");
+  Forwarder::URI fifth("//testing");
+  ASSERT_EQ(5, Settings.Brokers.size());
+  ASSERT_EQ(first.host, Settings.Brokers.at(0).host);
+  ASSERT_EQ(second.host, Settings.Brokers.at(1).host);
+  ASSERT_EQ(third.host, Settings.Brokers.at(2).host);
+  ASSERT_EQ(fourth.host, Settings.Brokers.at(3).host);
+  ASSERT_EQ(fifth.host, Settings.Brokers.at(4).host);
+}
