@@ -1,11 +1,6 @@
 #include "BrokerSettings.h"
 #include "logger.h"
-#ifdef _MSC_VER
-#include "process.h"
-#define getpid _getpid
-#else
-#include <unistd.h>
-#endif
+
 namespace KafkaW {
 std::unique_ptr<RdKafka::Conf> BrokerSettings::apply() {
   std::string ErrorString;

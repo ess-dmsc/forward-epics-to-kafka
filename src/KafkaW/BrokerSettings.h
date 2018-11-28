@@ -4,6 +4,12 @@
 #include <map>
 #include <memory>
 #include <string>
+#ifdef _MSC_VER
+#include "process.h"
+#define getpid _getpid
+#else
+#include <unistd.h>
+#endif
 
 namespace KafkaW {
 
