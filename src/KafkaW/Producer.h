@@ -19,8 +19,8 @@ public:
   virtual int outputQueueLength() = 0;
   virtual RdKafka::Producer *getRdKafkaPtr() const = 0;
   ProducerStats Stats;
-  std::function<void(RdKafka::Message const *msg)> on_delivery_ok = nullptr;
-  std::function<void(RdKafka::Message const *msg)> on_delivery_failed = nullptr;
+  std::function<void(RdKafka::Message *msg)> on_delivery_ok;
+  std::function<void(RdKafka::Message *msg)> on_delivery_failed;
 };
 
 class Producer : public ProducerInterface {
