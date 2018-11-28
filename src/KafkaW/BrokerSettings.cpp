@@ -1,7 +1,6 @@
 #include "BrokerSettings.h"
 #include "logger.h"
 #ifdef _MSC_VER
-#include <unistd.h>
 #include "process.h"
 #define getpid _getpid
 #else
