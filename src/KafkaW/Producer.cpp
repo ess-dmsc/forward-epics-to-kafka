@@ -6,32 +6,12 @@
 namespace KafkaW {
 
 static std::atomic<int> g_kafka_producer_instance_count;
-
+//
 // void Producer::deliveredCallback(rd_kafka_t *RK,
 //                                 rd_kafka_message_t const *Message,
 //                                 void *Opaque) {
 //  auto Self = reinterpret_cast<Producer *>(Opaque);
-//  if (!Message) {
-//    LOG(Sev::Error, "IID: {}  ERROR msg should never be null", Self->id);
-//    ++Self->Stats.produce_cb_fail;
-//    return;
-//  }
-//  if (Message->err) {
-//    LOG(Sev::Error, "IID: {}  ERROR on delivery, {}, topic {}, {} [{}] {}",
-//        Self->id, rd_kafka_name(RK), rd_kafka_topic_name(Message->rkt),
-//        rd_kafka_err2name(Message->err), Message->err,
-//        rd_kafka_err2str(Message->err));
-//    if (auto &Callback = Self->on_delivery_failed) {
-//      Callback(Message);
-//    }
-//    ++Self->Stats.produce_cb_fail;
-//  } else {
-//    if (auto &Callback = Self->on_delivery_ok) {
-//      Callback(Message);
-//    }
 //
-//    ++Self->Stats.produce_cb;
-//  }
 //}
 
 Producer::~Producer() {
@@ -73,8 +53,11 @@ Producer::Producer(BrokerSettings ProducerBrokerSettings)
   std::string errstr;
 
   RdKafka::Conf Config;
-  Config.set("dr_cb", &new ProducerDeliveryCb, errstr);
-  Config.set("event_cb", &new ProducerEventCb, errstr);
+  ProducerDeliveryCb DeliveryCallback(
+      std::make_shared<ProducerInterface>(this));
+  ProducerEventCb EventCallback;
+  Config.set("dr_cb", DeliveryCallback, errstr);
+  Config.set("event_cb", EventCallback, errstr);
   Config.set("metadata.broker.list", ProducerBrokerSettings.Address, errstr)
 
       rd_kafka_conf_set_opaque(Config, this);

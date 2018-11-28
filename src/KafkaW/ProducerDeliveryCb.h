@@ -1,22 +1,33 @@
+#include <utility>
+
 #pragma once
+#include "logger.h"
 #include <librdkafka/rdkafkacpp.h>
+
+namespace KafkaW {
 
 class ProducerDeliveryCb : public RdKafka::DeliveryReportCb {
 public:
-  ProducerDeliveryCb(std::function<> onDeliveryOk, std::function<> onDeliveryFailed)
-  ProducerDeliveryCb() = default;
-  void dr_cb(RdKafka::Message &message) override {
-    switch (message.status()) {
-    case RdKafka::Message::MSG_STATUS_NOT_PERSISTED:
-      // failed
-      break;
-    case RdKafka::Message::MSG_STATUS_POSSIBLY_PERSISTED:
-      break;
-    case RdKafka::Message::MSG_STATUS_PERSISTED:
-      // passed
-      break;
-    default:
-      break;
+  explicit ProducerDeliveryCb(std::shared_ptr<ProducerInterface> Producer)
+      : Prod(std::move(Producer)){};
+  void dr_cb(RdKafka::Message &Message) override {
+    if (Message.err()) {
+      LOG(Sev::Error, "ERROR on delivery, {}, topic {}, {} [{}] {}",
+          Prod->getRdKafkaPtr()->name(), Message.topic_name(), Message.err(),
+          Message.errstr(), RdKafka::err2str(Message.err()));
+      if (Prod->on_delivery_failed) {
+        Prod->on_delivery_failed(&Message);
+      }
+      ++Prod->Stats.produce_cb_fail;
+    } else {
+      if (Prod->on_delivery_ok) {
+        Prod->on_delivery_ok(&Message);
+      }
+      ++Prod->Stats.produce_cb;
     }
   }
+
+private:
+  std::shared_ptr<ProducerInterface> Prod;
 };
+}

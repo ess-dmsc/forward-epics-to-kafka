@@ -25,15 +25,15 @@ void InstanceSet::clear() {
 InstanceSet::InstanceSet(KafkaW::BrokerSettings BrokerSettings)
     : BrokerSettings(BrokerSettings) {}
 
-static void prod_delivery_ok(RdKafka::Message const *msg) {
-  if (auto x = msg->c_ptr() _private) {
+static void prod_delivery_ok(RdKafka::Message *msg) {
+  if (auto x = msg->c_ptr()->_private) {
     auto p = static_cast<KafkaW::ProducerMsg *>(x);
     p->deliveryOk();
     delete p;
   }
 }
 
-static void prod_delivery_failed(RdKafka::Message const *msg) {
+static void prod_delivery_failed(RdKafka::Message *msg) {
   if (auto x = msg->c_ptr()->_private) {
     auto p = static_cast<KafkaW::ProducerMsg *>(x);
     p->deliveryError();
