@@ -9,21 +9,22 @@ namespace KafkaW {
 
 static std::atomic<int> g_kafka_consumer_instance_count;
 
-#define KERR(RK, ERR)                                                          \
-  if (ERR != 0) {                                                              \
-    LOG(Sev::Error, "Kafka {}  error: {}, {}, {}", rd_kafka_name(RK), ERR,     \
-        rd_kafka_err2name((rd_kafka_resp_err_t)ERR),                           \
-        rd_kafka_err2str((rd_kafka_resp_err_t)ERR));                           \
-  }
-
 Consumer::Consumer(BrokerSettings BrokerSettings)
     : ConsumerBrokerSettings(std::move(BrokerSettings)) {
   // C++______________________
+  // CREATE
   std::string ErrStr;
   this->KafkaConsumer =
       std::shared_ptr<RdKafka::KafkaConsumer>(RdKafka::KafkaConsumer::create(
           ConsumerBrokerSettings.apply().get(), ErrStr));
   std::cout << this->KafkaConsumer->name();
+
+  // GET METADATA
+  RdKafka::Metadata *metadataRawPtr(nullptr);
+  KafkaConsumer->metadata(true, nullptr, &metadataRawPtr, 1000);
+  std::unique_ptr<RdKafka::Metadata> metadata(metadataRawPtr);
+  this->PartitionList = std::move(metadata);
+
   //_________________________
 
   //  librdkafka API sometimes wants to write errors into a buffer:
@@ -67,15 +68,9 @@ Consumer::Consumer(BrokerSettings BrokerSettings)
 Consumer::~Consumer() {
   LOG(Sev::Debug, "~Consumer()");
   if (RdKafka) {
-    LOG(Sev::Debug, "rd_kafka_consumer_close");
-    rd_kafka_consumer_close(RdKafka);
-    LOG(Sev::Debug, "rd_kafka_destroy");
-    rd_kafka_destroy(RdKafka);
-    RdKafka = nullptr;
-  }
-  if (PartitionList) {
-    rd_kafka_topic_partition_list_destroy(PartitionList);
-    PartitionList = nullptr;
+    LOG(Sev::Debug, "Close the consumer");
+    this->KafkaConsumer->close();
+    RdKafka::wait_destroyed(5000);
   }
 }
 
@@ -160,17 +155,15 @@ void Consumer::rebalanceCallback(rd_kafka_t *RK, rd_kafka_resp_err_t ERR,
   }
 }
 
+//// C++READY
 void Consumer::addTopic(std::string Topic) {
   LOG(Sev::Info, "Consumer::add_topic  {}", Topic);
-  //  int Partition = RD_KAFKA_PARTITION_UA;
-  //  rd_kafka_topic_partition_list_add(PartitionList, Topic.c_str(),
-  //  Partition);
-  //  int ERR = rd_kafka_subscribe(RdKafka, PartitionList);
-  //  KERR(RdKafka, ERR);
-  //  if (ERR) {
-  //    LOG(Sev::Error, "could not subscribe");
-  //    throw std::runtime_error("can not subscribe");
-  //  }
+  SubscribedTopics.push_back(Topic);
+  RdKafka::ErrorCode ERR = KafkaConsumer->subscribe(SubscribedTopics);
+  if (ERR != 0) {
+    LOG(Sev::Error, "could not subscribe");
+    throw std::runtime_error("can not subscribe");
+  }
 }
 
 std::unique_ptr<Message> Consumer::poll() {

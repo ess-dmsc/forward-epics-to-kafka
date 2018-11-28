@@ -5,6 +5,7 @@
 #include <functional>
 #include <librdkafka/rdkafka.h>
 #include <memory>
+#include <vector>
 
 namespace KafkaW {
 
@@ -71,7 +72,8 @@ private:
   static void rebalanceCallback(rd_kafka_t *RK, rd_kafka_resp_err_t ERR,
                                 rd_kafka_topic_partition_list_t *PartitionList,
                                 void *Opaque);
-  rd_kafka_topic_partition_list_t *PartitionList = nullptr;
+  std::unique_ptr<RdKafka::Metadata> PartitionList = nullptr;
+  std::vector<std::string> SubscribedTopics;
   int ID = 0;
 };
 } // namespace KafkaW
