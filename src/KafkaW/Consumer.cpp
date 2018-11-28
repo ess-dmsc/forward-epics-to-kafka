@@ -161,12 +161,33 @@ void Consumer::addTopic(std::string Topic) {
   SubscribedTopics.push_back(Topic);
   RdKafka::ErrorCode ERR = KafkaConsumer->subscribe(SubscribedTopics);
   if (ERR != 0) {
-    LOG(Sev::Error, "could not subscribe");
-    throw std::runtime_error("can not subscribe");
+    LOG(Sev::Error, "could not subscribe to {}", Topic);
+    throw std::runtime_error(fmt::format("could not subscribe to {}", Topic));
   }
 }
 
+//// C++READY
 std::unique_ptr<Message> Consumer::poll() {
+  //// C++___________________
+  auto KafkaMsg =
+      std::unique_ptr<RdKafka::Message>(KafkaConsumer->consume(1000));
+  switch (KafkaMsg->err()) {
+  case RdKafka::ERR_NO_ERROR:
+    // Real message
+    if (KafkaMsg->len() > 0) {
+      return make_unique<Message>((std::uint8_t *)KafkaMsg->payload(),
+                                  KafkaMsg->len(), PollStatus::Msg);
+    } else {
+      return make_unique<Message>(PollStatus::Empty);
+    }
+  case RdKafka::ERR__PARTITION_EOF:
+    return make_unique<Message>(PollStatus::EOP);
+  default:
+    /* All other errors */
+    return make_unique<Message>(PollStatus::Err);
+  }
+  //// ______________________
+
   //  auto PollMessage =
   //      rd_kafka_consumer_poll(RdKafka, ConsumerBrokerSettings.PollTimeoutMS);
   //
@@ -193,6 +214,6 @@ std::unique_ptr<Message> Consumer::poll() {
   //        rd_kafka_err2name(PollMessage->err),
   //        rd_kafka_err2str(PollMessage->err));
   //  }
-  return make_unique<Message>(PollStatus::Err);
+  //  return make_unique<Message>(PollStatus::Err);
 }
 } // namespace KafkaW
