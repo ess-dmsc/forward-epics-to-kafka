@@ -3,7 +3,6 @@
 #include <atomic>
 #include <helper.h>
 #include <iostream>
-#include <unistd.h>
 
 namespace KafkaW {
 
