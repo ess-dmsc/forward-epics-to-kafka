@@ -177,7 +177,7 @@ std::unique_ptr<ConsumerMessage> Consumer::poll() {
   static_assert(sizeof(char) == 1, "Failed: sizeof(char) == 1");
   if (PollMessage->err == RD_KAFKA_RESP_ERR_NO_ERROR) {
     return make_unique<ConsumerMessage>((std::uint8_t *)PollMessage->payload,
-                                PollMessage->len, PollStatus::Msg);
+                                        PollMessage->len, PollStatus::Msg);
   } else if (PollMessage->err == RD_KAFKA_RESP_ERR__PARTITION_EOF) {
     // Just an advisory.  msg contains which partition it is.
     return make_unique<ConsumerMessage>(PollStatus::EOP);
