@@ -11,12 +11,7 @@
 #include <EpicsClient/EpicsClientRandom.h>
 #include <nlohmann/json.hpp>
 #include <sys/types.h>
-#ifdef _MSC_VER
-#include "process.h"
-#define getpid _getpid
-#else
-#include <unistd.h>
-#endif
+
 #include "CURLReporter.h"
 
 namespace Forwarder {
