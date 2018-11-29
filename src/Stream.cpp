@@ -22,7 +22,7 @@ ConversionPath::~ConversionPath() {
     if (x == 0)
       break;
     LOG(Sev::Debug, "~ConversionPath  still has transit {}", transit);
-    sleep_ms(1000);
+    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
   }
 }
 
