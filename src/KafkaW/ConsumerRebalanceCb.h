@@ -8,7 +8,7 @@ public:
                     std::vector<RdKafka::TopicPartition *> &partitions) {
     std::cout << consumer->name() << err << partitions.size();
     // TODO: Matt said rebalancing won't be used and method can just throw an
-    // error?
+    // error? Clean up
     throw std::runtime_error("rebalance cannot be done");
 
     //        auto self = static_cast<RdKafka::Consumer *>(Opaque);

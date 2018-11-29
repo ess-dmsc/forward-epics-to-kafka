@@ -12,7 +12,7 @@ Consumer::Consumer(BrokerSettings BrokerSettings)
   // create conf
   auto conf = RdKafka::Conf::create(RdKafka::Conf::CONF_GLOBAL);
   // set callbacks
-  /// 'consume callback' was set to nullptr so I ommited it.
+  // 'consume callback' was set to nullptr so I omitted it.
   conf->set("event_cb", &EventCallback, ErrStr);
   conf->set("rebalance_cb", &RebalanceCallback, ErrStr);
 
@@ -58,7 +58,6 @@ std::unique_ptr<Message> Consumer::poll() {
       std::unique_ptr<RdKafka::Message>(KafkaConsumer->consume(1000));
   switch (KafkaMsg->err()) {
   case RdKafka::ERR_NO_ERROR:
-    // Real message
     if (KafkaMsg->len() > 0) {
       return make_unique<Message>((std::uint8_t *)KafkaMsg->payload(),
                                   KafkaMsg->len(), PollStatus::Msg);
@@ -68,7 +67,6 @@ std::unique_ptr<Message> Consumer::poll() {
   case RdKafka::ERR__PARTITION_EOF:
     return make_unique<Message>(PollStatus::EOP);
   default:
-    /* All other errors */
     return make_unique<Message>(PollStatus::Err);
   }
 }
