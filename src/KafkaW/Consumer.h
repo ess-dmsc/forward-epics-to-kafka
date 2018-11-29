@@ -17,11 +17,6 @@ public:
   virtual ~ConsumerInterface() = default;
   virtual void addTopic(std::string Topic) = 0;
   virtual std::unique_ptr<Message> poll() = 0;
-  std::function<void(rd_kafka_topic_partition_list_t *plist)>
-      on_rebalance_assign;
-  std::function<void(rd_kafka_topic_partition_list_t *plist)>
-      on_rebalance_start;
-  rd_kafka_t *RdKafka = nullptr;
 };
 
 class Consumer : public ConsumerInterface {
@@ -36,11 +31,8 @@ public:
 private:
   std::shared_ptr<RdKafka::KafkaConsumer> KafkaConsumer;
   BrokerSettings ConsumerBrokerSettings;
-
-  std::unique_ptr<RdKafka::Metadata> PartitionList = nullptr;
   std::vector<std::string> SubscribedTopics;
   ConsumerEventCb EventCallback;
   ConsumerRebalanceCb RebalanceCallback;
-  int ID = 0;
 };
 } // namespace KafkaW

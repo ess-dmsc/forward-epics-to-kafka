@@ -36,7 +36,5 @@ public:
       break;
     }
   };
-
-private:
 };
 }

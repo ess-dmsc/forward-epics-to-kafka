@@ -3,19 +3,12 @@
 #include <librdkafka/rdkafkacpp.h>
 
 class ConsumerRebalanceCb : public RdKafka::RebalanceCb {
-private:
-  static void
-  part_list_print(const std::vector<RdKafka::TopicPartition *> &partitions) {
-    for (unsigned int i = 0; i < partitions.size(); i++)
-      std::cerr << partitions[i]->topic() << "[" << partitions[i]->partition()
-                << "], ";
-    std::cerr << "\n";
-  }
-
 public:
   void rebalance_cb(RdKafka::KafkaConsumer *consumer, RdKafka::ErrorCode err,
                     std::vector<RdKafka::TopicPartition *> &partitions) {
     std::cout << consumer->name() << err << partitions.size();
+    // TODO: Matt said rebalancing won't be used and method can just throw an
+    // error?
     throw std::runtime_error("rebalance cannot be done");
 
     //        auto self = static_cast<RdKafka::Consumer *>(Opaque);

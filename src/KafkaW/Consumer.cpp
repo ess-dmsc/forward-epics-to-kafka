@@ -5,17 +5,14 @@
 #include <iostream>
 
 namespace KafkaW {
-
-static std::atomic<int> g_kafka_consumer_instance_count;
-
+//// C++READY
 Consumer::Consumer(BrokerSettings BrokerSettings)
     : ConsumerBrokerSettings(std::move(BrokerSettings)) {
-  // C++______________________
-  // CREATE
   std::string ErrStr;
   // create conf
   auto conf = RdKafka::Conf::create(RdKafka::Conf::CONF_GLOBAL);
   // set callbacks
+  /// 'consume callback' was set to nullptr so I ommited it.
   conf->set("event_cb", &EventCallback, ErrStr);
   conf->set("rebalance_cb", &RebalanceCallback, ErrStr);
 
@@ -30,21 +27,12 @@ Consumer::Consumer(BrokerSettings BrokerSettings)
     LOG(Sev::Error, "can not create kafka consumer: {}", ErrStr);
     throw std::runtime_error("can not create Kafka consumer");
   }
-  // get metadata
-  RdKafka::Metadata *metadataRawPtr(nullptr);
-  KafkaConsumer->metadata(true, nullptr, &metadataRawPtr, 1000);
-  std::unique_ptr<RdKafka::Metadata> metadata(metadataRawPtr);
-  this->PartitionList = std::move(metadata);
-
-  //_________________________
-
-  ID = g_kafka_consumer_instance_count++;
 }
 
 //// C++READY
 Consumer::~Consumer() {
   LOG(Sev::Debug, "~Consumer()");
-  if (RdKafka) {
+  if (KafkaConsumer) {
     LOG(Sev::Debug, "Close the consumer");
     this->KafkaConsumer->close();
     RdKafka::wait_destroyed(5000);
@@ -56,7 +44,7 @@ void Consumer::addTopic(std::string Topic) {
   LOG(Sev::Info, "Consumer::add_topic  {}", Topic);
   SubscribedTopics.push_back(Topic);
 
-  // use assign and assign() to topics like in kafkacow
+  // TODO: use ->assign() instead of ->subscribe like in kafkacow
   RdKafka::ErrorCode ERR = KafkaConsumer->subscribe(SubscribedTopics);
   if (ERR != 0) {
     LOG(Sev::Error, "could not subscribe to {}", Topic);
@@ -66,7 +54,6 @@ void Consumer::addTopic(std::string Topic) {
 
 //// C++READY
 std::unique_ptr<Message> Consumer::poll() {
-  //// C++___________________
   auto KafkaMsg =
       std::unique_ptr<RdKafka::Message>(KafkaConsumer->consume(1000));
   switch (KafkaMsg->err()) {
@@ -84,6 +71,5 @@ std::unique_ptr<Message> Consumer::poll() {
     /* All other errors */
     return make_unique<Message>(PollStatus::Err);
   }
-  //// ______________________
 }
 } // namespace KafkaW
