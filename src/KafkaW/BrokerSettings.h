@@ -8,7 +8,9 @@
 #include "process.h"
 #define getpid _getpid
 #else
+#include "ConsumerEventCb.h"
 #include <unistd.h>
+
 #endif
 
 namespace KafkaW {
@@ -16,7 +18,8 @@ namespace KafkaW {
 /// Collect options used to connect to the broker.
 
 struct BrokerSettings {
-  std::unique_ptr<RdKafka::Conf> apply();
+  std::unique_ptr<RdKafka::Conf> apply(ConsumerEventCb &EventCallback);
+  void apply(RdKafka::Conf *RdKafkaConfiguration);
   std::string Address;
   int PollTimeoutMS = 100;
   std::map<std::string, std::string> KafkaConfiguration = {
