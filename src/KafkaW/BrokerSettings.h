@@ -18,7 +18,6 @@ namespace KafkaW {
 /// Collect options used to connect to the broker.
 
 struct BrokerSettings {
-  std::unique_ptr<RdKafka::Conf> apply(ConsumerEventCb &EventCallback);
   void apply(RdKafka::Conf *RdKafkaConfiguration);
   std::string Address;
   int PollTimeoutMS = 100;

@@ -18,7 +18,10 @@ Consumer::Consumer(BrokerSettings BrokerSettings)
   // set callbacks
   conf->set("event_cb", &EventCallback, ErrStr);
   conf->set("rebalance_cb", &RebalanceCallback, ErrStr);
+
   // apply settings
+  conf->set("group.id",
+            fmt::format("forwarder-command-listener--pid{}", getpid()), ErrStr);
   ConsumerBrokerSettings.apply(conf);
   // create consumer
   this->KafkaConsumer = std::shared_ptr<RdKafka::KafkaConsumer>(
