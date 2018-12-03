@@ -105,7 +105,6 @@ set(SOURCES
     EpicsClient/EpicsClientRandom.cpp
     EpicsClient/FwdMonitorRequester.cpp
     EpicsClient/EpicsClientFactory.cpp
-    helper.cpp
     logger.cpp
     Kafka.cpp
     KafkaW/BrokerSettings.cpp
