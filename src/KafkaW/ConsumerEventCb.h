@@ -1,6 +1,5 @@
 #pragma once
 #include "logger.h"
-#include <functional>
 #include <librdkafka/rdkafkacpp.h>
 
 namespace KafkaW {

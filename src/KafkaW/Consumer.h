@@ -4,10 +4,15 @@
 #include "ConsumerEventCb.h"
 #include "ConsumerRebalanceCb.h"
 #include "Message.h"
-#include <functional>
-#include <librdkafka/rdkafka.h>
-#include <memory>
+#include "helper.h"
 #include <vector>
+#ifdef _MSC_VER
+#include "process.h"
+#define getpid _getpid
+#else
+#include "ConsumerEventCb.h"
+#include <unistd.h>
+#endif
 
 namespace KafkaW {
 

@@ -1,7 +1,5 @@
 #include "Consumer.h"
 #include "logger.h"
-#include <atomic>
-#include <helper.h>
 #include <iostream>
 
 namespace KafkaW {
