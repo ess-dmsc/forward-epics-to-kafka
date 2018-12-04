@@ -7,8 +7,6 @@ class ConsumerEventCb : public RdKafka::EventCb {
 public:
   void event_cb(RdKafka::Event &event) override {
     switch (event.type()) {
-    // TODO: event.severity() only put here to satisfy LOG arguments. RdKafka
-    // enum mismatches our LOG levels
     case RdKafka::Event::EVENT_ERROR:
       LOG(event.severity(),
           "Kafka EVENT_ERROR id: {}  broker: {}  errno: {}  errorname: {}  "
