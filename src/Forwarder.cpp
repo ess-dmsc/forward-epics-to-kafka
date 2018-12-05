@@ -52,8 +52,6 @@ Forwarder::Forwarder(MainOpt &opt)
   }
   if (use_config) {
     KafkaW::BrokerSettings bopt;
-    //    bopt.ConfigurationStrings["group.id"] =
-    //        fmt::format("forwarder-command-listener--pid{}", getpid());
     bopt.Address = main_opt.MainSettings.BrokerConfig.host_port;
     bopt.PollTimeoutMS = 0;
     auto NewConsumer = make_unique<KafkaW::Consumer>(bopt);
