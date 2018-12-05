@@ -34,10 +34,13 @@ public:
   std::unique_ptr<Message> poll() override;
 
 private:
+  std::vector<int32_t> getTopicPartitionNumbers(const std::string &Topic);
+  std::unique_ptr<RdKafka::Metadata> queryMetadata();
   std::shared_ptr<RdKafka::KafkaConsumer> KafkaConsumer;
   BrokerSettings ConsumerBrokerSettings;
   std::vector<std::string> SubscribedTopics;
   ConsumerEventCb EventCallback;
   ConsumerRebalanceCb RebalanceCallback;
+  std::unique_ptr<RdKafka::Metadata> MetadataPointer;
 };
 } // namespace KafkaW
