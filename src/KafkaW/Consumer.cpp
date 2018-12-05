@@ -78,7 +78,8 @@ void Consumer::addTopic(std::string Topic) {
   std::vector<RdKafka::TopicPartition *> TopicPartitionsWithOffsets;
   auto PartitionIDs = getTopicPartitionNumbers(Topic);
   for (unsigned long i = 0; i < PartitionIDs.size(); i++) {
-    auto TopicPartition = RdKafka::TopicPartition::create(Topic, i);
+    auto TopicPartition =
+        RdKafka::TopicPartition::create(Topic, PartitionIDs[i]);
     int64_t Low, High;
     KafkaConsumer->query_watermark_offsets(Topic, PartitionIDs[i], &Low, &High,
                                            100);
