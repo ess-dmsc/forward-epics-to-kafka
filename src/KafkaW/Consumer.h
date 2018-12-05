@@ -41,6 +41,6 @@ private:
   std::vector<std::string> SubscribedTopics;
   ConsumerEventCb EventCallback;
   ConsumerRebalanceCb RebalanceCallback;
-  std::unique_ptr<RdKafka::Metadata> MetadataPointer;
+  std::unique_ptr<RdKafka::Metadata> MetadataPointer = nullptr;
 };
 } // namespace KafkaW

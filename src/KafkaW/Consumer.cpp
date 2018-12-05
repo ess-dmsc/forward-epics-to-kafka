@@ -1,4 +1,5 @@
 #include "Consumer.h"
+#include "MetadataException.h"
 #include "logger.h"
 #include <algorithm>
 #include <iostream>
@@ -26,19 +27,15 @@ Consumer::Consumer(BrokerSettings BrokerSettings)
     LOG(Sev::Error, "can not create kafka consumer: {}", ErrStr);
     throw std::runtime_error("can not create Kafka consumer");
   }
-  //  this->MetadataPointer = this->queryMetadata();
 }
 
 std::unique_ptr<RdKafka::Metadata> Consumer::queryMetadata() {
   RdKafka::Metadata *metadataRawPtr(nullptr);
   KafkaConsumer->metadata(true, nullptr, &metadataRawPtr, 1000);
   std::unique_ptr<RdKafka::Metadata> metadata(metadataRawPtr);
-  try {
-    if (!metadata) {
-      throw std::runtime_error("Failed to query metadata from broker");
-    }
-  } catch (std::exception &E) {
-    LOG(Sev::Error, "Failed to query metadata from broker: {}", E.what());
+  if (!metadata) {
+    throw MetadataException(
+        "Consumer::queryMetadata() - error while retrieving metadata.");
   }
   return metadata;
 }
