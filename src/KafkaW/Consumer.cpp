@@ -5,22 +5,16 @@
 #include <iostream>
 
 namespace KafkaW {
-//// C++READY
 Consumer::Consumer(BrokerSettings BrokerSettings)
     : ConsumerBrokerSettings(std::move(BrokerSettings)) {
   std::string ErrStr;
-  // create conf
   auto conf = RdKafka::Conf::create(RdKafka::Conf::CONF_GLOBAL);
-  // set callbacks
-  // 'consume callback' was set to nullptr so I omitted it.
   conf->set("event_cb", &EventCallback, ErrStr);
   conf->set("rebalance_cb", &RebalanceCallback, ErrStr);
 
-  // apply settings
   conf->set("group.id",
             fmt::format("forwarder-command-listener--pid{}", getpid()), ErrStr);
   ConsumerBrokerSettings.apply(conf);
-  // create consumer
   this->KafkaConsumer = std::shared_ptr<RdKafka::KafkaConsumer>(
       RdKafka::KafkaConsumer::create(conf, ErrStr));
   if (!this->KafkaConsumer) {
@@ -40,7 +34,6 @@ std::unique_ptr<RdKafka::Metadata> Consumer::queryMetadata() {
   return metadata;
 }
 
-//// C++READY
 Consumer::~Consumer() {
   LOG(Sev::Debug, "~Consumer()");
   if (KafkaConsumer) {
@@ -61,7 +54,6 @@ Consumer::getTopicPartitionNumbers(const std::string &Topic) {
   auto matchedTopic = *Iterator;
   std::vector<int32_t> TopicPartitionNumbers;
   auto PartitionMetadata = matchedTopic->partitions();
-  // save needed partition metadata here
   for (auto &Partition : *PartitionMetadata) {
     TopicPartitionNumbers.push_back(Partition->id());
   }
@@ -71,7 +63,6 @@ Consumer::getTopicPartitionNumbers(const std::string &Topic) {
 
 void Consumer::addTopic(std::string Topic) {
   LOG(Sev::Info, "Consumer::add_topic  {}", Topic);
-  ////assign
   std::vector<RdKafka::TopicPartition *> TopicPartitionsWithOffsets;
   auto PartitionIDs = getTopicPartitionNumbers(Topic);
   for (unsigned long i = 0; i < PartitionIDs.size(); i++) {
@@ -87,15 +78,13 @@ void Consumer::addTopic(std::string Topic) {
   std::for_each(TopicPartitionsWithOffsets.cbegin(),
                 TopicPartitionsWithOffsets.cend(),
                 [](RdKafka::TopicPartition *Partition) { delete Partition; });
-  ////ENDassign
   if (ERR != 0) {
-    LOG(Sev::Error, "could not subscribe to {}", Topic);
-    throw std::runtime_error(fmt::format("could not subscribe to {}", Topic));
+    LOG(Sev::Error, "Could not subscribe to {}", Topic);
+    throw std::runtime_error(fmt::format("Could not subscribe to {}", Topic));
   }
   SubscribedTopics.push_back(Topic);
 }
 
-//// C++READY
 std::unique_ptr<Message> Consumer::poll() {
   auto KafkaMsg =
       std::unique_ptr<RdKafka::Message>(KafkaConsumer->consume(1000));
