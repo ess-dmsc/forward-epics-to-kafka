@@ -1,14 +1,15 @@
-#include <utility>
-
 #pragma once
+
+#include "Producer.h"
 #include "logger.h"
 #include <librdkafka/rdkafkacpp.h>
+#include <utility>
 
 namespace KafkaW {
 
 class ProducerDeliveryCb : public RdKafka::DeliveryReportCb {
 public:
-  explicit ProducerDeliveryCb(std::shared_ptr<ProducerInterface> Producer)
+  explicit ProducerDeliveryCb(std::shared_ptr<Producer> Producer)
       : Prod(std::move(Producer)){};
   void dr_cb(RdKafka::Message &Message) override {
     if (Message.err()) {
@@ -28,6 +29,6 @@ public:
   }
 
 private:
-  std::shared_ptr<ProducerInterface> Prod;
+  std::shared_ptr<Producer> Prod;
 };
 }

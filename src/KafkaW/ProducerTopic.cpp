@@ -16,8 +16,9 @@ ProducerTopic::ProducerTopic(std::shared_ptr<Producer> Producer,
     : Producer_(Producer), Name(Name_) {
 
   std::string ErrStr;
-  RdKafkaTopic = RdKafka::Topic::create(Producer_->getRdKafkaPtr(), Name,
-                                        new RdKafka::Conf, &ErrStr);
+  auto Config = RdKafka::Conf::create(RdKafka::Conf::CONF_TOPIC);
+  RdKafkaTopic =
+      RdKafka::Topic::create(Producer_->getRdKafkaPtr(), Name, Config, ErrStr);
   if (RdKafkaTopic == nullptr) {
     LOG(Sev::Error, "could not create Kafka topic: {}", ErrStr);
     throw TopicCreationError();
@@ -56,9 +57,9 @@ int ProducerTopic::produce(unique_ptr<ProducerMsg> &Msg) {
 
   auto &ProducerStats = Producer_->Stats;
 
-  switch (RdKafka::Producer::produce(RdKafkaTopic, RdKafka::Topic::PARTITION_UA,
-                                     msgflags, Msg->data, Msg->size, key,
-                                     key_len, Msg.get())) {
+  switch (this->Producer_->getRdKafkaPtr()->produce(
+      RdKafkaTopic, RdKafka::Topic::PARTITION_UA, msgflags, Msg->data,
+      Msg->size, key, key_len, Msg.get())) {
   case RdKafka::ERR_NO_ERROR:
     ++ProducerStats.produced;
     ProducerStats.produced_bytes += (uint64_t)Msg->size;
@@ -69,7 +70,7 @@ int ProducerTopic::produce(unique_ptr<ProducerMsg> &Msg) {
   case RdKafka::ERR__QUEUE_FULL:
     ++ProducerStats.local_queue_full;
     LOG(Sev::Warning, "QUEUE_FULL  outq: {}",
-        Producer_->getRdKafkaPtr().outq_len());
+        Producer_->getRdKafkaPtr()->outq_len());
     break;
 
   case RdKafka::ERR_MSG_SIZE_TOO_LARGE:
@@ -79,8 +80,7 @@ int ProducerTopic::produce(unique_ptr<ProducerMsg> &Msg) {
 
   default:
     ++ProducerStats.produce_fail;
-    LOG(Sev::Debug, "produce topic {}  partition {}   error: {}",
-        RdKafkaTopic->name(), partition, rd_kafka_err2str(err));
+    LOG(Sev::Debug, "produce topic {}", RdKafkaTopic->name());
     break;
   }
   return 1;

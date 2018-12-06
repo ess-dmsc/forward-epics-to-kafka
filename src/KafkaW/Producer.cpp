@@ -52,15 +52,15 @@ Producer::Producer(BrokerSettings ProducerBrokerSettings)
   // librdkafka API sometimes wants to write errors into a buffer:
   std::string errstr;
 
-  RdKafka::Conf Config;
-  ProducerDeliveryCb DeliveryCallback(
-      std::make_shared<ProducerInterface>(this));
+  auto Config = RdKafka::Conf::create(RdKafka::Conf::CONF_GLOBAL);
+  ProducerDeliveryCb DeliveryCallback(std::make_shared<Producer>(this));
   ProducerEventCb EventCallback;
-  Config.set("dr_cb", DeliveryCallback, errstr);
-  Config.set("event_cb", EventCallback, errstr);
-  Config.set("metadata.broker.list", ProducerBrokerSettings.Address, errstr)
+  Config->set("dr_cb", &DeliveryCallback, errstr);
+  Config->set("event_cb", &EventCallback, errstr);
+  // Config->set("metadata.broker.list", &ProducerBrokerSettings.Address,
+  // errstr);
 
-      rd_kafka_conf_set_opaque(Config, this);
+  // rd_kafka_conf_set_opaque(Config, this);
   LOG(Sev::Debug, "Producer opaque: {}", (void *)this);
 
   ProducerBrokerSettings.apply(Config);
