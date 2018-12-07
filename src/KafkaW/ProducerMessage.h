@@ -1,5 +1,5 @@
 #pragma once
-#include <stdint-gcc.h>
+#include <stdint.h>
 
 namespace KafkaW {
 struct ProducerMsg {
