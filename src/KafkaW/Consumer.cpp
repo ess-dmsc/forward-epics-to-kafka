@@ -85,21 +85,21 @@ void Consumer::addTopic(std::string Topic) {
   SubscribedTopics.push_back(Topic);
 }
 
-std::unique_ptr<Message> Consumer::poll() {
+std::unique_ptr<ConsumerMessage> Consumer::poll() {
   auto KafkaMsg =
       std::unique_ptr<RdKafka::Message>(KafkaConsumer->consume(1000));
   switch (KafkaMsg->err()) {
   case RdKafka::ERR_NO_ERROR:
     if (KafkaMsg->len() > 0) {
-      return make_unique<Message>((std::uint8_t *)KafkaMsg->payload(),
+      return make_unique<ConsumerMessage>((std::uint8_t *)KafkaMsg->payload(),
                                   KafkaMsg->len(), PollStatus::Msg);
     } else {
-      return make_unique<Message>(PollStatus::Empty);
+      return make_unique<ConsumerMessage>(PollStatus::Empty);
     }
   case RdKafka::ERR__PARTITION_EOF:
-    return make_unique<Message>(PollStatus::EOP);
+    return make_unique<ConsumerMessage>(PollStatus::EOP);
   default:
-    return make_unique<Message>(PollStatus::Err);
+    return make_unique<ConsumerMessage>(PollStatus::Err);
   }
 }
 } // namespace KafkaW

@@ -3,7 +3,7 @@
 #include "BrokerSettings.h"
 #include "ConsumerEventCb.h"
 #include "ConsumerRebalanceCb.h"
-#include "Message.h"
+#include "ConsumerMessage.h"
 #include "helper.h"
 #include <vector>
 #ifdef _MSC_VER
@@ -21,7 +21,7 @@ public:
   ConsumerInterface() = default;
   virtual ~ConsumerInterface() = default;
   virtual void addTopic(std::string Topic) = 0;
-  virtual std::unique_ptr<Message> poll() = 0;
+  virtual std::unique_ptr<ConsumerMessage> poll() = 0;
 };
 
 class Consumer : public ConsumerInterface {
@@ -31,7 +31,7 @@ public:
   Consumer(Consumer const &) = delete;
   ~Consumer() override;
   void addTopic(std::string Topic) override;
-  std::unique_ptr<Message> poll() override;
+  std::unique_ptr<ConsumerMessage> poll() override;
 
 private:
   std::vector<int32_t> getTopicPartitionNumbers(const std::string &Topic);
