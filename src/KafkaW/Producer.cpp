@@ -53,7 +53,7 @@ Producer::Producer(BrokerSettings ProducerBrokerSettings)
   std::string errstr;
 
   auto Config = RdKafka::Conf::create(RdKafka::Conf::CONF_GLOBAL);
-  ProducerDeliveryCb DeliveryCallback(std::make_shared<Producer>(this));
+  ProducerDeliveryCb DeliveryCallback(std::make_shared<Producer>(*this));
   ProducerEventCb EventCallback;
   Config->set("dr_cb", &DeliveryCallback, errstr);
   Config->set("event_cb", &EventCallback, errstr);
