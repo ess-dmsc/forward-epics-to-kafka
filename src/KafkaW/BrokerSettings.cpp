@@ -1,8 +1,8 @@
 #include "BrokerSettings.h"
+#include "ConsumerEventCb.h"
 #include "logger.h"
 
 namespace KafkaW {
-
 void BrokerSettings::apply(RdKafka::Conf *RdKafkaConfiguration) {
   std::string ErrorString;
   for (const auto &ConfigurationItem : KafkaConfiguration) {

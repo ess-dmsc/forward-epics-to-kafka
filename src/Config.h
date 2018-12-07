@@ -10,8 +10,6 @@
 
 namespace Forwarder {
 
-class Remote_T;
-
 namespace Config {
 
 using std::string;
@@ -26,15 +24,13 @@ struct Listener_impl;
 
 class Listener {
 public:
-  Listener(KafkaW::BrokerSettings bopt, URI uri);
+  Listener(URI uri, std::unique_ptr<KafkaW::ConsumerInterface> NewConsumer);
   Listener(Listener const &) = delete;
   ~Listener();
   void poll(Callback &cb);
-  void wait_for_connected(std::chrono::milliseconds timeout);
 
 private:
   std::unique_ptr<Listener_impl> impl;
-  friend class Remote_T;
 };
 } // namespace Config
 } // namespace Forwarder

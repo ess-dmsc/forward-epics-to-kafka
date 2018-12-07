@@ -62,8 +62,7 @@ Producer::Producer(BrokerSettings ProducerBrokerSettings)
 
   // rd_kafka_conf_set_opaque(Config, this);
   LOG(Sev::Debug, "Producer opaque: {}", (void *)this);
-
-  ProducerBrokerSettings.apply(Config);
+  // ProducerBrokerSettings.apply();
 
   ProducerPtr = RdKafka::Producer::create(Config, errstr);
   if (!ProducerPtr) {

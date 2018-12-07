@@ -14,7 +14,7 @@ set(sources
     Timer_tests.cpp
     StreamTestUtils.cpp
     $<TARGET_OBJECTS:__objects>
-)
+        Listener_tests.cpp)
 add_executable(${tgt} ${sources})
 add_dependencies(${tgt} flatbuffers_generate)
 target_include_directories(${tgt} PRIVATE ${path_include_common})

@@ -11,12 +11,7 @@
 #include <EpicsClient/EpicsClientRandom.h>
 #include <nlohmann/json.hpp>
 #include <sys/types.h>
-#ifdef _MSC_VER
-#include "process.h"
-#define getpid _getpid
-#else
-#include <unistd.h>
-#endif
+
 #include "CURLReporter.h"
 
 namespace Forwarder {
@@ -57,10 +52,11 @@ Forwarder::Forwarder(MainOpt &opt)
   }
   if (use_config) {
     KafkaW::BrokerSettings bopt;
-    bopt.KafkaConfiguration["group.id"] =
-        fmt::format("forwarder-command-listener--pid{}", getpid());
-    config_listener.reset(
-        new Config::Listener{bopt, main_opt.MainSettings.BrokerConfig});
+    bopt.Address = main_opt.MainSettings.BrokerConfig.host_port;
+    bopt.PollTimeoutMS = 0;
+    auto NewConsumer = make_unique<KafkaW::Consumer>(bopt);
+    config_listener.reset(new Config::Listener{
+        main_opt.MainSettings.BrokerConfig, std::move(NewConsumer)});
   }
   createPVUpdateTimerIfRequired();
   createFakePVUpdateTimerIfRequired();
