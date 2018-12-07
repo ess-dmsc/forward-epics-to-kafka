@@ -2,6 +2,7 @@
 
 #include "BrokerSettings.h"
 #include "ConsumerMessage.h"
+#include "ProducerMessage.h"
 #include "ProducerStats.h"
 #include <atomic>
 #include <functional>
@@ -26,6 +27,7 @@ public:
 class Producer : public ProducerInterface {
 public:
   typedef ProducerTopic Topic;
+  typedef ProducerMsg Msg;
   explicit Producer(BrokerSettings ProducerBrokerSettings_);
   Producer(Producer const &);
   Producer(Producer &&x) noexcept;
