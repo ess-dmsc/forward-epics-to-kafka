@@ -92,7 +92,7 @@ std::unique_ptr<ConsumerMessage> Consumer::poll() {
   case RdKafka::ERR_NO_ERROR:
     if (KafkaMsg->len() > 0) {
       return make_unique<ConsumerMessage>((std::uint8_t *)KafkaMsg->payload(),
-                                  KafkaMsg->len(), PollStatus::Msg);
+                                          KafkaMsg->len(), PollStatus::Msg);
     } else {
       return make_unique<ConsumerMessage>(PollStatus::Empty);
     }

@@ -2,8 +2,8 @@
 
 #include "BrokerSettings.h"
 #include "ConsumerEventCb.h"
-#include "ConsumerRebalanceCb.h"
 #include "ConsumerMessage.h"
+#include "ConsumerRebalanceCb.h"
 #include "helper.h"
 #include <vector>
 #ifdef _MSC_VER

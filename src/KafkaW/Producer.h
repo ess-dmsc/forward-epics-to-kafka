@@ -29,8 +29,7 @@ public:
   typedef ProducerTopic Topic;
   typedef ProducerMsg Msg;
   explicit Producer(BrokerSettings ProducerBrokerSettings_);
-  Producer(Producer const &);
-  Producer(Producer &&x) noexcept;
+  Producer(Producer &x) noexcept;
   ~Producer() override;
   void poll() override;
   int outputQueueLength() override;

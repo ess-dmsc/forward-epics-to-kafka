@@ -74,7 +74,7 @@ Producer::Producer(BrokerSettings ProducerBrokerSettings)
       ProducerBrokerSettings.Address.c_str());
 }
 
-Producer::Producer(Producer &&x) noexcept {
+Producer::Producer(Producer &x) noexcept {
   using std::swap;
   swap(ProducerPtr, x.ProducerPtr);
   swap(on_delivery_ok, x.on_delivery_ok);
