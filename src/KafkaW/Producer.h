@@ -27,7 +27,7 @@ class Producer : public ProducerInterface {
 public:
   typedef ProducerTopic Topic;
   explicit Producer(BrokerSettings ProducerBrokerSettings_);
-  // Producer(Producer const &) = delete;
+  Producer(Producer const &);
   Producer(Producer &&x) noexcept;
   ~Producer() override;
   void poll() override;

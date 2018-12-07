@@ -9,7 +9,7 @@ static std::shared_ptr<InstanceSet> kset;
 sptr<InstanceSet> InstanceSet::Set(KafkaW::BrokerSettings BrokerSettings) {
   std::unique_lock<std::mutex> lock(mx);
   LOG(Sev::Warning, "Kafka InstanceSet with rdkafka version: {}",
-      rd_kafka_version_str());
+      RdKafka::version());
   if (!kset) {
     BrokerSettings.PollTimeoutMS = 0;
     kset.reset(new InstanceSet(BrokerSettings));
@@ -26,7 +26,7 @@ InstanceSet::InstanceSet(KafkaW::BrokerSettings BrokerSettings)
     : BrokerSettings(BrokerSettings) {}
 
 static void prod_delivery_ok(RdKafka::Message *msg) {
-  if (auto x = msg->c_ptr()->_private) {
+  if (auto x = msg->msg_opaque()) {
     auto p = static_cast<KafkaW::ProducerMsg *>(x);
     p->deliveryOk();
     delete p;
@@ -34,7 +34,7 @@ static void prod_delivery_ok(RdKafka::Message *msg) {
 }
 
 static void prod_delivery_failed(RdKafka::Message *msg) {
-  if (auto x = msg->c_ptr()->_private) {
+  if (auto x = msg->msg_opaque()) {
     auto p = static_cast<KafkaW::ProducerMsg *>(x);
     p->deliveryError();
     delete p;
