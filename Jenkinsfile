@@ -29,7 +29,7 @@ images = [
                 'sh'  : '/usr/bin/scl enable rh-python35 devtoolset-6 -- /bin/bash -e'
         ],
         'debian9'    : [
-                'name': 'essdmscdm/debian9-build-node:2.2.0',
+                'name': 'essdmscdm/debian9-build-node:2.5.2',
                 'sh'  : 'bash -e'
         ],
         'ubuntu1804'  : [
