@@ -16,7 +16,7 @@ int KafkaOutput::emit(std::unique_ptr<FlatBufs::FlatbufferMessage> fb) {
   auto m1 = fb->message();
   fb->data = m1.data;
   fb->size = m1.size;
-  std::unique_ptr<KafkaW::Producer::Msg> msg(fb.release());
+  std::unique_ptr<KafkaW::ProducerMsg> msg(fb.release());
   auto x = pt.produce(msg);
   if (x == 0) {
     ++g__total_msgs_to_kafka;

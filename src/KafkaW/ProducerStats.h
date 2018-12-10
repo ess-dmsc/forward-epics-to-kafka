@@ -14,6 +14,16 @@ struct ProducerStats {
   std::atomic<uint64_t> produced_bytes{0};
   std::atomic<uint32_t> out_queue{0};
   ProducerStats() = default;
-  ProducerStats(ProducerStats const &);
+  ProducerStats(ProducerStats const &x) {
+    produced = x.produced.load();
+    produce_fail = x.produce_fail.load();
+    local_queue_full = x.local_queue_full.load();
+    produce_cb = x.produce_cb.load();
+    produce_cb_fail = x.produce_cb_fail.load();
+    poll_served = x.poll_served.load();
+    msg_too_large = x.msg_too_large.load();
+    produced_bytes = x.produced_bytes.load();
+    out_queue = x.out_queue.load();
+  };
 };
 }

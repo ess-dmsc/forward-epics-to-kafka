@@ -5,7 +5,7 @@
 #include <iostream>
 
 namespace KafkaW {
-Consumer::Consumer(BrokerSettings BrokerSettings)
+Consumer::Consumer(BrokerSettings &BrokerSettings)
     : ConsumerBrokerSettings(std::move(BrokerSettings)) {
   std::string ErrStr;
   auto conf = RdKafka::Conf::create(RdKafka::Conf::CONF_GLOBAL);
@@ -65,11 +65,10 @@ void Consumer::addTopic(std::string Topic) {
   LOG(Sev::Info, "Consumer::add_topic  {}", Topic);
   std::vector<RdKafka::TopicPartition *> TopicPartitionsWithOffsets;
   auto PartitionIDs = getTopicPartitionNumbers(Topic);
-  for (unsigned long i = 0; i < PartitionIDs.size(); i++) {
-    auto TopicPartition =
-        RdKafka::TopicPartition::create(Topic, PartitionIDs[i]);
+  for (int PartitionID : PartitionIDs) {
+    auto TopicPartition = RdKafka::TopicPartition::create(Topic, PartitionID);
     int64_t Low, High;
-    KafkaConsumer->query_watermark_offsets(Topic, PartitionIDs[i], &Low, &High,
+    KafkaConsumer->query_watermark_offsets(Topic, PartitionID, &Low, &High,
                                            100);
     TopicPartition->set_offset(Low);
     TopicPartitionsWithOffsets.push_back(TopicPartition);
@@ -91,15 +90,15 @@ std::unique_ptr<ConsumerMessage> Consumer::poll() {
   switch (KafkaMsg->err()) {
   case RdKafka::ERR_NO_ERROR:
     if (KafkaMsg->len() > 0) {
-      return make_unique<ConsumerMessage>((std::uint8_t *)KafkaMsg->payload(),
-                                          KafkaMsg->len(), PollStatus::Msg);
+      return ::make_unique<ConsumerMessage>((std::uint8_t *)KafkaMsg->payload(),
+                                            KafkaMsg->len(), PollStatus::Msg);
     } else {
-      return make_unique<ConsumerMessage>(PollStatus::Empty);
+      return ::make_unique<ConsumerMessage>(PollStatus::Empty);
     }
   case RdKafka::ERR__PARTITION_EOF:
-    return make_unique<ConsumerMessage>(PollStatus::EOP);
+    return ::make_unique<ConsumerMessage>(PollStatus::EOP);
   default:
-    return make_unique<ConsumerMessage>(PollStatus::Err);
+    return ::make_unique<ConsumerMessage>(PollStatus::Err);
   }
 }
 } // namespace KafkaW

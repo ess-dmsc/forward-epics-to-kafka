@@ -6,13 +6,6 @@
 namespace KafkaW {
 
 static std::atomic<int> g_kafka_producer_instance_count;
-//
-// void Producer::deliveredCallback(rd_kafka_t *RK,
-//                                 rd_kafka_message_t const *Message,
-//                                 void *Opaque) {
-//  auto Self = reinterpret_cast<Producer *>(Opaque);
-//
-//}
 
 Producer::~Producer() {
   LOG(Sev::Debug, "~Producer");
@@ -53,16 +46,15 @@ Producer::Producer(BrokerSettings ProducerBrokerSettings)
   std::string errstr;
 
   auto Config = RdKafka::Conf::create(RdKafka::Conf::CONF_GLOBAL);
+  ProducerBrokerSettings.apply(Config);
   ProducerDeliveryCb DeliveryCallback(std::make_shared<Producer>(*this));
   ProducerEventCb EventCallback;
   Config->set("dr_cb", &DeliveryCallback, errstr);
   Config->set("event_cb", &EventCallback, errstr);
-  // Config->set("metadata.broker.list", &ProducerBrokerSettings.Address,
-  // errstr);
+  //  Config->set("metadata.broker.list", ProducerBrokerSettings.Address,
+  //   errstr); //TODO: for some reason this seems to cause a segfault?
 
-  // rd_kafka_conf_set_opaque(Config, this);
   LOG(Sev::Debug, "Producer opaque: {}", (void *)this);
-  // ProducerBrokerSettings.apply();
 
   ProducerPtr = RdKafka::Producer::create(Config, errstr);
   if (!ProducerPtr) {
@@ -95,16 +87,4 @@ void Producer::poll() {
 RdKafka::Producer *Producer::getRdKafkaPtr() const { return ProducerPtr; }
 
 int Producer::outputQueueLength() { return ProducerPtr->outq_len(); }
-
-ProducerStats::ProducerStats(ProducerStats const &x) {
-  produced = x.produced.load();
-  produce_fail = x.produce_fail.load();
-  local_queue_full = x.local_queue_full.load();
-  produce_cb = x.produce_cb.load();
-  produce_cb_fail = x.produce_cb_fail.load();
-  poll_served = x.poll_served.load();
-  msg_too_large = x.msg_too_large.load();
-  produced_bytes = x.produced_bytes.load();
-  out_queue = x.out_queue.load();
-}
 } // namespace KafkaW
