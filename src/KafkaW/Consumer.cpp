@@ -13,7 +13,8 @@ Consumer::Consumer(BrokerSettings &BrokerSettings)
   conf->set("rebalance_cb", &RebalanceCallback, ErrorString);
 
   conf->set("group.id",
-            fmt::format("forwarder-command-listener--pid{}", getpid()), ErrorString);
+            fmt::format("forwarder-command-listener--pid{}", getpid()),
+            ErrorString);
   ConsumerBrokerSettings.apply(conf);
   this->KafkaConsumer = std::shared_ptr<RdKafka::KafkaConsumer>(
       RdKafka::KafkaConsumer::create(conf, ErrorString));
@@ -86,8 +87,8 @@ void Consumer::addTopic(std::string Topic) {
 }
 
 std::unique_ptr<ConsumerMessage> Consumer::poll() {
-  auto KafkaMsg =
-      std::unique_ptr<RdKafka::Message>(KafkaConsumer->consume(1000));
+  auto KafkaMsg = std::unique_ptr<RdKafka::Message>(
+      KafkaConsumer->consume(ConsumerBrokerSettings.PollTimeoutMS));
   switch (KafkaMsg->err()) {
   case RdKafka::ERR_NO_ERROR:
     if (KafkaMsg->len() > 0) {
