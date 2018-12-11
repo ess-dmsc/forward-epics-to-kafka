@@ -1,4 +1,5 @@
 #include "Producer.h"
+#include "ConsumerEventCb.h"
 #include "ProducerDeliveryCb.h"
 #include "ProducerEventCb.h"
 #include "logger.h"
@@ -47,14 +48,9 @@ Producer::Producer(BrokerSettings ProducerBrokerSettings)
 
   auto Config = RdKafka::Conf::create(RdKafka::Conf::CONF_GLOBAL);
   ProducerBrokerSettings.apply(Config);
-  ProducerDeliveryCb DeliveryCallback(std::make_shared<Producer>(*this));
-  ProducerEventCb EventCallback;
-  Config->set("dr_cb", &DeliveryCallback, errstr);
-  Config->set("event_cb", &EventCallback, errstr);
-  //  Config->set("metadata.broker.list", ProducerBrokerSettings.Address,
-  //   errstr); //TODO: for some reason this seems to cause a segfault?
-
-  LOG(Sev::Debug, "Producer opaque: {}", (void *)this);
+  Config->set("dr_cb", &DeliveryCb, errstr);
+  Config->set("event_cb", &EventCb, errstr);
+  Config->set("metadata.broker.list", ProducerBrokerSettings.Address, errstr);
 
   ProducerPtr = RdKafka::Producer::create(Config, errstr);
   if (!ProducerPtr) {
@@ -64,15 +60,6 @@ Producer::Producer(BrokerSettings ProducerBrokerSettings)
 
   LOG(Sev::Info, "New Kafka {} with brokers: {}", ProducerPtr->name(),
       ProducerBrokerSettings.Address.c_str());
-}
-
-Producer::Producer(Producer &x) noexcept {
-  using std::swap;
-  swap(ProducerPtr, x.ProducerPtr);
-  swap(on_delivery_ok, x.on_delivery_ok);
-  swap(on_delivery_failed, x.on_delivery_failed);
-  swap(ProducerBrokerSettings, x.ProducerBrokerSettings);
-  swap(id, x.id);
 }
 
 void Producer::poll() {

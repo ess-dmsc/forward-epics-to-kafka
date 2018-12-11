@@ -4,7 +4,6 @@
 #include <librdkafka/rdkafkacpp.h>
 
 namespace KafkaW {
-class ProducerInterface;
 
 class ProducerEventCb : public RdKafka::EventCb {
 public:
@@ -36,7 +35,5 @@ public:
       break;
     }
   };
-
-private:
 };
 }

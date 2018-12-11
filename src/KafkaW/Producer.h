@@ -2,11 +2,12 @@
 
 #include "BrokerSettings.h"
 #include "ConsumerMessage.h"
+#include "ProducerDeliveryCb.h"
+#include "ProducerEventCb.h"
 #include "ProducerMessage.h"
 #include "ProducerStats.h"
 #include <atomic>
 #include <functional>
-#include <librdkafka/rdkafkacpp.h>
 
 namespace KafkaW {
 
@@ -20,8 +21,6 @@ public:
   virtual int outputQueueLength() = 0;
   virtual RdKafka::Producer *getRdKafkaPtr() const = 0;
   ProducerStats Stats;
-  std::function<void(RdKafka::Message *msg)> on_delivery_ok;
-  std::function<void(RdKafka::Message *msg)> on_delivery_failed;
 };
 
 class Producer : public ProducerInterface {
@@ -29,7 +28,6 @@ public:
   typedef ProducerTopic Topic;
   typedef ProducerMsg Msg;
   explicit Producer(BrokerSettings ProducerBrokerSettings_);
-  Producer(Producer &x) noexcept;
   ~Producer() override;
   void poll() override;
   int outputQueueLength() override;
@@ -41,5 +39,7 @@ public:
 private:
   RdKafka::Producer *ProducerPtr = nullptr;
   int id = 0;
+  ProducerDeliveryCb DeliveryCb{Stats};
+  ProducerEventCb EventCb;
 };
 } // namespace KafkaW

@@ -25,64 +25,46 @@ void InstanceSet::clear() {
 InstanceSet::InstanceSet(KafkaW::BrokerSettings BrokerSettings)
     : BrokerSettings(BrokerSettings) {}
 
-static void prod_delivery_ok(RdKafka::Message *msg) {
-  if (auto x = msg->msg_opaque()) {
-    auto p = static_cast<KafkaW::ProducerMsg *>(x);
-    p->deliveryOk();
-    delete p;
-  }
-}
-
-static void prod_delivery_failed(RdKafka::Message *msg) {
-  if (auto x = msg->msg_opaque()) {
-    auto p = static_cast<KafkaW::ProducerMsg *>(x);
-    p->deliveryError();
-    delete p;
-  }
-}
-
-KafkaW::Producer::Topic InstanceSet::producer_topic(Forwarder::URI uri) {
+KafkaW::Producer::Topic InstanceSet::SetUpProducerTopic(Forwarder::URI uri) {
   LOG(Sev::Debug, "InstanceSet::producer_topic  for:  {}, {}", uri.host_port,
       uri.topic);
   auto host_port = uri.host_port;
-  auto it = producers_by_host.find(host_port);
-  if (it != producers_by_host.end()) {
+  auto it = ProducersByHost.find(host_port);
+  if (it != ProducersByHost.end()) {
     return KafkaW::Producer::Topic(it->second, uri.topic);
   }
   auto BrokerSettings = this->BrokerSettings;
   BrokerSettings.Address = host_port;
-  auto p = std::make_shared<KafkaW::Producer>(BrokerSettings);
-  p->on_delivery_ok = prod_delivery_ok;
-  p->on_delivery_failed = prod_delivery_failed;
+  auto Producer = std::make_shared<KafkaW::Producer>(BrokerSettings);
   {
-    std::unique_lock<std::mutex> lock(mx_producers_by_host);
-    producers_by_host[host_port] = p;
+    std::unique_lock<std::mutex> lock(ProducersByHostMutex);
+    ProducersByHost[host_port] = Producer;
   }
-  return KafkaW::Producer::Topic(p, uri.topic);
+  return KafkaW::Producer::Topic(Producer, uri.topic);
 }
 
 int InstanceSet::poll() {
-  std::unique_lock<std::mutex> lock(mx_producers_by_host);
-  for (auto const &m : producers_by_host) {
-    auto &p = m.second;
-    p->poll();
+  std::unique_lock<std::mutex> lock(ProducersByHostMutex);
+  for (auto const &ProducerMap : ProducersByHost) {
+    auto &Producer = ProducerMap.second;
+    Producer->poll();
   }
   return 0;
 }
 
 void InstanceSet::log_stats() {
-  std::unique_lock<std::mutex> lock(mx_producers_by_host);
-  for (auto const &m : producers_by_host) {
-    auto &p = m.second;
+  std::unique_lock<std::mutex> lock(ProducersByHostMutex);
+  for (auto const &m : ProducersByHost) {
+    auto &Producer = m.second;
     LOG(Sev::Info, "Broker: {}  total: {}  outq: {}", m.first,
-        p->TotalMessagesProduced, p->outputQueueLength());
+        Producer->TotalMessagesProduced, Producer->outputQueueLength());
   }
 }
 
-std::vector<KafkaW::ProducerStats> InstanceSet::stats_all() {
+std::vector<KafkaW::ProducerStats> InstanceSet::getStatsForAllProducers() {
   std::vector<KafkaW::ProducerStats> ret;
-  std::unique_lock<std::mutex> lock(mx_producers_by_host);
-  for (auto const &m : producers_by_host) {
+  std::unique_lock<std::mutex> lock(ProducersByHostMutex);
+  for (auto const &m : ProducersByHost) {
     ret.push_back(m.second->Stats);
   }
   return ret;

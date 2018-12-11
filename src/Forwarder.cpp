@@ -244,7 +244,7 @@ void Forwarder::report_stats(int dt) {
       b2, b1);
   if (CURLReporter::HaveCURL && !main_opt.InfluxURI.empty()) {
     int i1 = 0;
-    for (auto &s : kafka_instance_set->stats_all()) {
+    for (auto &s : kafka_instance_set->getStatsForAllProducers()) {
       auto &m1 = influxbuf;
       m1.write("forward-epics-to-kafka,hostname={},set={}",
                main_opt.Hostname.data(), i1);
@@ -339,7 +339,7 @@ void Forwarder::pushConverterToStream(ConverterSettings const &ConverterInfo,
   }
 
   // Create a conversion path then add it
-  auto Topic = kafka_instance_set->producer_topic(std::move(TopicURI));
+  auto Topic = kafka_instance_set->SetUpProducerTopic(std::move(TopicURI));
   auto cp = ::make_unique<ConversionPath>(
       std::move(ConverterShared), ::make_unique<KafkaOutput>(std::move(Topic)));
 
