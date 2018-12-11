@@ -13,7 +13,8 @@ Consumer::Consumer(BrokerSettings &BrokerSettings)
   conf->set("rebalance_cb", &RebalanceCallback, ErrorString);
 
   conf->set("group.id",
-            fmt::format("forwarder-command-listener--pid{}", getpid()), ErrorString);
+            fmt::format("forwarder-command-listener--pid{}", getpid()),
+            ErrorString);
   ConsumerBrokerSettings.apply(conf);
   this->KafkaConsumer = std::shared_ptr<RdKafka::KafkaConsumer>(
       RdKafka::KafkaConsumer::create(conf, ErrorString));
