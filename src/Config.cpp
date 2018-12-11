@@ -14,7 +14,7 @@ struct Listener_impl {
   int connected = 0;
 };
 
-Listener::Listener(KafkaW::BrokerSettings BrokerSettings, Forwarder::URI uri) {
+Listener::Listener(KafkaW::BrokerSettings BrokerSettings, URI uri) {
   BrokerSettings.Address = uri.host_port;
   BrokerSettings.PollTimeoutMS = 0;
   impl.reset(new Listener_impl);
@@ -36,7 +36,7 @@ Listener::Listener(KafkaW::BrokerSettings BrokerSettings, Forwarder::URI uri) {
 
 Listener::~Listener() {}
 
-void Listener::poll(Callback &cb) {
+void Listener::poll(::Forwarder::ConfigCB &cb) {
   auto Message = impl->consumer->poll();
   if (Message->getStatus() == KafkaW::PollStatus::Msg) {
     cb({(char *)Message->getData(), Message->getSize()});

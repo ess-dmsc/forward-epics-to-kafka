@@ -1,5 +1,6 @@
 #pragma once
 
+#include "CommandHandler.h"
 #include "KafkaW/KafkaW.h"
 #include "uri.h"
 #include <atomic>
@@ -9,18 +10,12 @@
 #include <vector>
 
 namespace Forwarder {
-
+class ConfigCB;
 class Remote_T;
 
 namespace Config {
 
 using std::string;
-
-/// Interface to react on configuration messages.
-class Callback {
-public:
-  virtual void operator()(string const &msg) = 0;
-};
 
 struct Listener_impl;
 
@@ -29,7 +24,7 @@ public:
   Listener(KafkaW::BrokerSettings bopt, URI uri);
   Listener(Listener const &) = delete;
   ~Listener();
-  void poll(Callback &cb);
+  void poll(::Forwarder::ConfigCB &cb);
   void wait_for_connected(std::chrono::milliseconds timeout);
 
 private:
