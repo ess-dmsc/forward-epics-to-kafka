@@ -44,17 +44,17 @@ Producer::Producer(BrokerSettings ProducerBrokerSettings)
   id = g_kafka_producer_instance_count++;
 
   // librdkafka API sometimes wants to write errors into a buffer:
-  std::string errstr;
+  std::string ErrorString;
 
   auto Config = RdKafka::Conf::create(RdKafka::Conf::CONF_GLOBAL);
   ProducerBrokerSettings.apply(Config);
-  Config->set("dr_cb", &DeliveryCb, errstr);
-  Config->set("event_cb", &EventCb, errstr);
-  Config->set("metadata.broker.list", ProducerBrokerSettings.Address, errstr);
+  Config->set("dr_cb", &DeliveryCb, ErrorString);
+  Config->set("event_cb", &EventCb, ErrorString);
+  Config->set("metadata.broker.list", ProducerBrokerSettings.Address, ErrorString);
 
-  ProducerPtr = RdKafka::Producer::create(Config, errstr);
+  ProducerPtr = RdKafka::Producer::create(Config, ErrorString);
   if (!ProducerPtr) {
-    LOG(Sev::Error, "can not create kafka handle: {}", errstr);
+    LOG(Sev::Error, "can not create kafka handle: {}", ErrorString);
     throw std::runtime_error("can not create Kafka handle");
   }
 

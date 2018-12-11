@@ -7,18 +7,18 @@
 namespace KafkaW {
 Consumer::Consumer(BrokerSettings &BrokerSettings)
     : ConsumerBrokerSettings(std::move(BrokerSettings)) {
-  std::string ErrStr;
+  std::string ErrorString;
   auto conf = RdKafka::Conf::create(RdKafka::Conf::CONF_GLOBAL);
-  conf->set("event_cb", &EventCallback, ErrStr);
-  conf->set("rebalance_cb", &RebalanceCallback, ErrStr);
+  conf->set("event_cb", &EventCallback, ErrorString);
+  conf->set("rebalance_cb", &RebalanceCallback, ErrorString);
 
   conf->set("group.id",
-            fmt::format("forwarder-command-listener--pid{}", getpid()), ErrStr);
+            fmt::format("forwarder-command-listener--pid{}", getpid()), ErrorString);
   ConsumerBrokerSettings.apply(conf);
   this->KafkaConsumer = std::shared_ptr<RdKafka::KafkaConsumer>(
-      RdKafka::KafkaConsumer::create(conf, ErrStr));
+      RdKafka::KafkaConsumer::create(conf, ErrorString));
   if (!this->KafkaConsumer) {
-    LOG(Sev::Error, "can not create kafka consumer: {}", ErrStr);
+    LOG(Sev::Error, "can not create kafka consumer: {}", ErrorString);
     throw std::runtime_error("can not create Kafka consumer");
   }
 }
@@ -31,6 +31,7 @@ std::unique_ptr<RdKafka::Metadata> Consumer::queryMetadata() {
     throw MetadataException(
         "Consumer::queryMetadata() - error while retrieving metadata.");
   }
+  delete metadataRawPtr;
   return metadata;
 }
 
