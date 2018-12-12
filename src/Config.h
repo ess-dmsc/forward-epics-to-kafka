@@ -11,7 +11,6 @@
 
 namespace Forwarder {
 class ConfigCB;
-class Remote_T;
 
 namespace Config {
 
@@ -25,11 +24,9 @@ public:
   Listener(Listener const &) = delete;
   ~Listener();
   void poll(::Forwarder::ConfigCB &cb);
-  void wait_for_connected(std::chrono::milliseconds timeout);
 
 private:
   std::unique_ptr<Listener_impl> impl;
-  friend class Remote_T;
 };
 } // namespace Config
 } // namespace Forwarder
