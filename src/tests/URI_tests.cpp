@@ -1,4 +1,4 @@
-#include "../uri.h"
+#include "URI.h"
 #include <gtest/gtest.h>
 
 TEST(URITest, port_is_set_to_zero_on_initialisation) {

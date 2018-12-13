@@ -84,7 +84,7 @@ set(INCLUDES
     Stream.h
     Streams.h
     Timer.h
-    uri.h)
+    URI.h)
 
 set(SOURCES
     MainOpt.cpp
@@ -107,7 +107,7 @@ set(SOURCES
     FlatbufferMessage.cpp
     SchemaRegistry.cpp
     FlatBufferCreator.cpp
-    uri.cpp
+    URI.cpp
     json.cpp
     Converter.cpp
     KafkaOutput.cpp

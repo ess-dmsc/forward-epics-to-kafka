@@ -1,6 +1,6 @@
 #pragma once
 
-#include "uri.h"
+#include "URI.h"
 #include <atomic>
 #include <deque>
 #include <map>
