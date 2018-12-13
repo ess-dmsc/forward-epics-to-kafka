@@ -27,13 +27,13 @@ Listener::Listener(URI uri,
   }
 }
 
-void Listener::poll(Callback &cb) {
+Listener::~Listener() {}
+
+void Listener::poll(::Forwarder::ConfigCB &cb) {
   auto Message = impl->consumer->poll();
   if (Message->getStatus() == KafkaW::PollStatus::Msg) {
     cb({(char *)Message->getData(), Message->getSize()});
   }
 }
-
-Listener::~Listener() {}
 } // namespace Config
 } // namespace Forwarder

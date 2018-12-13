@@ -1,5 +1,6 @@
 #pragma once
 
+#include "CommandHandler.h"
 #include "KafkaW/KafkaW.h"
 #include "uri.h"
 #include <atomic>
@@ -9,16 +10,11 @@
 #include <vector>
 
 namespace Forwarder {
+class ConfigCB;
 
 namespace Config {
 
 using std::string;
-
-/// Interface to react on configuration messages.
-class Callback {
-public:
-  virtual void operator()(string const &msg) = 0;
-};
 
 struct Listener_impl;
 
@@ -27,7 +23,7 @@ public:
   Listener(URI uri, std::unique_ptr<KafkaW::ConsumerInterface> NewConsumer);
   Listener(Listener const &) = delete;
   ~Listener();
-  void poll(Callback &cb);
+  void poll(::Forwarder::ConfigCB &cb);
 
 private:
   std::unique_ptr<Listener_impl> impl;
