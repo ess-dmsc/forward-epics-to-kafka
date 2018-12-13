@@ -33,7 +33,6 @@ std::unique_ptr<RdKafka::Metadata> Consumer::queryMetadata() {
     throw MetadataException(
         "Consumer::queryMetadata() - error while retrieving metadata.");
   }
-  delete metadataRawPtr;
   return metadata;
 }
 
