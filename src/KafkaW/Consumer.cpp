@@ -11,7 +11,8 @@ Consumer::Consumer(BrokerSettings &BrokerSettings)
   auto conf = RdKafka::Conf::create(RdKafka::Conf::CONF_GLOBAL);
   conf->set("event_cb", &EventCallback, ErrorString);
   conf->set("rebalance_cb", &RebalanceCallback, ErrorString);
-
+  conf->set("metadata.broker.list", ConsumerBrokerSettings.Address,
+            ErrorString);
   conf->set("group.id",
             fmt::format("forwarder-command-listener--pid{}", getpid()),
             ErrorString);
@@ -32,7 +33,6 @@ std::unique_ptr<RdKafka::Metadata> Consumer::queryMetadata() {
     throw MetadataException(
         "Consumer::queryMetadata() - error while retrieving metadata.");
   }
-  delete metadataRawPtr;
   return metadata;
 }
 

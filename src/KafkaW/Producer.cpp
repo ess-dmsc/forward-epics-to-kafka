@@ -50,7 +50,8 @@ Producer::Producer(BrokerSettings ProducerBrokerSettings)
   ProducerBrokerSettings.apply(Config);
   Config->set("dr_cb", &DeliveryCb, ErrorString);
   Config->set("event_cb", &EventCb, ErrorString);
-  Config->set("metadata.broker.list", ProducerBrokerSettings.Address, ErrorString);
+  Config->set("metadata.broker.list", ProducerBrokerSettings.Address,
+              ErrorString);
 
   ProducerPtr = RdKafka::Producer::create(Config, ErrorString);
   if (!ProducerPtr) {
