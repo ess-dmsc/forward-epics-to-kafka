@@ -10,7 +10,7 @@ std::unique_ptr<KafkaW::ConsumerMessage> KafkaW::ConsumerFake::poll() {
   return Message;
 }
 
-void ConsumerFake::addTopic(std::string Topic) {
+void ConsumerFake::addTopic(const std::string &Topic) {
   std::cout << Topic << std::endl;
 }
 }

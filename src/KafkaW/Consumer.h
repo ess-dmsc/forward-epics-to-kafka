@@ -3,7 +3,6 @@
 #include "BrokerSettings.h"
 #include "ConsumerEventCb.h"
 #include "ConsumerMessage.h"
-#include "ConsumerRebalanceCb.h"
 #include "helper.h"
 #include <vector>
 #ifdef _MSC_VER
@@ -20,7 +19,7 @@ class ConsumerInterface {
 public:
   ConsumerInterface() = default;
   virtual ~ConsumerInterface() = default;
-  virtual void addTopic(std::string Topic) = 0;
+  virtual void addTopic(const std::string &Topic) = 0;
   virtual std::unique_ptr<ConsumerMessage> poll() = 0;
 };
 
@@ -30,17 +29,12 @@ public:
   Consumer(Consumer &&) = delete;
   Consumer(Consumer const &) = delete;
   ~Consumer() override;
-  void addTopic(std::string Topic) override;
+  void addTopic(const std::string &Topic) override;
   std::unique_ptr<ConsumerMessage> poll() override;
 
 private:
-  std::vector<int32_t> getTopicPartitionNumbers(const std::string &Topic);
-  std::unique_ptr<RdKafka::Metadata> queryMetadata();
   std::shared_ptr<RdKafka::KafkaConsumer> KafkaConsumer;
   BrokerSettings ConsumerBrokerSettings;
-  std::vector<std::string> SubscribedTopics;
   ConsumerEventCb EventCallback;
-  ConsumerRebalanceCb RebalanceCallback;
-  std::unique_ptr<RdKafka::Metadata> MetadataPointer = nullptr;
 };
 } // namespace KafkaW

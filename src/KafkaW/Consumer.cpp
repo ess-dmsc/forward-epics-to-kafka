@@ -10,7 +10,6 @@ Consumer::Consumer(BrokerSettings &BrokerSettings)
   std::string ErrorString;
   auto conf = RdKafka::Conf::create(RdKafka::Conf::CONF_GLOBAL);
   conf->set("event_cb", &EventCallback, ErrorString);
-  conf->set("rebalance_cb", &RebalanceCallback, ErrorString);
   conf->set("metadata.broker.list", ConsumerBrokerSettings.Address,
             ErrorString);
   conf->set("group.id",
@@ -25,17 +24,6 @@ Consumer::Consumer(BrokerSettings &BrokerSettings)
   }
 }
 
-std::unique_ptr<RdKafka::Metadata> Consumer::queryMetadata() {
-  RdKafka::Metadata *metadataRawPtr(nullptr);
-  KafkaConsumer->metadata(true, nullptr, &metadataRawPtr, 1000);
-  std::unique_ptr<RdKafka::Metadata> metadata(metadataRawPtr);
-  if (!metadata) {
-    throw MetadataException(
-        "Consumer::queryMetadata() - error while retrieving metadata.");
-  }
-  return metadata;
-}
-
 Consumer::~Consumer() {
   LOG(Sev::Debug, "~Consumer()");
   if (KafkaConsumer) {
@@ -45,45 +33,13 @@ Consumer::~Consumer() {
   }
 }
 
-std::vector<int32_t>
-Consumer::getTopicPartitionNumbers(const std::string &Topic) {
-  this->MetadataPointer = queryMetadata();
-  auto Topics = MetadataPointer->topics();
-  auto Iterator = std::find_if(Topics->cbegin(), Topics->cend(),
-                               [Topic](const RdKafka::TopicMetadata *tpc) {
-                                 return tpc->topic() == Topic;
-                               });
-  auto matchedTopic = *Iterator;
-  std::vector<int32_t> TopicPartitionNumbers;
-  auto PartitionMetadata = matchedTopic->partitions();
-  for (auto &Partition : *PartitionMetadata) {
-    TopicPartitionNumbers.push_back(Partition->id());
-  }
-  sort(TopicPartitionNumbers.begin(), TopicPartitionNumbers.end());
-  return TopicPartitionNumbers;
-}
-
-void Consumer::addTopic(std::string Topic) {
-  LOG(Sev::Info, "Consumer::add_topic  {}", Topic);
-  std::vector<RdKafka::TopicPartition *> TopicPartitionsWithOffsets;
-  auto PartitionIDs = getTopicPartitionNumbers(Topic);
-  for (int PartitionID : PartitionIDs) {
-    auto TopicPartition = RdKafka::TopicPartition::create(Topic, PartitionID);
-    int64_t Low, High;
-    KafkaConsumer->query_watermark_offsets(Topic, PartitionID, &Low, &High,
-                                           100);
-    TopicPartition->set_offset(Low);
-    TopicPartitionsWithOffsets.push_back(TopicPartition);
-  }
-  RdKafka::ErrorCode ERR = KafkaConsumer->assign(TopicPartitionsWithOffsets);
-  std::for_each(TopicPartitionsWithOffsets.cbegin(),
-                TopicPartitionsWithOffsets.cend(),
-                [](RdKafka::TopicPartition *Partition) { delete Partition; });
-  if (ERR != 0) {
-    LOG(Sev::Error, "Could not subscribe to {}", Topic);
-    throw std::runtime_error(fmt::format("Could not subscribe to {}", Topic));
-  }
-  SubscribedTopics.push_back(Topic);
+void Consumer::addTopic(const std::string &Topic) {
+  auto ErrCode = KafkaConsumer->subscribe({Topic});
+  if (ErrCode != RdKafka::ErrorCode::ERR_NO_ERROR) {
+    LOG(Sev::Warning, "Unable to subscribe to topic {} - {}", Topic,
+        RdKafka::err2str(ErrCode));
+    return;
+  };
 }
 
 std::unique_ptr<ConsumerMessage> Consumer::poll() {
