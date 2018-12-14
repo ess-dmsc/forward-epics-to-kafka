@@ -19,8 +19,8 @@ Listener::Listener(URI uri,
                    std::unique_ptr<KafkaW::ConsumerInterface> NewConsumer) {
   impl.reset(new Listener_impl);
   impl->consumer = std::move(NewConsumer);
-  auto &consumer = *impl->consumer;
   try {
+    auto &consumer = *impl->consumer;
     consumer.addTopic(uri.topic);
   } catch (MetadataException &E) {
     LOG(Sev::Error, "{}", E.what());

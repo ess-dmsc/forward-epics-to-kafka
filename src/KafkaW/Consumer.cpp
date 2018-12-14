@@ -38,7 +38,6 @@ void Consumer::addTopic(const std::string &Topic) {
   if (ErrCode != RdKafka::ErrorCode::ERR_NO_ERROR) {
     LOG(Sev::Warning, "Unable to subscribe to topic {} - {}", Topic,
         RdKafka::err2str(ErrCode));
-    return;
   };
 }
 

@@ -7,6 +7,6 @@ namespace KafkaW {
 class ConsumerFake : public ConsumerInterface {
 public:
   std::unique_ptr<ConsumerMessage> poll() override;
-  virtual void addTopic(const std::string &Topic) override;
+  void addTopic(const std::string &Topic) override;
 };
 }
