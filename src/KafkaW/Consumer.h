@@ -33,6 +33,8 @@ public:
   std::unique_ptr<ConsumerMessage> poll() override;
 
 private:
+  std::vector<int32_t> getTopicPartitionNumbers(const std::string &Topic);
+  std::unique_ptr<RdKafka::Metadata> queryMetadata();
   std::shared_ptr<RdKafka::KafkaConsumer> KafkaConsumer;
   BrokerSettings ConsumerBrokerSettings;
   ConsumerEventCb EventCallback;

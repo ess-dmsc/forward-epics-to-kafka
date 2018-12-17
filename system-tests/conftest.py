@@ -21,6 +21,7 @@ def wait_until_kafka_ready(docker_cmd, docker_options):
 
     n_polls = 0
     while n_polls < 10 and not kafka_ready:
+        producer.produce('TEST_forwarderConfig', value='')
         producer.produce('waitUntilUp', value='Test message', on_delivery=delivery_callback)
         producer.poll(10)
         n_polls += 1
