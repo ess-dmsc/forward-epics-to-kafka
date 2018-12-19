@@ -2,8 +2,10 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ../../tests)
 
 set(tgt "tests")
 set(sources
+    ../KafkaW/ConsumerFake.h
+    ../KafkaW/ConsumerFake.cpp
     tests.cpp
-        URI_tests.cpp
+    URI_tests.cpp
     json_tests.cpp
     ConfigParser_tests.cpp
     Streams_tests.cpp

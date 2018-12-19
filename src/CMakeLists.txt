@@ -86,8 +86,6 @@ set(INCLUDES
     KafkaW/ProducerDeliveryCb.h
     KafkaW/ProducerStats.h
     KafkaW/ProducerTopic.h
-    KafkaW/ConsumerFake.h
-    KafkaW/ConsumerFake.cpp
     KafkaW/ConsumerEventCb.h
     KafkaW/MetadataException.h
     KafkaOutput.h

@@ -1,6 +1,5 @@
 #include "ConsumerFake.h"
 #include <helper.h>
-#include <iostream>
 
 namespace KafkaW {
 std::unique_ptr<KafkaW::ConsumerMessage> KafkaW::ConsumerFake::poll() {
@@ -12,6 +11,6 @@ std::unique_ptr<KafkaW::ConsumerMessage> KafkaW::ConsumerFake::poll() {
 }
 
 void ConsumerFake::addTopic(const std::string &Topic) {
-  std::cout << Topic << std::endl;
+  UNUSED_ARG(Topic);
 }
 }

@@ -7,7 +7,6 @@
 #include "process.h"
 #define getpid _getpid
 #else
-#include "ConsumerEventCb.h"
 #include <unistd.h>
 #endif
 
@@ -107,8 +106,9 @@ std::unique_ptr<ConsumerMessage> Consumer::poll() {
   switch (KafkaMsg->err()) {
   case RdKafka::ERR_NO_ERROR:
     if (KafkaMsg->len() > 0) {
-      return ::make_unique<ConsumerMessage>(reinterpret_cast<std::uint8_t *>(KafkaMsg->payload()),
-                                            KafkaMsg->len(), PollStatus::Msg);
+      return ::make_unique<ConsumerMessage>(
+          reinterpret_cast<std::uint8_t *>(KafkaMsg->payload()),
+          KafkaMsg->len(), PollStatus::Msg);
     } else {
       return ::make_unique<ConsumerMessage>(PollStatus::Empty);
     }
