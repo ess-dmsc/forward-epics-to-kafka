@@ -244,7 +244,7 @@ void Forwarder::report_stats(int dt) {
       b2, b1);
   if (CURLReporter::HaveCURL && !main_opt.InfluxURI.empty()) {
     int i1 = 0;
-    for (auto &s : kafka_instance_set->getStatsForAllProducers()) {
+    for (const auto &s : kafka_instance_set->getStatsForAllProducers()) {
       auto &m1 = influxbuf;
       m1.write("forward-epics-to-kafka,hostname={},set={}",
                main_opt.Hostname.data(), i1);

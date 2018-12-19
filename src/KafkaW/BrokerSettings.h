@@ -1,8 +1,11 @@
 #pragma once
 
-#include <librdkafka/rdkafkacpp.h>
 #include <map>
 #include <string>
+
+namespace RdKafka {
+    class Conf;
+}
 
 namespace KafkaW {
 

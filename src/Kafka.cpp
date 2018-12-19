@@ -23,7 +23,7 @@ void InstanceSet::clear() {
 }
 
 InstanceSet::InstanceSet(KafkaW::BrokerSettings BrokerSettings)
-    : BrokerSettings(BrokerSettings) {}
+    : BrokerSettings(std::move(BrokerSettings)) {}
 
 KafkaW::Producer::Topic InstanceSet::SetUpProducerTopic(Forwarder::URI uri) {
   LOG(Sev::Debug, "InstanceSet::producer_topic  for:  {}, {}", uri.host_port,

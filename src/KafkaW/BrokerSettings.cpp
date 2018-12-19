@@ -1,6 +1,7 @@
 #include "BrokerSettings.h"
 #include "ConsumerEventCb.h"
 #include "logger.h"
+#include <librdkafka/rdkafkacpp.h>
 
 namespace KafkaW {
 void BrokerSettings::apply(RdKafka::Conf *RdKafkaConfiguration) {
