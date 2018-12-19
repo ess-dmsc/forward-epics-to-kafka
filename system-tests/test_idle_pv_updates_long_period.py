@@ -8,7 +8,7 @@ from helpers.PVs import PVDOUBLE
 
 def test_forwarder_does_not_send_pv_update_more_than_once_when_periodic_update_is_used(docker_compose_idle_updates_long_period):
     consumer = create_consumer()
-    data_topic = "TEST_forwarderData_idle_updates"
+    data_topic = "TEST_forwarderData_long_idle_updates"
     consumer.subscribe([data_topic])
     sleep(3)
     msg = poll_for_valid_message(consumer)

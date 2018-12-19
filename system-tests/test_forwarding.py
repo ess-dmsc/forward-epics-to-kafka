@@ -163,7 +163,7 @@ def test_forwarder_sends_pv_updates_single_pv_enum(docker_compose):
     prod = ProducerWrapper("localhost:9092", CONFIG_TOPIC, data_topic)
     prod.add_config(pvs)
     # Wait for config to be pushed
-    sleep(2)
+    sleep(5)
 
     cons = create_consumer()
 
@@ -196,7 +196,7 @@ def test_forwarder_updates_multiple_pvs(docker_compose):
     cons = create_consumer()
     sleep(2)
     cons.subscribe([data_topic])
-    sleep(2)
+    sleep(4)
 
     expected_values = {PVSTR: (Value.String, b''), PVLONG: (Value.Int, 0)}
 
