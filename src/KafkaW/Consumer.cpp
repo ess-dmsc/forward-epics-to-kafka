@@ -3,6 +3,13 @@
 #include "logger.h"
 #include <algorithm>
 #include <iostream>
+#ifdef _MSC_VER
+#include "process.h"
+#define getpid _getpid
+#else
+#include "ConsumerEventCb.h"
+#include <unistd.h>
+#endif
 
 namespace KafkaW {
 Consumer::Consumer(BrokerSettings &BrokerSettings)
