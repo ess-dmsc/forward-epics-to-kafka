@@ -80,7 +80,8 @@ int ProducerTopic::produce(unique_ptr<ProducerMessage> &Msg) {
 
   default:
     ++ProducerStats.produce_fail;
-    LOG(Sev::Error, "Publishing message on topic \"{}\" failed", RdKafkaTopic->name());
+    LOG(Sev::Error, "Publishing message on topic \"{}\" failed",
+        RdKafkaTopic->name());
     break;
   }
   return 1;

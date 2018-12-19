@@ -52,8 +52,8 @@ Producer::Producer(BrokerSettings ProducerBrokerSettings)
     throw std::runtime_error("can not create Kafka handle");
   }
 
-  LOG(Sev::Info, "new Kafka producer: {}, with brokers: {}", ProducerPtr->name(),
-      ProducerBrokerSettings.Address.c_str());
+  LOG(Sev::Info, "new Kafka producer: {}, with brokers: {}",
+      ProducerPtr->name(), ProducerBrokerSettings.Address.c_str());
 }
 
 void Producer::poll() {
