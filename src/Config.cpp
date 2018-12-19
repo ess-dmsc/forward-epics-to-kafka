@@ -1,4 +1,5 @@
 #include "Config.h"
+#include "KafkaW/KafkaW.h"
 #include "KafkaW/MetadataException.h"
 #include "logger.h"
 #include <condition_variable>
@@ -8,31 +9,21 @@
 namespace Forwarder {
 namespace Config {
 
-struct Listener_impl {
-  std::unique_ptr<KafkaW::ConsumerInterface> consumer;
-  std::mutex mx;
-  std::condition_variable cv;
-  int connected = 0;
-};
-
 Listener::Listener(URI uri,
-                   std::unique_ptr<KafkaW::ConsumerInterface> NewConsumer) {
-  impl.reset(new Listener_impl);
-  impl->consumer = std::move(NewConsumer);
+                   std::unique_ptr<KafkaW::ConsumerInterface> NewConsumer)
+    : Consumer(std::move(NewConsumer)) {
   try {
-    auto &consumer = *impl->consumer;
-    consumer.addTopic(uri.topic);
+    Consumer->addTopic(uri.topic);
   } catch (MetadataException &E) {
     LOG(Sev::Error, "{}", E.what());
   }
 }
 
-Listener::~Listener() {}
-
 void Listener::poll(::Forwarder::ConfigCB &cb) {
-  auto Message = impl->consumer->poll();
+  auto Message = Consumer->poll();
   if (Message->getStatus() == KafkaW::PollStatus::Msg) {
-    cb({(char *)Message->getData(), Message->getSize()});
+    cb({reinterpret_cast<const char *>(Message->getData()),
+        Message->getSize()});
   }
 }
 } // namespace Config

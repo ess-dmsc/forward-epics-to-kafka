@@ -86,6 +86,10 @@ set(INCLUDES
     KafkaW/ProducerDeliveryCb.h
     KafkaW/ProducerStats.h
     KafkaW/ProducerTopic.h
+    KafkaW/ConsumerFake.h
+    KafkaW/ConsumerFake.cpp
+    KafkaW/ConsumerEventCb.h
+    KafkaW/MetadataException.h
     KafkaOutput.h
     logger.h
     MainOpt.h
@@ -126,8 +130,7 @@ set(SOURCES
     schemas/f142/f142.cpp
     ${FMT_SRC}
     Timer.cpp
-    ${CMAKE_CURRENT_BINARY_DIR}/git_commit_current.cpp
-        KafkaW/ConsumerFake.h KafkaW/ConsumerFake.cpp KafkaW/ConsumerEventCb.h KafkaW/MetadataException.h)
+    ${CMAKE_CURRENT_BINARY_DIR}/git_commit_current.cpp)
 
 set(tgt __objects)
 add_library(${tgt} OBJECT ${SOURCES} ${INCLUDES})

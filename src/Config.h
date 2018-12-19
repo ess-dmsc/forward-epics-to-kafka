@@ -1,7 +1,6 @@
 #pragma once
 
 #include "CommandHandler.h"
-#include "KafkaW/KafkaW.h"
 #include "uri.h"
 #include <atomic>
 #include <chrono>
@@ -9,24 +8,24 @@
 #include <string>
 #include <vector>
 
+namespace KafkaW {
+class ConsumerInterface;
+}
+
 namespace Forwarder {
 class ConfigCB;
 
 namespace Config {
 
-using std::string;
-
-struct Listener_impl;
-
 class Listener {
 public:
   Listener(URI uri, std::unique_ptr<KafkaW::ConsumerInterface> NewConsumer);
   Listener(Listener const &) = delete;
-  ~Listener();
+  ~Listener() = default;
   void poll(::Forwarder::ConfigCB &cb);
 
 private:
-  std::unique_ptr<Listener_impl> impl;
+  std::unique_ptr<KafkaW::ConsumerInterface> Consumer;
 };
 } // namespace Config
 } // namespace Forwarder
