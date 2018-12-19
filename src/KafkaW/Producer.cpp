@@ -1,7 +1,4 @@
 #include "Producer.h"
-#include "ConsumerEventCb.h"
-#include "ProducerDeliveryCb.h"
-#include "ProducerEventCb.h"
 #include "logger.h"
 
 namespace KafkaW {
@@ -31,11 +28,9 @@ Producer::~Producer() {
     }
     if (OutQueueLength > 0) {
       LOG(Sev::Notice,
-          "Kafka out queue still not empty: {}  destroy producer anyway.",
+          "Kafka out queue still not empty: {}, destroying producer anyway.",
           OutQueueLength);
     }
-    LOG(Sev::Debug, "rd_kafka_destroy");
-    ProducerPtr = nullptr;
   }
 }
 
@@ -43,7 +38,6 @@ Producer::Producer(BrokerSettings ProducerBrokerSettings)
     : ProducerBrokerSettings(ProducerBrokerSettings) {
   id = g_kafka_producer_instance_count++;
 
-  // librdkafka API sometimes wants to write errors into a buffer:
   std::string ErrorString;
 
   auto Config = RdKafka::Conf::create(RdKafka::Conf::CONF_GLOBAL);
@@ -52,14 +46,13 @@ Producer::Producer(BrokerSettings ProducerBrokerSettings)
   Config->set("event_cb", &EventCb, ErrorString);
   Config->set("metadata.broker.list", ProducerBrokerSettings.Address,
               ErrorString);
-
-  ProducerPtr = RdKafka::Producer::create(Config, ErrorString);
+  ProducerPtr.reset(RdKafka::Producer::create(Config, ErrorString));
   if (!ProducerPtr) {
     LOG(Sev::Error, "can not create kafka handle: {}", ErrorString);
     throw std::runtime_error("can not create Kafka handle");
   }
 
-  LOG(Sev::Info, "New Kafka {} with brokers: {}", ProducerPtr->name(),
+  LOG(Sev::Info, "new Kafka producer: {}, with brokers: {}", ProducerPtr->name(),
       ProducerBrokerSettings.Address.c_str());
 }
 
@@ -72,7 +65,7 @@ void Producer::poll() {
   Stats.out_queue = outputQueueLength();
 }
 
-RdKafka::Producer *Producer::getRdKafkaPtr() const { return ProducerPtr; }
+RdKafka::Producer *Producer::getRdKafkaPtr() const { return ProducerPtr.get(); }
 
 int Producer::outputQueueLength() { return ProducerPtr->outq_len(); }
 } // namespace KafkaW

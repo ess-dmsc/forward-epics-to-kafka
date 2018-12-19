@@ -2,8 +2,8 @@
 #include <stdint.h>
 
 namespace KafkaW {
-struct ProducerMsg {
-  virtual ~ProducerMsg() = default;
+struct ProducerMessage {
+  virtual ~ProducerMessage() = default;
   virtual void deliveryOk(){};
   virtual void deliveryError(){};
   unsigned char *data;

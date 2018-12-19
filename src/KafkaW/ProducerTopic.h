@@ -16,11 +16,11 @@ public:
 
 class ProducerTopic {
 public:
-  ProducerTopic(ProducerTopic &&);
+  ProducerTopic(ProducerTopic &&) noexcept;
   ProducerTopic(std::shared_ptr<Producer> Producer_, std::string Name_);
   ~ProducerTopic() = default;
   int produce(unsigned char *MsgData, size_t MsgSize);
-  int produce(std::unique_ptr<KafkaW::ProducerMsg> &Msg);
+  int produce(std::unique_ptr<KafkaW::ProducerMessage> &Msg);
   // Currently it's nice to have access to these for statistics:
   std::shared_ptr<Producer> Producer_;
   RdKafka::Topic *RdKafkaTopic = nullptr;

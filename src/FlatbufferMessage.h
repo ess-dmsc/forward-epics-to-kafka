@@ -20,7 +20,7 @@ class Converter;
 /// Also holds some internal counters for performance testing.
 /// If you want to implement your own custom memory management, this is the
 /// class to inherit from.
-class FlatbufferMessage : public KafkaW::ProducerMsg {
+class FlatbufferMessage : public KafkaW::ProducerMessage {
 public:
   /// Constructs a standard FlatBufferBuilder.
   FlatbufferMessage();

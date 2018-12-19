@@ -1,7 +1,6 @@
 #pragma once
 
 #include "BrokerSettings.h"
-#include "ConsumerMessage.h"
 #include "ProducerDeliveryCb.h"
 #include "ProducerEventCb.h"
 #include "ProducerMessage.h"
@@ -26,7 +25,7 @@ public:
 class Producer : public ProducerInterface {
 public:
   typedef ProducerTopic Topic;
-  typedef ProducerMsg Msg;
+  typedef ProducerMessage Msg;
   explicit Producer(BrokerSettings ProducerBrokerSettings_);
   ~Producer() override;
   void poll() override;
@@ -37,7 +36,7 @@ public:
   std::atomic<uint64_t> TotalMessagesProduced{0};
 
 private:
-  RdKafka::Producer *ProducerPtr = nullptr;
+  std::unique_ptr<RdKafka::Producer> ProducerPtr = nullptr;
   int id = 0;
   ProducerDeliveryCb DeliveryCb{Stats};
   ProducerEventCb EventCb;
