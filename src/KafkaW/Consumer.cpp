@@ -8,6 +8,7 @@ namespace KafkaW {
 Consumer::Consumer(BrokerSettings &BrokerSettings)
     : ConsumerBrokerSettings(std::move(BrokerSettings)) {
   std::string ErrorString;
+
   auto conf = RdKafka::Conf::create(RdKafka::Conf::CONF_GLOBAL);
   conf->set("event_cb", &EventCallback, ErrorString);
   conf->set("metadata.broker.list", ConsumerBrokerSettings.Address,
@@ -16,6 +17,7 @@ Consumer::Consumer(BrokerSettings &BrokerSettings)
             fmt::format("forwarder-command-listener--pid{}", getpid()),
             ErrorString);
   ConsumerBrokerSettings.apply(conf);
+
   KafkaConsumer = std::shared_ptr<RdKafka::KafkaConsumer>(
       RdKafka::KafkaConsumer::create(conf, ErrorString));
   if (!KafkaConsumer) {
@@ -44,6 +46,9 @@ Consumer::~Consumer() {
   }
 }
 
+/// Get a vector of partition numbers which exist for a given topic
+/// \param Topic Name of the topic
+/// \return Vector of partition numbers
 std::vector<int32_t>
 Consumer::getTopicPartitionNumbers(const std::string &Topic) {
   auto MetadataPtr = queryMetadata();
@@ -58,13 +63,15 @@ Consumer::getTopicPartitionNumbers(const std::string &Topic) {
   auto matchedTopic = *Iterator;
   std::vector<int32_t> TopicPartitionNumbers;
   auto PartitionMetadata = matchedTopic->partitions();
-  for (auto &Partition : *PartitionMetadata) {
+  for (const auto &Partition : *PartitionMetadata) {
     TopicPartitionNumbers.push_back(Partition->id());
   }
   sort(TopicPartitionNumbers.begin(), TopicPartitionNumbers.end());
   return TopicPartitionNumbers;
 }
 
+/// Subscribe to specified topic, note this removes any previous subscription
+/// \param Topic Name of the topic to subscribe to
 void Consumer::addTopic(const std::string &Topic) {
   LOG(Sev::Info, "Consumer::add_topic  {}", Topic);
   std::vector<RdKafka::TopicPartition *> TopicPartitionsWithOffsets;
@@ -77,11 +84,11 @@ void Consumer::addTopic(const std::string &Topic) {
     TopicPartition->set_offset(Low);
     TopicPartitionsWithOffsets.push_back(TopicPartition);
   }
-  RdKafka::ErrorCode ERR = KafkaConsumer->assign(TopicPartitionsWithOffsets);
+  RdKafka::ErrorCode Err = KafkaConsumer->assign(TopicPartitionsWithOffsets);
   std::for_each(TopicPartitionsWithOffsets.cbegin(),
                 TopicPartitionsWithOffsets.cend(),
                 [](RdKafka::TopicPartition *Partition) { delete Partition; });
-  if (ERR != RdKafka::ERR_NO_ERROR) {
+  if (Err != RdKafka::ERR_NO_ERROR) {
     LOG(Sev::Error, "Could not subscribe to {}", Topic);
     throw std::runtime_error(fmt::format("Could not subscribe to {}", Topic));
   }
@@ -93,7 +100,7 @@ std::unique_ptr<ConsumerMessage> Consumer::poll() {
   switch (KafkaMsg->err()) {
   case RdKafka::ERR_NO_ERROR:
     if (KafkaMsg->len() > 0) {
-      return ::make_unique<ConsumerMessage>((std::uint8_t *)KafkaMsg->payload(),
+      return ::make_unique<ConsumerMessage>(reinterpret_cast<std::uint8_t *>(KafkaMsg->payload()),
                                             KafkaMsg->len(), PollStatus::Msg);
     } else {
       return ::make_unique<ConsumerMessage>(PollStatus::Empty);
