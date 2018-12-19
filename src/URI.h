@@ -6,36 +6,27 @@
 
 namespace Forwarder {
 
-/// Thin parser for URIs.
-class URI {
-public:
-  /// Creates a default URI with all members empty. You can (should) run
-  /// URI::parse to fill it
-  URI();
+/// \brief Thin parser for URIs.
+struct URI {
+  URI() = default;
   /// Creates and parses the given URI
-  URI(std::string uri);
-  /// Parses the given `uri`
-  void parse(std::string uri);
-  /// Given a `http://www.example.com` scheme will contain `http`
-  std::string scheme;
-  /// Just the parsed hostname
-  std::string host;
-  /// If port was specified (or already non-zero before `URI::parse`) it
-  /// contains `host:port`
-  std::string host_port;
-  /// The port number if specified, or zero to indicate that the port is not
-  /// specified
-  uint32_t port = 0;
-  /// The path of the URL
-  std::string path;
-  /// If the path can be a valid Kafka topic name, then it is non-empty
-  std::string topic;
-  /// Whether we require two slashes before the hostname, as required by the
-  /// standard.  Otherwise ambiguous because `host/path` could also be a
-  /// `path/path`.
-  bool require_host_slashes = true;
+  explicit URI(const std::string &URIString);
 
-private:
-  void update_deps();
+  /// Parses the given `uri`
+  void parse(const std::string &URIString);
+
+  /// \brief If port was specified (or already non-zero before `URI::parse`) it
+  /// contains `host:port`.
+  std::string HostPort;
+
+  /// \brief The port number if specified, or zero to indicate that the port is
+  /// not specified.
+  uint32_t Port = 0;
+
+  /// If the path can be a valid Kafka topic name, then it is non-empty.
+  std::string Topic;
+
+  /// The URI string //<host>:<port>/<topic>
+  std::string getURIString() { return "//" + HostPort + "/" + Topic; }
 };
-}
+} // namespace Forwarder

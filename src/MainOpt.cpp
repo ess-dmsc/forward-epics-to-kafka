@@ -37,7 +37,7 @@ std::string MainOpt::brokers_as_comma_list() const {
     if (MultipleBrokers) {
       CommaList += ",";
     }
-    CommaList += Broker.host_port;
+    CommaList += Broker.HostPort;
     MultipleBrokers = true;
   }
   return CommaList;
@@ -69,8 +69,8 @@ CLI::Option *addOption(CLI::App &App, std::string const &Name,
   CLI::Option *Opt = App.add_option(Name, Fun, Description, Defaulted);
   Opt->set_custom_option("URI", 1);
   if (Defaulted) {
-    Opt->set_default_str(std::string("//") + URIArg.host_port + "/" +
-                         URIArg.topic);
+    Opt->set_default_str(std::string("//") + URIArg.HostPort + "/" +
+                         URIArg.Topic);
   }
   return Opt;
 }
@@ -194,8 +194,8 @@ std::pair<int, std::unique_ptr<MainOpt>> parse_opt(int argc, char **argv) {
 void MainOpt::init_logger() {
   if (!KafkaGELFAddress.empty()) {
     Forwarder::URI uri(KafkaGELFAddress);
-    log_kafka_gelf_start(uri.host, uri.topic);
-    LOG(Sev::Error, "Enabled kafka_gelf: //{}/{}", uri.host, uri.topic);
+    log_kafka_gelf_start(uri.HostPort, uri.Topic);
+    LOG(Sev::Error, "Enabled kafka_gelf: //{}/{}", uri.HostPort, uri.Topic);
   }
   if (!GraylogLoggerAddress.empty()) {
     fwd_graylog_logger_enable(GraylogLoggerAddress);

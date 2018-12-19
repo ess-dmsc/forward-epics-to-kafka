@@ -1,190 +1,85 @@
 #include "URI.h"
 #include <gtest/gtest.h>
 
-TEST(URITest, port_is_set_to_zero_on_initialisation) {
-  Forwarder::URI uri1;
-  ASSERT_EQ(uri1.port, 0u);
+using namespace Forwarder;
+
+TEST(URI, host_only_gives_hostport_plus_default_port) {
+  URI TestURI("//myhost");
+  ASSERT_EQ(TestURI.HostPort, "myhost");
+  ASSERT_EQ(TestURI.Port, (uint32_t)0);
 }
 
-TEST(URITest, default_host_is_set_to_nothing_on_initialisation) {
-  Forwarder::URI uri1;
-  ASSERT_EQ(uri1.host, "");
+TEST(URI, ip_only_gives_hostport_plus_default_port) {
+  URI TestURI("//127.0.0.1");
+  ASSERT_EQ(TestURI.HostPort, "127.0.0.1");
+  ASSERT_EQ(TestURI.Port, (uint32_t)0);
 }
 
-TEST(URITest, init_with_host_port_and_path) {
-  Forwarder::URI uri1("http://shizune:9000/isis_test_clusters/");
-  ASSERT_EQ(uri1.port, 9000u);
-  ASSERT_EQ(uri1.host, "shizune");
-  ASSERT_EQ(uri1.path, "/isis_test_clusters/");
+TEST(URI, host_with_port_gives_hostport_and_port) {
+  URI TestURI("//myhost:345");
+  ASSERT_EQ(TestURI.HostPort, "myhost:345");
+  ASSERT_EQ(TestURI.Port, (uint32_t)345);
 }
 
-TEST(URITest, init_with_host_and_path) {
-  Forwarder::URI uri1("http://shizune/isis_test_clusters/");
-  ASSERT_EQ(uri1.host, "shizune");
-  ASSERT_EQ(uri1.path, "/isis_test_clusters/");
-  ASSERT_EQ(uri1.port, (uint32_t)0);
+TEST(URI, getURIString_host_with_port_and_topic_gives_hostport_and_topic) {
+  std::string TestURIString = "//myhost:345/mytopic";
+  URI TestURI(TestURIString);
+  ASSERT_EQ(TestURI.getURIString(), TestURIString);
 }
 
-TEST(URITest, init_with_just_host) {
-  Forwarder::URI uri1("http://shizune");
-  ASSERT_EQ(uri1.host, "shizune");
-  ASSERT_EQ(uri1.path, "");
-  ASSERT_EQ(uri1.port, (uint32_t)0);
+TEST(URI, ip_with_port_gives_hostport_with_port) {
+  URI TestURI("//127.0.0.1:345");
+  ASSERT_EQ(TestURI.HostPort, "127.0.0.1:345");
+  ASSERT_EQ(TestURI.Port, (uint32_t)345);
 }
 
-TEST(URITest, uri_sets_host_from_host_string) {
-  Forwarder::URI u1("//myhost");
-  ASSERT_EQ(u1.scheme, "");
-  ASSERT_EQ(u1.host, "myhost");
-  ASSERT_EQ(u1.port, (uint32_t)0);
+TEST(URI, scheme_ignored_host_port_path_parsed) {
+  URI TestURI("kafka://my_host.com:8080/maybe");
+  ASSERT_EQ(TestURI.HostPort, "my_host.com:8080");
+  ASSERT_EQ(TestURI.Port, (uint32_t)8080);
+  ASSERT_EQ(TestURI.Topic, "maybe");
 }
 
-TEST(URITest, uri_sets_host_from_ip_string) {
-  Forwarder::URI u1("//127.0.0.1");
-  ASSERT_EQ(u1.scheme, "");
-  ASSERT_EQ(u1.host, "127.0.0.1");
-  ASSERT_EQ(u1.port, (uint32_t)0);
+TEST(URI, path_after_topic_throws_runtime_error) {
+  ASSERT_THROW(URI("//my.Host:99/some/longer"), std::runtime_error);
 }
 
-TEST(URITest, uri_parses_port) {
-  Forwarder::URI u1("//myhost:345");
-  ASSERT_EQ(u1.scheme, "");
-  ASSERT_EQ(u1.host, "myhost");
-  ASSERT_EQ(u1.port, (uint32_t)345);
+TEST(URI, host_with_topic_no_port_gives_hostport_topic_and_default_port) {
+  URI TestURI("//my.Host/the-topic");
+  ASSERT_EQ(TestURI.HostPort, "my.Host");
+  ASSERT_EQ(TestURI.Port, (uint32_t)0);
+  ASSERT_EQ(TestURI.Topic, "the-topic");
 }
 
-TEST(URITest, uri_parses_port_with_no_slashes_before_or_after_host_name) {
-  Forwarder::URI u1;
-  u1.require_host_slashes = false;
-  u1.parse("myhost:345");
-  ASSERT_EQ(u1.scheme, "");
-  ASSERT_EQ(u1.host, "myhost");
-  ASSERT_EQ(u1.port, (uint32_t)345);
+TEST(URI, host_with_topic_and_port_gives_hostport_topic_and_port) {
+  URI TestURI("//my.Host:789/the-topic");
+  ASSERT_EQ(TestURI.HostPort, "my.Host:789");
+  ASSERT_EQ(TestURI.Port, (uint32_t)789);
+  ASSERT_EQ(TestURI.Topic, "the-topic");
 }
 
-TEST(URITest, uri_parses_port_with_no_slashes_before_or_after_ip) {
-  Forwarder::URI u1("//127.0.0.1:345");
-  ASSERT_EQ(u1.scheme, "");
-  ASSERT_EQ(u1.host, "127.0.0.1");
-  ASSERT_EQ(u1.port, (uint32_t)345);
+TEST(URI, scheme_double_colon_throws_runtime_error) {
+  ASSERT_THROW(URI("http:://my.Host"), std::runtime_error);
 }
 
-TEST(URITest, uri_parses_host_and_port_with_domain_seperator) {
-  Forwarder::URI u1;
-  u1.port = 123;
-  u1.parse("http://my.host:345");
-  ASSERT_EQ(u1.scheme, "http");
-  ASSERT_EQ(u1.host, "my.host");
-  ASSERT_EQ(u1.host_port, "my.host:345");
-  ASSERT_EQ(u1.port, (uint32_t)345);
+TEST(URI, no_host_given_throws_runtime_error) {
+  ASSERT_THROW(URI("//:9092"), std::runtime_error);
 }
 
-TEST(URITest, uri_parses_host_with_domain_seperator) {
-  Forwarder::URI u1;
-  u1.port = 123;
-  u1.parse("http://my.host");
-  ASSERT_EQ(u1.scheme, "http");
-  ASSERT_EQ(u1.host, "my.host");
-  ASSERT_EQ(u1.host_port, "my.host:123");
-  ASSERT_EQ(u1.port, (uint32_t)123);
+TEST(URI, port_double_colon_throws_runtime_error) {
+  ASSERT_THROW(URI("//my.Host::789"), std::runtime_error);
 }
 
-TEST(URITest,
-     uri_parses_host_and_port_with_domain_seperator_followed_by_blank_path) {
-  Forwarder::URI u1("kafka://my-host.com:8080/");
-  ASSERT_EQ(u1.scheme, "kafka");
-  ASSERT_EQ(u1.host, "my-host.com");
-  ASSERT_EQ(u1.port, (uint32_t)8080);
-  ASSERT_EQ(u1.path, "/");
+TEST(URI, host_and_port_with_spaces_still_parsed_correctly) {
+  URI TestURI("  //some:123     ");
+  ASSERT_EQ(TestURI.HostPort, "some:123");
+  ASSERT_EQ(TestURI.Port, 123u);
 }
 
-TEST(
-    URITest,
-    uri_parses_host_and_port_with_domain_seperator_followed_by_directory_path) {
-  Forwarder::URI u1("kafka://my-host.com:8080/som_e");
-  ASSERT_EQ(u1.scheme, "kafka");
-  ASSERT_EQ(u1.host, "my-host.com");
-  ASSERT_EQ(u1.port, (uint32_t)8080);
-  ASSERT_EQ(u1.path, "/som_e");
-  ASSERT_EQ(u1.topic, "som_e");
-}
-
-TEST(
-    URITest,
-    uri_parses_host_and_port_with_domain_seperator_followed_by_multiple_directory_paths) {
-  Forwarder::URI u1("kafka://my_host.com:8080/some/longer");
-  ASSERT_EQ(u1.scheme, "kafka");
-  ASSERT_EQ(u1.host, "my_host.com");
-  ASSERT_EQ(u1.port, (uint32_t)8080);
-  ASSERT_EQ(u1.path, "/some/longer");
-  ASSERT_EQ(u1.topic, "");
-}
-
-TEST(URITest, uri_parses_host_without_scheme) {
-  Forwarder::URI u1("//my.host/the-topic");
-  ASSERT_EQ(u1.scheme, "");
-  ASSERT_EQ(u1.host, "my.host");
-  ASSERT_EQ(u1.port, (uint32_t)0);
-  ASSERT_EQ(u1.topic, "the-topic");
-}
-
-TEST(URITest, uri_parses_host_with_port_and_without_scheme) {
-  Forwarder::URI u1("//my.host:789/the-topic");
-  ASSERT_EQ(u1.scheme, "");
-  ASSERT_EQ(u1.host, "my.host");
-  ASSERT_EQ(u1.port, (uint32_t)789);
-  ASSERT_EQ(u1.topic, "the-topic");
-}
-
-TEST(URITest, uri_parses_absolute_path) {
-  Forwarder::URI u1("/mypath/sub");
-  ASSERT_EQ(u1.scheme, "");
-  ASSERT_EQ(u1.host, "");
-  ASSERT_EQ(u1.port, (uint32_t)0);
-  ASSERT_EQ(u1.path, "/mypath/sub");
-  ASSERT_EQ(u1.topic, "");
-}
-
-TEST(URITest, uri_parses_relative_path) {
-  Forwarder::URI u1("mypath/sub");
-  ASSERT_EQ(u1.scheme, "");
-  ASSERT_EQ(u1.host, "");
-  ASSERT_EQ(u1.port, (uint32_t)0);
-  ASSERT_EQ(u1.path, "mypath/sub");
-  ASSERT_EQ(u1.topic, "");
-}
-
-TEST(URITest, uri_parses_absolute_path_to_topic) {
-  Forwarder::URI u1("/topic-name.test");
-  ASSERT_EQ(u1.scheme, "");
-  ASSERT_EQ(u1.host, "");
-  ASSERT_EQ(u1.port, (uint32_t)0);
-  ASSERT_EQ(u1.path, "/topic-name.test");
-  ASSERT_EQ(u1.topic, "topic-name.test");
-}
-
-TEST(URITest, uri_parses_relative_path_to_topic) {
-  Forwarder::URI u1("topic-name.test");
-  ASSERT_EQ(u1.scheme, "");
-  ASSERT_EQ(u1.host, "");
-  ASSERT_EQ(u1.port, (uint32_t)0);
-  ASSERT_EQ(u1.path, "topic-name.test");
-  ASSERT_EQ(u1.topic, "topic-name.test");
-}
-
-TEST(URITest, uri_parses_host_with_domain_seperator_then_adds_path) {
-
-  Forwarder::URI u1("/some-path");
-  u1.parse("//my.host");
-  ASSERT_EQ(u1.scheme, "");
-  ASSERT_EQ(u1.host, "my.host");
-  ASSERT_EQ(u1.port, (uint32_t)0);
-  ASSERT_EQ(u1.path, "/some-path");
-  ASSERT_EQ(u1.topic, "some-path");
-}
-
-TEST(URITest, trim) {
-  Forwarder::URI u1("  //some:123     ");
-  ASSERT_EQ(u1.host, "some");
-  ASSERT_EQ(u1.port, 123u);
+TEST(URI, topic_picked_up_when_after_port) {
+  URI TestURI("//localhost:9092/TEST_writerCommand");
+  ASSERT_EQ(TestURI.HostPort, "localhost:9092");
+  ASSERT_EQ(TestURI.Port, 9092u);
+  ASSERT_EQ(TestURI.Topic, "TEST_writerCommand");
+  ASSERT_EQ(TestURI.getURIString(), "//localhost:9092/TEST_writerCommand");
 }

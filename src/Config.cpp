@@ -15,7 +15,7 @@ struct Listener_impl {
 };
 
 Listener::Listener(KafkaW::BrokerSettings BrokerSettings, Forwarder::URI uri) {
-  BrokerSettings.Address = uri.host_port;
+  BrokerSettings.Address = uri.HostPort;
   BrokerSettings.PollTimeoutMS = 0;
   impl.reset(new Listener_impl);
   impl->consumer.reset(new KafkaW::Consumer(BrokerSettings));
@@ -31,7 +31,7 @@ Listener::Listener(KafkaW::BrokerSettings BrokerSettings, Forwarder::URI uri) {
       };
   consumer.on_rebalance_assign = {};
   consumer.on_rebalance_start = {};
-  consumer.addTopic(uri.topic);
+  consumer.addTopic(uri.Topic);
 }
 
 Listener::~Listener() {}

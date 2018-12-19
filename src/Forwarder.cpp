@@ -47,11 +47,11 @@ Forwarder::Forwarder(MainOpt &opt)
   }
 
   bool use_config = true;
-  if (main_opt.MainSettings.BrokerConfig.topic.empty()) {
+  if (main_opt.MainSettings.BrokerConfig.Topic.empty()) {
     LOG(Sev::Error, "Name for configuration topic is empty");
     use_config = false;
   }
-  if (main_opt.MainSettings.BrokerConfig.host.empty()) {
+  if (main_opt.MainSettings.BrokerConfig.HostPort.empty()) {
     LOG(Sev::Error, "Host for configuration topic broker is empty");
     use_config = false;
   }
@@ -74,12 +74,12 @@ Forwarder::Forwarder(MainOpt &opt)
   }
 
   curl = ::make_unique<CURLReporter>();
-  if (!main_opt.MainSettings.StatusReportURI.host.empty()) {
+  if (!main_opt.MainSettings.StatusReportURI.HostPort.empty()) {
     KafkaW::BrokerSettings BrokerSettings;
-    BrokerSettings.Address = main_opt.MainSettings.StatusReportURI.host_port;
+    BrokerSettings.Address = main_opt.MainSettings.StatusReportURI.HostPort;
     status_producer = std::make_shared<KafkaW::Producer>(BrokerSettings);
     status_producer_topic = ::make_unique<KafkaW::ProducerTopic>(
-        status_producer, main_opt.MainSettings.StatusReportURI.topic);
+        status_producer, main_opt.MainSettings.StatusReportURI.Topic);
   }
 }
 
@@ -307,14 +307,21 @@ void Forwarder::pushConverterToStream(ConverterSettings const &ConverterInfo,
   }
 
   URI TopicURI;
-  if (!Uri.host.empty()) {
-    TopicURI.host = Uri.host;
+  if (!Uri.HostPort.empty()) {
+    TopicURI.HostPort = Uri.HostPort;
   }
 
-  if (Uri.port != 0) {
-    TopicURI.port = Uri.port;
+  if (Uri.Port != 0) {
+    TopicURI.Port = Uri.Port;
   }
-  TopicURI.parse(ConverterInfo.Topic);
+  try {
+    TopicURI.parse(ConverterInfo.Topic);
+  } catch (std::runtime_error &e) {
+    throw MappingAddException(
+        fmt::format("Invalid topic {} in converter, not added to stream. May "
+                    "require broker and/or host slashes.",
+                    ConverterInfo.Topic));
+  }
 
   std::shared_ptr<Converter> ConverterShared;
   if (!ConverterInfo.Name.empty()) {
