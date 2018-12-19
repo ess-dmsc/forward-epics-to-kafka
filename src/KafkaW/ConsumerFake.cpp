@@ -10,7 +10,5 @@ std::unique_ptr<KafkaW::ConsumerMessage> KafkaW::ConsumerFake::poll() {
   return Message;
 }
 
-void ConsumerFake::addTopic(const std::string &Topic) {
-  UNUSED_ARG(Topic);
-}
+void ConsumerFake::addTopic(const std::string &Topic) { UNUSED_ARG(Topic); }
 }

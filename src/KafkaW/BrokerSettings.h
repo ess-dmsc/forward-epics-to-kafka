@@ -4,7 +4,7 @@
 #include <string>
 
 namespace RdKafka {
-    class Conf;
+class Conf;
 }
 
 namespace KafkaW {
