@@ -3,7 +3,7 @@ version: '2'
 
 services:
   kafka:
-    image: wurstmeister/kafka:1.1.0
+    image: wurstmeister/kafka:2.12-2.1.0
     depends_on:
       - zookeeper
     hostname: kafka

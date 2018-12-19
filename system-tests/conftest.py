@@ -2,27 +2,50 @@ import os.path
 import pytest
 from compose.cli.main import TopLevelCommand, project_from_options
 from confluent_kafka.admin import AdminClient
+from confluent_kafka import Producer
 import docker
 from time import sleep
 
 
 def wait_until_kafka_ready(docker_cmd, docker_options):
     print('Waiting for Kafka broker to be ready for system tests...', flush=True)
-    client = AdminClient({'bootstrap.servers': 'localhost:9092', 'metadata.request.timeout.ms': '1000'})
+    conf = {'bootstrap.servers': 'localhost:9092', "metadata.request.timeout.ms": '10000'}
+    producer = Producer(**conf)
+
     kafka_ready = False
+
+    def delivery_callback(err, msg):
+        nonlocal n_polls
+        nonlocal kafka_ready
+        if not err:
+            print('Kafka is ready!')
+            kafka_ready = True
 
     n_polls = 0
     while n_polls < 10 and not kafka_ready:
-        if "TEST_forwarderConfig" in client.list_topics().topics.keys():
-            kafka_ready = True
-            print("Kafka is ready", flush=True)
-            break
-        sleep(6)
+        producer.produce('waitUntilUp', value='Test message', on_delivery=delivery_callback)
+        producer.poll(10)
         n_polls += 1
 
     if not kafka_ready:
         docker_cmd.down(docker_options)  # Bring down containers cleanly
-        raise Exception('Kafka broker was not ready after 60 seconds, aborting tests.')
+        raise Exception('Kafka broker was not ready after 100 seconds, aborting tests.')
+
+    client = AdminClient(conf)
+    topic_ready = False
+
+    n_polls = 0
+    while n_polls < 10 and not topic_ready:
+        if "TEST_forwarderConfig" in client.list_topics().topics.keys():
+            topic_ready = True
+            print("Topic is ready!", flush=True)
+            break
+        sleep(6)
+        n_polls += 1
+
+    if not topic_ready:
+        docker_cmd.down(docker_options)  # Bring down containers cleanly
+        raise Exception('Kafka topic was not ready after 60 seconds, aborting tests.')
 
 
 common_options = {"--no-deps": False,
@@ -104,7 +127,6 @@ def start_kafka(request):
 
     cmd.up(options)
     print("Started kafka containers", flush=True)
-    # sleep(20)
     wait_until_kafka_ready(cmd, options)
 
     def fin():
