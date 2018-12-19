@@ -1,6 +1,5 @@
 #pragma once
 
-#include "ConsumerMessage.h"
 #include "Producer.h"
 #include "ProducerMessage.h"
 #include "logger.h"

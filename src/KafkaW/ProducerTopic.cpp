@@ -69,18 +69,18 @@ int ProducerTopic::produce(unique_ptr<ProducerMessage> &Msg) {
 
   case RdKafka::ERR__QUEUE_FULL:
     ++ProducerStats.local_queue_full;
-    LOG(Sev::Warning, "QUEUE_FULL  outq: {}",
+    LOG(Sev::Warning, "Producer queue full, outq: {}",
         Producer_->getRdKafkaPtr()->outq_len());
     break;
 
   case RdKafka::ERR_MSG_SIZE_TOO_LARGE:
     ++ProducerStats.msg_too_large;
-    LOG(Sev::Error, "TOO_LARGE  size: {}", Msg->size);
+    LOG(Sev::Error, "Message size too large to publish, size: {}", Msg->size);
     break;
 
   default:
     ++ProducerStats.produce_fail;
-    LOG(Sev::Debug, "produce topic {}", RdKafkaTopic->name());
+    LOG(Sev::Error, "Publishing message on topic \"{}\" failed", RdKafkaTopic->name());
     break;
   }
   return 1;
