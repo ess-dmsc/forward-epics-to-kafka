@@ -3,14 +3,6 @@
 
 namespace KafkaW {
 
-using std::unique_ptr;
-using std::shared_ptr;
-using std::array;
-using std::vector;
-using std::string;
-using std::atomic;
-using std::move;
-
 ProducerTopic::ProducerTopic(std::shared_ptr<Producer> Producer,
                              std::string Name_)
     : Producer_(Producer), Name(std::move(Name_)) {
@@ -35,7 +27,7 @@ ProducerTopic::ProducerTopic(ProducerTopic &&x) noexcept {
 }
 
 struct Msg_ : public ProducerMessage {
-  vector<unsigned char> v;
+  std::vector<unsigned char> v;
   void finalize() {
     data = v.data();
     size = v.size();
@@ -46,23 +38,23 @@ int ProducerTopic::produce(unsigned char *MsgData, size_t MsgSize) {
   auto MsgPtr = new Msg_;
   std::copy(MsgData, MsgData + MsgSize, std::back_inserter(MsgPtr->v));
   MsgPtr->finalize();
-  unique_ptr<ProducerMessage> Msg(MsgPtr);
+  std::unique_ptr<ProducerMessage> Msg(MsgPtr);
   return produce(Msg);
 }
 
-int ProducerTopic::produce(unique_ptr<ProducerMessage> &Msg) {
+int ProducerTopic::produce(std::unique_ptr<ProducerMessage> &Msg) {
   void const *key = nullptr;
   size_t key_len = 0;
-  int msgflags = 0; // 0, RD_KAFKA_MSG_F_COPY, RD_KAFKA_MSG_F_FREE
-
+  int msgflags =
+      0; // 0, RdKafka::Producer::RK_MSG_COPY, RdKafka::Producer::RK_MSG_FREE
   auto &ProducerStats = Producer_->Stats;
 
-  switch (this->Producer_->getRdKafkaPtr()->produce(
+  switch (Producer_->getRdKafkaPtr()->produce(
       RdKafkaTopic, RdKafka::Topic::PARTITION_UA, msgflags, Msg->data,
       Msg->size, key, key_len, Msg.get())) {
   case RdKafka::ERR_NO_ERROR:
     ++ProducerStats.produced;
-    ProducerStats.produced_bytes += (uint64_t)Msg->size;
+    ProducerStats.produced_bytes += static_cast<uint64_t>(Msg->size);
     ++Producer_->TotalMessagesProduced;
     Msg.release();
     return 0;
