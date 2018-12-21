@@ -20,17 +20,18 @@ def test_config_file_channel_created_correctly(docker_compose):
     prod = ProducerWrapper("localhost:9092", CONFIG_TOPIC, "TEST_forwarderData_pv_from_config")
     cons = create_consumer()
     cons.subscribe(['TEST_forwarderData_pv_from_config'])
+    sleep(5)
     # Change the PV value, so something is forwarded
     change_pv_value(PVDOUBLE, 10)
     # Wait for PV to be updated
     sleep(5)
     # Check the initial value is forwarded
     first_msg = poll_for_valid_message(cons)
-    check_expected_values(first_msg, Value.Double, PVDOUBLE, 0)
+    check_expected_values(first_msg, Value.Double, PVDOUBLE, 0.0)
 
     # Check the new value is forwarded
     second_msg = poll_for_valid_message(cons)
-    check_expected_values(second_msg, Value.Double, PVDOUBLE, 10)
+    check_expected_values(second_msg, Value.Double, PVDOUBLE, 10.0)
 
     change_pv_value(PVDOUBLE, 0)
     prod.stop_all()
@@ -62,10 +63,10 @@ def test_forwarder_sends_pv_updates_single_pv_double(docker_compose):
     sleep(5)
 
     first_msg = poll_for_valid_message(cons)
-    check_expected_values(first_msg, Value.Double, PVDOUBLE, 0)
+    check_expected_values(first_msg, Value.Double, PVDOUBLE, 0.0)
 
     second_msg = poll_for_valid_message(cons)
-    check_expected_values(second_msg, Value.Double, PVDOUBLE, 5)
+    check_expected_values(second_msg, Value.Double, PVDOUBLE, 5.0)
 
     change_pv_value(PVDOUBLE, 0)
     prod.stop_all()
@@ -223,7 +224,7 @@ def test_forwarder_updates_pv_when_config_changed_from_one_pv(docker_compose):
     cons.subscribe([data_topic])
     sleep(2)
 
-    expected_values = {PVLONG: (Value.Int, 0), PVDOUBLE: (Value.Double, 0)}
+    expected_values = {PVLONG: (Value.Int, 0), PVDOUBLE: (Value.Double, 0.0)}
 
     first_msg = poll_for_valid_message(cons)
     second_msg = poll_for_valid_message(cons)
@@ -253,7 +254,7 @@ def test_forwarder_updates_pv_when_config_changed_from_two_pvs(docker_compose):
     poll_for_valid_message(cons)
     poll_for_valid_message(cons)
 
-    expected_values = {PVSTR: (Value.String, b''), PVLONG: (Value.Int, 0), PVDOUBLE: (Value.Double, 0)}
+    expected_values = {PVSTR: (Value.String, b''), PVLONG: (Value.Int, 0), PVDOUBLE: (Value.Double, 0.0)}
 
     messages = [poll_for_valid_message(cons), poll_for_valid_message(cons), poll_for_valid_message(cons)]
     check_multiple_expected_values(messages, expected_values)
