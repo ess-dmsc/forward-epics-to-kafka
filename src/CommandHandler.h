@@ -1,12 +1,13 @@
 #pragma once
 #include "Config.h"
 #include "Forwarder.h"
+#include "nlohmann/json.hpp"
 #include <string>
-
 namespace Forwarder {
+class Forwarder;
 
 /// Helper class to provide a callback for the Kafka command listener.
-class ConfigCB : public Config::Callback {
+class ConfigCB {
 public:
   /// Constructor.
   ///
@@ -16,7 +17,7 @@ public:
   /// The callback entry-point.
   ///
   /// \param msg The message to handle.
-  void operator()(std::string const &msg) override;
+  void operator()(std::string const &msg);
 
   /// Extract the command type from the message.
   ///

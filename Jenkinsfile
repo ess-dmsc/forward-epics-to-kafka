@@ -15,7 +15,7 @@ properties([[
         artifactDaysToKeepStr: '',
         artifactNumToKeepStr: '10',
         daysToKeepStr: '',
-        numToKeepStr: ''
+        numToKeepStr: '10'
     ]
 ]]);
 
