@@ -32,6 +32,7 @@ public:
 
 private:
   explicit InstanceSet(KafkaW::BrokerSettings opt);
+  std::unique_lock<std::mutex> getProducersByHostMutexLock();
   KafkaW::BrokerSettings BrokerSettings;
   std::mutex ProducersByHostMutex;
   std::map<std::string, std::shared_ptr<KafkaW::Producer>> ProducersByHost;

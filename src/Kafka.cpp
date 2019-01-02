@@ -6,6 +6,11 @@ namespace Forwarder {
 static std::mutex mx;
 static std::shared_ptr<InstanceSet> kset;
 
+std::unique_lock<std::mutex> InstanceSet::getProducersByHostMutexLock() {
+  std::unique_lock<std::mutex> lock(ProducersByHostMutex);
+  return lock;
+}
+
 sptr<InstanceSet> InstanceSet::Set(KafkaW::BrokerSettings BrokerSettings) {
   std::unique_lock<std::mutex> lock(mx);
   LOG(Sev::Warning, "Kafka InstanceSet with rdkafka version: {}",
@@ -37,14 +42,14 @@ KafkaW::Producer::Topic InstanceSet::SetUpProducerTopic(Forwarder::URI uri) {
   BrokerSettings.Address = host_port;
   auto Producer = std::make_shared<KafkaW::Producer>(BrokerSettings);
   {
-    std::unique_lock<std::mutex> lock(ProducersByHostMutex);
+    auto lock = getProducersByHostMutexLock();
     ProducersByHost[host_port] = Producer;
   }
   return KafkaW::Producer::Topic(Producer, uri.topic);
 }
 
 int InstanceSet::poll() {
-  std::unique_lock<std::mutex> lock(ProducersByHostMutex);
+  auto lock = getProducersByHostMutexLock();
   for (auto const &ProducerMap : ProducersByHost) {
     auto &Producer = ProducerMap.second;
     Producer->poll();
@@ -53,7 +58,7 @@ int InstanceSet::poll() {
 }
 
 void InstanceSet::log_stats() {
-  std::unique_lock<std::mutex> lock(ProducersByHostMutex);
+  auto lock = getProducersByHostMutexLock();
   for (auto const &m : ProducersByHost) {
     auto &Producer = m.second;
     LOG(Sev::Info, "Broker: {}  total: {}  outq: {}", m.first,
@@ -63,7 +68,7 @@ void InstanceSet::log_stats() {
 
 std::vector<KafkaW::ProducerStats> InstanceSet::getStatsForAllProducers() {
   std::vector<KafkaW::ProducerStats> ret;
-  std::unique_lock<std::mutex> lock(ProducersByHostMutex);
+  auto lock = getProducersByHostMutexLock();
   for (auto const &m : ProducersByHost) {
     ret.push_back(m.second->Stats);
   }

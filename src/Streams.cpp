@@ -19,8 +19,8 @@ void Streams::clearStreams() {
   LOG(Sev::Debug, "Main::clearStreams()  begin");
   std::unique_lock<std::mutex> lock(streams_mutex);
   if (!streams.empty()) {
-    for (auto x : streams) {
-      x->stop();
+    for (auto const &Stream : streams) {
+      Stream->stop();
     }
     // Wait for Epics to cool down
     std::this_thread::sleep_for(std::chrono::milliseconds(1000));
@@ -56,9 +56,9 @@ const std::vector<std::shared_ptr<Stream>> &Streams::getStreams() {
 
 std::shared_ptr<Stream>
 Streams::getStreamByChannelName(std::string const &channel_name) {
-  for (auto const &x : streams) {
-    if (x->getChannelInfo().channel_name == channel_name) {
-      return x;
+  for (auto const &Stream : streams) {
+    if (Stream->getChannelInfo().channel_name == channel_name) {
+      return Stream;
     }
   }
   return nullptr;

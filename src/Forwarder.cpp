@@ -118,7 +118,7 @@ int Forwarder::conversion_workers_clear() {
 
 int Forwarder::converters_clear() {
   if (!conversion_workers.empty()) {
-    std::unique_lock<std::mutex> lock(converters_mutex);
+    auto lock = get_lock_converters();
     conversion_workers.clear();
   }
   return 0;
@@ -347,16 +347,12 @@ void Forwarder::pushConverterToStream(ConverterSettings const &ConverterInfo,
 }
 
 void Forwarder::addMapping(StreamSettings const &StreamInfo) {
-  std::unique_lock<std::mutex> lock(streams_mutex);
+  auto lock = get_lock_streams();
   try {
     ChannelInfo ChannelInfo{StreamInfo.EpicsProtocol, StreamInfo.Name};
     std::shared_ptr<Stream> Stream;
     if (GenerateFakePVUpdateTimer != nullptr) {
       Stream = findOrAddStream<EpicsClient::EpicsClientRandom>(ChannelInfo);
-    } else {
-      Stream = findOrAddStream<EpicsClient::EpicsClientMonitor>(ChannelInfo);
-    }
-    if (GenerateFakePVUpdateTimer != nullptr) {
       auto Client = Stream->getEpicsClient();
       auto RandomClient =
           dynamic_cast<EpicsClient::EpicsClientRandom *>(Client.get());
@@ -364,7 +360,10 @@ void Forwarder::addMapping(StreamSettings const &StreamInfo) {
         GenerateFakePVUpdateTimer->addCallback(
             [Client, RandomClient]() { RandomClient->generateFakePVUpdate(); });
       }
+    } else {
+      Stream = findOrAddStream<EpicsClient::EpicsClientMonitor>(ChannelInfo);
     }
+
     if (PVUpdateTimer != nullptr) {
       auto Client = Stream->getEpicsClient();
       auto PeriodicClient =
@@ -372,6 +371,7 @@ void Forwarder::addMapping(StreamSettings const &StreamInfo) {
       PVUpdateTimer->addCallback(
           [Client, PeriodicClient]() { PeriodicClient->emitCachedValue(); });
     }
+
     for (auto &Converter : StreamInfo.Converters) {
       pushConverterToStream(Converter, Stream);
     }
