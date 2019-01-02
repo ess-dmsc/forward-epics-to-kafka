@@ -37,12 +37,9 @@ URI::URI() {}
 URI::URI(std::string const &Uri) { parse(Uri); }
 
 static bool is_alpha(std::string s) {
-  for (auto c : s) {
-    if (c < 'a' || c > 'z') {
-      return false;
-    }
-  }
-  return true;
+  return not std::any_of(s.cbegin(), s.cend(), [](const char &Character) {
+    return Character < 'a' or Character > 'z';
+  });
 }
 
 static std::vector<std::string> protocol(std::string s) {

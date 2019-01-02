@@ -57,11 +57,14 @@ const std::vector<std::shared_ptr<Stream>> &Streams::getStreams() const {
 
 std::shared_ptr<Stream>
 Streams::getStreamByChannelName(std::string const &channel_name) {
-  for (auto const &x : StreamPointers) {
-    if (x->getChannelInfo().channel_name == channel_name) {
-      return x;
-    }
+  auto FoundChannel = std::find_if(
+      StreamPointers.cbegin(), StreamPointers.cend(),
+      [&channel_name](const std::shared_ptr<Stream> &CurrentStream) {
+        return CurrentStream->getChannelInfo().channel_name == channel_name;
+      });
+  if (FoundChannel == StreamPointers.end()) {
+    return nullptr;
   }
-  return nullptr;
+  return *FoundChannel;
 }
 } // namespace Forwarder

@@ -215,9 +215,12 @@ void Forwarder::report_status() {
   using nlohmann::json;
   auto Status = json::object();
   auto Streams = json::array();
-  for (auto const &Stream : streams.getStreams()) {
-    Streams.push_back(Stream->getStatusJson());
-  }
+  auto StreamVector = streams.getStreams();
+  std::transform(StreamVector.cbegin(), StreamVector.cend(),
+                 std::back_inserter(Streams),
+                 [](const std::shared_ptr<Stream> &CStream) {
+                   return CStream->getStatusJson();
+                 });
   Status["streams"] = Streams;
   auto StatusString = Status.dump();
   auto StatusStringSize = StatusString.size();

@@ -82,9 +82,11 @@ void InstanceSet::log_stats() {
 std::vector<KafkaW::ProducerStats> InstanceSet::stats_all() {
   std::vector<KafkaW::ProducerStats> ret;
   std::unique_lock<std::mutex> lock(mx_producers_by_host);
-  for (auto const &m : producers_by_host) {
-    ret.push_back(m.second->Stats);
-  }
+  std::transform(
+      producers_by_host.cbegin(), producers_by_host.cend(),
+      std::back_inserter(ret),
+      [](const std::pair<std::string, std::shared_ptr<KafkaW::Producer>>
+             &CProducer) { return CProducer.second->Stats; });
   return ret;
 }
 }
