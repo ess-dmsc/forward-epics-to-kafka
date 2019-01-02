@@ -11,6 +11,8 @@ def poll_for_valid_message(consumer):
     :return: The message object received from polling.
     """
     msg = consumer.poll()
+    if msg.error():
+        print("Consumer error: {}".format(msg.error()))
     assert not msg.error()
     return LogData.LogData.GetRootAsLogData(msg.value(), 0)
 
