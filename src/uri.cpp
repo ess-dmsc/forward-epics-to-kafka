@@ -1,6 +1,7 @@
 #include "uri.h"
 #include "logger.h"
 #include <algorithm>
+#include <ciso646>
 #include <iostream>
 
 namespace Forwarder {
