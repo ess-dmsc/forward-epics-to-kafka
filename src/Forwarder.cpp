@@ -9,6 +9,7 @@
 #include <EpicsClient/EpicsClientInterface.h>
 #include <EpicsClient/EpicsClientMonitor.h>
 #include <EpicsClient/EpicsClientRandom.h>
+#include <algorithm>
 #include <nlohmann/json.hpp>
 #include <sys/types.h>
 #ifdef _MSC_VER

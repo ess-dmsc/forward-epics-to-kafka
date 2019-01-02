@@ -1,5 +1,6 @@
 #include "Streams.h"
 #include "Stream.h"
+#include <algorithm>
 
 namespace Forwarder {
 

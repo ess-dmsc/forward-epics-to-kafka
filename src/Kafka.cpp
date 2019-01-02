@@ -1,5 +1,6 @@
 #include "Kafka.h"
 #include "logger.h"
+#include <algorithm>
 
 namespace Forwarder {
 

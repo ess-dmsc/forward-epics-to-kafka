@@ -4,6 +4,7 @@
 #include "EpicsPVUpdate.h"
 #include "helper.h"
 #include "logger.h"
+#include <algorithm>
 
 namespace Forwarder {
 
