@@ -16,7 +16,7 @@ def test_config_file_channel_created_correctly(docker_compose):
     :param docker_compose: Test fixture
     :return: None
     """
-
+    prod = ProducerWrapper("localhost:9092", CONFIG_TOPIC, "TEST_forwarderData_pv_from_config")
     cons = create_consumer()
     cons.subscribe(['TEST_forwarderData_pv_from_config'])
     sleep(5)
@@ -33,6 +33,7 @@ def test_config_file_channel_created_correctly(docker_compose):
     check_expected_values(second_msg, Value.Double, PVDOUBLE, 10.0)
 
     change_pv_value(PVDOUBLE, 0)
+    prod.stop_all()
     sleep(5)
     cons.close()
 

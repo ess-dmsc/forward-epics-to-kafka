@@ -21,3 +21,9 @@ services:
 
   zookeeper:
     image: zookeeper:3.4
+
+  ioc:
+    image: screamingudder/softioc:latest
+    stdin_open: true
+    tty: true
+    network_mode: "host"
