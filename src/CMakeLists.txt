@@ -61,6 +61,12 @@ set(INCLUDES
     EpicsClient/FwdMonitorRequester.h
     EpicsClient/EpicsClientInterface.h
     EpicsClient/ChannelRequester.h
+    KafkaW/Message.h
+    KafkaW/KafkaW.h
+    KafkaW/Producer.h
+    KafkaW/ProducerTopic.h
+    KafkaW/Consumer.h
+    KafkaW/BrokerSettings.h
     Config.h
     ConfigParser.h
     ConversionWorker.h
