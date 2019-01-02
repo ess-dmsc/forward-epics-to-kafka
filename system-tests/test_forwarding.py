@@ -190,7 +190,7 @@ def test_forwarder_sends_pv_updates_single_pv_enum(docker_compose):
 
 
 def test_forwarder_updates_multiple_pvs(docker_compose):
-    data_topic = "TEST_forwarderData_multiple_pv_different"
+    data_topic = "TEST_forwarderData_multiple"
 
     pvs = [PVSTR, PVLONG]
     prod = ProducerWrapper("localhost:9092", CONFIG_TOPIC, data_topic)
