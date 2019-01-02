@@ -3,7 +3,6 @@
 #include "EpicsPVUpdate.h"
 #include "helper.h"
 #include "logger.h"
-#include <atomic>
 #include <memory>
 #include <pv/pvAccess.h>
 #include <pv/pvData.h>
