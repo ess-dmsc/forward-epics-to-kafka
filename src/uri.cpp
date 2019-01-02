@@ -5,11 +5,10 @@
 namespace Forwarder {
 
 static std::string topic_from_path(std::string s) {
-  auto p = s.find("/");
-  if (p == 0) {
+  if (s.compare(0, 1, "/") == 0) {
     s = s.substr(1);
   }
-  p = s.find("/");
+  auto p = s.find("/");
   if (p == std::string::npos) {
     return s;
   } else {
@@ -35,7 +34,7 @@ void URI::update_deps() {
 
 URI::URI() {}
 
-URI::URI(std::string uri) { parse(uri); }
+URI::URI(std::string const &Uri) { parse(Uri); }
 
 static bool is_alpha(std::string s) {
   for (auto c : s) {
@@ -59,7 +58,8 @@ static std::vector<std::string> protocol(std::string s) {
 }
 
 static std::vector<std::string> hostport(std::string s) {
-  if (s.find("//") != 0) {
+  /// \note This code REALLY needs error handling.
+  if (s.compare(0, 2, "//") != 0) {
     return {std::string(), std::string(), s};
   }
   auto slash = s.find("/", 2);
@@ -102,9 +102,9 @@ static std::string trim(std::string s) {
   return s;
 }
 
-void URI::parse(std::string uri) {
-  uri = trim(uri);
-  auto proto = protocol(uri);
+void URI::parse(std::string Uri) {
+  Uri = trim(Uri);
+  auto proto = protocol(Uri);
   if (!proto[0].empty()) {
     scheme = proto[0];
   }

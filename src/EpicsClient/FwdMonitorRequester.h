@@ -55,9 +55,10 @@ public:
   void unlisten(::epics::pvData::MonitorPtr const &Monitor) override;
 
 private:
-  std::string name;
-  std::string channel_name;
+  std::string ChannelName;
+  std::string RequesterName;
   EpicsClientInterface *epics_client = nullptr;
+  static std::atomic<uint32_t> GlobalIdCounter;
 };
 }
 }

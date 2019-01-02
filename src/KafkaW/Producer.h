@@ -47,11 +47,11 @@ class Producer : public ProducerInterface {
 public:
   typedef ProducerTopic Topic;
   typedef ProducerMsg Msg;
-  explicit Producer(BrokerSettings ProducerBrokerSettings_);
+  explicit Producer(BrokerSettings Settings);
   Producer(Producer const &) = delete;
   Producer(Producer &&x) noexcept;
   ~Producer() override;
-  void poll();
+  void poll() override;
   uint64_t outputQueueLength() override;
 
   /// The message delivered callback for Kafka.

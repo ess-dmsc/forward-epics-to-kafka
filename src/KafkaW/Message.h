@@ -18,8 +18,8 @@ public:
       : DataPointer(Pointer), DataSize(Size), Status(Status) {}
   explicit Message(PollStatus Status) : Status(Status) {}
   std::uint8_t const *getData() const { return DataPointer; };
-  PollStatus getStatus() { return Status; }
-  size_t getSize() { return DataSize; }
+  PollStatus getStatus() const { return Status; }
+  size_t getSize() const { return DataSize; }
 
 private:
   unsigned char const *DataPointer{nullptr};

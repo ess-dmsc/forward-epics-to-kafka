@@ -40,7 +40,7 @@ private:
 
 class ConversionScheduler {
 public:
-  ConversionScheduler(Forwarder *main);
+  explicit ConversionScheduler(Forwarder *main);
   ~ConversionScheduler();
   int fill(
       moodycamel::ConcurrentQueue<std::unique_ptr<ConversionWorkPacket>> &queue,

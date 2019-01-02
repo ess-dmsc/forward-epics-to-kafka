@@ -23,7 +23,7 @@ public:
   ///
   /// \param Document The JSON message.
   /// \return The command name.
-  std::string findCommand(nlohmann::json const &Document);
+  static std::string findCommand(nlohmann::json const &Document);
 
 private:
   Forwarder &main;

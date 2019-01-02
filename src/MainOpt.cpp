@@ -43,8 +43,7 @@ std::string MainOpt::brokers_as_comma_list() const {
   return CommaList;
 }
 
-std::vector<StreamSettings>
-MainOpt::parseStreamsJson(const std::string &filepath) {
+std::vector<StreamSettings> parseStreamsJson(const std::string &filepath) {
   std::ifstream ifs(filepath);
   if (!ifs.is_open()) {
     LOG(Sev::Error, "Could not open JSON file")
@@ -105,7 +104,7 @@ CLI::Option *addKafkaOption(CLI::App &App, std::string const &Name,
     for (size_t i = 0; i < Results.size() / 2; i++) {
       try {
         ConfigMap[Results.at(i * 2)] = std::stol(Results.at(i * 2 + 1));
-      } catch (std::invalid_argument e) {
+      } catch (std::invalid_argument &) {
         throw std::runtime_error(
             fmt::format("Argument {} is not an int", Results.at(i * 2)));
       }
@@ -178,7 +177,7 @@ std::pair<int, std::unique_ptr<MainOpt>> parse_opt(int argc, char **argv) {
   }
   if (!opt.StreamsFile.empty()) {
     try {
-      opt.MainSettings.StreamsInfo = opt.parseStreamsJson(opt.StreamsFile);
+      opt.MainSettings.StreamsInfo = parseStreamsJson(opt.StreamsFile);
     } catch (std::exception const &e) {
       LOG(Sev::Warning, "Can not parse configuration file: {}", e.what());
       ret.first = 1;

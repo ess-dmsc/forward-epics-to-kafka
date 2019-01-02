@@ -41,7 +41,7 @@ nlohmann::json ConversionPath::status_json() const {
   auto Document = json::object();
   Document["schema"] = converter->schema_name();
   Document["broker"] =
-      kafka_output->pt.Producer_->ProducerBrokerSettings.Address;
+      kafka_output->Output.KafkaProducer->ProducerBrokerSettings.Address;
   Document["topic"] = kafka_output->topic_name();
   return Document;
 }

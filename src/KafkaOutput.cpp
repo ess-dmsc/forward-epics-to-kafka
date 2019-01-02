@@ -4,9 +4,11 @@
 
 namespace Forwarder {
 
-KafkaOutput::KafkaOutput(KafkaOutput &&x) noexcept : pt(std::move(x.pt)) {}
+KafkaOutput::KafkaOutput(KafkaOutput &&x) noexcept
+    : Output(std::move(x.Output)) {}
 
-KafkaOutput::KafkaOutput(KafkaW::Producer::Topic &&pt) : pt(std::move(pt)) {}
+KafkaOutput::KafkaOutput(KafkaW::Producer::Topic &&OutputTopic)
+    : Output(std::move(OutputTopic)) {}
 
 int KafkaOutput::emit(std::unique_ptr<FlatBufs::FlatbufferMessage> fb) {
   if (!fb) {
@@ -17,7 +19,7 @@ int KafkaOutput::emit(std::unique_ptr<FlatBufs::FlatbufferMessage> fb) {
   fb->data = m1.data;
   fb->size = m1.size;
   std::unique_ptr<KafkaW::Producer::Msg> msg(fb.release());
-  auto x = pt.produce(msg);
+  auto x = Output.produce(msg);
   if (x == 0) {
     ++g__total_msgs_to_kafka;
     g__total_bytes_to_kafka += m1.size;
@@ -25,5 +27,5 @@ int KafkaOutput::emit(std::unique_ptr<FlatBufs::FlatbufferMessage> fb) {
   return x;
 }
 
-std::string KafkaOutput::topic_name() { return pt.name(); }
+std::string KafkaOutput::topic_name() { return Output.name(); }
 } // namespace Forwarder

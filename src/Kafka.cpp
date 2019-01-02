@@ -3,27 +3,27 @@
 
 namespace Forwarder {
 
-static std::mutex mx;
+static std::mutex ProducerMutex;
 static std::shared_ptr<InstanceSet> kset;
 
-sptr<InstanceSet> InstanceSet::Set(KafkaW::BrokerSettings BrokerSettings) {
-  std::unique_lock<std::mutex> lock(mx);
+sptr<InstanceSet> InstanceSet::Set(KafkaW::BrokerSettings Settings) {
+  std::lock_guard<std::mutex> Lock(ProducerMutex);
   LOG(Sev::Warning, "Kafka InstanceSet with rdkafka version: {}",
       rd_kafka_version_str());
   if (!kset) {
-    BrokerSettings.PollTimeoutMS = 0;
-    kset.reset(new InstanceSet(BrokerSettings));
+    Settings.PollTimeoutMS = 0;
+    kset.reset(new InstanceSet(Settings));
   }
   return kset;
 }
 
 void InstanceSet::clear() {
-  std::unique_lock<std::mutex> lock(mx);
+  std::lock_guard<std::mutex> Lock(ProducerMutex);
   kset.reset();
 }
 
-InstanceSet::InstanceSet(KafkaW::BrokerSettings BrokerSettings)
-    : BrokerSettings(BrokerSettings) {}
+InstanceSet::InstanceSet(KafkaW::BrokerSettings Settings)
+    : BrokerSettings(std::move(Settings)) {}
 
 static void prod_delivery_ok(rd_kafka_message_t const *msg) {
   if (auto x = msg->_private) {
