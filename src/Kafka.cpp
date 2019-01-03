@@ -56,14 +56,14 @@ KafkaW::Producer::Topic InstanceSet::producer_topic(Forwarder::URI uri) {
   p->on_delivery_ok = prod_delivery_ok;
   p->on_delivery_failed = prod_delivery_failed;
   {
-    std::unique_lock<std::mutex> lock(mx_producers_by_host);
+    std::lock_guard<std::mutex> Lock(mx_producers_by_host);
     producers_by_host[host_port] = p;
   }
   return KafkaW::Producer::Topic(p, uri.topic);
 }
 
 int InstanceSet::poll() {
-  std::unique_lock<std::mutex> lock(mx_producers_by_host);
+  std::lock_guard<std::mutex> Lock(mx_producers_by_host);
   for (auto const &m : producers_by_host) {
     auto &p = m.second;
     p->poll();
@@ -72,7 +72,7 @@ int InstanceSet::poll() {
 }
 
 void InstanceSet::log_stats() {
-  std::unique_lock<std::mutex> lock(mx_producers_by_host);
+  std::lock_guard<std::mutex> Lock(mx_producers_by_host);
   for (auto const &m : producers_by_host) {
     auto &p = m.second;
     LOG(Sev::Info, "Broker: {}  total: {}  outq: {}", m.first,
@@ -82,7 +82,7 @@ void InstanceSet::log_stats() {
 
 std::vector<KafkaW::ProducerStats> InstanceSet::stats_all() {
   std::vector<KafkaW::ProducerStats> ret;
-  std::unique_lock<std::mutex> lock(mx_producers_by_host);
+  std::lock_guard<std::mutex> Lock(mx_producers_by_host);
   std::transform(
       producers_by_host.cbegin(), producers_by_host.cend(),
       std::back_inserter(ret),
