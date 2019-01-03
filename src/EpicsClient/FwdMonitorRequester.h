@@ -18,7 +18,7 @@ public:
   /// \param EpicsClientMonitor The PV monitor.
   /// \param ChannelName The PV name.
   FwdMonitorRequester(EpicsClientInterface *EpicsClientMonitor,
-                      const std::string &ChannelName);
+                      const std::string &PVName);
 
   ~FwdMonitorRequester() override;
 

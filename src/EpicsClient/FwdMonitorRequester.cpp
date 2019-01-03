@@ -13,8 +13,8 @@ namespace EpicsClient {
 std::atomic<uint32_t> FwdMonitorRequester::GlobalIdCounter{0};
 
 FwdMonitorRequester::FwdMonitorRequester(
-    EpicsClientInterface *EpicsClientMonitor, const std::string &ChannelName)
-    : ChannelName(ChannelName),
+    EpicsClientInterface *EpicsClientMonitor, const std::string &PVName)
+    : ChannelName(PVName),
       RequesterName(fmt::format("FwdMonitorRequester-{}", GlobalIdCounter)),
       epics_client(EpicsClientMonitor) {
   ++GlobalIdCounter;
