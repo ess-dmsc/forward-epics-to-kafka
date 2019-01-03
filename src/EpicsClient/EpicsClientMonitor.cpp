@@ -73,8 +73,7 @@ public:
     if (monitor) {
       monitoringStop();
     }
-    monitor_requester.reset(
-        new FwdMonitorRequester(epics_client, channel_name));
+    monitor_requester = std::make_shared<FwdMonitorRequester>(epics_client, channel_name);
     monitor = channel->createMonitor(monitor_requester, pvreq);
     if (!monitor) {
       LOG(Sev::Warning, "could not create EPICS monitor instance");
@@ -119,7 +118,7 @@ public:
   }
 
   /// Pushes update to the emit_queue ring buffer which is owned by a stream.
-  int emit(std::shared_ptr<FlatBufs::EpicsPVUpdate> Update) {
+  int emit(std::shared_ptr<FlatBufs::EpicsPVUpdate> const &Update) {
 #if TEST_PROVOKE_ERROR == 1
     static std::atomic<int> c1{0};
     if (c1 > 10) {
