@@ -21,7 +21,28 @@
 ## Usage
 
 ```
-forward-epics-to-kafka --help
+  -h,--help                   Print this help message and exit
+  --log-file TEXT             Log filename
+  --streams-json TEXT         Json file for streams to add
+  --broker TEXT               Default broker for data
+  --kafka-gelf TEXT           Kafka GELF logging //broker[:port]/topic
+  --graylog-logger-address TEXT
+                              Address for Graylog logging
+  --influx-url TEXT           Address for Influx logging
+  -v,--verbosity INT=3        Syslog logging level
+  --config-topic URI=//localhost:9092/forward_epics_to_kafka_commands (REQUIRED)
+                              <//host[:port]/topic> Kafka host/topic to listen for commands on
+  --status-topic URI          <//host[:port][/topic]> Kafka broker/topic to publish status updates on
+  --pv-update-period UINT=0   Force forwarding all PVs with this period even if values are not updated (ms). 0=Off
+  --fake-pv-period UINT=0     Generates and forwards fake (random value) PV updates with the specified period in milliseconds, instead of forwarding real PV updates from EPICS
+  --conversion-threads UINT=1 Conversion threads
+  --conversion-worker-queue-size UINT=1024
+                              Conversion worker queue size
+  --main-poll-interval INT=500
+                              Main Poll interval
+  -S,--kafka-config KEY VALUE ...
+                              LibRDKafka options
+  -c,--config-file TEXT       Read configuration from an ini file
 ```
 
 
