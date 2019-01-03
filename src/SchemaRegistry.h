@@ -20,7 +20,7 @@ class SchemaRegistry {
 public:
   static std::map<std::string, SchemaInfo::ptr> &items();
 
-  static void registerSchema(std::string FlatbufferID,
+  static void registerSchema(std::string const &FlatbufferID,
                              SchemaInfo::ptr &&SchemaInfoPtr) {
     auto &SchemaMap = items();
     if (SchemaMap.find(FlatbufferID) != SchemaMap.end()) {

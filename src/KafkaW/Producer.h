@@ -14,8 +14,8 @@ struct ProducerMsg {
   virtual ~ProducerMsg() = default;
   virtual void deliveryOk();
   virtual void deliveryError();
-  unsigned char *data;
-  uint32_t size;
+  unsigned char *data{nullptr};
+  uint32_t size{0};
 };
 
 struct ProducerStats {

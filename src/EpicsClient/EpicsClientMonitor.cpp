@@ -2,6 +2,7 @@
 #include "ChannelRequester.h"
 #include "FwdMonitorRequester.h"
 #include <atomic>
+#include <memory>
 #include <mutex>
 // EPICS 4 supports access via the channel access protocol as well,
 // and we need it because some hardware speaks EPICS base.
@@ -36,7 +37,7 @@ public:
 
   /// Starts the EPICS channel access provider loop and the monitor requester
   /// loop for monitoring EPICS PVs.
-  int init(std::string epics_channel_provider_type) {
+  int init(std::string const &epics_channel_provider_type) {
     factory_init = EpicsClientFactoryInit::factory_init();
     {
       RLOCK();
@@ -46,7 +47,7 @@ public:
         LOG(Sev::Error, "Can not initialize provider");
         return 1;
       }
-      channel_requester.reset(new ChannelRequester(this));
+      channel_requester = std::make_shared<ChannelRequester>(this);
       channel = provider->createChannel(channel_name, channel_requester);
     }
     return 0;

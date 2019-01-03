@@ -14,7 +14,7 @@ ConversionPath::ConversionPath(ConversionPath &&x) noexcept
 
 ConversionPath::ConversionPath(std::shared_ptr<Converter> conv,
                                std::unique_ptr<KafkaOutput> ko)
-    : converter(conv), kafka_output(std::move(ko)) {}
+    : converter(std::move(conv)), kafka_output(std::move(ko)) {}
 
 ConversionPath::~ConversionPath() {
   LOG(Sev::Debug, "~ConversionPath");

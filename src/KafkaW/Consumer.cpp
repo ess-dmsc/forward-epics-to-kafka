@@ -8,7 +8,7 @@ namespace KafkaW {
 static std::atomic<int> g_kafka_consumer_instance_count;
 
 #define KERR(RK, ERR)                                                          \
-  if (ERR != 0) {                                                              \
+  if ((ERR) != 0) {                                                            \
     LOG(Sev::Error, "Kafka {}  error: {}, {}, {}", rd_kafka_name(RK), ERR,     \
         rd_kafka_err2name((rd_kafka_resp_err_t)ERR),                           \
         rd_kafka_err2str((rd_kafka_resp_err_t)ERR));                           \

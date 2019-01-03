@@ -51,7 +51,8 @@ public:
   explicit Timer(std::chrono::milliseconds Interval,
                  std::shared_ptr<Sleeper> Sleeper)
       : Running(false), IntervalMS(Interval), CallbacksMutex(),
-        Sleeper_(Sleeper), DoIteration(false), IterationComplete(true){};
+        Sleeper_(std::move(Sleeper)), DoIteration(false),
+        IterationComplete(true){};
 
   /// Executes all registered callbacks when notified to do iteration
   void executionLoop();

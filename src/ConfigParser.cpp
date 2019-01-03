@@ -11,7 +11,7 @@ static std::vector<std::string> split(const std::string &Brokers) {
   std::vector<std::string> ret;
   std::string::size_type i1 = 0;
   while (true) {
-    auto i2 = Brokers.find(",", i1);
+    auto i2 = Brokers.find(',', i1);
     if (i2 == std::string::npos)
       break;
     if (i2 > i1) {

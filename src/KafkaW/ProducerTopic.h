@@ -15,7 +15,7 @@ public:
 
 class ProducerTopic {
 public:
-  ProducerTopic(ProducerTopic &&);
+  ProducerTopic(ProducerTopic &&) noexcept;
   ProducerTopic(std::shared_ptr<Producer> ProducerPtr, std::string TopicName);
   ~ProducerTopic();
   int produce(unsigned char *MsgData, size_t MsgSize);

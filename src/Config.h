@@ -11,7 +11,6 @@
 
 namespace Forwarder {
 class ConfigCB;
-
 namespace Config {
 
 using std::string;

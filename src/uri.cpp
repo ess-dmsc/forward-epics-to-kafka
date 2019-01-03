@@ -10,7 +10,7 @@ static std::string topic_from_path(std::string s) {
   if (s.compare(0, 1, "/") == 0) {
     s = s.substr(1);
   }
-  auto p = s.find("/");
+  auto p = s.find('/');
   if (p == std::string::npos) {
     return s;
   } else {
@@ -34,17 +34,15 @@ void URI::update_deps() {
   }
 }
 
-URI::URI() {}
-
 URI::URI(std::string const &Uri) { parse(Uri); }
 
-static bool is_alpha(std::string s) {
+static bool is_alpha(std::string const &s) {
   return not std::any_of(s.cbegin(), s.cend(), [](const char &Character) {
     return Character < 'a' or Character > 'z';
   });
 }
 
-static std::vector<std::string> protocol(std::string s) {
+static std::vector<std::string> protocol(std::string const &s) {
   auto slashes = s.find("://");
   if (slashes == std::string::npos || slashes == 0) {
     return {std::string(), s};
@@ -56,13 +54,13 @@ static std::vector<std::string> protocol(std::string s) {
   return {proto, s.substr(slashes + 1, std::string::npos)};
 }
 
-static std::vector<std::string> hostport(std::string s) {
+static std::vector<std::string> hostport(std::string const &s) {
   /// \note This code REALLY needs error handling.
   if (s.compare(0, 2, "//") != 0) {
     return {std::string(), std::string(), s};
   }
-  auto slash = s.find("/", 2);
-  auto colon = s.find(":", 2);
+  auto slash = s.find('/', 2);
+  auto colon = s.find(':', 2);
   if (colon == std::string::npos) {
     if (slash == std::string::npos) {
       return {s.substr(2), std::string(), std::string()};
@@ -86,7 +84,7 @@ static std::vector<std::string> hostport(std::string s) {
 
 static std::string trim(std::string s) {
   std::string::size_type a = 0;
-  while (s.find(" ", a) == a) {
+  while (s.find(' ', a) == a) {
     ++a;
   }
   s = s.substr(a);
@@ -109,7 +107,7 @@ void URI::parse(std::string Uri) {
   }
   auto s = proto[1];
   if (!require_host_slashes) {
-    if (s.find("/") != 0) {
+    if (s.find('/') != 0) {
       s = "//" + s;
     }
   }

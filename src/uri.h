@@ -11,7 +11,7 @@ class URI {
 public:
   /// Creates a default URI with all members empty. You can (should) run
   /// URI::parse to fill it
-  URI();
+  URI() = default;
   /// Creates and parses the given URI
   explicit URI(std::string const &Uri);
   /// Parses the given `uri`

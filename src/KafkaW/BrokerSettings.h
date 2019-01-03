@@ -3,7 +3,6 @@
 #include <map>
 #include <string>
 
-struct rd_kafka_conf_s;
 typedef struct rd_kafka_conf_s rd_kafka_conf_t;
 
 namespace KafkaW {
