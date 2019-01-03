@@ -291,6 +291,31 @@ void Forwarder::report_stats(int dt) {
   }
 }
 
+URI Forwarder::createTopicURI(ConverterSettings const &ConverterInfo) {
+  URI BrokerURI;
+  if (!main_opt.MainSettings.Brokers.empty()) {
+    BrokerURI = main_opt.MainSettings.Brokers[0];
+  }
+
+  URI TopicURI;
+  if (!BrokerURI.HostPort.empty()) {
+    TopicURI.HostPort = BrokerURI.HostPort;
+  }
+
+  if (BrokerURI.Port != 0) {
+    TopicURI.Port = BrokerURI.Port;
+  }
+  try {
+    TopicURI.parse(ConverterInfo.Topic);
+  } catch (std::runtime_error &e) {
+    throw MappingAddException(
+        fmt::format("Invalid topic {} in converter, not added to stream. May "
+                    "require broker and/or host slashes.",
+                    ConverterInfo.Topic));
+  }
+  return TopicURI;
+}
+
 void Forwarder::pushConverterToStream(ConverterSettings const &ConverterInfo,
                                       std::shared_ptr<Stream> &Stream) {
 
@@ -301,27 +326,7 @@ void Forwarder::pushConverterToStream(ConverterSettings const &ConverterInfo,
         "Cannot handle flatbuffer schema id {}", ConverterInfo.Schema));
   }
 
-  URI Uri;
-  if (!main_opt.MainSettings.Brokers.empty()) {
-    Uri = main_opt.MainSettings.Brokers[0];
-  }
-
-  URI TopicURI;
-  if (!Uri.HostPort.empty()) {
-    TopicURI.HostPort = Uri.HostPort;
-  }
-
-  if (Uri.Port != 0) {
-    TopicURI.Port = Uri.Port;
-  }
-  try {
-    TopicURI.parse(ConverterInfo.Topic);
-  } catch (std::runtime_error &e) {
-    throw MappingAddException(
-        fmt::format("Invalid topic {} in converter, not added to stream. May "
-                    "require broker and/or host slashes.",
-                    ConverterInfo.Topic));
-  }
+  URI TopicURI = createTopicURI(ConverterInfo);
 
   std::shared_ptr<Converter> ConverterShared;
   if (!ConverterInfo.Name.empty()) {

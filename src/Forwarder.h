@@ -71,6 +71,7 @@ private:
   std::mutex converters_mutex;
   std::map<std::string, std::weak_ptr<Converter>> converters;
   std::mutex streams_mutex;
+  URI createTopicURI(ConverterSettings const &ConverterInfo);
   std::mutex conversion_workers_mx;
   std::vector<std::unique_ptr<ConversionWorker>> conversion_workers;
   ConversionScheduler conversion_scheduler;
