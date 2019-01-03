@@ -70,7 +70,7 @@ Stream::~Stream() {
 }
 
 int Stream::addConverter(std::unique_ptr<ConversionPath> Path) {
-  std::unique_lock<std::mutex> lock(ConversionPathsMutex);
+  std::lock_guard<std::mutex> lock(ConversionPathsMutex);
 
   for (auto const &ConversionPath : ConversionPaths) {
     if (ConversionPath->getKafkaTopicName() == Path->getKafkaTopicName() &&
@@ -156,7 +156,7 @@ nlohmann::json Stream::getStatusJson() {
   Document["channel_name"] = ChannelInfo.channel_name;
   Document["getQueueSize"] = getQueueSize();
   {
-    std::unique_lock<std::mutex> lock(SeqDataEmitted.Mutex);
+    std::lock_guard<std::mutex> lock(SeqDataEmitted.Mutex);
     auto const &Set = SeqDataEmitted.set;
     auto Last = Set.rbegin();
     if (Last != Set.rend()) {

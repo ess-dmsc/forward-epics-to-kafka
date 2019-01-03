@@ -6,7 +6,7 @@ namespace Forwarder {
 size_t Streams::size() { return streams.size(); }
 
 void Streams::stopChannel(std::string const &channel) {
-  std::unique_lock<std::mutex> lock(streams_mutex);
+  std::lock_guard<std::mutex> lock(streams_mutex);
   streams.erase(std::remove_if(streams.begin(), streams.end(),
                                [&](std::shared_ptr<Stream> s) {
                                  return (s->getChannelInfo().channel_name ==
@@ -17,7 +17,7 @@ void Streams::stopChannel(std::string const &channel) {
 
 void Streams::clearStreams() {
   LOG(Sev::Debug, "Main::clearStreams()  begin");
-  std::unique_lock<std::mutex> lock(streams_mutex);
+  std::lock_guard<std::mutex> lock(streams_mutex);
   if (!streams.empty()) {
     for (auto const &Stream : streams) {
       Stream->stop();

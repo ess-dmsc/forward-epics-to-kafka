@@ -28,8 +28,6 @@ static KafkaW::BrokerSettings make_broker_opt(MainOpt const &opt) {
   return ret;
 }
 
-using ulock = std::unique_lock<std::mutex>;
-
 /// Main program entry class.
 Forwarder::Forwarder(MainOpt &opt)
     : main_opt(opt), kafka_instance_set(InstanceSet::Set(make_broker_opt(opt))),
@@ -105,7 +103,7 @@ void Forwarder::createFakePVUpdateTimerIfRequired() {
 
 int Forwarder::conversion_workers_clear() {
   LOG(Sev::Debug, "Main::conversion_workers_clear()  begin");
-  std::unique_lock<std::mutex> lock(conversion_workers_mx);
+  std::lock_guard<std::mutex> lock(conversion_workers_mx);
   if (!conversion_workers.empty()) {
     for (auto &x : conversion_workers) {
       x->stop();
@@ -144,7 +142,7 @@ void Forwarder::forward_epics_to_kafka() {
   auto t_status_last = CLK::now();
   ConfigCB config_cb(*this);
   {
-    std::unique_lock<std::mutex> lock(conversion_workers_mx);
+    std::lock_guard<std::mutex> lock(conversion_workers_mx);
     for (auto &x : conversion_workers) {
       x->start();
     }

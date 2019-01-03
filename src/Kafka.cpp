@@ -12,7 +12,7 @@ std::unique_lock<std::mutex> InstanceSet::getProducersByHostMutexLock() {
 }
 
 sptr<InstanceSet> InstanceSet::Set(KafkaW::BrokerSettings BrokerSettings) {
-  std::unique_lock<std::mutex> lock(mx);
+  std::lock_guard<std::mutex> lock(mx);
   LOG(Sev::Warning, "Kafka InstanceSet with rdkafka version: {}",
       RdKafka::version());
   if (!kset) {
@@ -23,7 +23,7 @@ sptr<InstanceSet> InstanceSet::Set(KafkaW::BrokerSettings BrokerSettings) {
 }
 
 void InstanceSet::clear() {
-  std::unique_lock<std::mutex> lock(mx);
+  std::lock_guard<std::mutex> lock(mx);
   kset.reset();
 }
 

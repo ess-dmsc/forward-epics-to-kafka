@@ -18,7 +18,7 @@ std::unique_ptr<EpicsClientFactoryInit> EpicsClientFactoryInit::factory_init() {
 
 EpicsClientFactoryInit::EpicsClientFactoryInit() {
   LOG(Sev::Debug, "EpicsClientFactoryInit");
-  std::unique_lock<std::mutex> lock(MutexLock);
+  std::lock_guard<std::mutex> lock(MutexLock);
   auto c = Count++;
   if (c == 0) {
     LOG(Sev::Info, "START  Epics factories");
@@ -29,7 +29,7 @@ EpicsClientFactoryInit::EpicsClientFactoryInit() {
 
 EpicsClientFactoryInit::~EpicsClientFactoryInit() {
   LOG(Sev::Debug, "~EpicsClientFactoryInit");
-  std::unique_lock<std::mutex> lock(MutexLock);
+  std::lock_guard<std::mutex> lock(MutexLock);
   auto c = --Count;
   if (c < 0) {
     LOG(Sev::Error,
