@@ -33,7 +33,7 @@ def test_config_file_channel_created_correctly(docker_compose):
     check_expected_values(second_msg, Value.Double, PVDOUBLE, 10.0)
 
     change_pv_value(PVDOUBLE, 0)
-    prod.stop_all()
+    prod.stop_all_pvs()
     sleep(5)
     cons.close()
 
@@ -68,7 +68,7 @@ def test_forwarder_sends_pv_updates_single_pv_double(docker_compose):
     check_expected_values(second_msg, Value.Double, PVDOUBLE, 5.0)
 
     change_pv_value(PVDOUBLE, 0)
-    prod.stop_all()
+    prod.stop_all_pvs()
     sleep(3)
     cons.close()
 
@@ -106,7 +106,7 @@ def test_forwarder_sends_pv_updates_single_pv_string(docker_compose):
 
     # We have to use this as the second parameter for caput gets parsed as empty so does not change the value of the PV
     change_pv_value(PVSTR, "\"\"")
-    prod.stop_all()
+    prod.stop_all_pvs()
     sleep(3)
     cons.close()
 
@@ -147,7 +147,7 @@ def test_forwarder_sends_pv_updates_single_pv_long(docker_compose):
     check_expected_values(second_msg, Value.Int, PVLONG, 5)
 
     change_pv_value(PVLONG, 0)
-    prod.stop_all()
+    prod.stop_all_pvs()
     sleep(3)
     cons.close()
 
@@ -184,7 +184,7 @@ def test_forwarder_sends_pv_updates_single_pv_enum(docker_compose):
     check_expected_values(second_msg, Value.Int, PVENUM, 1)
 
     change_pv_value(PVENUM, "INIT")
-    prod.stop_all()
+    prod.stop_all_pvs()
     sleep(3)
     cons.close()
 
@@ -210,7 +210,7 @@ def test_forwarder_updates_multiple_pvs(docker_compose):
 
     check_multiple_expected_values(messages, expected_values)
 
-    prod.stop_all()
+    prod.stop_all_pvs()
     sleep(3)
     cons.close()
 
@@ -235,7 +235,7 @@ def test_forwarder_updates_pv_when_config_changed_from_one_pv(docker_compose):
 
     check_multiple_expected_values(messages, expected_values)
 
-    prod.stop_all()
+    prod.stop_all_pvs()
     sleep(3)
     cons.close()
 
@@ -262,6 +262,6 @@ def test_forwarder_updates_pv_when_config_changed_from_two_pvs(docker_compose):
     messages = [poll_for_valid_message(cons), poll_for_valid_message(cons), poll_for_valid_message(cons)]
     check_multiple_expected_values(messages, expected_values)
 
-    prod.stop_all()
+    prod.stop_all_pvs()
     sleep(3)
     cons.close()

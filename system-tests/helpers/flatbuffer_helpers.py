@@ -47,6 +47,8 @@ def check_multiple_expected_values(message_list, expected_values):
         assert expected_values[name][0] == log_data.ValueType()
         union_val = ValueTypes[log_data.ValueType()]()
         union_val.Init(log_data.Value().Bytes, log_data.Value().Pos)
+        print("expected value: {}, value from message: {}".format(expected_values[name][1], union_val.Value())
+              , flush=True)
         if isinstance(expected_values[name][1], float):
             isclose(expected_values[name][1], union_val.Value())
         else:
