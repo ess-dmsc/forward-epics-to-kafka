@@ -74,10 +74,16 @@ int ProducerTopic::produce(unique_ptr<Producer::Msg> &Msg) {
     auto err = rd_kafka_last_error();
     if (err == RD_KAFKA_RESP_ERR__QUEUE_FULL) {
       ++s.local_queue_full;
+      LOG(Sev::Warning, "QUEUE_FULL  outq: {}",
+          rd_kafka_outq_len(KafkaProducer->getRdKafkaPtr()));
     } else if (err == RD_KAFKA_RESP_ERR_MSG_SIZE_TOO_LARGE) {
       ++s.msg_too_large;
+      LOG(Sev::Error, "TOO_LARGE  size: {}", Msg->size);
     } else {
       ++s.produce_fail;
+      LOG(Sev::Debug, "produce topic {}  partition {}   error: {}  {}",
+          rd_kafka_topic_name(RdKafkaTopic), partition, x,
+          rd_kafka_err2str(err));
     }
   } else {
     ++s.produced;
