@@ -50,7 +50,7 @@ class Timer {
 public:
   explicit Timer(std::chrono::milliseconds Interval,
                  std::shared_ptr<Sleeper> Sleeper)
-      : Running(false), IntervalMS(Interval), CallbacksMutex(),
+      : Running(false), IntervalMS(Interval),
         Sleeper_(std::move(Sleeper)), DoIteration(false),
         IterationComplete(true){};
 

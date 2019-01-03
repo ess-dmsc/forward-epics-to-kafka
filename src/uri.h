@@ -38,4 +38,4 @@ public:
 private:
   void update_deps();
 };
-}
+} // namespace Forwarder

@@ -154,11 +154,13 @@ void Forwarder::forward_epics_to_kafka() {
     }
   }
 
-  if (PVUpdateTimer != nullptr)
+  if (PVUpdateTimer != nullptr) {
     PVUpdateTimer->start();
+  }
 
-  if (GenerateFakePVUpdateTimer != nullptr)
+  if (GenerateFakePVUpdateTimer != nullptr) {
     GenerateFakePVUpdateTimer->start();
+  }
 
   while (ForwardingRunFlag.load() == ForwardingRunState::RUN) {
     auto do_stats = false;

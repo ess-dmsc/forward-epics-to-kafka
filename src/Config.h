@@ -13,8 +13,6 @@ namespace Forwarder {
 class ConfigCB;
 namespace Config {
 
-using std::string;
-
 struct Listener_impl;
 
 class Listener {

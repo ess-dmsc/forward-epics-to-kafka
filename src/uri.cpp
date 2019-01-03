@@ -123,4 +123,4 @@ void URI::parse(std::string Uri) {
   }
   update_deps();
 }
-}
+} // namespace Forwarder

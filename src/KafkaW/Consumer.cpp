@@ -133,7 +133,7 @@ void Consumer::init() {
 
   RdKafka = rd_kafka_new(RD_KAFKA_CONSUMER, Configuration, ErrorStringBuffer,
                          ErrorStringSize);
-  if (!RdKafka) {
+  if (nullptr == RdKafka) {
     LOG(Sev::Error, "can not create kafka handle: {}", ErrorStringBuffer);
     throw std::runtime_error("can not create Kafka handle");
   }
@@ -160,7 +160,7 @@ void Consumer::addTopic(std::string Topic) {
   rd_kafka_topic_partition_list_add(PartitionList, Topic.c_str(), Partition);
   int ERR = rd_kafka_subscribe(RdKafka, PartitionList);
   KERR(RdKafka, ERR);
-  if (ERR) {
+  if (ERR != 0) {
     LOG(Sev::Error, "could not subscribe");
     throw std::runtime_error("can not subscribe");
   }
