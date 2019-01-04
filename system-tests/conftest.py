@@ -196,3 +196,18 @@ def docker_compose_idle_updates_long_period(request):
     options["--file"] = ["compose/docker-compose-idle-updates-long-period.yml"]
 
     build_and_run(options, request)
+
+
+@pytest.fixture(scope="module", autouse=False)
+def docker_compose_lr(request):
+    """
+    :type request: _pytest.python.FixtureRequest
+    """
+    print("Started preparing test environment...", flush=True)
+
+    # Options must be given as long form
+    options = common_options
+    options["--project-name"] = "lr"
+    options["--file"] = ["compose/docker-compose-long-running.yml"]
+
+    build_and_run(options, request)

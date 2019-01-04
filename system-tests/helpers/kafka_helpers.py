@@ -10,7 +10,8 @@ def poll_for_valid_message(consumer):
     :param consumer: The consumer object.
     :return: The message object received from polling.
     """
-    msg = consumer.poll()
+    msg = consumer.poll(timeout=1.0)
+    assert msg is not None
     if msg.error():
         print("Consumer error: {}".format(msg.error()))
     assert not msg.error()
