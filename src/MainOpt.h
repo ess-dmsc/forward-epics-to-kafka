@@ -10,6 +10,8 @@
 
 namespace Forwarder {
 
+std::vector<StreamSettings> parseStreamsJson(const std::string &filepath);
+
 struct MainOpt {
   ConfigSettings MainSettings;
   std::string brokers_as_comma_list() const;
@@ -26,7 +28,6 @@ struct MainOpt {
   MainOpt();
   void set_broker(std::string &Broker);
   void init_logger();
-  std::vector<StreamSettings> parseStreamsJson(const std::string &filepath);
 };
 
 std::pair<int, std::unique_ptr<MainOpt>> parse_opt(int argc, char **argv);

@@ -16,12 +16,12 @@ public:
 class ProducerTopic {
 public:
   ProducerTopic(ProducerTopic &&);
-  ProducerTopic(std::shared_ptr<Producer> Producer_, std::string Name_);
+  ProducerTopic(std::shared_ptr<Producer> ProducerPtr, std::string TopicName);
   ~ProducerTopic();
   int produce(unsigned char *MsgData, size_t MsgSize);
   int produce(std::unique_ptr<Producer::Msg> &Msg);
   // Currently it's nice to have access to these for statistics:
-  std::shared_ptr<Producer> Producer_;
+  std::shared_ptr<Producer> KafkaProducer;
   rd_kafka_topic_t *RdKafkaTopic = nullptr;
   void enableCopy();
   std::string name() const;

@@ -23,7 +23,7 @@ template <typename T> using sptr = std::shared_ptr<T>;
 
 class InstanceSet {
 public:
-  static sptr<InstanceSet> Set(KafkaW::BrokerSettings opt);
+  static sptr<InstanceSet> Set(KafkaW::BrokerSettings Settings);
   static void clear();
   KafkaW::Producer::Topic producer_topic(URI uri);
   int poll();
@@ -32,7 +32,7 @@ public:
   InstanceSet(InstanceSet const &&) = delete;
 
 private:
-  explicit InstanceSet(KafkaW::BrokerSettings opt);
+  explicit InstanceSet(KafkaW::BrokerSettings Settings);
   KafkaW::BrokerSettings BrokerSettings;
   std::mutex mx_producers_by_host;
   std::map<std::string, std::shared_ptr<KafkaW::Producer>> producers_by_host;

@@ -25,9 +25,8 @@ static std::vector<std::string> split(const std::string &Brokers) {
   return ret;
 }
 
-ConfigParser::ConfigParser(const std::string &RawJson) {
-  Json = nlohmann::json::parse(RawJson);
-}
+ConfigParser::ConfigParser(const std::string &RawJson)
+    : Json(nlohmann::json::parse(RawJson)) {}
 
 ConfigSettings ConfigParser::extractStreamInfo() {
   ConfigSettings Settings;

@@ -18,7 +18,7 @@ public:
 
 class Consumer : public ConsumerInterface {
 public:
-  explicit Consumer(BrokerSettings opt);
+  explicit Consumer(BrokerSettings Settings);
   Consumer(Consumer &&) = delete;
   Consumer(Consumer const &) = delete;
   ~Consumer() override;
@@ -59,7 +59,7 @@ private:
   /// \param Err_i The error code.
   /// \param Reason The error string.
   /// \param Opaque The opaque object.
-  static void errorCallback(rd_kafka_t *RK, int Err_i, char const *Reason,
+  static void errorCallback(rd_kafka_t *RK, int Err_i, char const *Message,
                             void *Opaque);
 
   /// The rebalance callback for Kafka.

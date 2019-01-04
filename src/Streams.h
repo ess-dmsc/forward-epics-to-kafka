@@ -12,14 +12,14 @@ class Stream;
 
 class Streams {
 private:
-  std::vector<std::shared_ptr<Stream>> streams;
-  std::mutex streams_mutex;
+  std::vector<std::shared_ptr<Stream>> StreamPointers;
+  std::mutex StreamsMutex;
 
 public:
   /// Gets the number of streams.
   ///
   /// \return The number of streams.
-  size_t size();
+  size_t size() const;
 
   /// Stop the specified channel and remove the stream.
   ///
@@ -48,7 +48,7 @@ public:
   ///
   /// \return The last stream in the vector.
   std::shared_ptr<Stream> back();
-  std::shared_ptr<Stream> operator[](size_t s) { return streams.at(s); };
-  const std::vector<std::shared_ptr<Stream>> &getStreams();
+  std::shared_ptr<Stream> operator[](size_t s) { return StreamPointers.at(s); };
+  const std::vector<std::shared_ptr<Stream>> &getStreams() const;
 };
 } // namespace Forwarder

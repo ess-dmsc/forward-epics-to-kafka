@@ -188,8 +188,8 @@ public:
           ValueSize, sizeof(T0), (uint8_t **)&VectorPointer);
       memcpy(VectorPointer, Value.data(), ValueSize * sizeof(T0));
     } else {
-      VectorValue =
-          Builder->CreateVector((BooleanType *)Value.data(), ValueSize);
+      VectorValue = Builder->CreateVector(
+          reinterpret_cast<const BooleanType *>(Value.data()), ValueSize);
     }
 
     ArrayType PVBuilder(*Builder);
@@ -295,16 +295,6 @@ Value_t makeValueArray(flatbuffers::FlatBufferBuilder &Builder,
   return {Value::NONE, 0};
 }
 
-template <typename T> class release_deleter {
-public:
-  release_deleter() : Delete(true) {}
-  void operator()(T *ptr) {
-    if (Delete)
-      delete ptr;
-  }
-  bool Delete;
-};
-
 Value_t makeValue(flatbuffers::FlatBufferBuilder &Builder,
                   epics::pvData::PVStructurePtr const &PVStructureField,
                   bool opts, Statistics &Stats) {
@@ -335,10 +325,10 @@ Value_t makeValue(flatbuffers::FlatBufferBuilder &Builder,
     // NTEnum:  we currently send the index value.  full enum identifier is
     // coming when it
     // is decided how we store on nexus side.
-    release_deleter<epics::pvData::PVStructure> PointerDeleter;
-    PointerDeleter.Delete = false;
-    epics::pvData::PVStructurePtr p1(PVStructureField.get(), PointerDeleter);
-    if (epics::nt::NTEnum::isCompatible(p1)) {
+    epics::pvData::PVStructurePtr ComparisonPtr(
+        PVStructureField.get(),
+        [](epics::pvData::PVStructure *) { /* Do nothing. */ });
+    if (epics::nt::NTEnum::isCompatible(ComparisonPtr)) {
       auto IndexField = ((epics::pvData::PVStructure *)(ValueField.get()))
                             ->getSubField("index");
       return makeValueScalar(
