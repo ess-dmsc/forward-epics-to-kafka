@@ -245,7 +245,7 @@ void ChannelRequester::channelCreated(epics::pvData::Status const &Status,
       std::string cname = Channel->getChannelName();
       LOG(Sev::Error, "  failure is in channel: {}", cname);
     }
-    EpicsClientImpl->error_channel_requester();
+    EpicsClientMonitor_impl::error_channel_requester();
   }
 }
 
@@ -257,7 +257,7 @@ void ChannelRequester::channelStateChange(
   if (!Channel) {
     LOG(Sev::Error, "no channel, even though we should have.  state: {}",
         channelStateName(ConnectionState));
-    EpicsClientImpl->error_channel_requester();
+    EpicsClientMonitor_impl::error_channel_requester();
     return;
   }
   if (ConnectionState == Channel::CONNECTED) {
@@ -276,7 +276,7 @@ void ChannelRequester::channelStateChange(
   } else {
     LOG(Sev::Error, "Unhandled channel state change: {} {}", ConnectionState,
         channelStateName(ConnectionState));
-    EpicsClientImpl->error_channel_requester();
+    EpicsClientMonitor_impl::error_channel_requester();
   }
 }
 } // namespace EpicsClient

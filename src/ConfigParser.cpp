@@ -30,7 +30,7 @@ ConfigParser::ConfigParser(const std::string &RawJson)
     : Json(nlohmann::json::parse(RawJson)) {}
 
 ConfigSettings ConfigParser::extractStreamInfo() {
-  ConfigSettings Settings;
+  ConfigSettings Settings{};
   using nlohmann::json;
   if (auto StreamsMaybe = find<json>("streams", Json)) {
     auto Streams = StreamsMaybe.inner();
