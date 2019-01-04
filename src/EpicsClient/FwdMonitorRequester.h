@@ -1,6 +1,7 @@
 #pragma once
 #include "EpicsClientInterface.h"
 #include "RangeSet.h"
+#include <atomic>
 #include <pv/monitor.h>
 namespace Forwarder {
 namespace EpicsClient {
@@ -17,7 +18,7 @@ public:
   /// \param EpicsClientMonitor The PV monitor.
   /// \param ChannelName The PV name.
   FwdMonitorRequester(EpicsClientInterface *EpicsClientMonitor,
-                      const std::string &ChannelName);
+                      const std::string &PVName);
 
   ~FwdMonitorRequester() override;
 
@@ -55,9 +56,10 @@ public:
   void unlisten(::epics::pvData::MonitorPtr const &Monitor) override;
 
 private:
-  std::string name;
-  std::string channel_name;
+  std::string ChannelName;
+  std::string RequesterName;
   EpicsClientInterface *epics_client = nullptr;
+  static std::atomic<uint32_t> GlobalIdCounter;
 };
 }
 }

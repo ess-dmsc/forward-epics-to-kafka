@@ -2,9 +2,9 @@
 
 #include "BrokerSettings.h"
 #include "ProducerDeliveryCb.h"
-#include "ProducerEventCb.h"
 #include "ProducerMessage.h"
 #include "ProducerStats.h"
+#include "KafkaEventCb.h"
 #include <atomic>
 #include <functional>
 
@@ -39,6 +39,6 @@ private:
   std::unique_ptr<RdKafka::Producer> ProducerPtr = nullptr;
   int id = 0;
   ProducerDeliveryCb DeliveryCb{Stats};
-  ProducerEventCb EventCb;
+  KafkaEventCb EventCb;
 };
 } // namespace KafkaW

@@ -1,7 +1,8 @@
 #pragma once
 
 #include "CommandHandler.h"
-#include "uri.h"
+#include "KafkaW/KafkaW.h"
+#include "URI.h"
 #include <atomic>
 #include <chrono>
 #include <memory>

@@ -61,6 +61,12 @@ set(INCLUDES
     EpicsClient/FwdMonitorRequester.h
     EpicsClient/EpicsClientInterface.h
     EpicsClient/ChannelRequester.h
+    KafkaW/ConsumerMessage.h
+    KafkaW/KafkaW.h
+    KafkaW/Producer.h
+    KafkaW/ProducerTopic.h
+    KafkaW/Consumer.h
+    KafkaW/BrokerSettings.h
     Config.h
     ConfigParser.h
     ConversionWorker.h
@@ -81,12 +87,11 @@ set(INCLUDES
     KafkaW/ConsumerMessage.h
     KafkaW/KafkaW.h
     KafkaW/Producer.h
-    KafkaW/ProducerEventCb.h
-    KafkaW/ProducerMessage.h
+        KafkaW/ProducerMessage.h
     KafkaW/ProducerDeliveryCb.h
     KafkaW/ProducerStats.h
     KafkaW/ProducerTopic.h
-    KafkaW/ConsumerEventCb.h
+        KafkaW/KafkaEventCb.h
     KafkaW/MetadataException.h
     KafkaOutput.h
     logger.h
@@ -96,7 +101,7 @@ set(INCLUDES
     Stream.h
     Streams.h
     Timer.h
-    uri.h)
+    URI.h)
 
 set(SOURCES
     MainOpt.cpp
@@ -119,7 +124,7 @@ set(SOURCES
     FlatbufferMessage.cpp
     SchemaRegistry.cpp
     FlatBufferCreator.cpp
-    uri.cpp
+    URI.cpp
     json.cpp
     Converter.cpp
     KafkaOutput.cpp

@@ -4,7 +4,7 @@
 /// Manage the running Kafka producer instances.
 /// Simple load balance over the available producers.
 
-#include "uri.h"
+#include "URI.h"
 #include <atomic>
 #include <map>
 #include <memory>
@@ -22,7 +22,7 @@ template <typename T> using sptr = std::shared_ptr<T>;
 
 class InstanceSet {
 public:
-  static sptr<InstanceSet> Set(KafkaW::BrokerSettings opt);
+  static sptr<InstanceSet> Set(KafkaW::BrokerSettings Settings);
   static void clear();
   KafkaW::Producer::Topic SetUpProducerTopic(URI uri);
   int poll();

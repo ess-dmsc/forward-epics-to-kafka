@@ -1,7 +1,7 @@
 #pragma once
 
 #include "BrokerSettings.h"
-#include "ConsumerEventCb.h"
+#include "KafkaEventCb.h"
 #include "ConsumerMessage.h"
 #include "helper.h"
 #include <vector>
@@ -30,6 +30,6 @@ private:
   std::unique_ptr<RdKafka::Metadata> queryMetadata();
   std::shared_ptr<RdKafka::KafkaConsumer> KafkaConsumer;
   BrokerSettings ConsumerBrokerSettings;
-  ConsumerEventCb EventCallback;
+  KafkaEventCb EventCallback;
 };
 } // namespace KafkaW

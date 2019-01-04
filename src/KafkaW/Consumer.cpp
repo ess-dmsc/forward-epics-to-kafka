@@ -106,9 +106,9 @@ std::unique_ptr<ConsumerMessage> Consumer::poll() {
   switch (KafkaMsg->err()) {
   case RdKafka::ERR_NO_ERROR:
     if (KafkaMsg->len() > 0) {
-      return ::make_unique<ConsumerMessage>(
-          reinterpret_cast<std::uint8_t *>(KafkaMsg->payload()),
-          KafkaMsg->len(), PollStatus::Msg);
+      std::string MessageString = {reinterpret_cast<const char *>(KafkaMsg->payload())};
+      auto Message = ::make_unique<ConsumerMessage>(MessageString, PollStatus::Msg);
+      return Message;
     } else {
       return ::make_unique<ConsumerMessage>(PollStatus::Empty);
     }

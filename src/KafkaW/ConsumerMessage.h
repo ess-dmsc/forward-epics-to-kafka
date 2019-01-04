@@ -14,16 +14,14 @@ enum class PollStatus {
 
 class ConsumerMessage {
 public:
-  ConsumerMessage(std::uint8_t const *Pointer, size_t Size, PollStatus Status)
-      : DataPointer(Pointer), DataSize(Size), Status(Status) {}
+  ConsumerMessage(std::string &MessageData, PollStatus Status)
+      : Data(MessageData), Status(Status) {}
   explicit ConsumerMessage(PollStatus Status) : Status(Status) {}
-  std::uint8_t const *getData() const { return DataPointer; };
-  PollStatus getStatus() { return Status; }
-  size_t getSize() { return DataSize; }
+  std::string const getData() const { return Data; };
+  PollStatus getStatus() const { return Status; }
 
 private:
-  unsigned char const *DataPointer{nullptr};
-  size_t DataSize{0};
+  std::string Data;
   PollStatus Status;
 };
 }

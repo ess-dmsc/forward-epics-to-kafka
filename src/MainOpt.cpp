@@ -26,10 +26,6 @@ MainOpt::MainOpt() {
   }
 }
 
-void MainOpt::set_broker(std::string &Broker) {
-  ConfigParser::setBrokers(Broker, MainSettings);
-}
-
 std::string MainOpt::brokers_as_comma_list() const {
   std::string CommaList;
   bool MultipleBrokers = false;
@@ -37,14 +33,13 @@ std::string MainOpt::brokers_as_comma_list() const {
     if (MultipleBrokers) {
       CommaList += ",";
     }
-    CommaList += Broker.host_port;
+    CommaList += Broker.HostPort;
     MultipleBrokers = true;
   }
   return CommaList;
 }
 
-std::vector<StreamSettings>
-MainOpt::parseStreamsJson(const std::string &filepath) {
+std::vector<StreamSettings> parseStreamsJson(const std::string &filepath) {
   std::ifstream ifs(filepath);
   if (!ifs.is_open()) {
     LOG(Sev::Error, "Could not open JSON file")
@@ -69,8 +64,8 @@ CLI::Option *addOption(CLI::App &App, std::string const &Name,
   CLI::Option *Opt = App.add_option(Name, Fun, Description, Defaulted);
   Opt->set_custom_option("URI", 1);
   if (Defaulted) {
-    Opt->set_default_str(std::string("//") + URIArg.host_port + "/" +
-                         URIArg.topic);
+    Opt->set_default_str(std::string("//") + URIArg.HostPort + "/" +
+                         URIArg.Topic);
   }
   return Opt;
 }
@@ -105,7 +100,7 @@ CLI::Option *addKafkaOption(CLI::App &App, std::string const &Name,
     for (size_t i = 0; i < Results.size() / 2; i++) {
       try {
         ConfigMap[Results.at(i * 2)] = std::stol(Results.at(i * 2 + 1));
-      } catch (std::invalid_argument e) {
+      } catch (std::invalid_argument &) {
         throw std::runtime_error(
             fmt::format("Argument {} is not an int", Results.at(i * 2)));
       }
@@ -122,12 +117,10 @@ std::pair<int, std::unique_ptr<MainOpt>> parse_opt(int argc, char **argv) {
       fmt::format("forward-epics-to-kafka-0.1.0 {:.7} (ESS, BrightnESS)\n"
                   "  https://github.com/ess-dmsc/forward-epics-to-kafka\n\n",
                   GIT_COMMIT)};
-  std::string BrokerDataDefault;
   App.add_option("--log-file", opt.LogFilename, "Log filename");
   App.add_option("--streams-json", opt.StreamsFile,
                  "Json file for streams to add")
       ->check(CLI::ExistingFile);
-  App.add_option("--broker", BrokerDataDefault, "Default broker for data");
   App.add_option("--kafka-gelf", opt.KafkaGELFAddress,
                  "Kafka GELF logging //broker[:port]/topic");
   App.add_option("--graylog-logger-address", opt.GraylogLoggerAddress,
@@ -178,15 +171,12 @@ std::pair<int, std::unique_ptr<MainOpt>> parse_opt(int argc, char **argv) {
   }
   if (!opt.StreamsFile.empty()) {
     try {
-      opt.MainSettings.StreamsInfo = opt.parseStreamsJson(opt.StreamsFile);
+      opt.MainSettings.StreamsInfo = parseStreamsJson(opt.StreamsFile);
     } catch (std::exception const &e) {
       LOG(Sev::Warning, "Can not parse configuration file: {}", e.what());
       ret.first = 1;
       return ret;
     }
-  }
-  if (!BrokerDataDefault.empty()) {
-    opt.set_broker(BrokerDataDefault);
   }
   return ret;
 }
@@ -194,8 +184,8 @@ std::pair<int, std::unique_ptr<MainOpt>> parse_opt(int argc, char **argv) {
 void MainOpt::init_logger() {
   if (!KafkaGELFAddress.empty()) {
     Forwarder::URI uri(KafkaGELFAddress);
-    log_kafka_gelf_start(uri.host, uri.topic);
-    LOG(Sev::Error, "Enabled kafka_gelf: //{}/{}", uri.host, uri.topic);
+    log_kafka_gelf_start(uri.HostPort, uri.Topic);
+    LOG(Sev::Error, "Enabled kafka_gelf: //{}/{}", uri.HostPort, uri.Topic);
   }
   if (!GraylogLoggerAddress.empty()) {
     fwd_graylog_logger_enable(GraylogLoggerAddress);

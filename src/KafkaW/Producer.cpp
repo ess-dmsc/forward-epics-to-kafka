@@ -34,8 +34,8 @@ Producer::~Producer() {
   }
 }
 
-Producer::Producer(BrokerSettings ProducerBrokerSettings)
-    : ProducerBrokerSettings(ProducerBrokerSettings) {
+Producer::Producer(BrokerSettings Settings)
+    : ProducerBrokerSettings(std::move(Settings)) {
   id = g_kafka_producer_instance_count++;
 
   std::string ErrorString;

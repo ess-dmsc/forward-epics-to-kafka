@@ -41,8 +41,8 @@ public:
   int is_tty = 1;
   void dwlog_inner(int level, int color, char const *file, int line,
                    char const *func, std::string const &s1);
-  int prefix_len();
-  void fwd_graylog_logger_enable(std::string const &address);
+  static int prefix_len();
+  static void fwd_graylog_logger_enable(std::string const &address);
 
 private:
   std::atomic<bool> do_run_kafka{false};

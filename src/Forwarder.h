@@ -15,7 +15,8 @@ namespace Forwarder {
 
 class MappingAddException : public std::runtime_error {
 public:
-  explicit MappingAddException(std::string what) : std::runtime_error(what) {}
+  explicit MappingAddException(std::string what)
+      : std::runtime_error(std::move(what)) {}
 };
 
 class Converter;
@@ -30,8 +31,6 @@ enum class ForwardingStatus : int32_t {
   NORMAL,
   STOPPED,
 };
-
-class CURLReporter;
 
 enum class ForwardingRunState : int {
   RUN = 0,
@@ -71,11 +70,11 @@ private:
   std::mutex converters_mutex;
   std::map<std::string, std::weak_ptr<Converter>> converters;
   std::mutex streams_mutex;
+  URI createTopicURI(ConverterSettings const &ConverterInfo);
   std::mutex conversion_workers_mx;
   std::vector<std::unique_ptr<ConversionWorker>> conversion_workers;
   ConversionScheduler conversion_scheduler;
   std::atomic<ForwardingStatus> forwarding_status{ForwardingStatus::NORMAL};
-  std::unique_ptr<CURLReporter> curl;
   std::shared_ptr<KafkaW::Producer> status_producer;
   std::unique_ptr<KafkaW::ProducerTopic> status_producer_topic;
   std::atomic<ForwardingRunState> ForwardingRunFlag{ForwardingRunState::RUN};

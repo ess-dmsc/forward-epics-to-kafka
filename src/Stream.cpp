@@ -4,6 +4,7 @@
 #include "EpicsPVUpdate.h"
 #include "helper.h"
 #include "logger.h"
+#include <algorithm>
 
 namespace Forwarder {
 
@@ -41,7 +42,7 @@ nlohmann::json ConversionPath::status_json() const {
   auto Document = json::object();
   Document["schema"] = converter->schema_name();
   Document["broker"] =
-      kafka_output->pt.Producer_->ProducerBrokerSettings.Address;
+      kafka_output->Output.KafkaProducer->ProducerBrokerSettings.Address;
   Document["topic"] = kafka_output->topic_name();
   return Document;
 }
@@ -72,19 +73,21 @@ Stream::~Stream() {
 int Stream::addConverter(std::unique_ptr<ConversionPath> Path) {
   std::lock_guard<std::mutex> lock(ConversionPathsMutex);
 
-  for (auto const &ConversionPath : ConversionPaths) {
-    if (ConversionPath->getKafkaTopicName() == Path->getKafkaTopicName() &&
-        ConversionPath->getSchemaName() == Path->getSchemaName()) {
-      LOG(Sev::Notice,
-          "Stream with channel name: {}  KafkaTopicName: {}  SchemaName: {} "
-          " already exists.",
-          ChannelInfo_.channel_name, ConversionPath->getKafkaTopicName(),
-          ConversionPath->getSchemaName());
-      return 1;
-    }
+  auto FoundPath = std::find_if(
+      ConversionPaths.cbegin(), ConversionPaths.cend(),
+      [&Path](const std::unique_ptr<ConversionPath> &TestPath) {
+        return Path->getKafkaTopicName() == TestPath->getKafkaTopicName() and
+               Path->getSchemaName() == TestPath->getSchemaName();
+      });
+  if (FoundPath == ConversionPaths.end()) {
+    ConversionPaths.push_back(std::move(Path));
+    return 0;
   }
-  ConversionPaths.push_back(std::move(Path));
-  return 0;
+  LOG(Sev::Notice, "Stream with channel name: {}  KafkaTopicName: {}  "
+                   "SchemaName: {} already exists.",
+      ChannelInfo_.channel_name, Path->getKafkaTopicName(),
+      Path->getSchemaName());
+  return 1;
 }
 
 void Stream::setEpicsError() { Client->errorInEpics(); }
@@ -164,9 +167,12 @@ nlohmann::json Stream::getStatusJson() {
     }
   }
   auto Converters = json::array();
-  for (auto const &Converter : ConversionPaths) {
-    Converters.push_back(Converter->status_json());
-  }
+  std::transform(ConversionPaths.begin(), ConversionPaths.end(),
+                 std::back_inserter(Converters),
+                 [](std::unique_ptr<ConversionPath> &Path) {
+                   return Path->status_json();
+                 });
+
   Document["converters"] = Converters;
   return Document;
 }

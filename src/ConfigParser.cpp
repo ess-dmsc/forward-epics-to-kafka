@@ -25,9 +25,8 @@ static std::vector<std::string> split(const std::string &Brokers) {
   return ret;
 }
 
-ConfigParser::ConfigParser(const std::string &RawJson) {
-  Json = nlohmann::json::parse(RawJson);
-}
+ConfigParser::ConfigParser(const std::string &RawJson)
+    : Json(nlohmann::json::parse(RawJson)) {}
 
 ConfigSettings ConfigParser::extractStreamInfo() {
   ConfigSettings Settings;
@@ -64,9 +63,7 @@ void ConfigParser::setBrokers(std::string const &Brokers,
   Settings.Brokers.clear();
   std::vector<std::string> ret = split(Brokers);
   for (auto &x : ret) {
-    URI u1;
-    u1.require_host_slashes = false;
-    u1.parse(x);
+    URI u1(x);
     Settings.Brokers.push_back(u1);
   }
 }

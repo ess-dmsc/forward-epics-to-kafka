@@ -13,7 +13,7 @@ Listener::Listener(URI uri,
                    std::unique_ptr<KafkaW::ConsumerInterface> NewConsumer)
     : Consumer(std::move(NewConsumer)) {
   try {
-    Consumer->addTopic(uri.topic);
+    Consumer->addTopic(uri.Topic);
   } catch (MetadataException &E) {
     LOG(Sev::Error, "{}", E.what());
   }
@@ -22,8 +22,7 @@ Listener::Listener(URI uri,
 void Listener::poll(::Forwarder::ConfigCB &cb) {
   auto Message = Consumer->poll();
   if (Message->getStatus() == KafkaW::PollStatus::Msg) {
-    cb({reinterpret_cast<const char *>(Message->getData()),
-        Message->getSize()});
+    cb(Message->getData());
   }
 }
 } // namespace Config

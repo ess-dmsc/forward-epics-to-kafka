@@ -5,22 +5,21 @@ namespace KafkaW {
 
 ProducerTopic::ProducerTopic(std::shared_ptr<Producer> Producer,
                              std::string Name_)
-    : Producer_(Producer), Name(std::move(Name_)) {
+    : KafkaProducer(Producer), Name(std::move(Name_)) {
 
   std::string ErrStr;
   auto Config = RdKafka::Conf::create(RdKafka::Conf::CONF_TOPIC);
   RdKafkaTopic =
-      RdKafka::Topic::create(Producer_->getRdKafkaPtr(), Name, Config, ErrStr);
+      RdKafka::Topic::create(KafkaProducer->getRdKafkaPtr(), Name, Config, ErrStr);
   if (RdKafkaTopic == nullptr) {
     LOG(Sev::Error, "could not create Kafka topic: {}", ErrStr);
     throw TopicCreationError();
   }
-
   LOG(Sev::Debug, "ctor topic: {}", RdKafkaTopic->name());
 }
 
 ProducerTopic::ProducerTopic(ProducerTopic &&x) noexcept {
-  std::swap(Producer_, x.Producer_);
+  std::swap(KafkaProducer, x.KafkaProducer);
   std::swap(RdKafkaTopic, x.RdKafkaTopic);
   std::swap(Name, x.Name);
   std::swap(DoCopyMsg, x.DoCopyMsg);
@@ -56,15 +55,15 @@ int ProducerTopic::produce(std::unique_ptr<ProducerMessage> &Msg) {
   // call, this pointer is returned to us in the delivery callback, at which
   // point we can free the memory
   int MsgFlags = 0;
-  auto &ProducerStats = Producer_->Stats;
+  auto &ProducerStats = KafkaProducer->Stats;
 
-  switch (Producer_->getRdKafkaPtr()->produce(
+  switch (KafkaProducer->getRdKafkaPtr()->produce(
       RdKafkaTopic, RdKafka::Topic::PARTITION_UA, MsgFlags, Msg->data,
       Msg->size, key, key_len, Msg.get())) {
   case RdKafka::ERR_NO_ERROR:
     ++ProducerStats.produced;
     ProducerStats.produced_bytes += static_cast<uint64_t>(Msg->size);
-    ++Producer_->TotalMessagesProduced;
+    ++KafkaProducer->TotalMessagesProduced;
     Msg.release(); // we clean up the message after it has been sent, see
                    // comment by MsgFlags declaration
     return 0;
@@ -72,7 +71,7 @@ int ProducerTopic::produce(std::unique_ptr<ProducerMessage> &Msg) {
   case RdKafka::ERR__QUEUE_FULL:
     ++ProducerStats.local_queue_full;
     LOG(Sev::Warning, "Producer queue full, outq: {}",
-        Producer_->getRdKafkaPtr()->outq_len());
+        KafkaProducer->getRdKafkaPtr()->outq_len());
     break;
 
   case RdKafka::ERR_MSG_SIZE_TOO_LARGE:
