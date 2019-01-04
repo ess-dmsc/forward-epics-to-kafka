@@ -13,9 +13,9 @@ public:
   /// URI::parse to fill it
   URI();
   /// Creates and parses the given URI
-  URI(std::string uri);
+  explicit URI(std::string const &Uri);
   /// Parses the given `uri`
-  void parse(std::string uri);
+  void parse(std::string Uri);
   /// Given a `http://www.example.com` scheme will contain `http`
   std::string scheme;
   /// Just the parsed hostname

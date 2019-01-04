@@ -14,8 +14,8 @@ static std::atomic<int> g_kafka_consumer_instance_count;
         rd_kafka_err2str((rd_kafka_resp_err_t)ERR));                           \
   }
 
-Consumer::Consumer(BrokerSettings BrokerSettings)
-    : ConsumerBrokerSettings(std::move(BrokerSettings)) {
+Consumer::Consumer(BrokerSettings Settings)
+    : ConsumerBrokerSettings(std::move(Settings)) {
   init();
   ID = g_kafka_consumer_instance_count++;
 }
@@ -41,19 +41,19 @@ void Consumer::logCallback(rd_kafka_t const *RK, int Level, char const *Fac,
   LOG(Sev(Level), "IID: {}  {}  fac: {}", self->ID, Buf, Fac);
 }
 
-void Consumer::errorCallback(rd_kafka_t *RK, int Err_i, char const *msg,
+void Consumer::errorCallback(rd_kafka_t *RK, int Err_i, char const *Message,
                              void *Opaque) {
   UNUSED_ARG(RK);
   auto self = reinterpret_cast<Consumer *>(Opaque);
-  auto err = static_cast<rd_kafka_resp_err_t>(Err_i);
+  auto ErrorType = static_cast<rd_kafka_resp_err_t>(Err_i);
   Sev ll = Sev::Debug;
-  if (err == RD_KAFKA_RESP_ERR__TRANSPORT) {
+  if (ErrorType == RD_KAFKA_RESP_ERR__TRANSPORT) {
     ll = Sev::Warning;
   }
   LOG(ll, "Kafka cb_error id: {}  broker: {}  errno: {}  errorname: {}  "
           "errorstring: {}  message: {}",
       self->ID, self->ConsumerBrokerSettings.Address, Err_i,
-      rd_kafka_err2name(err), rd_kafka_err2str(err), msg);
+      rd_kafka_err2name(ErrorType), rd_kafka_err2str(ErrorType), Message);
 }
 
 int Consumer::statsCallback(rd_kafka_t *RK, char *Json, size_t Json_size,

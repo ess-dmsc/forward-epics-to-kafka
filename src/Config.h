@@ -20,7 +20,7 @@ struct Listener_impl;
 
 class Listener {
 public:
-  Listener(KafkaW::BrokerSettings bopt, URI uri);
+  Listener(KafkaW::BrokerSettings BrokerSettings, URI Uri);
   Listener(Listener const &) = delete;
   ~Listener();
   void poll(::Forwarder::ConfigCB &cb);

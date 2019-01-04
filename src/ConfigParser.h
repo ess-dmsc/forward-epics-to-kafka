@@ -61,8 +61,8 @@ public:
 
 private:
   nlohmann::json Json;
-  void extractMappingInfo(nlohmann::json const &Mapping, std::string &Channel,
-                          std::string &Protocol);
+  static void extractMappingInfo(nlohmann::json const &Mapping,
+                                 std::string &Channel, std::string &Protocol);
   ConverterSettings extractConverterSettings(nlohmann::json const &Mapping);
   std::atomic<uint32_t> ConverterIndex{0};
 };
