@@ -24,7 +24,6 @@
   -h,--help                   Print this help message and exit
   --log-file TEXT             Log filename
   --streams-json TEXT         Json file for streams to add
-  --broker TEXT               Default broker for data
   --kafka-gelf TEXT           Kafka GELF logging //broker[:port]/topic
   --graylog-logger-address TEXT
                               Address for Graylog logging
@@ -55,8 +54,8 @@ The forwarder can be also set up with a configuration file:
 with an `ini` file for command line options:
 
 ```ini
-broker="//kafkabroker:9092"
-status-topic="//kafkabroker:9092/the_status_topic"
+config-topic=//kakfabroker:9092/the_config_topic 
+status-topic=//kafkabroker:9092/the_status_topic
 streams-json=./streams.json
 kafka-config=consumer.timeout.ms 501 fetch.message.max.bytes 1234 api.version.request true
 verbosity=5

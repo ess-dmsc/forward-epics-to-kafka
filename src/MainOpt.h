@@ -26,7 +26,6 @@ struct MainOpt {
   FlatBufs::SchemaRegistry schema_registry;
   KafkaW::BrokerSettings broker_opt;
   MainOpt();
-  void set_broker(std::string &Broker);
   void init_logger();
 };
 
