@@ -50,7 +50,7 @@ class Timer {
 public:
   explicit Timer(std::chrono::milliseconds Interval,
                  std::shared_ptr<Sleeper> Sleeper)
-      : Running(false), IntervalMS(Interval), Sleeper_(std::move(Sleeper)),
+      : Running(false), IntervalMS(Interval), SleeperPtr(std::move(Sleeper)),
         DoIteration(false), IterationComplete(true){};
 
   /// Executes all registered callbacks when notified to do iteration
@@ -90,7 +90,7 @@ private:
   std::vector<CallbackFunction> Callbacks{};
   std::thread ExecutionThread;
   std::thread TimerThread;
-  std::shared_ptr<Sleeper> Sleeper_;
+  std::shared_ptr<Sleeper> SleeperPtr;
 
   /// For triggering execution of registered callbacks.
   std::atomic_bool DoIteration;
