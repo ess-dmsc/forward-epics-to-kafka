@@ -20,14 +20,13 @@ Listener::Listener(KafkaW::BrokerSettings BrokerSettings, URI Uri) {
   impl.reset(new Listener_impl);
   impl->consumer.reset(new KafkaW::Consumer(BrokerSettings));
   auto &consumer = *impl->consumer;
-  consumer.on_rebalance_assign =
-      [this](rd_kafka_topic_partition_list_t *) {
-        {
-          std::unique_lock<std::mutex> lock(impl->mx);
-          impl->connected = 1;
-        }
-        impl->cv.notify_all();
-      };
+  consumer.on_rebalance_assign = [this](rd_kafka_topic_partition_list_t *) {
+    {
+      std::unique_lock<std::mutex> lock(impl->mx);
+      impl->connected = 1;
+    }
+    impl->cv.notify_all();
+  };
   consumer.on_rebalance_assign = {};
   consumer.on_rebalance_start = {};
   consumer.addTopic(Uri.topic);
