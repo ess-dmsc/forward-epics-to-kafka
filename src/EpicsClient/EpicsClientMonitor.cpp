@@ -48,7 +48,7 @@ public:
         LOG(Sev::Error, "Can not initialize provider");
         return 1;
       }
-      channel_requester = std::make_shared<ChannelRequester>(this);
+      channel_requester.reset(new ChannelRequester(this));
       channel = provider->createChannel(channel_name, channel_requester);
     }
     return 0;
@@ -74,8 +74,7 @@ public:
     if (monitor) {
       monitoringStop();
     }
-    monitor_requester =
-        std::make_shared<FwdMonitorRequester>(epics_client, channel_name);
+    monitor_requester.reset(new FwdMonitorRequester(epics_client, channel_name));
     monitor = channel->createMonitor(monitor_requester, pvreq);
     if (!monitor) {
       LOG(Sev::Warning, "could not create EPICS monitor instance");
