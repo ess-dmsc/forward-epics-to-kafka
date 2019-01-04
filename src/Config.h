@@ -2,7 +2,7 @@
 
 #include "CommandHandler.h"
 #include "KafkaW/KafkaW.h"
-#include "uri.h"
+#include "URI.h"
 #include <atomic>
 #include <chrono>
 #include <memory>

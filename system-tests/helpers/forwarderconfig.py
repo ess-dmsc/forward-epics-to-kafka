@@ -17,7 +17,7 @@ class ForwarderConfig:
         
         :return:(dict) The dictionary of the schema and topic for the flatbuffers converter.
         """
-        return {"schema": self.schema, "topic": self.topic}
+        return {"schema": self.schema, "topic": "//localhost:9092/" + self.topic}
 
     def _create_stream(self, blk):
         """

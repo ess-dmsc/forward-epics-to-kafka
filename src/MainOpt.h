@@ -3,7 +3,7 @@
 #include "ConfigParser.h"
 #include "KafkaW/KafkaW.h"
 #include "SchemaRegistry.h"
-#include "uri.h"
+#include "URI.h"
 #include <memory>
 #include <string>
 #include <vector>
@@ -26,7 +26,6 @@ struct MainOpt {
   FlatBufs::SchemaRegistry schema_registry;
   KafkaW::BrokerSettings broker_opt;
   MainOpt();
-  void set_broker(std::string &Broker);
   void init_logger();
 };
 
