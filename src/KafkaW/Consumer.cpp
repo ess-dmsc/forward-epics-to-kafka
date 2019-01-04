@@ -106,8 +106,10 @@ std::unique_ptr<ConsumerMessage> Consumer::poll() {
   switch (KafkaMsg->err()) {
   case RdKafka::ERR_NO_ERROR:
     if (KafkaMsg->len() > 0) {
-      std::string MessageString = {reinterpret_cast<const char *>(KafkaMsg->payload())};
-      auto Message = ::make_unique<ConsumerMessage>(MessageString, PollStatus::Msg);
+      std::string MessageString = {
+          reinterpret_cast<const char *>(KafkaMsg->payload())};
+      auto Message =
+          ::make_unique<ConsumerMessage>(MessageString, PollStatus::Msg);
       return Message;
     } else {
       return ::make_unique<ConsumerMessage>(PollStatus::Empty);

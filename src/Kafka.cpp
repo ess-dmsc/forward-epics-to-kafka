@@ -71,8 +71,7 @@ std::vector<KafkaW::ProducerStats> InstanceSet::getStatsForAllProducers() {
   std::vector<KafkaW::ProducerStats> ret;
   auto lock = getProducersByHostMutexLock();
   std::transform(
-      ProducersByHost.cbegin(), ProducersByHost.cend(),
-      std::back_inserter(ret),
+      ProducersByHost.cbegin(), ProducersByHost.cend(), std::back_inserter(ret),
       [](const std::pair<std::string, std::shared_ptr<KafkaW::Producer>>
              &CProducer) { return CProducer.second->Stats; });
   return ret;

@@ -1,8 +1,8 @@
 #pragma once
 
 #include "BrokerSettings.h"
-#include "KafkaEventCb.h"
 #include "ConsumerMessage.h"
+#include "KafkaEventCb.h"
 #include "helper.h"
 #include <vector>
 

@@ -1,10 +1,10 @@
 #pragma once
 
 #include "BrokerSettings.h"
+#include "KafkaEventCb.h"
 #include "ProducerDeliveryCb.h"
 #include "ProducerMessage.h"
 #include "ProducerStats.h"
-#include "KafkaEventCb.h"
 #include <atomic>
 #include <functional>
 
