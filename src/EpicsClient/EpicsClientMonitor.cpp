@@ -4,6 +4,7 @@
 #include <atomic>
 #include <memory>
 #include <mutex>
+#include <utility>
 // EPICS 4 supports access via the channel access protocol as well,
 // and we need it because some hardware speaks EPICS base.
 #include "EpicsPVUpdate.h"
@@ -150,7 +151,7 @@ EpicsClientMonitor::EpicsClientMonitor(
     std::shared_ptr<
         moodycamel::ConcurrentQueue<std::shared_ptr<FlatBufs::EpicsPVUpdate>>>
         Ring)
-    : EmitQueue(Ring) {
+    : EmitQueue(std::move(Ring)) {
   Impl.reset(new EpicsClientMonitor_impl(this));
   LOG(Sev::Debug, "channel_name: {}", ChannelInfo.channel_name);
   Impl->channel_name = ChannelInfo.channel_name;

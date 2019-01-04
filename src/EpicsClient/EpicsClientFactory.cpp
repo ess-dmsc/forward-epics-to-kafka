@@ -8,8 +8,7 @@
 namespace Forwarder {
 namespace EpicsClient {
 
-using std::mutex;
-using ulock = std::unique_lock<mutex>;
+using ulock = std::lock_guard<std::mutex>;
 
 std::atomic<int> EpicsClientFactoryInit::Count{0};
 

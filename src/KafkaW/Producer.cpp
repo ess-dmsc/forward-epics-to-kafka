@@ -47,8 +47,9 @@ void Producer::errorCallback(rd_kafka_t *RK, int Err_i, char const *Message,
   if (ERR == RD_KAFKA_RESP_ERR__TRANSPORT) {
     Level = Sev::Error;
   } else {
-    if (Self->on_error)
+    if (Self->on_error) {
       Self->on_error(Self, ERR);
+    }
   }
   LOG(Level, "Kafka cb_error id: {}  broker: {}  errno: {}  errorname: {}  "
              "errorstring: {}  message: {}",
