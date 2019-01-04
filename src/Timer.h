@@ -50,9 +50,8 @@ class Timer {
 public:
   explicit Timer(std::chrono::milliseconds Interval,
                  std::shared_ptr<Sleeper> Sleeper)
-      : Running(false), IntervalMS(Interval),
-        Sleeper_(std::move(Sleeper)), DoIteration(false),
-        IterationComplete(true){};
+      : Running(false), IntervalMS(Interval), Sleeper_(std::move(Sleeper)),
+        DoIteration(false), IterationComplete(true){};
 
   /// Executes all registered callbacks when notified to do iteration
   void executionLoop();

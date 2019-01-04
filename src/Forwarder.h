@@ -27,7 +27,7 @@ namespace Config {
 class Listener;
 } // namespace Config
 
-  enum class ForwardingStatus : int32_t {
+enum class ForwardingStatus : int32_t {
   NORMAL,
   STOPPED,
 };

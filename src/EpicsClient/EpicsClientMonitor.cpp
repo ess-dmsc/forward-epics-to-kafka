@@ -74,7 +74,8 @@ public:
     if (monitor) {
       monitoringStop();
     }
-    monitor_requester = std::make_shared<FwdMonitorRequester>(epics_client, channel_name);
+    monitor_requester =
+        std::make_shared<FwdMonitorRequester>(epics_client, channel_name);
     monitor = channel->createMonitor(monitor_requester, pvreq);
     if (!monitor) {
       LOG(Sev::Warning, "could not create EPICS monitor instance");
