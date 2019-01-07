@@ -3,13 +3,13 @@
 
 namespace Forwarder {
 
-std::shared_ptr<Converter>
-Converter::create(FlatBufs::SchemaRegistry const &schema_registry,
-                  std::string schema, MainOpt const &main_opt) {
+std::shared_ptr<Converter> Converter::create(FlatBufs::SchemaRegistry const &,
+                                             std::string schema,
+                                             MainOpt const &main_opt) {
   auto ret = std::make_shared<Converter>();
   ret->schema = schema;
-  auto r1 = schema_registry.items().find(schema);
-  if (r1 == schema_registry.items().end()) {
+  auto r1 = FlatBufs::SchemaRegistry::items().find(schema);
+  if (r1 == FlatBufs::SchemaRegistry::items().end()) {
     LOG(Sev::Error, "can not handle (yet?) schema id {}", schema);
     return nullptr;
   }

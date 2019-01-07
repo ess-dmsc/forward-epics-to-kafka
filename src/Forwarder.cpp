@@ -148,11 +148,13 @@ void Forwarder::forward_epics_to_kafka() {
     }
   }
 
-  if (PVUpdateTimer != nullptr)
+  if (PVUpdateTimer != nullptr) {
     PVUpdateTimer->start();
+  }
 
-  if (GenerateFakePVUpdateTimer != nullptr)
+  if (GenerateFakePVUpdateTimer != nullptr) {
     GenerateFakePVUpdateTimer->start();
+  }
 
   while (ForwardingRunFlag.load() == ForwardingRunState::RUN) {
     auto do_stats = false;
@@ -315,8 +317,8 @@ void Forwarder::pushConverterToStream(ConverterSettings const &ConverterInfo,
                                       std::shared_ptr<Stream> &Stream) {
 
   // Check schema exists
-  auto r1 = main_opt.schema_registry.items().find(ConverterInfo.Schema);
-  if (r1 == main_opt.schema_registry.items().end()) {
+  auto r1 = FlatBufs::SchemaRegistry::items().find(ConverterInfo.Schema);
+  if (r1 == FlatBufs::SchemaRegistry::items().end()) {
     throw MappingAddException(fmt::format(
         "Cannot handle flatbuffer schema id {}", ConverterInfo.Schema));
   }

@@ -91,4 +91,4 @@ int ConversionScheduler::fill(
 ConversionScheduler::~ConversionScheduler() {
   LOG(Sev::Info, "~ConversionScheduler");
 }
-}
+} // namespace Forwarder

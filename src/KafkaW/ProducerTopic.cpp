@@ -3,9 +3,9 @@
 
 namespace KafkaW {
 
-ProducerTopic::ProducerTopic(std::shared_ptr<Producer> Producer,
-                             std::string Name_)
-    : KafkaProducer(Producer), Name(std::move(Name_)) {
+ProducerTopic::ProducerTopic(std::shared_ptr<Producer> ProducerPtr,
+                             std::string TopicName)
+    : KafkaProducer(ProducerPtr), Name(std::move(TopicName)) {
 
   std::string ErrStr;
   auto Config = RdKafka::Conf::create(RdKafka::Conf::CONF_TOPIC);

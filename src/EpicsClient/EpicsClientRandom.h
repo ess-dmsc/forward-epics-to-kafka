@@ -5,10 +5,6 @@
 #include <concurrentqueue/concurrentqueue.h>
 #include <random>
 
-namespace FlatBufs {
-struct EpicsPVUpdate;
-}
-
 namespace Forwarder {
 namespace EpicsClient {
 
@@ -21,7 +17,7 @@ public:
       std::shared_ptr<
           moodycamel::ConcurrentQueue<std::shared_ptr<FlatBufs::EpicsPVUpdate>>>
           RingBuffer)
-      : ChannelInformation(channelInfo), EmitQueue(RingBuffer),
+      : ChannelInformation(channelInfo), EmitQueue(std::move(RingBuffer)),
         UniformDistribution(0, 100){};
   ~EpicsClientRandom() override = default;
   int emit(std::shared_ptr<FlatBufs::EpicsPVUpdate> up) override;

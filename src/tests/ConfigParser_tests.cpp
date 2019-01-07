@@ -12,9 +12,8 @@
 
 TEST(ConfigParserTest, using_broker_list_creates_multiple_brokers_) {
   Forwarder::MainOpt MainOpt;
-  Forwarder::ConfigParser Config("{}");
   std::string Brokers = "//localhost1:9092, //localhost2:9092";
-  Config.setBrokers(Brokers, MainOpt.MainSettings);
+  Forwarder::ConfigParser::setBrokers(Brokers, MainOpt.MainSettings);
   ASSERT_EQ("localhost1:9092", MainOpt.MainSettings.Brokers.at(0).HostPort);
   ASSERT_EQ("localhost2:9092", MainOpt.MainSettings.Brokers.at(1).HostPort);
   ASSERT_EQ("localhost1:9092,localhost2:9092", MainOpt.brokers_as_comma_list());
@@ -23,9 +22,8 @@ TEST(ConfigParserTest, using_broker_list_creates_multiple_brokers_) {
 TEST(ConfigParserTest,
      set_brokers_with_one_broker_and_topic_parses_one_broker) {
   Forwarder::MainOpt MainOpt;
-  Forwarder::ConfigParser Config("{}");
   std::string Brokers = "//localhost:9092/TEST_forwarderConfig";
-  Config.setBrokers(Brokers, MainOpt.MainSettings);
+  Forwarder::ConfigParser::setBrokers(Brokers, MainOpt.MainSettings);
   ASSERT_EQ("localhost:9092", MainOpt.MainSettings.Brokers.at(0).HostPort);
   ASSERT_EQ(9092, MainOpt.MainSettings.Brokers.at(0).Port);
   ASSERT_EQ("TEST_forwarderConfig", MainOpt.MainSettings.Brokers.at(0).Topic);

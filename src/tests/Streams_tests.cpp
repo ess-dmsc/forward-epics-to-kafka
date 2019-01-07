@@ -80,7 +80,7 @@ TEST(StreamsTest,
      check_stream_status_on_one_stream_with_negative_status_removes_stream) {
   Streams streams;
   auto s = createStream("hello", "world");
-  s.get()->setEpicsError(); // sets status to -1
+  s->setEpicsError(); // sets status to -1
   streams.add(s);
   streams.checkStreamStatus();
   ASSERT_EQ(nullptr, streams.back().get());

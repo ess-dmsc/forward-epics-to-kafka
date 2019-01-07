@@ -6,13 +6,12 @@
 namespace RdKafka {
 class Conf;
 }
-
 namespace KafkaW {
 
 /// Collect options used to connect to the broker.
 
 struct BrokerSettings {
-  void apply(RdKafka::Conf *RdKafkaConfiguration);
+  void apply(RdKafka::Conf *RdKafkaConfiguration) const;
   std::string Address;
   int PollTimeoutMS = 100;
   std::map<std::string, std::string> KafkaConfiguration = {
@@ -31,4 +30,4 @@ struct BrokerSettings {
       {"statistics.interval.ms", "600000"}, // 1 Min
   };
 };
-}
+} // namespace KafkaW

@@ -15,7 +15,6 @@ class ConsumerInterface;
 
 namespace Forwarder {
 class ConfigCB;
-
 namespace Config {
 
 class Listener {
