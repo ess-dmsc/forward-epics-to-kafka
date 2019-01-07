@@ -1,5 +1,5 @@
 from helpers.epics_helpers import change_pv_value
-from helpers.kafka_helpers import create_consumer, poll_for_valid_message
+from helpers.kafka_helpers import create_consumer, poll_for_valid_message, MsgErrorException
 from helpers.PVs import PVDOUBLE
 import pytest
 from time import sleep
@@ -17,7 +17,7 @@ def test_long_run(docker_compose_lr):
     :return: None
     """
     # Set up consumer now and subscribe from earliest offset on data topic
-    cons = create_consumer('smallest')
+    cons = create_consumer('earliest')
     cons.subscribe(['TEST_forwarderDataLR'])
     with open("logs/forwarder_lr_missedupdates.log", 'w+') as file:
         for i in range(5150):  # minimum 12 hours with 4 second sleep time
@@ -27,7 +27,11 @@ def test_long_run(docker_compose_lr):
             sleep(3)
             try:
                 msg = poll_for_valid_message(cons)
+            except MsgErrorException:
+                sleep(3)
+                msg = poll_for_valid_message(cons)
+            try:
                 check_expected_values(msg, Value.Double, PVDOUBLE, float(i))
             except AssertionError:
                 # Message is either incorrect or empty - log expected value to file
-                    file.write(str(i) + '\n')
+                file.write(str(i) + '\n')
