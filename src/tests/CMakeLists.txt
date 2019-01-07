@@ -2,8 +2,6 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ../../tests)
 
 set(tgt "tests")
 set(sources
-    ../KafkaW/ConsumerFake.h
-    ../KafkaW/ConsumerFake.cpp
     tests.cpp
     URI_tests.cpp
     json_tests.cpp
@@ -16,7 +14,7 @@ set(sources
     Timer_tests.cpp
     StreamTestUtils.cpp
     $<TARGET_OBJECTS:__objects>
-        Listener_tests.cpp)
+    Listener_tests.cpp)
 add_executable(${tgt} ${sources})
 add_dependencies(${tgt} flatbuffers_generate)
 target_include_directories(${tgt} PRIVATE ${path_include_common})
