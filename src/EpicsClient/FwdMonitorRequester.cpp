@@ -66,9 +66,9 @@ void FwdMonitorRequester::monitorEvent(
 
     static_assert(sizeof(uint64_t) == sizeof(std::chrono::nanoseconds::rep),
                   "Types not compatible");
-    uint64_t ts = std::chrono::duration_cast<std::chrono::nanoseconds>(
-                      std::chrono::system_clock::now().time_since_epoch())
-                      .count();
+    int64_t ts = std::chrono::duration_cast<std::chrono::nanoseconds>(
+                     std::chrono::system_clock::now().time_since_epoch())
+                     .count();
 
     // Seems like MonitorElement always returns a Structure type ?
     // The inheritance diagram shows that scalars derive from Field, not from

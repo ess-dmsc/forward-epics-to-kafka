@@ -8,7 +8,7 @@ namespace KafkaW {
 static std::atomic<int> g_kafka_consumer_instance_count;
 
 #define KERR(RK, ERR)                                                          \
-  if (ERR != 0) {                                                              \
+  if ((ERR) != 0) {                                                            \
     LOG(Sev::Error, "Kafka {}  error: {}, {}, {}", rd_kafka_name(RK), ERR,     \
         rd_kafka_err2name((rd_kafka_resp_err_t)ERR),                           \
         rd_kafka_err2str((rd_kafka_resp_err_t)ERR));                           \
@@ -133,7 +133,7 @@ void Consumer::init() {
 
   RdKafka = rd_kafka_new(RD_KAFKA_CONSUMER, Configuration, ErrorStringBuffer,
                          ErrorStringSize);
-  if (!RdKafka) {
+  if (RdKafka == nullptr) {
     LOG(Sev::Error, "can not create kafka handle: {}", ErrorStringBuffer);
     throw std::runtime_error("can not create Kafka handle");
   }
@@ -160,7 +160,7 @@ void Consumer::addTopic(std::string Topic) {
   rd_kafka_topic_partition_list_add(PartitionList, Topic.c_str(), Partition);
   int ERR = rd_kafka_subscribe(RdKafka, PartitionList);
   KERR(RdKafka, ERR);
-  if (ERR) {
+  if (ERR != 0) {
     LOG(Sev::Error, "could not subscribe");
     throw std::runtime_error("can not subscribe");
   }

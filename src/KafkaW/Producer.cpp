@@ -47,8 +47,9 @@ void Producer::errorCallback(rd_kafka_t *RK, int Err_i, char const *Message,
   if (ERR == RD_KAFKA_RESP_ERR__TRANSPORT) {
     Level = Sev::Error;
   } else {
-    if (Self->on_error)
+    if (Self->on_error) {
       Self->on_error(Self, ERR);
+    }
   }
   LOG(Level, "Kafka cb_error id: {}  broker: {}  errno: {}  errorname: {}  "
              "errorstring: {}  message: {}",
@@ -86,7 +87,7 @@ Producer::~Producer() {
   LOG(Sev::Debug, "~Producer");
   if (RdKafkaPtr) {
     int TimeoutMS = 1;
-    uint32_t OutQueueLength = 0;
+    int OutQueueLength = 0;
     while (true) {
       OutQueueLength = rd_kafka_outq_len(RdKafkaPtr);
       if (OutQueueLength == 0) {
@@ -175,7 +176,7 @@ void Producer::poll() {
 
 rd_kafka_t *Producer::getRdKafkaPtr() const { return RdKafkaPtr; }
 
-uint64_t Producer::outputQueueLength() { return rd_kafka_outq_len(RdKafkaPtr); }
+int Producer::outputQueueLength() { return rd_kafka_outq_len(RdKafkaPtr); }
 
 ProducerStats::ProducerStats(ProducerStats const &x) {
   produced = x.produced.load();

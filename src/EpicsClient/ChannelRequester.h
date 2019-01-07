@@ -39,4 +39,4 @@ private:
   EpicsClientMonitor_impl *EpicsClientImpl = nullptr;
 };
 }
-}
+} // namespace Forwarder

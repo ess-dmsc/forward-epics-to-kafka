@@ -22,7 +22,7 @@ ProducerTopic::~ProducerTopic() {
 
 ProducerTopic::ProducerTopic(std::shared_ptr<Producer> ProducerPtr,
                              std::string TopicName)
-    : KafkaProducer(ProducerPtr), Name(std::move(TopicName)) {
+    : KafkaProducer(std::move(ProducerPtr)), Name(std::move(TopicName)) {
   rd_kafka_topic_conf_t *topic_conf = rd_kafka_topic_conf_new();
   RdKafkaTopic = rd_kafka_topic_new(KafkaProducer->getRdKafkaPtr(),
                                     Name.c_str(), topic_conf);
@@ -37,7 +37,7 @@ ProducerTopic::ProducerTopic(std::shared_ptr<Producer> ProducerPtr,
       rd_kafka_name(KafkaProducer->getRdKafkaPtr()));
 }
 
-ProducerTopic::ProducerTopic(ProducerTopic &&x) {
+ProducerTopic::ProducerTopic(ProducerTopic &&x) noexcept {
   std::swap(KafkaProducer, x.KafkaProducer);
   std::swap(RdKafkaTopic, x.RdKafkaTopic);
   std::swap(Name, x.Name);
