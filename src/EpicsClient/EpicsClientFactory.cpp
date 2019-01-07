@@ -8,8 +8,6 @@
 namespace Forwarder {
 namespace EpicsClient {
 
-using ulock = std::lock_guard<std::mutex>;
-
 std::atomic<int> EpicsClientFactoryInit::Count{0};
 
 std::mutex EpicsClientFactoryInit::MutexLock;
@@ -20,7 +18,7 @@ std::unique_ptr<EpicsClientFactoryInit> EpicsClientFactoryInit::factory_init() {
 
 EpicsClientFactoryInit::EpicsClientFactoryInit() {
   LOG(Sev::Debug, "EpicsClientFactoryInit");
-  ulock lock(MutexLock);
+  std::lock_guard<std::mutex> lock(MutexLock);
   auto c = Count++;
   if (c == 0) {
     LOG(Sev::Info, "START  Epics factories");
@@ -31,7 +29,7 @@ EpicsClientFactoryInit::EpicsClientFactoryInit() {
 
 EpicsClientFactoryInit::~EpicsClientFactoryInit() {
   LOG(Sev::Debug, "~EpicsClientFactoryInit");
-  ulock lock(MutexLock);
+  std::lock_guard<std::mutex> lock(MutexLock);
   auto c = --Count;
   if (c < 0) {
     LOG(Sev::Error,

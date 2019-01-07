@@ -133,7 +133,7 @@ void Consumer::init() {
 
   RdKafka = rd_kafka_new(RD_KAFKA_CONSUMER, Configuration, ErrorStringBuffer,
                          ErrorStringSize);
-  if (nullptr == RdKafka) {
+  if (RdKafka == nullptr) {
     LOG(Sev::Error, "can not create kafka handle: {}", ErrorStringBuffer);
     throw std::runtime_error("can not create Kafka handle");
   }
