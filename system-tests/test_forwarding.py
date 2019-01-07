@@ -15,7 +15,7 @@ def teardown_function(function):
     :param docker_compose: test fixture to apply to
     :return:
     """
-    print("teardown happening", flush=True)
+    print("Resetting PVs", flush=True)
     prod = ProducerWrapper("localhost:9092", CONFIG_TOPIC, "")
     prod.stop_all_pvs()
 
