@@ -43,12 +43,12 @@ static void prod_delivery_failed(rd_kafka_message_t const *msg) {
 }
 
 KafkaW::Producer::Topic InstanceSet::producer_topic(Forwarder::URI uri) {
-  LOG(Sev::Debug, "InstanceSet::producer_topic  for:  {}, {}", uri.host_port,
-      uri.topic);
-  auto host_port = uri.host_port;
+  LOG(Sev::Debug, "InstanceSet::producer_topic  for:  {}, {}", uri.HostPort,
+      uri.Topic);
+  auto host_port = uri.HostPort;
   auto it = producers_by_host.find(host_port);
   if (it != producers_by_host.end()) {
-    return KafkaW::Producer::Topic(it->second, uri.topic);
+    return KafkaW::Producer::Topic(it->second, uri.Topic);
   }
   auto BrokerSettings = this->BrokerSettings;
   BrokerSettings.Address = host_port;
@@ -59,7 +59,7 @@ KafkaW::Producer::Topic InstanceSet::producer_topic(Forwarder::URI uri) {
     std::lock_guard<std::mutex> Lock(mx_producers_by_host);
     producers_by_host[host_port] = p;
   }
-  return KafkaW::Producer::Topic(p, uri.topic);
+  return KafkaW::Producer::Topic(p, uri.Topic);
 }
 
 int InstanceSet::poll() {

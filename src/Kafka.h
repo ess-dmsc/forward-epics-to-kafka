@@ -4,7 +4,7 @@
 /// Manage the running Kafka producer instances.
 /// Simple load balance over the available producers.
 
-#include "uri.h"
+#include "URI.h"
 #include <atomic>
 #include <map>
 #include <memory>
