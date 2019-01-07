@@ -16,4 +16,4 @@ def test_forwarder_does_not_send_pv_update_more_than_once_when_periodic_update_i
 
     with raises(AssertionError):
         # AssertionError because there are no more messages to poll
-        msg = poll_for_valid_message(consumer)
+        poll_for_valid_message(consumer)

@@ -9,6 +9,30 @@ from helpers.PVs import PVDOUBLE, PVSTR, PVLONG, PVENUM
 CONFIG_TOPIC = "TEST_forwarderConfig"
 
 
+def teardown_function(function):
+    """
+    Stops forwarder pv listening and resets any values in EPICS
+    :param docker_compose: test fixture to apply to
+    :return:
+    """
+    print("teardown happening", flush=True)
+    prod = ProducerWrapper("localhost:9092", CONFIG_TOPIC, "")
+    prod.stop_all_pvs()
+
+    defaults = {
+        PVDOUBLE: 0.0,
+        # We have to use this as the second parameter for caput gets parsed as empty so does not change the value of
+        # the PV
+        PVSTR: "\"\"",
+        PVLONG: 0,
+        PVENUM: "INIT"
+    }
+
+    for key, value in defaults.items():
+        change_pv_value(key, value)
+    sleep(3)
+
+
 def test_config_file_channel_created_correctly(docker_compose):
     """
     Test that the channel defined in the config file is created.
@@ -31,10 +55,6 @@ def test_config_file_channel_created_correctly(docker_compose):
     # Check the new value is forwarded
     second_msg = poll_for_valid_message(cons)
     check_expected_values(second_msg, Value.Double, PVDOUBLE, 10.0)
-
-    change_pv_value(PVDOUBLE, 0)
-    prod.stop_all_pvs()
-    sleep(5)
     cons.close()
 
 
@@ -66,10 +86,6 @@ def test_forwarder_sends_pv_updates_single_pv_double(docker_compose):
 
     second_msg = poll_for_valid_message(cons)
     check_expected_values(second_msg, Value.Double, PVDOUBLE, 5.0)
-
-    change_pv_value(PVDOUBLE, 0)
-    prod.stop_all_pvs()
-    sleep(3)
     cons.close()
 
 
@@ -103,11 +119,6 @@ def test_forwarder_sends_pv_updates_single_pv_string(docker_compose):
     data_msg = poll_for_valid_message(cons)
 
     check_expected_values(data_msg, Value.String, PVSTR, b'stop')
-
-    # We have to use this as the second parameter for caput gets parsed as empty so does not change the value of the PV
-    change_pv_value(PVSTR, "\"\"")
-    prod.stop_all_pvs()
-    sleep(3)
     cons.close()
 
 
@@ -145,10 +156,6 @@ def test_forwarder_sends_pv_updates_single_pv_long(docker_compose):
 
     second_msg = poll_for_valid_message(cons)
     check_expected_values(second_msg, Value.Int, PVLONG, 5)
-
-    change_pv_value(PVLONG, 0)
-    prod.stop_all_pvs()
-    sleep(3)
     cons.close()
 
 
@@ -182,10 +189,6 @@ def test_forwarder_sends_pv_updates_single_pv_enum(docker_compose):
 
     second_msg = poll_for_valid_message(cons)
     check_expected_values(second_msg, Value.Int, PVENUM, 1)
-
-    change_pv_value(PVENUM, "INIT")
-    prod.stop_all_pvs()
-    sleep(3)
     cons.close()
 
 
@@ -209,9 +212,6 @@ def test_forwarder_updates_multiple_pvs(docker_compose):
     messages = [first_msg, second_msg]
 
     check_multiple_expected_values(messages, expected_values)
-
-    prod.stop_all_pvs()
-    sleep(3)
     cons.close()
 
 
@@ -234,9 +234,6 @@ def test_forwarder_updates_pv_when_config_changed_from_one_pv(docker_compose):
     messages = [first_msg, second_msg]
 
     check_multiple_expected_values(messages, expected_values)
-
-    prod.stop_all_pvs()
-    sleep(3)
     cons.close()
 
 
@@ -261,7 +258,4 @@ def test_forwarder_updates_pv_when_config_changed_from_two_pvs(docker_compose):
 
     messages = [poll_for_valid_message(cons), poll_for_valid_message(cons), poll_for_valid_message(cons)]
     check_multiple_expected_values(messages, expected_values)
-
-    prod.stop_all_pvs()
-    sleep(3)
     cons.close()
