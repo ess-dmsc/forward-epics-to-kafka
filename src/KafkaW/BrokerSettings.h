@@ -1,8 +1,9 @@
 #pragma once
 
-#include <librdkafka/rdkafka.h>
 #include <map>
 #include <string>
+
+struct rd_kafka_conf_s;
 
 namespace KafkaW {
 
