@@ -51,4 +51,4 @@ private:
   size_t sid = 0;
   std::mutex mx;
 };
-}
+} // namespace Forwarder

@@ -10,9 +10,6 @@
 
 namespace Forwarder {
 
-/// Holder for the Kafka brokers settings defined in the command line options.
-struct KafkaBrokerSettings {};
-
 /// Holder for the converter settings defined in the streams configuration file.
 struct ConverterSettings {
   std::string Schema;

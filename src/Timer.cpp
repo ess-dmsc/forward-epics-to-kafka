@@ -46,7 +46,7 @@ void Timer::callCallbacks() {
 
 void Timer::timerLoop() {
   while (Running) {
-    Sleeper_->sleepFor(IntervalMS);
+    SleeperPtr->sleepFor(IntervalMS);
     waitForPreviousIterationToComplete();
     triggerCallbackExecution();
   }

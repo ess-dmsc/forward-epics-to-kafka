@@ -6,8 +6,6 @@
 namespace Forwarder {
 namespace EpicsClient {
 
-class EpicsClientMonitor;
-
 /// An implementation of an internal epics monitor loop.
 /// Owned by the epics client monitor, responsible for starting the monitor
 /// and creating callbacks.

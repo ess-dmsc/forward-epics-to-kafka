@@ -11,4 +11,4 @@ struct FlatbufferMessageSlice {
   uint8_t *data;
   size_t size;
 };
-}
+} // namespace FlatBufs

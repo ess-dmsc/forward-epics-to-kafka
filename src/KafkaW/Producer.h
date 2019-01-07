@@ -14,8 +14,8 @@ struct ProducerMsg {
   virtual ~ProducerMsg() = default;
   virtual void deliveryOk();
   virtual void deliveryError();
-  unsigned char *data;
-  uint32_t size;
+  unsigned char *data{nullptr};
+  uint32_t size{0};
 };
 
 struct ProducerStats {
@@ -39,7 +39,7 @@ public:
 
   virtual void poll() = 0;
 
-  virtual uint64_t outputQueueLength() = 0;
+  virtual int outputQueueLength() = 0;
   virtual rd_kafka_t *getRdKafkaPtr() const = 0;
 };
 
@@ -52,7 +52,7 @@ public:
   Producer(Producer &&x) noexcept;
   ~Producer() override;
   void poll() override;
-  uint64_t outputQueueLength() override;
+  int outputQueueLength() override;
 
   /// The message delivered callback for Kafka.
   ///

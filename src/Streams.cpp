@@ -20,7 +20,7 @@ void Streams::clearStreams() {
   LOG(Sev::Debug, "Main::clearStreams()  begin");
   std::unique_lock<std::mutex> lock(StreamsMutex);
   if (!StreamPointers.empty()) {
-    for (auto x : StreamPointers) {
+    for (auto &x : StreamPointers) {
       x->stop();
     }
     // Wait for Epics to cool down

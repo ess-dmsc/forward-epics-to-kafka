@@ -15,8 +15,8 @@ namespace Forwarder {
 
 class MappingAddException : public std::runtime_error {
 public:
-  explicit MappingAddException(std::string what)
-      : std::runtime_error(std::move(what)) {}
+  explicit MappingAddException(std::string const &What)
+      : std::runtime_error(What) {}
 };
 
 class Converter;
@@ -25,7 +25,7 @@ class Timer;
 
 namespace Config {
 class Listener;
-}
+} // namespace Config
 
 enum class ForwardingStatus : int32_t {
   NORMAL,
@@ -60,8 +60,6 @@ private:
   void createPVUpdateTimerIfRequired();
   template <typename T>
   std::shared_ptr<Stream> findOrAddStream(ChannelInfo &ChannelInfo);
-  template <typename T>
-  std::shared_ptr<T> getStreamByChannelName(std::string const &ChannelName);
   MainOpt &main_opt;
   std::shared_ptr<InstanceSet> kafka_instance_set;
   std::unique_ptr<Config::Listener> config_listener;

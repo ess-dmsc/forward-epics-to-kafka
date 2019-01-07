@@ -11,9 +11,10 @@ static std::vector<std::string> split(const std::string &Brokers) {
   std::vector<std::string> ret;
   std::string::size_type i1 = 0;
   while (true) {
-    auto i2 = Brokers.find(",", i1);
-    if (i2 == std::string::npos)
+    auto i2 = Brokers.find(',', i1);
+    if (i2 == std::string::npos) {
       break;
+    }
     if (i2 > i1) {
       ret.push_back(Brokers.substr(i1, i2 - i1));
     }
@@ -29,7 +30,7 @@ ConfigParser::ConfigParser(const std::string &RawJson)
     : Json(nlohmann::json::parse(RawJson)) {}
 
 ConfigSettings ConfigParser::extractStreamInfo() {
-  ConfigSettings Settings;
+  ConfigSettings Settings{};
   using nlohmann::json;
   if (auto StreamsMaybe = find<json>("streams", Json)) {
     auto Streams = StreamsMaybe.inner();
