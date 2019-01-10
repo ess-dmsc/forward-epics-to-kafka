@@ -1,4 +1,4 @@
 # Detailed Documentation
 
-- [Installation](INSTALLATION.md)
-- [Performance](PERFORMANCE.md)
+- [Installation](documentation/INSTALLATION.md)
+- [Performance](documentation/PERFORMANCE.md)
