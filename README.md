@@ -22,10 +22,10 @@ variables to [Kafka](https://kafka.apache.org/) topics.
 
   - [Further documentation](documentation/README.md)
 
-# Installation
+## Installation
 [Installation](documentation/installation.md)
 
-# Tests
+## Tests
 
 ### Unit tests
 Run the tests executable:
