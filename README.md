@@ -2,9 +2,13 @@
 [![codecov](https://codecov.io/gh/ess-dmsc/forward-epics-to-kafka/branch/master/graph/badge.svg)](https://codecov.io/gh/ess-dmsc/forward-epics-to-kafka)
 [![DOI](https://zenodo.org/badge/81432248.svg)](https://zenodo.org/badge/latestdoi/81432248)
 
-# Forward EPICS to Kafka
+# Summary
+Application used at ESS to forward [EPICS](https://epics.anl.gov/) process
+variables to [Kafka](https://kafka.apache.org/) topics.
 
-- Forward EPICS process variables to Kafka topics
+[Further documentation](documentation/README.md)
+
+## Features
 - Converts EPICS data into FlatBuffers according to the configured schema
 - New converters from EPICS to FlatBuffers can be easily
   [added](#adding-new-converter-plugins).
@@ -15,8 +19,9 @@
 - Conversion to FlatBuffers is distributed over threads
 - The same converter instance can be [shared](#share-converter-instance-between-channels)
   between different channels
-  
-  
+
+
+
 
 ## Usage
 
@@ -54,14 +59,14 @@ The forwarder can be also set up with a configuration file:
 with an `ini` file for command line options:
 
 ```ini
-config-topic=//kakfabroker:9092/the_config_topic 
+config-topic=//kakfabroker:9092/the_config_topic
 status-topic=//kafkabroker:9092/the_status_topic
 streams-json=./streams.json
 kafka-config=consumer.timeout.ms 501 fetch.message.max.bytes 1234 api.version.request true
 verbosity=5
 ```
 
-and/or a `json` file for the list of streams to add: 
+and/or a `json` file for the list of streams to add:
 
 ```json
 {
@@ -74,7 +79,7 @@ and/or a `json` file for the list of streams to add:
 }
 ```
 
-All command line options should be passed through the command line or by using a `.ini`. The JSON file was previously responsible for some options however these are now available through the command line. This does mean separate files are required, however there is more distinction between streams and command line options. The JSON will also look similar to any command messages received through Kafka. 
+All command line options should be passed through the command line or by using a `.ini`. The JSON file was previously responsible for some options however these are now available through the command line. This does mean separate files are required, however there is more distinction between streams and command line options. The JSON will also look similar to any command messages received through Kafka.
 
 
 ### Commands
@@ -308,13 +313,13 @@ of data works just fine, utilizing about 30% of each core on a reasonable deskto
 
 Higher frequency updates over EPICS should be batched into a PV structure which can hold multiple events at a time, such as a waveform record.
 
-The Forwarder uses the [MDEL](https://epics.anl.gov/EpicsDocumentation/AppDevManuals/RecordRef/Recordref-5.html#MARKER-9-15) monitor specification for monitoring PV updates rather than the ADEL Archive monitoring specification. This means that every PV update is processed rather than just those that exceed the ADEL. 
+The Forwarder uses the [MDEL](https://epics.anl.gov/EpicsDocumentation/AppDevManuals/RecordRef/Recordref-5.html#MARKER-9-15) monitor specification for monitoring PV updates rather than the ADEL Archive monitoring specification. This means that every PV update is processed rather than just those that exceed the ADEL.
 
 #### Idle PV Updates
 
 To enable the forwarder to publish PV values periodically even if their values have not been updated use the `pv-update-period <MILLISECONDS>` flag. This runs alongside the normal PV monitor so it will push value updates as well as sending values periodically.
 
-By default this is not enabled. 
+By default this is not enabled.
 
 ## Performance
 
