@@ -21,9 +21,9 @@ variables to [Kafka](https://kafka.apache.org/) topics.
   between different channels
 
   - [Further documentation](documentation/README.md)
-  - Details on installation see [here](documentation/INSTALLATION.md)
-  - Details on performance see [here](documentation/PERFORMANCE.md)
 
+# Installation
+[Installation](documentation/installation.md)
 
 # Tests
 
