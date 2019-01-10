@@ -6,7 +6,9 @@
 Application used at ESS to forward [EPICS](https://epics.anl.gov/) process
 variables to [Kafka](https://kafka.apache.org/) topics.
 
-[Further documentation](documentation/README.md)
+- [Further documentation](documentation/README.md)
+- Details on install see [here](documentation/INSTALLATION.md)
+- Details on performance see [here](documentation/PERFORMANCE.md)
 
 ## Features
 - Converts EPICS data into FlatBuffers according to the configured schema
@@ -19,8 +21,6 @@ variables to [Kafka](https://kafka.apache.org/) topics.
 - Conversion to FlatBuffers is distributed over threads
 - The same converter instance can be [shared](#share-converter-instance-between-channels)
   between different channels
-
-
 
 
 ## Usage
@@ -194,113 +194,19 @@ Example:
 ```
 
 
-## Installation
-
-### Requirements
-
-These libraries are expected in the ESS dev default locations or set via
-environment variables (see `src/CMakeLists.txt`):
-
-- EPICSv4
-- `streaming-data-types`, easiest if cloned parallel to this repository.
-  <https://github.com/ess-dmsc/streaming-data-types>
-
-Tooling
-- Conan
-- Cmake (minimum tested is 2.8.11)
-- C++ compiler with c++11 support
-- Doxygen - CMake variable `RUN_DOXYGEN` needs to be set to `TRUE` and then use `make docs`
-
-
-### Conan repositories
-
-The following remote repositories are required to be configured:
-
-- https://api.bintray.com/conan/ess-dmsc/conan
-- https://api.bintray.com/conan/conan-community/conan
-
-You can add them by running
-
-```
-conan remote add <local-name> <remote-url>
-```
-
-where `<local-name>` must be substituted by a locally unique name. Configured
-remotes can be listed with `conan remote list`.
-
-
-### Build
-
-Assuming you have `make`:
-
-```
-cmake <path-to-source> [-DCONAN_DISABLE=TRUE]
-make
-make docs  # optional
-```
-
-To skip building the tests target pass cmake `-DBUILD_TESTS=FALSE`
-
-#### Running on OSX
-
-When using Conan on OSX, due to the way paths to dependencies are handled,
-the `activate_run.sh` file must be sourced before running the application. The
-`deactivate_run.sh` can be sourced to undo the changes afterwards. This has not
-been tested yet, and it is possible that EPICS libraries cannot be found.
-Please report any issues you encounter when running this setup.
-
-
-#### Dependencies in custom locations
-
-The `forward-epics-to-kafka` follows standard `CMake` conventions.
-You can use the standard `CMAKE_INCLUDE_PATH`, `CMAKE_LIBRARY_PATH` and
-`CMAKE_PROGRAM_PATH` to point `CMake` into the right direction.
-It will prefer dependencies found there over those in the system directories.
-
-We of course also support the ESS EPICS installation scheme.
-To that end, we use as specified in the ESS wiki:
-- `EPICS_V4_BASE_VERSION`
-- `EPICS_BASES_PATH`
-- `EPICS_HOST_ARCH`
-- `EPICS_MODULES_PATH`
-
-
-#### Fully non-standard dependencies
-
-If you like full control over the dependencies:
-
-Here follows an example where all dependencies are in non-standard locations.
-Also EPICS is a custom build from source.
-No additional environment variables are needed.
-Only a few basic dependencies (like PCRE) are in standard locations.
-
-```
-export D1=$HOME/software/;
-export EPICS_MODULES_PATH=$D1/epics/EPICS-CPP-4.6.0;
-export EPICS_HOST_ARCH=darwin-x86;
-cmake \
--DREQUIRE_GTEST=1 \
--DCMAKE_INCLUDE_PATH="$D1/fmt;$D1/rapidjson/include;$D1/flatbuffers/include;$D1/librdkafka/include;$D1/googletest;$D1/epics/base-3.16.0.1/include" \
--DCMAKE_LIBRARY_PATH="$D1/librdkafka/lib;$D1/epics/base-3.16.0.1/lib/$EPICS_HOST_ARCH" \
--DCMAKE_PROGRAM_PATH="$D1/flatbuffers/bin" \
-<path-to-forward-epics-to-kafka-repository>
-```
-
-Note that in this example, there is no need for `EPICS_V4_BASE_VERSION`
-or `EPICS_BASES_PATH` because we give them explicitly in `CMAKE_*_PATH`.
 
 
 
-## Tests
+# Tests
 
-#### Unit tests
+### Unit tests
 Run the tests executable:
 
 ```
 ./tests/tests
 ```
 
-#### [Running System tests (link)](https://github.com/ess-dmsc/forward-epics-to-kafka/blob/master/system-tests/README.md)
+### [Running System tests (link)](https://github.com/ess-dmsc/forward-epics-to-kafka/blob/master/system-tests/README.md)
 
 
 ### Update Frequency
@@ -321,19 +227,7 @@ To enable the forwarder to publish PV values periodically even if their values h
 
 By default this is not enabled.
 
-## Performance
 
-Some more thorough figures are to be included here, but we have forwarded
-about 200MB/s without problems for extended periods of time.
-Higher bandwidth has been done, but not yet tested over long time periods.
-
-### Conversion bandwidth
-
-If we run as usual except that we do not actually write to Kafka, tests show
-on my quite standard 4 core desktop PC a Flatbuffer conversion rate of about
-2.8 GB/s. with all cores at a ~80% usage.
-These numbers are of course very rough estimates and depend on a lot of
-factors.  For systematic tests are to be done.
 
 ## Adding New Converter Plugins
 
