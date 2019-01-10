@@ -8,6 +8,10 @@ To summarise:
 
 - These tickets need to be approved by the steering committee before work is started.
 
+## Feature requests
+Feel free to create a GitHub issue if you have a feature request or, even better, implement it
+yourself on a branch and create a pull request!
+
 ## Branching
 
 - Branch your feature off 'master'
