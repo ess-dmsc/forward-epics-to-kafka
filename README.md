@@ -2,11 +2,11 @@
 [![codecov](https://codecov.io/gh/ess-dmsc/forward-epics-to-kafka/branch/master/graph/badge.svg)](https://codecov.io/gh/ess-dmsc/forward-epics-to-kafka)
 [![DOI](https://zenodo.org/badge/81432248.svg)](https://zenodo.org/badge/latestdoi/81432248)
 
-# Summary
+# Forward EPICS to Kafka
+
+## Summary
 Application used at ESS to forward [EPICS](https://epics.anl.gov/) process
 variables to [Kafka](https://kafka.apache.org/) topics.
-
-
 
 ## Features
 - Converts EPICS data into FlatBuffers according to the configured schema
@@ -38,7 +38,6 @@ Run the tests executable:
 
 
 ## Deployment
-
 TBD
 
 ## Built With
@@ -52,7 +51,7 @@ Please read [CONTRIBUTING.md] for details on the process for submitting pull req
 
 ## Versioning
 
-TBD
+[Releases](https://github.com/ess-dmsc/forward-epics-to-kafka/releases)
 
 ## Authors
 
@@ -61,7 +60,3 @@ See also the list of [contributors](https://github.com/ess-dmsc/forward-epics-to
 ## License
 
 This project is licensed under the BSD-2 - see the [LICENSE.md](LICENSE.md) file for details
-
-## Acknowledgments
-
-TBD
