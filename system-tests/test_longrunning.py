@@ -47,5 +47,5 @@ def test_long_run(docker_compose_lr):
                             container = item
                             break
                     if container:
-                        stats_file.write("{} mem_usage:{} bytes\n".format(datetime.now(), container.stats(stream=False)['memory_stats']['usage']))
+                        stats_file.write("{}\t{}\n".format(datetime.now(), container.stats(stream=False)['memory_stats']['usage']))
 
