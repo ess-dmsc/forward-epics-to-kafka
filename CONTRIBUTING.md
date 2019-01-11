@@ -7,9 +7,13 @@ development, we decided on this lowest common denominator.
 The `.clang-format` is just a `-dump-config` of the default LLVM style from
 `clang-format` v3.9.
 
-## Issues 
+## Issues
 
 For issues that require changes in the functionality of the code (i.e. not tiny bits of refactoring) create a ticket on the [ESS JIRA board](https://jira.esss.lu.se/secure/RapidBoard.jspa?rapidView=167&view=detail&quickFilter=2154) with the label `FW&FW`
+
+## Feature requests
+Feel free to create a GitHub issue if you have a feature request or, even better, implement it
+yourself on a branch and create a pull request!
 
 ## Branching
 
