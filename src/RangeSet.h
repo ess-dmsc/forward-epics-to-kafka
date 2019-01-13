@@ -15,22 +15,22 @@ template <typename T> struct RangeSet {
 
   std::string to_string() {
     std::unique_lock<std::mutex> lock(Mutex);
-    fmt::MemoryWriter mw;
-    mw.write("[");
+    fmt::memory_buffer mw;
+    fmt::format_to(mw, "[");
     int i1 = 0;
     for (auto &x : set) {
       if (i1 > 0) {
-        mw.write(", ");
+        fmt::format_to(mw, ", ");
       }
-      mw.write("[{}, {}]", x.first, x.second);
+      fmt::format_to(mw, "[{}, {}]", x.first, x.second);
       ++i1;
       if (i1 > 100) {
-        mw.write(" ...");
+        fmt::format_to(mw, " ...");
         break;
       }
     }
-    mw.write("]\0");
-    return std::string(mw.c_str());
+    fmt::format_to(mw, "]\0");
+    return std::string(mw.data());
   }
 
   std::set<std::pair<T, T>> set;
