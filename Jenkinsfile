@@ -21,11 +21,11 @@ properties([[
 
 images = [
         'centos7': [
-                'name': 'essdmscdm/centos7-build-node:3.0.0',
+                'name': 'essdmscdm/centos7-build-node:3.5.1',
                 'sh'  : '/usr/bin/scl enable rh-python35 devtoolset-6 -- /bin/bash -e'
         ],
         'centos7-release': [
-                'name': 'essdmscdm/centos7-build-node:3.0.0',
+                'name': 'essdmscdm/centos7-build-node:3.5.1',
                 'sh'  : '/usr/bin/scl enable rh-python35 devtoolset-6 -- /bin/bash -e'
         ],
         'debian9'    : [
@@ -33,7 +33,7 @@ images = [
                 'sh'  : 'bash -e'
         ],
         'ubuntu1804'  : [
-                'name': 'essdmscdm/ubuntu18.04-build-node:1.1.0',
+                'name': 'essdmscdm/ubuntu18.04-build-node:1.3.1',
                 'sh'  : 'bash -e'
         ]
 ]
