@@ -23,6 +23,9 @@ RUN conan profile new default
 ADD "https://raw.githubusercontent.com/ess-dmsc/docker-ubuntu18.04-build-node/master/files/registry.json" "/root/.conan/registry.json"
 ADD "https://raw.githubusercontent.com/ess-dmsc/docker-ubuntu18.04-build-node/master/files/default_profile" "/root/.conan/profiles/default"
 
+# Add local Conan server
+RUN conan remote add --insert 0 ess-dmsc-local http://eeenfs.dm.esss.dk:9300
+
 RUN mkdir forwarder
 
 COPY conan/ ../forwarder_src/conan/
