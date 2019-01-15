@@ -6,6 +6,8 @@ ARG http_proxy
 
 ARG https_proxy
 
+ARG local_conan_server
+
 RUN apt-get update -y && \
     apt-get --no-install-recommends -y install build-essential git python-pip cmake tzdata vim  && \
     apt-get -y autoremove && \
@@ -24,7 +26,7 @@ ADD "https://raw.githubusercontent.com/ess-dmsc/docker-ubuntu18.04-build-node/ma
 ADD "https://raw.githubusercontent.com/ess-dmsc/docker-ubuntu18.04-build-node/master/files/default_profile" "/root/.conan/profiles/default"
 
 # Add local Conan server
-RUN conan remote add --insert 0 ess-dmsc-local http://eeenfs.dm.esss.dk:9300
+RUN if [ ! -z "$local_conan_server" ]; then conan remote add --insert 0 ess-dmsc-local "$local_conan_server"; fi
 
 RUN mkdir forwarder
 
