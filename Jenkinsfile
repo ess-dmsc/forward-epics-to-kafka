@@ -380,7 +380,7 @@ def get_win10_pipeline() {
 
 def get_system_tests_pipeline() {
     return {
-        node('integration-test') {
+        node('system-test') {
             cleanWs()
             dir("${project}") {
                 try{
@@ -395,7 +395,7 @@ def get_system_tests_pipeline() {
                     stage("System tests: Run") {
                         sh """docker stop \$(docker ps -a -q) && docker rm \$(docker ps -a -q) || true
                                                 """
-			timeout(time: 30, activity: true){     
+			timeout(time: 30, activity: true){
                             sh """cd system-tests/
                             scl enable rh-python35 -- python -m pytest -s  --junitxml=./SystemTestsOutput.xml ./
                             """
