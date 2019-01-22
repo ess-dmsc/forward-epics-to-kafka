@@ -11,6 +11,7 @@ set(sources
     CommandHandler_tests.cpp
     EpicsClientMonitor_tests.cpp
     EpicsClientRandom_tests.cpp
+    Producer_tests.cpp
     Timer_tests.cpp
     StreamTestUtils.cpp
     $<TARGET_OBJECTS:__objects>

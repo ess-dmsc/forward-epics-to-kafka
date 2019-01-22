@@ -57,7 +57,7 @@ int ProducerTopic::produce(std::unique_ptr<ProducerMessage> &Msg) {
   int MsgFlags = 0;
   auto &ProducerStats = KafkaProducer->Stats;
 
-  switch (KafkaProducer->getRdKafkaPtr()->produce(
+  switch (KafkaProducer->produce(
       RdKafkaTopic, RdKafka::Topic::PARTITION_UA, MsgFlags, Msg->data,
       Msg->size, key, key_len, Msg.get())) {
   case RdKafka::ERR_NO_ERROR:
@@ -71,7 +71,7 @@ int ProducerTopic::produce(std::unique_ptr<ProducerMessage> &Msg) {
   case RdKafka::ERR__QUEUE_FULL:
     ++ProducerStats.local_queue_full;
     LOG(Sev::Warning, "Producer queue full, outq: {}",
-        KafkaProducer->getRdKafkaPtr()->outq_len());
+        KafkaProducer->outputQueueLength());
     break;
 
   case RdKafka::ERR_MSG_SIZE_TOO_LARGE:
