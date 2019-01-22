@@ -18,11 +18,9 @@
 
 namespace Forwarder {
 
-template <typename T> using sptr = std::shared_ptr<T>;
-
 class InstanceSet {
 public:
-  static sptr<InstanceSet> Set(KafkaW::BrokerSettings Settings);
+  static std::shared_ptr<InstanceSet> Set(KafkaW::BrokerSettings Settings);
   static void clear();
   KafkaW::Producer::Topic SetUpProducerTopic(URI uri);
   int poll();
