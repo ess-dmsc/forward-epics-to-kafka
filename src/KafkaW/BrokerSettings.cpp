@@ -13,8 +13,10 @@ void BrokerSettings::apply(RdKafka::Conf *RdKafkaConfiguration) const {
     if (RdKafka::Conf::ConfResult::CONF_OK !=
         RdKafkaConfiguration->set(ConfigurationItem.first,
                                   ConfigurationItem.second, ErrorString)) {
-      LOG(Sev::Warning, "Failure setting config: {} = {}",
-          ConfigurationItem.first, ConfigurationItem.second);
+      std::string ThrowMessage = fmt::format("Failure setting config: {} = {}",
+                              ConfigurationItem.first, ConfigurationItem.second);
+      LOG(Sev::Warning, ThrowMessage.c_str());
+      throw std::runtime_error(ThrowMessage);
     }
   }
 }

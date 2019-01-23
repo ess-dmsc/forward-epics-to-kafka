@@ -41,7 +41,13 @@ Producer::Producer(BrokerSettings Settings)
   std::string ErrorString;
 
   auto Config = RdKafka::Conf::create(RdKafka::Conf::CONF_GLOBAL);
-  ProducerBrokerSettings.apply(Config);
+    try {
+        ProducerBrokerSettings.apply(Config);
+    }
+    catch (std::runtime_error &e) {
+        throw std::runtime_error("Cannot create kafka handle due to configuration error");
+    }
+
   Config->set("dr_cb", &DeliveryCb, ErrorString);
   Config->set("event_cb", &EventCb, ErrorString);
   Config->set("metadata.broker.list", ProducerBrokerSettings.Address,
