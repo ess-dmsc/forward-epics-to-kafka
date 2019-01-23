@@ -60,5 +60,10 @@ TEST_F(ProducerTests, callPollTest) {
   EXPECT_CALL(*dynamic_cast<MockHandle *>(Producer1.ProducerPtr.get()),
               poll(::testing::_))
       .Times(AtLeast(1));
+
+  EXPECT_CALL(*dynamic_cast<MockHandle *>(Producer1.ProducerPtr.get()),
+              outq_len())
+          .Times(AtLeast(1));
+
   Producer1.poll();
 }

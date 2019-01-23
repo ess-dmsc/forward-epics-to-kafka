@@ -82,6 +82,7 @@ TEST_F(ConsumerTests, addTopicAddsTopicObject) {
     ConsumerStandIn StandIn(Settings);
     StandIn.KafkaConsumer.reset(Consumer);
     EXPECT_CALL(*Consumer, assign(_)).Times(Exactly(1)).WillOnce(Return(RdKafka::ErrorCode::ERR_NO_ERROR));
+    EXPECT_CALL(*Consumer, close()).Times(Exactly(1));
     StandIn.addTopic("something");
 }
 
@@ -91,6 +92,7 @@ TEST_F(ConsumerTests, addTopicThrowsWhenFailsToAssign) {
     ConsumerStandIn StandIn(Settings);
     StandIn.KafkaConsumer.reset(Consumer);
     EXPECT_CALL(*Consumer, assign(_)).Times(Exactly(1)).WillOnce(Return(RdKafka::ErrorCode::ERR__ASSIGN_PARTITIONS));
+    EXPECT_CALL(*Consumer, close()).Times(Exactly(1));
     EXPECT_THROW(StandIn.addTopic("something"), std::runtime_error);
 }
 
