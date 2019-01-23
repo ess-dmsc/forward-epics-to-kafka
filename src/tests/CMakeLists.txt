@@ -18,7 +18,8 @@ set(sources
     Listener_tests.cpp
     BrokerSettings_tests.cpp
     ConfStandIn.h
-    ProducerDeliveryCb_tests.cpp)
+    ProducerDeliveryCb_tests.cpp
+    Consumer_tests.cpp)
 add_executable(${tgt} ${sources})
 add_dependencies(${tgt} flatbuffers_generate)
 target_include_directories(${tgt} PRIVATE ${path_include_common})
