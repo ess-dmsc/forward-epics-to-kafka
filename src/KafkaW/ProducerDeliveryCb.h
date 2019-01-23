@@ -30,6 +30,6 @@ public:
   }
 
 private:
-  ProducerStats Stats;
+  ProducerStats &Stats;
 };
 }
