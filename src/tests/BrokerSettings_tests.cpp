@@ -13,7 +13,7 @@ protected:
   void SetUp() override {}
 };
 
-TEST_F(BrokerSettingsTests, testSomething) {
+TEST_F(BrokerSettingsTests, callingApplyCallsSetOnKafkaConfObject) {
   BrokerSettings Settings;
   ConfStandIn Conf;
   EXPECT_CALL(Conf, set(An<const std::string &>(), An<const std::string &>(),
