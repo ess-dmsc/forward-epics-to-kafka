@@ -1,4 +1,5 @@
 #include "../KafkaW/Consumer.h"
+#include "MockMessage.h"
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include <librdkafka/rdkafkacpp.h>
@@ -91,4 +92,67 @@ TEST_F(ConsumerTests, addTopicThrowsWhenFailsToAssign) {
     StandIn.KafkaConsumer.reset(Consumer);
     EXPECT_CALL(*Consumer, assign(_)).Times(Exactly(1)).WillOnce(Return(RdKafka::ErrorCode::ERR__ASSIGN_PARTITIONS));
     EXPECT_THROW(StandIn.addTopic("something"), std::runtime_error);
+}
+
+TEST_F(ConsumerTests, pollReturnsConsumerMessageWithMessagePollStatus) {
+    auto Consumer = new MockKafkaConsumer;
+    BrokerSettings Settings;
+    ConsumerStandIn StandIn(Settings);
+    StandIn.KafkaConsumer.reset(Consumer);
+    auto Message = new MockMessage;
+    EXPECT_CALL(*Message, len()).Times(AtLeast(1)).WillOnce(Return(1));
+    EXPECT_CALL(*Message, err()).Times(AtLeast(1)).WillOnce(Return(RdKafka::ErrorCode::ERR_NO_ERROR));
+    std::string Payload{"test"};
+    EXPECT_CALL(*Message, payload()).Times(AtLeast(1)).WillOnce(Return(reinterpret_cast<void*>(&Payload)));
+
+    EXPECT_CALL(*Consumer, consume(_)).Times(Exactly(1)).WillOnce(Return(Message));
+    EXPECT_CALL(*Consumer, close()).Times(Exactly(1));
+
+    auto ConsumedMessage = StandIn.poll();
+    ASSERT_EQ(ConsumedMessage->getStatus(), PollStatus::Message);
+}
+
+TEST_F(ConsumerTests, pollReturnsConsumerMessageWithEmptyPollStatusIfKafkaErrorMessageIsEmpty) {
+    auto Consumer = new MockKafkaConsumer;
+    BrokerSettings Settings;
+    ConsumerStandIn StandIn(Settings);
+    StandIn.KafkaConsumer.reset(Consumer);
+    auto Message = new MockMessage;
+    EXPECT_CALL(*Message, len()).Times(AtLeast(1)).WillOnce(Return(0));
+
+    EXPECT_CALL(*Message, err()).Times(AtLeast(1)).WillOnce(Return(RdKafka::ErrorCode::ERR_NO_ERROR));
+    EXPECT_CALL(*Consumer, consume(_)).Times(Exactly(1)).WillOnce(Return(Message));
+    EXPECT_CALL(*Consumer, close()).Times(Exactly(1));
+
+    auto ConsumedMessage = StandIn.poll();
+    ASSERT_EQ(ConsumedMessage->getStatus(), PollStatus::Empty);
+
+}
+
+TEST_F(ConsumerTests, pollReturnsConsumerMessageWithEmptyPollStatusIfEndofPartition) {
+    auto Consumer = new MockKafkaConsumer;
+    BrokerSettings Settings;
+    ConsumerStandIn StandIn(Settings);
+    StandIn.KafkaConsumer.reset(Consumer);
+    auto Message = new MockMessage;
+    EXPECT_CALL(*Message, err()).Times(AtLeast(1)).WillOnce(Return(RdKafka::ErrorCode::ERR__PARTITION_EOF));
+    EXPECT_CALL(*Consumer, consume(_)).Times(Exactly(1)).WillOnce(Return(Message));
+    EXPECT_CALL(*Consumer, close()).Times(Exactly(1));
+
+    auto ConsumedMessage = StandIn.poll();
+    ASSERT_EQ(ConsumedMessage->getStatus(), PollStatus::EndOfPartition);
+}
+
+TEST_F(ConsumerTests, pollReturnsConsumerMessageWithErrorPollStatusIfUnknownOrUnexpected) {
+    auto Consumer = new MockKafkaConsumer;
+    BrokerSettings Settings;
+    ConsumerStandIn StandIn(Settings);
+    StandIn.KafkaConsumer.reset(Consumer);
+    auto Message = new MockMessage;
+    EXPECT_CALL(*Message, err()).Times(AtLeast(1)).WillOnce(Return(RdKafka::ErrorCode::ERR__BAD_MSG));
+    EXPECT_CALL(*Consumer, consume(_)).Times(Exactly(1)).WillOnce(Return(Message));
+    EXPECT_CALL(*Consumer, close()).Times(Exactly(1));
+
+    auto ConsumedMessage = StandIn.poll();
+    ASSERT_EQ(ConsumedMessage->getStatus(), PollStatus::Error);
 }
