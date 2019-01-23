@@ -10,7 +10,7 @@ public:
   std::unique_ptr<ConsumerMessage> poll() override {
     std::string Data = "1,2,3";
     auto Message =
-        make_unique<KafkaW::ConsumerMessage>(Data, KafkaW::PollStatus::Msg);
+        make_unique<KafkaW::ConsumerMessage>(Data, KafkaW::PollStatus::Message);
     return Message;
   };
   void addTopic(const std::string &Topic) override { UNUSED_ARG(Topic); };

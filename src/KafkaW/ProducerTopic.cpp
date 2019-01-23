@@ -1,5 +1,6 @@
 #include "ProducerTopic.h"
 #include <vector>
+#include <helper.h>
 
 namespace KafkaW {
 

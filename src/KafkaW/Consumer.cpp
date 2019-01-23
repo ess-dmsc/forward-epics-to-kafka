@@ -109,15 +109,15 @@ std::unique_ptr<ConsumerMessage> Consumer::poll() {
       std::string MessageString = {
           reinterpret_cast<const char *>(KafkaMsg->payload())};
       auto Message =
-          ::make_unique<ConsumerMessage>(MessageString, PollStatus::Msg);
+          ::make_unique<ConsumerMessage>(MessageString, PollStatus::Message);
       return Message;
     } else {
       return ::make_unique<ConsumerMessage>(PollStatus::Empty);
     }
   case RdKafka::ERR__PARTITION_EOF:
-    return ::make_unique<ConsumerMessage>(PollStatus::EOP);
+    return ::make_unique<ConsumerMessage>(PollStatus::EndOfPartition);
   default:
-    return ::make_unique<ConsumerMessage>(PollStatus::Err);
+    return ::make_unique<ConsumerMessage>(PollStatus::Error);
   }
 }
 } // namespace KafkaW

@@ -6,9 +6,9 @@
 namespace KafkaW {
 
 enum class PollStatus {
-  Msg,
-  Err,
-  EOP,
+  Message,
+  Error,
+  EndOfPartition,
   Empty,
 };
 
