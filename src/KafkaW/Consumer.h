@@ -29,6 +29,8 @@ protected:
     std::shared_ptr<RdKafka::KafkaConsumer> KafkaConsumer;
     virtual std::vector<int32_t> getTopicPartitionNumbers(const std::string &Topic);
 private:
+    RdKafka::Conf* Conf;
+    const RdKafka::TopicMetadata* findTopic(const std::string &Topic);
     std::unique_ptr<RdKafka::Metadata> queryMetadata();
   BrokerSettings ConsumerBrokerSettings;
   KafkaEventCb EventCallback;

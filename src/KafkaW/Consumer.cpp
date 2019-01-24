@@ -15,31 +15,33 @@ Consumer::Consumer(BrokerSettings &BrokerSettings)
     : ConsumerBrokerSettings(std::move(BrokerSettings)) {
   std::string ErrorString;
 
-  auto conf = RdKafka::Conf::create(RdKafka::Conf::CONF_GLOBAL);
-  conf->set("event_cb", &EventCallback, ErrorString);
-  conf->set("metadata.broker.list", ConsumerBrokerSettings.Address,
+  Conf = RdKafka::Conf::create(RdKafka::Conf::CONF_GLOBAL);
+  Conf->set("event_cb", &EventCallback, ErrorString);
+  Conf->set("metadata.broker.list", ConsumerBrokerSettings.Address,
             ErrorString);
-  conf->set("group.id",
+  Conf->set("group.id",
             fmt::format("forwarder-command-listener--pid{}", getpid()),
             ErrorString);
-  ConsumerBrokerSettings.apply(conf);
+  ConsumerBrokerSettings.apply(Conf);
 
   KafkaConsumer = std::shared_ptr<RdKafka::KafkaConsumer>(
-      RdKafka::KafkaConsumer::create(conf, ErrorString));
+      RdKafka::KafkaConsumer::create(Conf, ErrorString));
   if (!KafkaConsumer) {
     LOG(Sev::Error, "can not create kafka consumer: {}", ErrorString);
     throw std::runtime_error("can not create Kafka consumer");
   }
+
 }
 
 std::unique_ptr<RdKafka::Metadata> Consumer::queryMetadata() {
+    //todo: create a unique pointer here
   RdKafka::Metadata *metadataRawPtr;
   auto RetCode = KafkaConsumer->metadata(true, nullptr, &metadataRawPtr, 5000);
-  std::unique_ptr<RdKafka::Metadata> metadata(metadataRawPtr);
   if (RetCode != RdKafka::ERR_NO_ERROR) {
     throw MetadataException(
         "Consumer::queryMetadata() - error while retrieving metadata.");
   }
+  std::unique_ptr<RdKafka::Metadata> metadata(metadataRawPtr);
   return metadata;
 }
 
@@ -50,23 +52,26 @@ Consumer::~Consumer() {
     KafkaConsumer->close();
     RdKafka::wait_destroyed(5000);
   }
+  delete Conf;
 }
 
-/// Get a vector of partition numbers which exist for a given topic
-/// \param Topic Name of the topic
-/// \return Vector of partition numbers
-std::vector<int32_t>
-Consumer::getTopicPartitionNumbers(const std::string &Topic) {
+const RdKafka::TopicMetadata*
+Consumer::findTopic(const std::string &Topic) {
   auto MetadataPtr = queryMetadata();
   auto Topics = MetadataPtr->topics();
   auto Iterator = std::find_if(Topics->cbegin(), Topics->cend(),
-                               [Topic](const RdKafka::TopicMetadata *tpc) {
-                                 return tpc->topic() == Topic;
+                               [Topic](const RdKafka::TopicMetadata *TopicMetadata) {
+                                 return TopicMetadata->topic() == Topic;
                                });
   if (Iterator == Topics->end()) {
     throw std::runtime_error("Config topic does not exist");
   }
-  auto matchedTopic = *Iterator;
+  return *Iterator;
+}
+
+std::vector<int32_t>
+Consumer::getTopicPartitionNumbers(const std::string &Topic) {
+  auto matchedTopic = findTopic(Topic);
   std::vector<int32_t> TopicPartitionNumbers;
   auto PartitionMetadata = matchedTopic->partitions();
   for (const auto &Partition : *PartitionMetadata) {
@@ -76,8 +81,6 @@ Consumer::getTopicPartitionNumbers(const std::string &Topic) {
   return TopicPartitionNumbers;
 }
 
-/// Subscribe to specified topic, note this removes any previous subscription
-/// \param Topic Name of the topic to subscribe to
 void Consumer::addTopic(const std::string &Topic) {
   LOG(Sev::Info, "Consumer::add_topic  {}", Topic);
   std::vector<RdKafka::TopicPartition *> TopicPartitionsWithOffsets;
