@@ -43,6 +43,7 @@ protected:
   std::unique_ptr<RdKafka::Handle> ProducerPtr = nullptr;
 
 private:
+  std::unique_ptr<RdKafka::Conf> Conf;
   ProducerDeliveryCb DeliveryCb{Stats};
   KafkaEventCb EventCb;
 };

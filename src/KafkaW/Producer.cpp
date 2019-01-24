@@ -10,8 +10,8 @@ Producer::~Producer() {
   if (ProducerPtr != nullptr) {
     int TimeoutMS = 100;
     int NumberOfIterations = 80;
-    for (int i = 0; i < NumberOfIterations; i++){
-      if (outputQueueLength() == 0){
+    for (int i = 0; i < NumberOfIterations; i++) {
+      if (outputQueueLength() == 0) {
         break;
       }
       ProducerPtr->poll(TimeoutMS);
@@ -30,19 +30,20 @@ Producer::Producer(BrokerSettings Settings)
 
   std::string ErrorString;
 
-  auto Config = RdKafka::Conf::create(RdKafka::Conf::CONF_GLOBAL);
+  Conf = std::unique_ptr<RdKafka::Conf>(
+      RdKafka::Conf::create(RdKafka::Conf::CONF_GLOBAL));
   try {
-    ProducerBrokerSettings.apply(Config);
+    ProducerBrokerSettings.apply(Conf.get());
   } catch (std::runtime_error &e) {
     throw std::runtime_error(
         "Cannot create kafka handle due to configuration error");
   }
 
-  Config->set("dr_cb", &DeliveryCb, ErrorString);
-  Config->set("event_cb", &EventCb, ErrorString);
-  Config->set("metadata.broker.list", ProducerBrokerSettings.Address,
-              ErrorString);
-  ProducerPtr.reset(RdKafka::Producer::create(Config, ErrorString));
+  Conf->set("dr_cb", &DeliveryCb, ErrorString);
+  Conf->set("event_cb", &EventCb, ErrorString);
+  Conf->set("metadata.broker.list", ProducerBrokerSettings.Address,
+            ErrorString);
+  ProducerPtr.reset(RdKafka::Producer::create(Conf.get(), ErrorString));
   if (!ProducerPtr) {
     LOG(Sev::Error, "can not create kafka handle: {}", ErrorString);
     throw std::runtime_error("can not create Kafka handle");
