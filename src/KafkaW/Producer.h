@@ -31,18 +31,16 @@ public:
   void poll() override;
   int outputQueueLength() override;
   RdKafka::Producer *getRdKafkaPtr() const override;
-  RdKafka::ErrorCode produce (RdKafka::Topic *topic, int32_t partition,
-                       int msgflags,
-                       void *payload, size_t len,
-                       const void *key, size_t key_len,
-                       void *msg_opaque);
+  RdKafka::ErrorCode produce(RdKafka::Topic *topic, int32_t partition,
+                             int msgflags, void *payload, size_t len,
+                             const void *key, size_t key_len, void *msg_opaque);
   // Currently it's nice to have access to these two for statistics:
   BrokerSettings ProducerBrokerSettings;
   std::atomic<uint64_t> TotalMessagesProduced{0};
 
 protected:
-    int id = 0;
-    std::unique_ptr<RdKafka::Handle> ProducerPtr = nullptr;
+  int id = 0;
+  std::unique_ptr<RdKafka::Handle> ProducerPtr = nullptr;
 
 private:
   ProducerDeliveryCb DeliveryCb{Stats};

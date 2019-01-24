@@ -63,7 +63,7 @@ TEST_F(ProducerTests, callPollTest) {
 
   EXPECT_CALL(*dynamic_cast<MockHandle *>(Producer1.ProducerPtr.get()),
               outq_len())
-          .Times(AtLeast(1));
+      .Times(AtLeast(1));
 
   Producer1.poll();
 }

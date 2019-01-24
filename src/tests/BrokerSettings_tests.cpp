@@ -29,6 +29,7 @@ TEST_F(BrokerSettingsTests, callingApplyThrows) {
   ConfStandIn Conf;
   EXPECT_CALL(Conf, set(An<const std::string &>(), An<const std::string &>(),
                         An<std::string &>()))
-          .Times(Exactly(1)).WillRepeatedly(Return(RdKafka::Conf::ConfResult::CONF_INVALID));
+      .Times(Exactly(1))
+      .WillRepeatedly(Return(RdKafka::Conf::ConfResult::CONF_INVALID));
   EXPECT_THROW(Settings.apply(&Conf), std::runtime_error);
 }

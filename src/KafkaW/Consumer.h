@@ -26,12 +26,14 @@ public:
   std::unique_ptr<ConsumerMessage> poll() override;
 
 protected:
-    std::unique_ptr<RdKafka::KafkaConsumer> KafkaConsumer;
-    virtual std::vector<int32_t> getTopicPartitionNumbers(const std::string &Topic);
+  std::unique_ptr<RdKafka::KafkaConsumer> KafkaConsumer;
+  virtual std::vector<int32_t>
+  getTopicPartitionNumbers(const std::string &Topic);
+
 private:
-    std::unique_ptr<RdKafka::Conf> Conf;
-    const RdKafka::TopicMetadata* findTopic(const std::string &Topic);
-    std::unique_ptr<RdKafka::Metadata> queryMetadata();
+  std::unique_ptr<RdKafka::Conf> Conf;
+  const RdKafka::TopicMetadata *findTopic(const std::string &Topic);
+  std::unique_ptr<RdKafka::Metadata> queryMetadata();
   BrokerSettings ConsumerBrokerSettings;
   KafkaEventCb EventCallback;
 };

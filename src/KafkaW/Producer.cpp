@@ -41,12 +41,12 @@ Producer::Producer(BrokerSettings Settings)
   std::string ErrorString;
 
   auto Config = RdKafka::Conf::create(RdKafka::Conf::CONF_GLOBAL);
-    try {
-        ProducerBrokerSettings.apply(Config);
-    }
-    catch (std::runtime_error &e) {
-        throw std::runtime_error("Cannot create kafka handle due to configuration error");
-    }
+  try {
+    ProducerBrokerSettings.apply(Config);
+  } catch (std::runtime_error &e) {
+    throw std::runtime_error(
+        "Cannot create kafka handle due to configuration error");
+  }
 
   Config->set("dr_cb", &DeliveryCb, ErrorString);
   Config->set("event_cb", &EventCb, ErrorString);
@@ -71,11 +71,18 @@ void Producer::poll() {
   Stats.out_queue = outputQueueLength();
 }
 
-RdKafka::Producer *Producer::getRdKafkaPtr() const { return dynamic_cast<RdKafka::Producer*>(ProducerPtr.get()); }
+RdKafka::Producer *Producer::getRdKafkaPtr() const {
+  return dynamic_cast<RdKafka::Producer *>(ProducerPtr.get());
+}
 
 int Producer::outputQueueLength() { return ProducerPtr->outq_len(); }
 
-RdKafka::ErrorCode Producer::produce(RdKafka::Topic *topic, int32_t partition, int msgflags, void *payload, size_t len, const void *key, size_t key_len, void *msg_opaque) {
-      return dynamic_cast<RdKafka::Producer*>(ProducerPtr.get())->produce(topic, partition, msgflags, payload, len, key, key_len, msg_opaque);
-    }
+RdKafka::ErrorCode Producer::produce(RdKafka::Topic *topic, int32_t partition,
+                                     int msgflags, void *payload, size_t len,
+                                     const void *key, size_t key_len,
+                                     void *msg_opaque) {
+  return dynamic_cast<RdKafka::Producer *>(ProducerPtr.get())
+      ->produce(topic, partition, msgflags, payload, len, key, key_len,
+                msg_opaque);
+}
 } // namespace KafkaW

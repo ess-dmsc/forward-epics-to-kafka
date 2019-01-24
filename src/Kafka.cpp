@@ -12,7 +12,8 @@ std::unique_lock<std::mutex> InstanceSet::getProducersByHostMutexLock() {
   return lock;
 }
 
-std::shared_ptr<InstanceSet> InstanceSet::Set(KafkaW::BrokerSettings BrokerSettings) {
+std::shared_ptr<InstanceSet>
+InstanceSet::Set(KafkaW::BrokerSettings BrokerSettings) {
   std::lock_guard<std::mutex> lock(ProducerMutex);
   LOG(Sev::Warning, "Kafka InstanceSet with rdkafka version: {}",
       RdKafka::version());
