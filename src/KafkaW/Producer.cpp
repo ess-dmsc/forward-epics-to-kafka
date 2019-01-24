@@ -7,7 +7,7 @@ static std::atomic<int> g_kafka_producer_instance_count;
 
 Producer::~Producer() {
   LOG(Sev::Debug, "~Producer");
-  if (ProducerPtr) {
+  if (ProducerPtr != nullptr) {
     int TimeoutMS = 1;
     int OutQueueLength = 0;
     while (true) {
