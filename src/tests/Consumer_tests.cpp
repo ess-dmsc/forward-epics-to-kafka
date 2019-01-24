@@ -73,8 +73,7 @@ class MockTopicMetadata : public RdKafka::TopicMetadata {
 private:
     std::string name;
 public:
-    MockTopicMetadata(std::string name)  {
-        name = name;
+    MockTopicMetadata(std::string name) : name(name)  {
     }
 
     const std::string topic() const override {
@@ -188,9 +187,11 @@ TEST_F(ConsumerTests, getTopicPartitionNumbersReturnsPartitionNumbersIfTopicDoes
     auto PartitionMetadataVector = RdKafka::TopicMetadata::PartitionMetadataVector{PartitionMetadata};
     EXPECT_CALL(*Consumer, metadata(_,_,_,_)).Times(AtLeast(1)).WillOnce(DoAll(SetArgPointee<2>(Metadata), Return(RdKafka::ErrorCode::ERR_NO_ERROR)));
     EXPECT_CALL(*Metadata, topics()).Times(Exactly(1)).WillOnce(Return(&TopicVector));
-    EXPECT_CALL(*TopicMetadata, partitions()).Times(AtLeast(1)).WillOnce(Return(PartitionMetadataVector));
+    EXPECT_CALL(*TopicMetadata, partitions()).Times(AtLeast(1)).WillOnce(Return(&PartitionMetadataVector));
     EXPECT_CALL(*PartitionMetadata, id()).Times(AtLeast(1)).WillOnce(Return(1));
     EXPECT_CALL(*Consumer, close()).Times(Exactly(1));
     EXPECT_CALL(*Consumer, assign(_)).Times(Exactly(1)).WillOnce(Return(RdKafka::ERR_NO_ERROR));
     ASSERT_NO_THROW(StandIn.addTopic("something"));
+    delete TopicMetadata;
+    delete PartitionMetadata;
 }

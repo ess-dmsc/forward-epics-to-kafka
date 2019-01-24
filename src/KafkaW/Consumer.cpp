@@ -24,7 +24,7 @@ Consumer::Consumer(BrokerSettings &BrokerSettings)
             ErrorString);
   ConsumerBrokerSettings.apply(Conf.get());
 
-  KafkaConsumer = std::shared_ptr<RdKafka::KafkaConsumer>(
+  KafkaConsumer = std::unique_ptr<RdKafka::KafkaConsumer>(
       RdKafka::KafkaConsumer::create(Conf.get(), ErrorString));
   if (!KafkaConsumer) {
     LOG(Sev::Error, "can not create kafka consumer: {}", ErrorString);

@@ -26,7 +26,7 @@ public:
   std::unique_ptr<ConsumerMessage> poll() override;
 
 protected:
-    std::shared_ptr<RdKafka::KafkaConsumer> KafkaConsumer;
+    std::unique_ptr<RdKafka::KafkaConsumer> KafkaConsumer;
     virtual std::vector<int32_t> getTopicPartitionNumbers(const std::string &Topic);
 private:
     std::unique_ptr<RdKafka::Conf> Conf;
