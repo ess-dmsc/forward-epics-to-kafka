@@ -15,17 +15,17 @@ Consumer::Consumer(BrokerSettings &BrokerSettings)
     : ConsumerBrokerSettings(std::move(BrokerSettings)) {
   std::string ErrorString;
 
-  Conf = RdKafka::Conf::create(RdKafka::Conf::CONF_GLOBAL);
+  Conf = std::unique_ptr<RdKafka::Conf>(RdKafka::Conf::create(RdKafka::Conf::CONF_GLOBAL));
   Conf->set("event_cb", &EventCallback, ErrorString);
   Conf->set("metadata.broker.list", ConsumerBrokerSettings.Address,
             ErrorString);
   Conf->set("group.id",
             fmt::format("forwarder-command-listener--pid{}", getpid()),
             ErrorString);
-  ConsumerBrokerSettings.apply(Conf);
+  ConsumerBrokerSettings.apply(Conf.get());
 
   KafkaConsumer = std::shared_ptr<RdKafka::KafkaConsumer>(
-      RdKafka::KafkaConsumer::create(Conf, ErrorString));
+      RdKafka::KafkaConsumer::create(Conf.get(), ErrorString));
   if (!KafkaConsumer) {
     LOG(Sev::Error, "can not create kafka consumer: {}", ErrorString);
     throw std::runtime_error("can not create Kafka consumer");
@@ -50,9 +50,7 @@ Consumer::~Consumer() {
   if (KafkaConsumer != nullptr) {
     LOG(Sev::Debug, "Close the consumer");
     KafkaConsumer->close();
-    RdKafka::wait_destroyed(5000);
   }
-  delete Conf;
 }
 
 const RdKafka::TopicMetadata*
