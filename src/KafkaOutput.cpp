@@ -7,7 +7,7 @@ namespace Forwarder {
 KafkaOutput::KafkaOutput(KafkaOutput &&x) noexcept
     : Output(std::move(x.Output)) {}
 
-KafkaOutput::KafkaOutput(KafkaW::Producer::Topic &&OutputTopic)
+KafkaOutput::KafkaOutput(KafkaW::ProducerTopic &&OutputTopic)
     : Output(std::move(OutputTopic)) {}
 
 int KafkaOutput::emit(std::unique_ptr<FlatBufs::FlatbufferMessage> fb) {
