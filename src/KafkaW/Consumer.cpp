@@ -15,7 +15,8 @@ Consumer::Consumer(BrokerSettings &BrokerSettings)
     : ConsumerBrokerSettings(std::move(BrokerSettings)) {
   std::string ErrorString;
 
-  Conf = std::unique_ptr<RdKafka::Conf>(RdKafka::Conf::create(RdKafka::Conf::CONF_GLOBAL));
+  Conf = std::unique_ptr<RdKafka::Conf>(
+      RdKafka::Conf::create(RdKafka::Conf::CONF_GLOBAL));
   Conf->set("event_cb", &EventCallback, ErrorString);
   Conf->set("metadata.broker.list", ConsumerBrokerSettings.Address,
             ErrorString);
@@ -30,11 +31,10 @@ Consumer::Consumer(BrokerSettings &BrokerSettings)
     LOG(Sev::Error, "can not create kafka consumer: {}", ErrorString);
     throw std::runtime_error("can not create Kafka consumer");
   }
-
 }
 
 std::unique_ptr<RdKafka::Metadata> Consumer::queryMetadata() {
-  RdKafka::Metadata * ptr = nullptr;
+  RdKafka::Metadata *ptr = nullptr;
   auto RetCode = KafkaConsumer->metadata(true, nullptr, &ptr, 5000);
   if (RetCode != RdKafka::ERR_NO_ERROR) {
     throw MetadataException(
@@ -51,14 +51,14 @@ Consumer::~Consumer() {
   }
 }
 
-const RdKafka::TopicMetadata*
-Consumer::findTopic(const std::string &Topic) {
+const RdKafka::TopicMetadata *Consumer::findTopic(const std::string &Topic) {
   auto MetadataPtr = queryMetadata();
   auto Topics = MetadataPtr->topics();
-  auto Iterator = std::find_if(Topics->cbegin(), Topics->cend(),
-                               [Topic](const RdKafka::TopicMetadata *TopicMetadata) {
-                                 return TopicMetadata->topic() == Topic;
-                               });
+  auto Iterator =
+      std::find_if(Topics->cbegin(), Topics->cend(),
+                   [Topic](const RdKafka::TopicMetadata *TopicMetadata) {
+                     return TopicMetadata->topic() == Topic;
+                   });
   if (Iterator == Topics->end()) {
     throw std::runtime_error("Config topic does not exist");
   }
