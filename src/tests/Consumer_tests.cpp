@@ -85,15 +85,21 @@ public:
     MOCK_CONST_METHOD0(err, RdKafka::ErrorCode());
 };
 
+class MockPartitionMetadata : public RdKafka::PartitionMetadata {
+public:
+  MOCK_CONST_METHOD0(id, int32_t());
+  MOCK_CONST_METHOD0(err, RdKafka::ErrorCode());
+  MOCK_CONST_METHOD0(leader, int32_t());
+  MOCK_CONST_METHOD0(replicas, const std::vector<int32_t>*());
+  MOCK_CONST_METHOD0(isrs, const std::vector<int32_t>*());
+};
+
 class ConsumerStandIn : public Consumer {
 public:
     ConsumerStandIn(BrokerSettings& Settings) : Consumer(Settings) {
 
     }
     using Consumer::KafkaConsumer;
-//    std::vector<int32_t> getTopicPartitionNumbers(const std::string& Topic) override {
-//        return {};
-//    }
 
 };
 
@@ -104,26 +110,10 @@ protected:
         StandIn.KafkaConsumer.reset(Consumer);
     }
 
-    void TearDown() override {
-        delete Consumer;
-    }
-
     MockKafkaConsumer* Consumer;
     BrokerSettings Settings;
     ConsumerStandIn StandIn{Settings};
 };
-
-TEST_F(ConsumerTests, addTopicAddsTopicObject) {
-    EXPECT_CALL(*Consumer, assign(_)).Times(Exactly(1)).WillOnce(Return(RdKafka::ErrorCode::ERR_NO_ERROR));
-    EXPECT_CALL(*Consumer, close()).Times(Exactly(1));
-    StandIn.addTopic("something");
-}
-
-TEST_F(ConsumerTests, addTopicThrowsWhenFailsToAssign) {
-    EXPECT_CALL(*Consumer, assign(_)).Times(Exactly(1)).WillOnce(Return(RdKafka::ErrorCode::ERR__ASSIGN_PARTITIONS));
-    EXPECT_CALL(*Consumer, close()).Times(Exactly(1));
-    EXPECT_THROW(StandIn.addTopic("something"), std::runtime_error);
-}
 
 TEST_F(ConsumerTests, pollReturnsConsumerMessageWithMessagePollStatus) {
     auto Message = new MockMessage;
@@ -192,17 +182,15 @@ TEST_F(ConsumerTests, getTopicPartitionNumbersThrowsErrorIfTopicDoesntExist) {
 
 TEST_F(ConsumerTests, getTopicPartitionNumbersReturnsPartitionNumbersIfTopicDoesExist) {
     auto Metadata = new MockMetadata;
-    auto TopicVector = RdKafka::Metadata::TopicMetadataVector{new MockTopicMetadata("something")};
+    auto TopicMetadata = new MockTopicMetadata("something");
+    auto TopicVector = RdKafka::Metadata::TopicMetadataVector{TopicMetadata};
+    auto PartitionMetadata = new MockPartitionMetadata;
+    auto PartitionMetadataVector = RdKafka::TopicMetadata::PartitionMetadataVector{PartitionMetadata};
     EXPECT_CALL(*Consumer, metadata(_,_,_,_)).Times(AtLeast(1)).WillOnce(DoAll(SetArgPointee<2>(Metadata), Return(RdKafka::ErrorCode::ERR_NO_ERROR)));
     EXPECT_CALL(*Metadata, topics()).Times(Exactly(1)).WillOnce(Return(&TopicVector));
+    EXPECT_CALL(*TopicMetadata, partitions()).Times(AtLeast(1)).WillOnce(Return(PartitionMetadataVector));
+    EXPECT_CALL(*PartitionMetadata, id()).Times(AtLeast(1)).WillOnce(Return(1));
     EXPECT_CALL(*Consumer, close()).Times(Exactly(1));
     EXPECT_CALL(*Consumer, assign(_)).Times(Exactly(1)).WillOnce(Return(RdKafka::ERR_NO_ERROR));
     ASSERT_NO_THROW(StandIn.addTopic("something"));
 }
-
-//TEST_F(ConsumerTests, getTopicPartitionNumbersThrows) {
-//    EXPECT_CALL(*Consumer, metadata(_)).Times(AtLeast(1)).WillOnce(Return(RdKafka::ErrorCode::ERR_OFFSET_METADATA_TOO_LARGE));
-//
-//    //Requires stand-in of queryMetadata, possible mock of TopicPartition
-//    ASSERT_TRUE(false);
-//}
