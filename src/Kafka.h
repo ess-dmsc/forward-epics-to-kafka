@@ -22,7 +22,7 @@ class InstanceSet {
 public:
   static std::shared_ptr<InstanceSet> Set(KafkaW::BrokerSettings Settings);
   static void clear();
-  KafkaW::Producer::Topic SetUpProducerTopic(URI uri);
+  KafkaW::ProducerTopic SetUpProducerTopic(URI uri);
   int poll();
   void log_stats();
   std::vector<KafkaW::ProducerStats> getStatsForAllProducers();
