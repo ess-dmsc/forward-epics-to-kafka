@@ -10,8 +10,8 @@ ProducerTopic::ProducerTopic(std::shared_ptr<Producer> ProducerPtr,
 
   std::string ErrStr;
   auto Config = RdKafka::Conf::create(RdKafka::Conf::CONF_TOPIC);
-  RdKafkaTopic = std::unique_ptr<RdKafka::Topic>(RdKafka::Topic::create(KafkaProducer->getRdKafkaPtr(), Name,
-                                        Config, ErrStr));
+  RdKafkaTopic = std::unique_ptr<RdKafka::Topic>(RdKafka::Topic::create(
+      KafkaProducer->getRdKafkaPtr(), Name, Config, ErrStr));
   if (RdKafkaTopic == nullptr) {
     LOG(Sev::Error, "could not create Kafka topic: {}", ErrStr);
     throw TopicCreationError();
@@ -58,9 +58,9 @@ int ProducerTopic::produce(std::unique_ptr<ProducerMessage> &Msg) {
   int MsgFlags = 0;
   auto &ProducerStats = KafkaProducer->Stats;
 
-  switch (KafkaProducer->produce(RdKafkaTopic.get(), RdKafka::Topic::PARTITION_UA,
-                                 MsgFlags, Msg->data, Msg->size, key, key_len,
-                                 Msg.get())) {
+  switch (KafkaProducer->produce(
+      RdKafkaTopic.get(), RdKafka::Topic::PARTITION_UA, MsgFlags, Msg->data,
+      Msg->size, key, key_len, Msg.get())) {
   case RdKafka::ERR_NO_ERROR:
     ++ProducerStats.produced;
     ProducerStats.produced_bytes += static_cast<uint64_t>(Msg->size);
@@ -92,4 +92,8 @@ int ProducerTopic::produce(std::unique_ptr<ProducerMessage> &Msg) {
 void ProducerTopic::enableCopy() { DoCopyMsg = true; }
 
 std::string ProducerTopic::name() const { return Name; }
+
+std::string ProducerTopic::brokerAddress() const {
+  return KafkaProducer->ProducerBrokerSettings.Address;
+}
 }
