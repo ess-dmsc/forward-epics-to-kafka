@@ -22,12 +22,12 @@ public:
   int produce(std::unique_ptr<KafkaW::ProducerMessage> &Msg);
   // Currently it's nice to have access to these for statistics:
   std::shared_ptr<Producer> KafkaProducer;
-  RdKafka::Topic *RdKafkaTopic = nullptr;
   void enableCopy();
-  std::string name() const;
-
+    std::string name() const;
 private:
-  std::string Name;
+    std::unique_ptr<RdKafka::Topic> RdKafkaTopic;
+    std::string Name;
+
   bool DoCopyMsg{false};
 };
 }

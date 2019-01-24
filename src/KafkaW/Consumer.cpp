@@ -34,14 +34,13 @@ Consumer::Consumer(BrokerSettings &BrokerSettings)
 }
 
 std::unique_ptr<RdKafka::Metadata> Consumer::queryMetadata() {
-  auto metadata = std::unique_ptr<RdKafka::Metadata>();
-  RdKafka::Metadata * ptr = metadata.get();
+  RdKafka::Metadata * ptr = nullptr;
   auto RetCode = KafkaConsumer->metadata(true, nullptr, &ptr, 5000);
   if (RetCode != RdKafka::ERR_NO_ERROR) {
     throw MetadataException(
         "Consumer::queryMetadata() - error while retrieving metadata.");
   }
-  return metadata;
+  return std::unique_ptr<RdKafka::Metadata>(ptr);
 }
 
 Consumer::~Consumer() {

@@ -3,40 +3,30 @@
 
 namespace KafkaW {
 
-static std::atomic<int> g_kafka_producer_instance_count;
+static std::atomic<int> ProducerInstanceCount;
 
 Producer::~Producer() {
   LOG(Sev::Debug, "~Producer");
   if (ProducerPtr != nullptr) {
-    int TimeoutMS = 1;
-    int OutQueueLength = 0;
-    while (true) {
-      OutQueueLength = ProducerPtr->outq_len();
-      if (OutQueueLength == 0) {
+    int TimeoutMS = 100;
+    int NumberOfIterations = 80;
+    for (int i = 0; i < NumberOfIterations; i++){
+      if (outputQueueLength() == 0){
         break;
       }
-      auto EventsHandled = ProducerPtr->poll(TimeoutMS);
-      if (EventsHandled > 0) {
-        LOG(Sev::Debug,
-            "rd_kafka_poll handled: {}  outq before: {}  timeout: {}",
-            EventsHandled, OutQueueLength, TimeoutMS);
-      }
-      TimeoutMS = TimeoutMS << 1;
-      if (TimeoutMS > 8192) {
-        break;
-      }
+      ProducerPtr->poll(TimeoutMS);
     }
-    if (OutQueueLength > 0) {
+    if (outputQueueLength() > 0) {
       LOG(Sev::Notice,
           "Kafka out queue still not empty: {}, destroying producer anyway.",
-          OutQueueLength);
+          outputQueueLength());
     }
   }
 }
 
 Producer::Producer(BrokerSettings Settings)
     : ProducerBrokerSettings(std::move(Settings)) {
-  id = g_kafka_producer_instance_count++;
+  id = ProducerInstanceCount++;
 
   std::string ErrorString;
 
