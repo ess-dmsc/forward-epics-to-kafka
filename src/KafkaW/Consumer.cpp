@@ -53,7 +53,7 @@ Consumer::~Consumer() {
 
 const RdKafka::TopicMetadata *Consumer::findTopic(const std::string &Topic) {
   auto MetadataPtr = queryMetadata();
-  auto Topics = std::unique_ptr<const RdKafka::Metadata::TopicMetadataVector>(
+  const RdKafka::Metadata::TopicMetadataVector * Topics = (
       MetadataPtr->topics());
   auto Iterator =
       std::find_if(Topics->cbegin(), Topics->cend(),
