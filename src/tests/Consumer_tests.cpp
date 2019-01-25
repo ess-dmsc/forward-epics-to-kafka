@@ -205,10 +205,12 @@ TEST_F(ConsumerTests, getTopicPartitionNumbersThrowsErrorIfTopicsEmpty) {
 
 TEST_F(ConsumerTests, getTopicPartitionNumbersThrowsErrorIfTopicDoesntExist) {
   MockMetadata *Metadata = new MockMetadata;
-  auto TopicVector = RdKafka::Metadata::TopicMetadataVector{
-      new MockTopicMetadata("not_something")};
+  auto TopicMetadataPtr = std::unique_ptr<MockTopicMetadata>(
+      new MockTopicMetadata("not_something"));
+  auto TopicVector =
+      RdKafka::Metadata::TopicMetadataVector{TopicMetadataPtr.get()};
   EXPECT_CALL(*Consumer, metadata(_, _, _, _))
-      .Times(AtLeast(1))
+      .Times(Exactly(1))
       .WillOnce(DoAll(SetArgPointee<2>(Metadata),
                       Return(RdKafka::ErrorCode::ERR_NO_ERROR)));
   EXPECT_CALL(*Metadata, topics())
