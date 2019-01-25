@@ -31,9 +31,10 @@ protected:
   getTopicPartitionNumbers(const std::string &Topic);
 
 private:
+  std::unique_ptr<RdKafka::Metadata> Metadata;
   std::unique_ptr<RdKafka::Conf> Conf;
   const RdKafka::TopicMetadata *findTopic(const std::string &Topic);
-  std::unique_ptr<RdKafka::Metadata> queryMetadata();
+  void queryMetadata();
   BrokerSettings ConsumerBrokerSettings;
   KafkaEventCb EventCallback;
 };
