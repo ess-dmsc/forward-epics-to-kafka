@@ -121,7 +121,7 @@ protected:
 };
 
 TEST_F(ConsumerTests, pollReturnsConsumerMessageWithMessagePollStatus) {
-  MockMessage * Message = new MockMessage;
+  MockMessage *Message = new MockMessage;
   EXPECT_CALL(*Message, len()).Times(AtLeast(1)).WillOnce(Return(1));
   EXPECT_CALL(*Message, err())
       .Times(AtLeast(1))
@@ -143,7 +143,7 @@ TEST_F(ConsumerTests, pollReturnsConsumerMessageWithMessagePollStatus) {
 TEST_F(
     ConsumerTests,
     pollReturnsConsumerMessageWithEmptyPollStatusIfKafkaErrorMessageIsEmpty) {
-  MockMessage * Message = new MockMessage;
+  MockMessage *Message = new MockMessage;
   EXPECT_CALL(*Message, len()).Times(AtLeast(1)).WillOnce(Return(0));
 
   EXPECT_CALL(*Message, err())
@@ -160,7 +160,7 @@ TEST_F(
 
 TEST_F(ConsumerTests,
        pollReturnsConsumerMessageWithEmptyPollStatusIfEndofPartition) {
-  MockMessage * Message = new MockMessage;
+  MockMessage *Message = new MockMessage;
   EXPECT_CALL(*Message, err())
       .Times(AtLeast(1))
       .WillOnce(Return(RdKafka::ErrorCode::ERR__PARTITION_EOF));
@@ -175,7 +175,7 @@ TEST_F(ConsumerTests,
 
 TEST_F(ConsumerTests,
        pollReturnsConsumerMessageWithErrorPollStatusIfUnknownOrUnexpected) {
-  MockMessage * Message = new MockMessage;
+  MockMessage *Message = new MockMessage;
   EXPECT_CALL(*Message, err())
       .Times(AtLeast(1))
       .WillOnce(Return(RdKafka::ErrorCode::ERR__BAD_MSG));
@@ -189,7 +189,7 @@ TEST_F(ConsumerTests,
 }
 
 TEST_F(ConsumerTests, getTopicPartitionNumbersThrowsErrorIfTopicsEmpty) {
-  MockMetadata * Metadata = new MockMetadata;
+  MockMetadata *Metadata = new MockMetadata;
   auto TopicVector = RdKafka::Metadata::TopicMetadataVector{};
   EXPECT_CALL(*Consumer, metadata(_, _, _, _))
       .Times(AtLeast(1))
@@ -204,7 +204,7 @@ TEST_F(ConsumerTests, getTopicPartitionNumbersThrowsErrorIfTopicsEmpty) {
 }
 
 TEST_F(ConsumerTests, getTopicPartitionNumbersThrowsErrorIfTopicDoesntExist) {
-  MockMetadata * Metadata = new MockMetadata;
+  MockMetadata *Metadata = new MockMetadata;
   auto TopicVector = RdKafka::Metadata::TopicMetadataVector{
       new MockTopicMetadata("not_something")};
   EXPECT_CALL(*Consumer, metadata(_, _, _, _))
@@ -220,7 +220,7 @@ TEST_F(ConsumerTests, getTopicPartitionNumbersThrowsErrorIfTopicDoesntExist) {
 
 TEST_F(ConsumerTests,
        getTopicPartitionNumbersReturnsPartitionNumbersIfTopicDoesExist) {
-  MockMetadata * Metadata = new MockMetadata;
+  MockMetadata *Metadata = new MockMetadata;
   auto TopicMetadata = new MockTopicMetadata("something");
   auto TopicVector = RdKafka::Metadata::TopicMetadataVector{TopicMetadata};
   auto PartitionMetadata = new MockPartitionMetadata;

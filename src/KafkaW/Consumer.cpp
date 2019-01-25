@@ -53,8 +53,7 @@ Consumer::~Consumer() {
 
 const RdKafka::TopicMetadata *Consumer::findTopic(const std::string &Topic) {
   auto MetadataPtr = queryMetadata();
-  const RdKafka::Metadata::TopicMetadataVector * Topics =
-      MetadataPtr->topics();
+  const RdKafka::Metadata::TopicMetadataVector *Topics = MetadataPtr->topics();
   auto Iterator =
       std::find_if(Topics->cbegin(), Topics->cend(),
                    [Topic](const RdKafka::TopicMetadata *TopicMetadata) {
@@ -70,7 +69,8 @@ std::vector<int32_t>
 Consumer::getTopicPartitionNumbers(const std::string &Topic) {
   auto matchedTopic = findTopic(Topic);
   std::vector<int32_t> TopicPartitionNumbers;
-  const RdKafka::TopicMetadata::PartitionMetadataVector * PartitionMetadata = matchedTopic->partitions();
+  const RdKafka::TopicMetadata::PartitionMetadataVector *PartitionMetadata =
+      matchedTopic->partitions();
   for (const auto &Partition : *PartitionMetadata) {
     TopicPartitionNumbers.push_back(Partition->id());
   }
