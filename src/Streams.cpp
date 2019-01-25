@@ -7,7 +7,7 @@ namespace Forwarder {
 size_t Streams::size() const { return StreamPointers.size(); }
 
 void Streams::stopChannel(std::string const &channel) {
-  std::unique_lock<std::mutex> lock(StreamsMutex);
+  std::lock_guard<std::mutex> lock(StreamsMutex);
   StreamPointers.erase(
       std::remove_if(StreamPointers.begin(), StreamPointers.end(),
                      [&](std::shared_ptr<Stream> s) {
@@ -18,10 +18,10 @@ void Streams::stopChannel(std::string const &channel) {
 
 void Streams::clearStreams() {
   LOG(Sev::Debug, "Main::clearStreams()  begin");
-  std::unique_lock<std::mutex> lock(StreamsMutex);
+  std::lock_guard<std::mutex> lock(StreamsMutex);
   if (!StreamPointers.empty()) {
-    for (auto &x : StreamPointers) {
-      x->stop();
+    for (auto const &Stream : StreamPointers) {
+      Stream->stop();
     }
     // Wait for Epics to cool down
     std::this_thread::sleep_for(std::chrono::milliseconds(1000));

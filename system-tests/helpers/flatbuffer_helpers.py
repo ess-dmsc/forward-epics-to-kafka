@@ -1,4 +1,5 @@
 from helpers.f142_logdata import Int, Double, String, Long, Value
+from cmath import isclose
 
 ValueTypes = {
     Value.Value.Int: Int.Int,
@@ -22,7 +23,11 @@ def check_expected_values(log_data, value_type, pv_name, expected_value=None):
     if expected_value is not None:
         union_val = ValueTypes[value_type]()
         union_val.Init(log_data.Value().Bytes, log_data.Value().Pos)
-        assert expected_value == union_val.Value()
+        print('expected value: {}, value from message: {}'.format(expected_value, union_val.Value()), flush=True)
+        if isinstance(expected_value, float):
+            assert isclose(expected_value, union_val.Value())
+        else:
+            assert expected_value == union_val.Value()
 
 
 def check_multiple_expected_values(message_list, expected_values):
@@ -42,4 +47,9 @@ def check_multiple_expected_values(message_list, expected_values):
         assert expected_values[name][0] == log_data.ValueType()
         union_val = ValueTypes[log_data.ValueType()]()
         union_val.Init(log_data.Value().Bytes, log_data.Value().Pos)
-        assert expected_values[name][1] == union_val.Value()
+        print("expected value: {}, value from message: {}".format(expected_values[name][1], union_val.Value())
+              , flush=True)
+        if isinstance(expected_values[name][1], float):
+            isclose(expected_values[name][1], union_val.Value())
+        else:
+            assert expected_values[name][1] == union_val.Value()

@@ -1,21 +1,23 @@
 #include "BrokerSettings.h"
+#include "KafkaEventCb.h"
 #include "logger.h"
-#include <librdkafka/rdkafka.h>
-#include <vector>
+#include <librdkafka/rdkafkacpp.h>
 
 namespace KafkaW {
 
-void BrokerSettings::apply(rd_kafka_conf_s *RdKafkaConfiguration) const {
-  std::vector<char> ErrorString(256);
+void BrokerSettings::apply(RdKafka::Conf *RdKafkaConfiguration) const {
+  std::string ErrorString;
   for (const auto &ConfigurationItem : KafkaConfiguration) {
     LOG(Sev::Debug, "set config: {} = {}", ConfigurationItem.first,
         ConfigurationItem.second);
-    if (RD_KAFKA_CONF_OK !=
-        rd_kafka_conf_set(RdKafkaConfiguration, ConfigurationItem.first.c_str(),
-                          ConfigurationItem.second.c_str(), ErrorString.data(),
-                          ErrorString.size())) {
-      LOG(Sev::Warning, "Failure setting config: {} = {}",
-          ConfigurationItem.first, ConfigurationItem.second);
+    if (RdKafka::Conf::ConfResult::CONF_OK !=
+        RdKafkaConfiguration->set(ConfigurationItem.first,
+                                  ConfigurationItem.second, ErrorString)) {
+      std::string ThrowMessage =
+          fmt::format("Failure setting config: {} = {}",
+                      ConfigurationItem.first, ConfigurationItem.second);
+      LOG(Sev::Warning, ThrowMessage.c_str());
+      throw std::runtime_error(ThrowMessage);
     }
   }
 }

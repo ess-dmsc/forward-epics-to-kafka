@@ -61,7 +61,7 @@ set(INCLUDES
     EpicsClient/FwdMonitorRequester.h
     EpicsClient/EpicsClientInterface.h
     EpicsClient/ChannelRequester.h
-    KafkaW/Message.h
+    KafkaW/ConsumerMessage.h
     KafkaW/KafkaW.h
     KafkaW/Producer.h
     KafkaW/ProducerTopic.h
@@ -82,6 +82,17 @@ set(INCLUDES
     helper.h
     json.h
     Kafka.h
+    KafkaW/BrokerSettings.h
+    KafkaW/Consumer.h
+    KafkaW/ConsumerMessage.h
+    KafkaW/KafkaW.h
+    KafkaW/Producer.h
+        KafkaW/ProducerMessage.h
+    KafkaW/ProducerDeliveryCb.h
+    KafkaW/ProducerStats.h
+    KafkaW/ProducerTopic.h
+        KafkaW/KafkaEventCb.h
+    KafkaW/MetadataException.h
     KafkaOutput.h
     logger.h
     MainOpt.h
@@ -122,8 +133,7 @@ set(SOURCES
     schemas/f142/f142.cpp
     ${FMT_SRC}
     Timer.cpp
-    ${CMAKE_CURRENT_BINARY_DIR}/git_commit_current.cpp
-)
+    ${CMAKE_CURRENT_BINARY_DIR}/git_commit_current.cpp)
 
 set(tgt __objects)
 add_library(${tgt} OBJECT ${SOURCES} ${INCLUDES})

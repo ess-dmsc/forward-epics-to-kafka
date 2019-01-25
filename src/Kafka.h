@@ -15,26 +15,24 @@
 
 #include "FlatbufferMessage.h"
 #include "KafkaW/KafkaW.h"
-#include <librdkafka/rdkafka.h>
 
 namespace Forwarder {
 
-template <typename T> using sptr = std::shared_ptr<T>;
-
 class InstanceSet {
 public:
-  static sptr<InstanceSet> Set(KafkaW::BrokerSettings Settings);
+  static std::shared_ptr<InstanceSet> Set(KafkaW::BrokerSettings Settings);
   static void clear();
-  KafkaW::Producer::Topic producer_topic(URI uri);
+  KafkaW::ProducerTopic SetUpProducerTopic(URI uri);
   int poll();
   void log_stats();
-  std::vector<KafkaW::ProducerStats> stats_all();
+  std::vector<KafkaW::ProducerStats> getStatsForAllProducers();
   InstanceSet(InstanceSet const &&) = delete;
 
 private:
-  explicit InstanceSet(KafkaW::BrokerSettings Settings);
+  explicit InstanceSet(KafkaW::BrokerSettings opt);
+  std::unique_lock<std::mutex> getProducersByHostMutexLock();
   KafkaW::BrokerSettings BrokerSettings;
-  std::mutex mx_producers_by_host;
-  std::map<std::string, std::shared_ptr<KafkaW::Producer>> producers_by_host;
+  std::mutex ProducersByHostMutex;
+  std::map<std::string, std::shared_ptr<KafkaW::Producer>> ProducersByHost;
 };
 } // namespace Forwarder

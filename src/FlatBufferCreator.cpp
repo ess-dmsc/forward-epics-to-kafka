@@ -1,4 +1,5 @@
 #include "FlatBufferCreator.h"
+#include "logger.h"
 
 namespace FlatBufs {
 

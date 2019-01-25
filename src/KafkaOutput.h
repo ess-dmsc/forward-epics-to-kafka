@@ -10,10 +10,10 @@ namespace Forwarder {
 class KafkaOutput {
 public:
   KafkaOutput(KafkaOutput &&) noexcept;
-  explicit KafkaOutput(KafkaW::Producer::Topic &&OutputTopic);
+  explicit KafkaOutput(KafkaW::ProducerTopic &&OutputTopic);
   /// Hands off the message to Kafka
   int emit(std::unique_ptr<FlatBufs::FlatbufferMessage> fb);
   std::string topic_name();
-  KafkaW::Producer::Topic Output;
+  KafkaW::ProducerTopic Output;
 };
 } // namespace Forwarder
