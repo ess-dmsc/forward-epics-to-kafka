@@ -121,7 +121,7 @@ protected:
 };
 
 TEST_F(ConsumerTests, pollReturnsConsumerMessageWithMessagePollStatus) {
-  auto Message = std::unique_ptr<MockMessage>(new MockMessage);
+  MockMessage * Message = new MockMessage;
   EXPECT_CALL(*Message, len()).Times(AtLeast(1)).WillOnce(Return(1));
   EXPECT_CALL(*Message, err())
       .Times(AtLeast(1))
@@ -133,7 +133,7 @@ TEST_F(ConsumerTests, pollReturnsConsumerMessageWithMessagePollStatus) {
 
   EXPECT_CALL(*Consumer, consume(_))
       .Times(Exactly(1))
-      .WillOnce(Return(Message.get()));
+      .WillOnce(Return(Message));
   EXPECT_CALL(*Consumer, close()).Times(Exactly(1));
 
   auto ConsumedMessage = StandIn.poll();
@@ -143,7 +143,7 @@ TEST_F(ConsumerTests, pollReturnsConsumerMessageWithMessagePollStatus) {
 TEST_F(
     ConsumerTests,
     pollReturnsConsumerMessageWithEmptyPollStatusIfKafkaErrorMessageIsEmpty) {
-  auto Message = std::unique_ptr<MockMessage>(new MockMessage);
+  MockMessage * Message = new MockMessage;
   EXPECT_CALL(*Message, len()).Times(AtLeast(1)).WillOnce(Return(0));
 
   EXPECT_CALL(*Message, err())
@@ -151,7 +151,7 @@ TEST_F(
       .WillOnce(Return(RdKafka::ErrorCode::ERR_NO_ERROR));
   EXPECT_CALL(*Consumer, consume(_))
       .Times(Exactly(1))
-      .WillOnce(Return(Message.get()));
+      .WillOnce(Return(Message));
   EXPECT_CALL(*Consumer, close()).Times(Exactly(1));
 
   auto ConsumedMessage = StandIn.poll();
@@ -160,13 +160,13 @@ TEST_F(
 
 TEST_F(ConsumerTests,
        pollReturnsConsumerMessageWithEmptyPollStatusIfEndofPartition) {
-  auto Message = std::unique_ptr<MockMessage>(new MockMessage);
+  MockMessage * Message = new MockMessage;
   EXPECT_CALL(*Message, err())
       .Times(AtLeast(1))
       .WillOnce(Return(RdKafka::ErrorCode::ERR__PARTITION_EOF));
   EXPECT_CALL(*Consumer, consume(_))
       .Times(Exactly(1))
-      .WillOnce(Return(Message.get()));
+      .WillOnce(Return(Message));
   EXPECT_CALL(*Consumer, close()).Times(Exactly(1));
 
   auto ConsumedMessage = StandIn.poll();
@@ -175,13 +175,13 @@ TEST_F(ConsumerTests,
 
 TEST_F(ConsumerTests,
        pollReturnsConsumerMessageWithErrorPollStatusIfUnknownOrUnexpected) {
-  auto Message = std::unique_ptr<MockMessage>(new MockMessage);
+  MockMessage * Message = new MockMessage;
   EXPECT_CALL(*Message, err())
       .Times(AtLeast(1))
       .WillOnce(Return(RdKafka::ErrorCode::ERR__BAD_MSG));
   EXPECT_CALL(*Consumer, consume(_))
       .Times(Exactly(1))
-      .WillOnce(Return(Message.get()));
+      .WillOnce(Return(Message));
   EXPECT_CALL(*Consumer, close()).Times(Exactly(1));
 
   auto ConsumedMessage = StandIn.poll();
@@ -189,11 +189,11 @@ TEST_F(ConsumerTests,
 }
 
 TEST_F(ConsumerTests, getTopicPartitionNumbersThrowsErrorIfTopicsEmpty) {
-  auto Metadata = std::unique_ptr<MockMetadata>(new MockMetadata);
+  MockMetadata * Metadata = new MockMetadata;
   auto TopicVector = RdKafka::Metadata::TopicMetadataVector{};
   EXPECT_CALL(*Consumer, metadata(_, _, _, _))
       .Times(AtLeast(1))
-      .WillOnce(DoAll(SetArgPointee<2>(Metadata.get()),
+      .WillOnce(DoAll(SetArgPointee<2>(Metadata),
                       Return(RdKafka::ErrorCode::ERR_NO_ERROR)));
   EXPECT_CALL(*Metadata, topics())
       .Times(Exactly(1))
@@ -204,12 +204,12 @@ TEST_F(ConsumerTests, getTopicPartitionNumbersThrowsErrorIfTopicsEmpty) {
 }
 
 TEST_F(ConsumerTests, getTopicPartitionNumbersThrowsErrorIfTopicDoesntExist) {
-  auto Metadata = std::unique_ptr<MockMetadata>(new MockMetadata);
+  MockMetadata * Metadata = new MockMetadata;
   auto TopicVector = RdKafka::Metadata::TopicMetadataVector{
       new MockTopicMetadata("not_something")};
   EXPECT_CALL(*Consumer, metadata(_, _, _, _))
       .Times(AtLeast(1))
-      .WillOnce(DoAll(SetArgPointee<2>(Metadata.get()),
+      .WillOnce(DoAll(SetArgPointee<2>(Metadata),
                       Return(RdKafka::ErrorCode::ERR_NO_ERROR)));
   EXPECT_CALL(*Metadata, topics())
       .Times(Exactly(1))
@@ -220,7 +220,7 @@ TEST_F(ConsumerTests, getTopicPartitionNumbersThrowsErrorIfTopicDoesntExist) {
 
 TEST_F(ConsumerTests,
        getTopicPartitionNumbersReturnsPartitionNumbersIfTopicDoesExist) {
-  auto Metadata = std::unique_ptr<MockMetadata>(new MockMetadata);
+  MockMetadata * Metadata = new MockMetadata;
   auto TopicMetadata = new MockTopicMetadata("something");
   auto TopicVector = RdKafka::Metadata::TopicMetadataVector{TopicMetadata};
   auto PartitionMetadata = new MockPartitionMetadata;
@@ -228,7 +228,7 @@ TEST_F(ConsumerTests,
       RdKafka::TopicMetadata::PartitionMetadataVector{PartitionMetadata};
   EXPECT_CALL(*Consumer, metadata(_, _, _, _))
       .Times(AtLeast(1))
-      .WillOnce(DoAll(SetArgPointee<2>(Metadata.get()),
+      .WillOnce(DoAll(SetArgPointee<2>(Metadata),
                       Return(RdKafka::ErrorCode::ERR_NO_ERROR)));
   EXPECT_CALL(*Metadata, topics())
       .Times(Exactly(1))
