@@ -26,7 +26,7 @@ Producer::~Producer() {
 
 Producer::Producer(BrokerSettings Settings)
     : ProducerBrokerSettings(std::move(Settings)) {
-  id = ProducerInstanceCount++;
+  ProducerID = ProducerInstanceCount++;
 
   std::string ErrorString;
 
@@ -56,8 +56,9 @@ Producer::Producer(BrokerSettings Settings)
 void Producer::poll() {
   auto EventsHandled = ProducerPtr->poll(ProducerBrokerSettings.PollTimeoutMS);
   LOG(Sev::Debug,
-      "IID: {}  broker: {}  rd_kafka_poll()  served: {}  outq_len: {}", id,
-      ProducerBrokerSettings.Address, EventsHandled, outputQueueLength());
+      "IID: {}  broker: {}  rd_kafka_poll()  served: {}  outq_len: {}",
+      ProducerID, ProducerBrokerSettings.Address, EventsHandled,
+      outputQueueLength());
   Stats.poll_served += EventsHandled;
   Stats.out_queue = outputQueueLength();
 }
@@ -68,12 +69,12 @@ RdKafka::Producer *Producer::getRdKafkaPtr() const {
 
 int Producer::outputQueueLength() { return ProducerPtr->outq_len(); }
 
-RdKafka::ErrorCode Producer::produce(RdKafka::Topic *topic, int32_t partition,
-                                     int msgflags, void *payload, size_t len,
-                                     const void *key, size_t key_len,
-                                     void *msg_opaque) {
+RdKafka::ErrorCode Producer::produce(RdKafka::Topic *Topic, int32_t Partition,
+                                     int MessageFlags, void *Payload,
+                                     size_t PayloadSize, const void *Key,
+                                     size_t KeySize, void *OpaqueMessage) {
   return dynamic_cast<RdKafka::Producer *>(ProducerPtr.get())
-      ->produce(topic, partition, msgflags, payload, len, key, key_len,
-                msg_opaque);
+      ->produce(Topic, Partition, MessageFlags, Payload, PayloadSize, Key,
+                KeySize, OpaqueMessage);
 }
 } // namespace KafkaW

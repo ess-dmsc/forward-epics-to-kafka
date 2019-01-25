@@ -13,7 +13,7 @@ protected:
 class ProducerStandIn : public Producer {
 public:
   ProducerStandIn(BrokerSettings Settings) : Producer(Settings) {}
-  using Producer::id;
+  using Producer::ProducerID;
   using Producer::ProducerPtr;
 };
 
@@ -21,7 +21,7 @@ TEST_F(ProducerTests, creatingForwarderIncrementsForwarderCounter) {
   BrokerSettings Settings{};
   ProducerStandIn Producer1(Settings);
   ProducerStandIn Producer2(Settings);
-  ASSERT_EQ(-1, Producer1.id - Producer2.id);
+  ASSERT_EQ(-1, Producer1.ProducerID - Producer2.ProducerID);
 }
 
 class MockHandle : public RdKafka::Handle {

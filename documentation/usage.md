@@ -48,7 +48,7 @@ and/or a `json` file for the list of streams to add:
 	"streams": [
 		{
 			"channel": "Epics_PV_name",
-			"converter": { "schema": "f142", "topic": "Kafka_topic_name" }
+			"converter": { "schema": "f142", "topic": "//localhost:9092/Kafka_topic_name" }
 		}
 	]
 }
@@ -77,14 +77,14 @@ using `ca` Channel Access:
       "channel": "<EPICS PV name>",
       "converter": {
         "schema": "<schema-id>",
-        "topic": "<Kafka-topic>"
+        "topic": "//<host>[:port]<Kafka-topic>"
       }
     },
     {
       "channel": "<EPICS PV name..>",
       "converter": {
         "schema": "<schema-id>",
-        "topic": "//<host-if-we-do-not-like-the-default-host>[:port]/<Kafka-topic..>"
+        "topic": "//<host>[:port]/<Kafka-topic..>"
       }
     },
     {
@@ -92,16 +92,13 @@ using `ca` Channel Access:
       "channel_provider_type": "ca",
       "converter": {
         "schema": "<schema-id>",
-        "topic": "<Kafka-topic..>"
+        "topic": "//<host>[:port]/<Kafka-topic..>"
       }
     }
   ]
 }
 ```
 
-The `topic` in the above stream configuration can contain the Kafka broker
-hostname like `//<host>[:port]/<topic>` otherwise the default broker given in
-the configuration file or at the command line is used.
 
 #### Stop channel
 
@@ -138,8 +135,8 @@ through multiple converters:
 {
   "channel": "Epics_PV_name",
   "converter": [
-    { "schema": "f142", "topic": "Kafka_topic_name" },
-    { "schema": "f999", "topic": "some_other_topic" }
+    { "schema": "f142", "topic": "//localhost:9092/Kafka_topic_name" },
+    { "schema": "f999", "topic": "//otherhost:9092/some_other_topic" }
   ]
 }
 ```
@@ -158,11 +155,11 @@ Example:
   "streams": [
     {
       "channel": "Epics_PV_One",
-      "converter": {"schema": "f142", "name": "my-named-conv", "topic": "Kafka_topic_name" }
+      "converter": {"schema": "f142", "name": "my-named-conv", "topic": "//host:port/Kafka_topic_name" }
     },
     {
       "channel": "Epics_PV_Two",
-      "converter": {"schema": "f142", "name": "my-named-conv", "topic": "Kafka_topic_name" }
+      "converter": {"schema": "f142", "name": "my-named-conv", "topic": "//host:port/Kafka_topic_name" }
     }
   ]
 }
