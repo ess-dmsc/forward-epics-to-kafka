@@ -33,12 +33,12 @@ Consumer::Consumer(BrokerSettings &BrokerSettings)
   }
 }
 
-void Consumer::queryMetadata() {
+void Consumer::updateMetadata() {
   RdKafka::Metadata *ptr = nullptr;
   auto RetCode = KafkaConsumer->metadata(true, nullptr, &ptr, 5000);
   if (RetCode != RdKafka::ERR_NO_ERROR) {
     throw MetadataException(
-        "Consumer::queryMetadata() - error while retrieving metadata.");
+        "Consumer::updateMetadata() - error while retrieving metadata.");
   }
   Metadata = std::unique_ptr<RdKafka::Metadata>(ptr);
 }
@@ -52,8 +52,8 @@ Consumer::~Consumer() {
 }
 
 const RdKafka::TopicMetadata *Consumer::findTopic(const std::string &Topic) {
-  queryMetadata();
-  const RdKafka::Metadata::TopicMetadataVector *Topics = Metadata->topics();
+  updateMetadata();
+  auto Topics = Metadata->topics();
   auto Iterator =
       std::find_if(Topics->cbegin(), Topics->cend(),
                    [Topic](const RdKafka::TopicMetadata *TopicMetadata) {
