@@ -11,8 +11,8 @@
 #endif
 
 namespace KafkaW {
-Consumer::Consumer(BrokerSettings &BrokerSettings)
-    : ConsumerBrokerSettings(std::move(BrokerSettings)) {
+Consumer::Consumer(BrokerSettings &Settings)
+    : ConsumerBrokerSettings(std::move(Settings)) {
   std::string ErrorString;
 
   Conf = std::unique_ptr<RdKafka::Conf>(
@@ -34,13 +34,13 @@ Consumer::Consumer(BrokerSettings &BrokerSettings)
 }
 
 void Consumer::updateMetadata() {
-  RdKafka::Metadata *ptr = nullptr;
-  auto RetCode = KafkaConsumer->metadata(true, nullptr, &ptr, 5000);
+  RdKafka::Metadata *MetadataPtr = nullptr;
+  auto RetCode = KafkaConsumer->metadata(true, nullptr, &MetadataPtr, 5000);
   if (RetCode != RdKafka::ERR_NO_ERROR) {
     throw MetadataException(
         "Consumer::updateMetadata() - error while retrieving metadata.");
   }
-  Metadata = std::unique_ptr<RdKafka::Metadata>(ptr);
+  Metadata = std::unique_ptr<RdKafka::Metadata>(MetadataPtr);
 }
 
 Consumer::~Consumer() {

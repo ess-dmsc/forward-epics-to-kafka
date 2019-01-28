@@ -24,20 +24,42 @@ public:
 
 class Producer : public ProducerInterface {
 public:
-  explicit Producer(BrokerSettings ProducerBrokerSettings_);
+  /// The constructor.
+  ///
+  /// \param Settings_ The BrokerSettings.
+  explicit Producer(BrokerSettings Settings);
   ~Producer() override;
+
+  /// Polls Kafka for events.
   void poll() override;
+
+  /// Gets the number of messages not send.
+  ///
+  /// \return The number of messages.
   int outputQueueLength() override;
+
   RdKafka::Producer *getRdKafkaPtr() const override;
-  RdKafka::ErrorCode produce(RdKafka::Topic *topic, int32_t partition,
-                             int msgflags, void *payload, size_t len,
-                             const void *key, size_t key_len, void *msg_opaque);
-  // Currently it's nice to have access to these two for statistics:
+
+  /// Send a message to Kafka.
+  ///
+  /// \param Topic The topic to publish to.
+  /// \param Partition The topic partition to publish to.
+  /// \param MessageFlags
+  /// \param Payload The actual message data.
+  /// \param PayloadSize The size of the payload.
+  /// \param Key The message's key.
+  /// \param KeySize The size of the key.
+  /// \param OpaqueMessage Points to the whole message.
+  /// \return The Kafka RESP error code.
+  RdKafka::ErrorCode produce(RdKafka::Topic *Topic, int32_t Partition,
+                             int MessageFlags, void *Payload,
+                             size_t PayloadSize, const void *Key,
+                             size_t KeySize, void *OpaqueMessage);
   BrokerSettings ProducerBrokerSettings;
   std::atomic<uint64_t> TotalMessagesProduced{0};
 
 protected:
-  int id = 0;
+  int ProducerID = 0;
   std::unique_ptr<RdKafka::Handle> ProducerPtr = nullptr;
 
 private:

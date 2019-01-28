@@ -87,11 +87,11 @@ set(INCLUDES
     KafkaW/ConsumerMessage.h
     KafkaW/KafkaW.h
     KafkaW/Producer.h
-        KafkaW/ProducerMessage.h
+    KafkaW/ProducerMessage.h
     KafkaW/ProducerDeliveryCb.h
     KafkaW/ProducerStats.h
     KafkaW/ProducerTopic.h
-        KafkaW/KafkaEventCb.h
+    KafkaW/KafkaEventCb.h
     KafkaW/MetadataException.h
     KafkaOutput.h
     logger.h
@@ -116,7 +116,6 @@ set(SOURCES
     Kafka.cpp
     KafkaW/BrokerSettings.cpp
     KafkaW/Consumer.cpp
-    KafkaW/KafkaW.cpp
     KafkaW/Producer.cpp
     KafkaW/ProducerTopic.cpp
     ConversionWorker.cpp
