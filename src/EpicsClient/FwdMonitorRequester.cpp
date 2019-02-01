@@ -30,8 +30,8 @@ std::string FwdMonitorRequester::getRequesterName() { return RequesterName; }
 void FwdMonitorRequester::message(std::string const &Message,
                                   ::epics::pvData::MessageType MessageType) {
   UNUSED_ARG(MessageType);
-  LOG(spdlog::level::trace, "FwdMonitorRequester::message: {}:  {}", RequesterName,
-      Message);
+  LOG(spdlog::level::trace, "FwdMonitorRequester::message: {}:  {}",
+      RequesterName, Message);
 }
 
 void FwdMonitorRequester::monitorConnect(
@@ -43,7 +43,8 @@ void FwdMonitorRequester::monitorConnect(
     // NOTE
     // Docs does not say anything about whether we are responsible for any
     // handling of the monitor if non-null?
-    LOG(spdlog::level::err, "monitorConnect is != success for {}", RequesterName);
+    LOG(spdlog::level::err, "monitorConnect is != success for {}",
+        RequesterName);
     epics_client->errorInEpics();
   } else {
     if (Status.isOK()) {

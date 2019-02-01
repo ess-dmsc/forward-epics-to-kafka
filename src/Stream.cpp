@@ -83,7 +83,7 @@ int Stream::addConverter(std::unique_ptr<ConversionPath> Path) {
     return 0;
   }
   LOG(spdlog::level::warn, "Stream with channel name: {}  KafkaTopicName: {}  "
-                   "SchemaName: {} already exists.",
+                           "SchemaName: {} already exists.",
       ChannelInfo_.channel_name, Path->getKafkaTopicName(),
       Path->getSchemaName());
   return 1;

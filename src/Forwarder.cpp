@@ -64,7 +64,8 @@ Forwarder::Forwarder(MainOpt &opt)
     try {
       addMapping(Stream);
     } catch (std::exception &e) {
-      LOG(spdlog::level::warn, "Could not add mapping: {}  {}", Stream.Name, e.what());
+      LOG(spdlog::level::warn, "Could not add mapping: {}  {}", Stream.Name,
+          e.what());
     }
   }
 
@@ -243,8 +244,8 @@ void Forwarder::report_stats(int dt) {
   b1 %= 1024;
   auto b3 = b2 / 1024;
   b2 %= 1024;
-  LOG(spdlog::level::info, "dt: {:4}  m: {:4}.{:03}  b: {:3}.{:03}.{:03}", dt, m2, m1, b3,
-      b2, b1);
+  LOG(spdlog::level::info, "dt: {:4}  m: {:4}.{:03}  b: {:3}.{:03}.{:03}", dt,
+      m2, m1, b3, b2, b1);
   if (CURLReporter::HaveCURL && !main_opt.InfluxURI.empty()) {
     int i1 = 0;
     for (auto &s : kafka_instance_set->getStatsForAllProducers()) {

@@ -220,8 +220,8 @@ std::string ChannelRequester::getRequesterName() { return "ChannelRequester"; }
 
 void ChannelRequester::message(std::string const &Message,
                                epics::pvData::MessageType MessageType) {
-  LOG(spdlog::level::warn, "Message for: {}  msg: {}  msgtype: {}", getRequesterName(),
-      Message, getMessageTypeName(MessageType));
+  LOG(spdlog::level::warn, "Message for: {}  msg: {}  msgtype: {}",
+      getRequesterName(), Message, getMessageTypeName(MessageType));
 }
 
 void ChannelRequester::channelCreated(epics::pvData::Status const &Status,
@@ -229,7 +229,8 @@ void ChannelRequester::channelCreated(epics::pvData::Status const &Status,
   // Seems that channel creation is actually a synchronous operation
   // and that this requester callback is called from the same stack
   // from which the channel creation was initiated.
-  LOG(spdlog::level::trace, "ChannelRequester::channelCreated:  (int)status.isOK(): {}",
+  LOG(spdlog::level::trace,
+      "ChannelRequester::channelCreated:  (int)status.isOK(): {}",
       (int)Status.isOK());
   if (!Status.isOK() or !Status.isSuccess()) {
     // quick fix until decided on logging system..
@@ -241,7 +242,8 @@ void ChannelRequester::channelCreated(epics::pvData::Status const &Status,
   if (!Status.isSuccess()) {
     std::ostringstream s1;
     s1 << Status;
-    LOG(spdlog::level::err, "ChannelRequester::channelCreated:  failure: {}", s1.str());
+    LOG(spdlog::level::err, "ChannelRequester::channelCreated:  failure: {}",
+        s1.str());
     if (Channel) {
       std::string cname = Channel->getChannelName();
       LOG(spdlog::level::err, "  failure is in channel: {}", cname);
@@ -256,7 +258,8 @@ void ChannelRequester::channelStateChange(
   LOG(spdlog::level::trace, "channel state change: {}",
       channelStateName(ConnectionState));
   if (!Channel) {
-    LOG(spdlog::level::err, "no channel, even though we should have.  state: {}",
+    LOG(spdlog::level::err,
+        "no channel, even though we should have.  state: {}",
         channelStateName(ConnectionState));
     EpicsClientMonitor_impl::error_channel_requester();
     return;
@@ -275,8 +278,8 @@ void ChannelRequester::channelStateChange(
     LOG(spdlog::level::trace, "Epics channel destroyed");
     EpicsClientImpl->channelDestroyed();
   } else {
-    LOG(spdlog::level::err, "Unhandled channel state change: {} {}", ConnectionState,
-        channelStateName(ConnectionState));
+    LOG(spdlog::level::err, "Unhandled channel state change: {} {}",
+        ConnectionState, channelStateName(ConnectionState));
     EpicsClientMonitor_impl::error_channel_requester();
   }
 }

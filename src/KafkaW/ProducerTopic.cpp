@@ -77,7 +77,8 @@ int ProducerTopic::produce(std::unique_ptr<ProducerMessage> &Msg) {
 
   case RdKafka::ERR_MSG_SIZE_TOO_LARGE:
     ++ProducerStats.msg_too_large;
-    LOG(spdlog::level::err, "Message size too large to publish, size: {}", Msg->size);
+    LOG(spdlog::level::err, "Message size too large to publish, size: {}",
+        Msg->size);
     break;
 
   default:

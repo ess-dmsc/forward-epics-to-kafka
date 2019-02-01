@@ -13,8 +13,8 @@
 #include <CLI/CLI.hpp>
 #include <fstream>
 #include <iostream>
-#include <streambuf>
 #include <spdlog/common.h>
+#include <streambuf>
 
 namespace Forwarder {
 
@@ -40,37 +40,33 @@ std::string MainOpt::brokers_as_comma_list() const {
   return CommaList;
 }
 
+bool parseLogLevel(std::vector<std::string> LogLevelString,
+                   spdlog::level::level_enum &LogLevelResult) {
+  std::map<std::string, spdlog::level::level_enum> LevelMap{
+      {"Critical", spdlog::level::critical}, {"Error", spdlog::level::err},
+      {"Warning", spdlog::level::warn},      {"Info", spdlog::level::info},
+      {"Debug", spdlog::level::debug},       {"Trace", spdlog::level::trace}};
 
-    bool parseLogLevel(std::vector<std::string> LogLevelString,
-                       spdlog::level::level_enum &LogLevelResult) {
-      std::map<std::string, spdlog::level::level_enum> LevelMap{
-              {"Critical", spdlog::level::critical},
-              {"Error", spdlog::level::err},
-              {"Warning", spdlog::level::warn},
-              {"Info", spdlog::level::info},
-              {"Debug", spdlog::level::debug},
-              {"Trace", spdlog::level::trace}};
-
-      if (LogLevelString.size() != 1) {
-        return false;
-      }
-      try {
-        LogLevelResult = LevelMap.at(LogLevelString.at(0));
-        return true;
-      } catch (std::out_of_range &e) {
-        // Do nothing
-      }
-      try {
-        int TempLogMessageLevel = std::stoi(LogLevelString.at(0));
-        if (TempLogMessageLevel < 1 or TempLogMessageLevel > 7) {
-          return false;
-        }
-        LogLevelResult = spdlog::level::level_enum(TempLogMessageLevel);
-      } catch (std::invalid_argument &e) {
-        return false;
-      }
-      return true;
+  if (LogLevelString.size() != 1) {
+    return false;
+  }
+  try {
+    LogLevelResult = LevelMap.at(LogLevelString.at(0));
+    return true;
+  } catch (std::out_of_range &e) {
+    // Do nothing
+  }
+  try {
+    int TempLogMessageLevel = std::stoi(LogLevelString.at(0));
+    if (TempLogMessageLevel < 1 or TempLogMessageLevel > 7) {
+      return false;
     }
+    LogLevelResult = spdlog::level::level_enum(TempLogMessageLevel);
+  } catch (std::invalid_argument &e) {
+    return false;
+  }
+  return true;
+}
 
 std::vector<StreamSettings> parseStreamsJson(const std::string &filepath) {
   std::ifstream ifs(filepath);
@@ -160,16 +156,16 @@ std::pair<int, std::unique_ptr<MainOpt>> parse_opt(int argc, char **argv) {
                  "Address for Graylog logging");
   App.add_option("--influx-url", opt.InfluxURI, "Address for Influx logging");
   std::string LogLevelInfoStr =
-          R"*(Set log message level. Set to 1 - 7 or one of
+      R"*(Set log message level. Set to 1 - 7 or one of
   `Critical`, `Error`, `Warning`, `Notice`, `Info`,
   or `Debug`. Ex: "-l Notice")*";
   App.add_option(
-                  "-v,--verbosity",
-                  [&MainOptions, LogLevelInfoStr](std::vector<std::string> Input) {
-                      return parseLogLevel(Input, MainOptions.LoggingLevel);
-                  },
-                  LogLevelInfoStr)
-          ->set_default_val("Error");
+         "-v,--verbosity",
+         [&MainOptions, LogLevelInfoStr](std::vector<std::string> Input) {
+           return parseLogLevel(Input, MainOptions.LoggingLevel);
+         },
+         LogLevelInfoStr)
+      ->set_default_val("Error");
   addOption(App, "--config-topic", opt.MainSettings.BrokerConfig,
             "<//host[:port]/topic> Kafka host/topic to listen for commands on",
             true)
@@ -215,7 +211,8 @@ std::pair<int, std::unique_ptr<MainOpt>> parse_opt(int argc, char **argv) {
     try {
       opt.MainSettings.StreamsInfo = parseStreamsJson(opt.StreamsFile);
     } catch (std::exception const &e) {
-      LOG(spdlog::level::warn, "Can not parse configuration file: {}", e.what());
+      LOG(spdlog::level::warn, "Can not parse configuration file: {}",
+          e.what());
       ret.first = 1;
       return ret;
     }
@@ -227,7 +224,8 @@ void MainOpt::init_logger() {
   if (!KafkaGELFAddress.empty()) {
     Forwarder::URI uri(KafkaGELFAddress);
     log_kafka_gelf_start(uri.HostPort, uri.Topic);
-    LOG(spdlog::level::err, "Enabled kafka_gelf: //{}/{}", uri.HostPort, uri.Topic);
+    LOG(spdlog::level::err, "Enabled kafka_gelf: //{}/{}", uri.HostPort,
+        uri.Topic);
   }
   if (!GraylogLoggerAddress.empty()) {
     fwd_graylog_logger_enable(GraylogLoggerAddress);

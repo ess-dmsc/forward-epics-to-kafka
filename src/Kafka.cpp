@@ -33,8 +33,8 @@ InstanceSet::InstanceSet(KafkaW::BrokerSettings BrokerSettings)
     : BrokerSettings(std::move(BrokerSettings)) {}
 
 KafkaW::ProducerTopic InstanceSet::SetUpProducerTopic(Forwarder::URI uri) {
-  LOG(spdlog::level::trace, "InstanceSet::producer_topic  for:  {}, {}", uri.HostPort,
-      uri.Topic);
+  LOG(spdlog::level::trace, "InstanceSet::producer_topic  for:  {}, {}",
+      uri.HostPort, uri.Topic);
   auto host_port = uri.HostPort;
   auto it = ProducersByHost.find(host_port);
   if (it != ProducersByHost.end()) {

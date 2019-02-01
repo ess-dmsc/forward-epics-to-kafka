@@ -6,7 +6,7 @@ namespace KafkaW {
 class KafkaEventCb : public RdKafka::EventCb {
 public:
   void event_cb(RdKafka::Event &Event) override {
-      //todo convert syslog to spdlog level (there's a map in our fork of spdlog)
+    // todo convert syslog to spdlog level (there's a map in our fork of spdlog)
     switch (Event.type()) {
     case RdKafka::Event::EVENT_ERROR:
       LOG(Event.severity(),
