@@ -30,7 +30,7 @@ void send(fmt::MemoryWriter &MemoryWriter, std::string const &URL) {
     curl_easy_setopt(curl, CURLOPT_POSTFIELDS, MemoryWriter.c_str());
     res = curl_easy_perform(curl);
     if (res != CURLE_OK) {
-      LOG(Sev::Notice, "curl_easy_perform() failed: {}",
+      LOG(spdlog::level::trace, "curl_easy_perform() failed: {}",
           curl_easy_strerror(res));
     }
   }

@@ -15,7 +15,7 @@ std::unique_lock<std::mutex> InstanceSet::getProducersByHostMutexLock() {
 std::shared_ptr<InstanceSet>
 InstanceSet::Set(KafkaW::BrokerSettings BrokerSettings) {
   std::lock_guard<std::mutex> lock(ProducerMutex);
-  LOG(Sev::Warning, "Kafka InstanceSet with rdkafka version: {}",
+  LOG(spdlog::level::warn, "Kafka InstanceSet with rdkafka version: {}",
       RdKafka::version());
   if (!kset) {
     BrokerSettings.PollTimeoutMS = 0;
@@ -33,7 +33,7 @@ InstanceSet::InstanceSet(KafkaW::BrokerSettings BrokerSettings)
     : BrokerSettings(std::move(BrokerSettings)) {}
 
 KafkaW::ProducerTopic InstanceSet::SetUpProducerTopic(Forwarder::URI uri) {
-  LOG(Sev::Debug, "InstanceSet::producer_topic  for:  {}, {}", uri.HostPort,
+  LOG(spdlog::level::trace, "InstanceSet::producer_topic  for:  {}, {}", uri.HostPort,
       uri.Topic);
   auto host_port = uri.HostPort;
   auto it = ProducersByHost.find(host_port);
@@ -63,7 +63,7 @@ void InstanceSet::log_stats() {
   auto lock = getProducersByHostMutexLock();
   for (auto const &m : ProducersByHost) {
     auto &Producer = m.second;
-    LOG(Sev::Info, "Broker: {}  total: {}  outq: {}", m.first,
+    LOG(spdlog::level::info, "Broker: {}  total: {}  outq: {}", m.first,
         Producer->TotalMessagesProduced, Producer->outputQueueLength());
   }
 }

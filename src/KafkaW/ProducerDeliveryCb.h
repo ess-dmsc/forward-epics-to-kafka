@@ -15,7 +15,7 @@ public:
 
   void dr_cb(RdKafka::Message &Message) override {
     if (Message.err()) {
-      LOG(Sev::Error, "ERROR on delivery, topic {}, {} [{}] {}",
+      LOG(spdlog::level::err, "ERROR on delivery, topic {}, {} [{}] {}",
           Message.topic_name(), Message.err(), Message.errstr(),
           RdKafka::err2str(Message.err()));
       ++Stats.produce_cb_fail;

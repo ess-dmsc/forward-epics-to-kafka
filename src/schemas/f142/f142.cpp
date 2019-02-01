@@ -351,7 +351,7 @@ class Converter : public FlatBufferCreator {
 public:
   Converter() = default;
 
-  ~Converter() override { LOG(Sev::Error, "~Converter"); }
+  ~Converter() override { LOG(spdlog::level::err, "~Converter"); }
 
   std::unique_ptr<FlatBufs::FlatbufferMessage>
   create(EpicsPVUpdate const &PVUpdate) override {

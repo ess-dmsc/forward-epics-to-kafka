@@ -74,7 +74,7 @@ int ConversionScheduler::fill(
   while (nfc < nfm) {
     auto n1 = main->streams[sid]->fillConversionQueue(queue, nfm - nfc);
     if (n1 > 0) {
-      LOG(Sev::Debug, "Give worker {:2}  items: {:3}  stream: {:3}", wid, n1,
+      LOG(spdlog::level::trace, "Give worker {:2}  items: {:3}  stream: {:3}", wid, n1,
           sid);
     }
     nfc += n1;
@@ -89,6 +89,6 @@ int ConversionScheduler::fill(
 }
 
 ConversionScheduler::~ConversionScheduler() {
-  LOG(Sev::Info, "~ConversionScheduler");
+  LOG(spdlog::level::trace, "~ConversionScheduler");
 }
 } // namespace Forwarder

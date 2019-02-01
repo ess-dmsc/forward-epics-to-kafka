@@ -42,11 +42,11 @@ Forwarder::Forwarder(MainOpt &opt)
 
   bool use_config = true;
   if (main_opt.MainSettings.BrokerConfig.Topic.empty()) {
-    LOG(Sev::Error, "Name for configuration topic is empty");
+    LOG(spdlog::level::err, "Name for configuration topic is empty");
     use_config = false;
   }
   if (main_opt.MainSettings.BrokerConfig.HostPort.empty()) {
-    LOG(Sev::Error, "Host for configuration topic broker is empty");
+    LOG(spdlog::level::err, "Host for configuration topic broker is empty");
     use_config = false;
   }
   if (use_config) {
@@ -64,7 +64,7 @@ Forwarder::Forwarder(MainOpt &opt)
     try {
       addMapping(Stream);
     } catch (std::exception &e) {
-      LOG(Sev::Warning, "Could not add mapping: {}  {}", Stream.Name, e.what());
+      LOG(spdlog::level::warn, "Could not add mapping: {}  {}", Stream.Name, e.what());
     }
   }
 
@@ -102,7 +102,7 @@ void Forwarder::createFakePVUpdateTimerIfRequired() {
 }
 
 int Forwarder::conversion_workers_clear() {
-  LOG(Sev::Debug, "Main::conversion_workers_clear()  begin");
+  LOG(spdlog::level::trace, "Main::conversion_workers_clear()  begin");
   std::lock_guard<std::mutex> lock(conversion_workers_mx);
   if (!conversion_workers.empty()) {
     for (auto &x : conversion_workers) {
@@ -110,7 +110,7 @@ int Forwarder::conversion_workers_clear() {
     }
     conversion_workers.clear();
   }
-  LOG(Sev::Debug, "Main::conversion_workers_clear()  end");
+  LOG(spdlog::level::trace, "Main::conversion_workers_clear()  end");
   return 0;
 }
 
@@ -182,15 +182,15 @@ void Forwarder::forward_epics_to_kafka() {
       report_stats(dt.count());
     }
     if (dt >= Dt) {
-      LOG(Sev::Error, "slow main loop: {}", dt.count());
+      LOG(spdlog::level::err, "slow main loop: {}", dt.count());
     } else {
       std::this_thread::sleep_for(Dt - dt);
     }
   }
   if (isStopDueToSignal(ForwardingRunFlag.load())) {
-    LOG(Sev::Info, "Forwarder stopping due to signal.");
+    LOG(spdlog::level::info, "Forwarder stopping due to signal.");
   }
-  LOG(Sev::Info, "Main::forward_epics_to_kafka shutting down");
+  LOG(spdlog::level::info, "Main::forward_epics_to_kafka shutting down");
   conversion_workers_clear();
   streams.clearStreams();
 
@@ -204,7 +204,7 @@ void Forwarder::forward_epics_to_kafka() {
     GenerateFakePVUpdateTimer->waitForStop();
   }
 
-  LOG(Sev::Info, "ForwardingStatus::STOPPED");
+  LOG(spdlog::level::info, "ForwardingStatus::STOPPED");
   forwarding_status.store(ForwardingStatus::STOPPED);
 }
 
@@ -225,9 +225,9 @@ void Forwarder::report_status() {
     auto StatusStringShort =
         StatusString.substr(0, 1000) +
         fmt::format(" ... {} chars total ...", StatusStringSize);
-    LOG(Sev::Debug, "status: {}", StatusStringShort);
+    LOG(spdlog::level::trace, "status: {}", StatusStringShort);
   } else {
-    LOG(Sev::Debug, "status: {}", StatusString);
+    LOG(spdlog::level::trace, "status: {}", StatusString);
   }
   status_producer_topic->produce((unsigned char *)StatusString.c_str(),
                                  StatusString.size());
@@ -243,7 +243,7 @@ void Forwarder::report_stats(int dt) {
   b1 %= 1024;
   auto b3 = b2 / 1024;
   b2 %= 1024;
-  LOG(Sev::Info, "dt: {:4}  m: {:4}.{:03}  b: {:3}.{:03}.{:03}", dt, m2, m1, b3,
+  LOG(spdlog::level::info, "dt: {:4}  m: {:4}.{:03}  b: {:3}.{:03}.{:03}", dt, m2, m1, b3,
       b2, b1);
   if (CURLReporter::HaveCURL && !main_opt.InfluxURI.empty()) {
     int i1 = 0;
@@ -264,7 +264,7 @@ void Forwarder::report_stats(int dt) {
     }
     {
       auto lock = get_lock_converters();
-      LOG(Sev::Info, "N converters: {}", converters.size());
+      LOG(spdlog::level::info, "N converters: {}", converters.size());
       i1 = 0;
       for (auto &c : converters) {
         auto stats = c.second.lock()->stats();

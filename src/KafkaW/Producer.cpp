@@ -6,7 +6,7 @@ namespace KafkaW {
 static std::atomic<int> ProducerInstanceCount;
 
 Producer::~Producer() {
-  LOG(Sev::Debug, "~Producer");
+  LOG(spdlog::level::trace, "~Producer");
   if (ProducerPtr != nullptr) {
     int TimeoutMS = 100;
     int NumberOfIterations = 80;
@@ -45,17 +45,17 @@ Producer::Producer(BrokerSettings Settings)
             ErrorString);
   ProducerPtr.reset(RdKafka::Producer::create(Conf.get(), ErrorString));
   if (!ProducerPtr) {
-    LOG(Sev::Error, "can not create kafka handle: {}", ErrorString);
+    LOG(spdlog::level::err, "can not create kafka handle: {}", ErrorString);
     throw std::runtime_error("can not create Kafka handle");
   }
 
-  LOG(Sev::Info, "new Kafka producer: {}, with brokers: {}",
+  LOG(spdlog::level::info, "new Kafka producer: {}, with brokers: {}",
       ProducerPtr->name(), ProducerBrokerSettings.Address.c_str());
 }
 
 void Producer::poll() {
   auto EventsHandled = ProducerPtr->poll(ProducerBrokerSettings.PollTimeoutMS);
-  LOG(Sev::Debug,
+  LOG(spdlog::level::trace,
       "IID: {}  broker: {}  rd_kafka_poll()  served: {}  outq_len: {}",
       ProducerID, ProducerBrokerSettings.Address, EventsHandled,
       outputQueueLength());

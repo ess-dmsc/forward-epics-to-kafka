@@ -10,13 +10,13 @@ std::shared_ptr<Converter> Converter::create(FlatBufs::SchemaRegistry const &,
   ret->schema = schema;
   auto r1 = FlatBufs::SchemaRegistry::items().find(schema);
   if (r1 == FlatBufs::SchemaRegistry::items().end()) {
-    LOG(Sev::Error, "can not handle (yet?) schema id {}", schema);
+    LOG(spdlog::level::err, "can not handle (yet?) schema id {}", schema);
     return nullptr;
   }
   ret->conv = r1->second->createConverter();
   auto &conv = ret->conv;
   if (!conv) {
-    LOG(Sev::Error, "can not create a converter");
+    LOG(spdlog::level::err, "can not create a converter");
     return ret;
   }
 
