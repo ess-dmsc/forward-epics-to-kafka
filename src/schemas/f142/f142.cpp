@@ -370,16 +370,18 @@ public:
 
     /////////////////////////////////// attempt to get units
 
-    auto PVDisplay =
-        PVStructure->getSubField<epics::pvData::PVStructure>("display");
-    auto NewUnits =
-        (PVDisplay
-             ->getSubField<epics::pvData::PVScalarValue<std::string>>("units")
-             ->get());
-    LOG(Sev::Debug, "Is this a real field {}  is this just fantasy?", NewUnits);
+    if (auto PVDisplay =
+            PVStructure->getSubField<epics::pvData::PVStructure>("display")) {
+      auto NewUnits =
+          PVDisplay
+              ->getSubField<epics::pvData::PVScalarValue<std::string>>("units")
+              ->get();
+      LOG(Sev::Error, "Is this a real field {}  is this just fantasy?",
+          NewUnits);
 
-    if (NewUnits != Units) {
-      LOG(Sev::Notice, "Units changed from {} to {}.", Units, NewUnits);
+      if (NewUnits != Units) {
+        LOG(Sev::Error, "Units changed from {} to {}.", Units, NewUnits);
+      }
     }
 
     ///////////////////////////////////
