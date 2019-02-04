@@ -376,11 +376,11 @@ public:
           PVDisplay
               ->getSubField<epics::pvData::PVScalarValue<std::string>>("units")
               ->get();
-      LOG(Sev::Error, "Is this a real field {}  is this just fantasy?",
-          NewUnits);
-
-      if (NewUnits != Units) {
-        LOG(Sev::Error, "Units changed from {} to {}.", Units, NewUnits);
+      if (UnitsLocal.empty()) {
+        UnitsLocal = NewUnits;
+        Units = NewUnits;
+      } else if (NewUnits != UnitsLocal) {
+        LOG(Sev::Error, "Units changed from {} to {}.", UnitsLocal, NewUnits);
       }
     }
 
@@ -413,8 +413,9 @@ public:
 
   RangeSet<uint64_t> seqs;
   Statistics Stats;
-  // private:
-  //    static std::string Units="";
+
+private:
+  std::string UnitsLocal = "";
 };
 
 class Info : public SchemaInfo {
