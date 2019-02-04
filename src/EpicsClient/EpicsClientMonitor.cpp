@@ -59,7 +59,8 @@ public:
   int monitoringStart() {
     RLOCK();
     if (!channel) {
-      LOG(spdlog::level::warn, "monitoringStart:  want to start but we have no channel");
+      LOG(spdlog::level::warn,
+          "monitoringStart:  want to start but we have no channel");
       return -1;
     }
     LOG(spdlog::level::debug, "monitoringStart");
@@ -266,8 +267,9 @@ void ChannelRequester::channelStateChange(
   }
   if (ConnectionState == Channel::CONNECTED) {
     LOG(spdlog::level::trace, "Epics channel connected");
-      LOG(spdlog::level::debug, "ChannelRequester::channelStateChange  channelinfo: {}",
-          channelInfo(Channel));
+    LOG(spdlog::level::debug,
+        "ChannelRequester::channelStateChange  channelinfo: {}",
+        channelInfo(Channel));
     EpicsClientImpl->monitoringStart();
   } else if (ConnectionState == Channel::DISCONNECTED) {
     LOG(spdlog::level::trace, "Epics channel disconnect");
