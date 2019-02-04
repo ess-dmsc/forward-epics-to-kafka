@@ -17,7 +17,7 @@ Producer::~Producer() {
       ProducerPtr->poll(TimeoutMS);
     }
     if (outputQueueLength() > 0) {
-      LOG(Sev::Notice,
+      LOG(spdlog::level::info,
           "Kafka out queue still not empty: {}, destroying producer anyway.",
           outputQueueLength());
     }

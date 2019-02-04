@@ -1,5 +1,4 @@
 #include "Config.h"
-#include "KafkaW/KafkaW.h"
 #include "KafkaW/MetadataException.h"
 #include "logger.h"
 #include <condition_variable>

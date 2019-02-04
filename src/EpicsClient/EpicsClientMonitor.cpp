@@ -59,10 +59,10 @@ public:
   int monitoringStart() {
     RLOCK();
     if (!channel) {
-      LOG(7, "monitoringStart:  want to start but we have no channel");
+      LOG(spdlog::level::warn, "monitoringStart:  want to start but we have no channel");
       return -1;
     }
-    LOG(Sev::Debug, "monitoringStart");
+    LOG(spdlog::level::debug, "monitoringStart");
     // Leaving it empty seems to be the full channel, including name.  That's
     // good.
     // Can also specify subfields, e.g. "value, timeStamp"  or also
@@ -266,10 +266,8 @@ void ChannelRequester::channelStateChange(
   }
   if (ConnectionState == Channel::CONNECTED) {
     LOG(spdlog::level::trace, "Epics channel connected");
-    if (log_level >= 9) {
-      LOG(Sev::Debug, "ChannelRequester::channelStateChange  channelinfo: {}",
+      LOG(spdlog::level::debug, "ChannelRequester::channelStateChange  channelinfo: {}",
           channelInfo(Channel));
-    }
     EpicsClientImpl->monitoringStart();
   } else if (ConnectionState == Channel::DISCONNECTED) {
     LOG(spdlog::level::trace, "Epics channel disconnect");

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "ConfigParser.h"
-#include "KafkaW/KafkaW.h"
+#include "KafkaW/BrokerSettings.h"
 #include "SchemaRegistry.h"
 #include "URI.h"
 #include <memory>
@@ -22,6 +22,7 @@ struct MainOpt {
   std::string StreamsFile;
   uint32_t PeriodMS = 0;
   uint32_t FakePVPeriodMS = 0;
+  spdlog::level::level_enum LoggingLevel;
   std::vector<char> Hostname;
   FlatBufs::SchemaRegistry schema_registry;
   KafkaW::BrokerSettings broker_opt;

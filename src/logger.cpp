@@ -1,8 +1,7 @@
 #include "logger.h"
 
 void setUpLogging(const spdlog::level::level_enum &LoggingLevel,
-                  const std::string &ServiceID, const std::string &LogFile,
-                  const std::string &GraylogURI) {
+                  const std::string &LogFile, const std::string &GraylogURI) {
 
   //  std::shared_ptr<spdlog::logger> LoggerInstance;
 
@@ -11,7 +10,7 @@ void setUpLogging(const spdlog::level::level_enum &LoggingLevel,
     spdlog::basic_logger_mt("filewriterlogger", LogFile);
   }
   if (not GraylogURI.empty()) {
-    uri::URI TempURI(GraylogURI);
+    Forwarder::URI TempURI(GraylogURI);
     // Set up URI interface here
     // auto grayloginterface = spdlog::graylog_sink(TempURI.HostPort,
     // TempURI.Topic);

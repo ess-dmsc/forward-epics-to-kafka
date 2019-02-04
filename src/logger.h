@@ -2,9 +2,11 @@
 
 #include "URI.h"
 #include <fmt/format.h>
+// clang-format off
+#include <spdlog/spdlog.h>
 #include <spdlog/sinks/basic_file_sink.h>
 #include <spdlog/sinks/stdout_color_sinks.h>
-#include <spdlog/spdlog.h>
+// clang-format on
 #include <string>
 //#include <spdlog/sinks/graylog_sink.h>
 #ifdef _MSC_VER
@@ -18,6 +20,7 @@
   { spdlog::get("filewriterlogger")->log(level, fmt, ##args); }
 #endif
 
+#define UNUSED_ARG(x) (void)x;
+
 void setUpLogging(const spdlog::level::level_enum &LoggingLevel,
-                  const std::string &ServiceID, const std::string &LogFile,
-                  const std::string &GraylogURI);
+                  const std::string &LogFile, const std::string &GraylogURI);

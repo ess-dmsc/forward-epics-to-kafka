@@ -1,7 +1,7 @@
 #pragma once
 
 #include "FlatbufferMessage.h"
-#include "KafkaW/KafkaW.h"
+#include "KafkaW/ProducerTopic.h"
 #include <memory>
 
 namespace Forwarder {

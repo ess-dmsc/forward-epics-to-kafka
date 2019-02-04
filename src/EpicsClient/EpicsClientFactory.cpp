@@ -32,7 +32,7 @@ EpicsClientFactoryInit::~EpicsClientFactoryInit() {
   std::lock_guard<std::mutex> lock(MutexLock);
   auto c = --Count;
   if (c < 0) {
-    LOG(Sev::Error,
+    LOG(spdlog::level::err,
         "Reference count {} is not consistent, should never happen, but "
         "ignoring for now.",
         c);

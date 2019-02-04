@@ -159,12 +159,11 @@ std::pair<int, std::unique_ptr<MainOpt>> parse_opt(int argc, char **argv) {
       R"*(Set log message level. Set to 1 - 7 or one of
   `Critical`, `Error`, `Warning`, `Notice`, `Info`,
   or `Debug`. Ex: "-l Notice")*";
-  App.add_option(
-         "-v,--verbosity",
-         [&MainOptions, LogLevelInfoStr](std::vector<std::string> Input) {
-           return parseLogLevel(Input, MainOptions.LoggingLevel);
-         },
-         LogLevelInfoStr)
+  App.add_option("-v,--verbosity",
+                 [&opt, LogLevelInfoStr](std::vector<std::string> Input) {
+                   return parseLogLevel(Input, opt.LoggingLevel);
+                 },
+                 LogLevelInfoStr)
       ->set_default_val("Error");
   addOption(App, "--config-topic", opt.MainSettings.BrokerConfig,
             "<//host[:port]/topic> Kafka host/topic to listen for commands on",
@@ -221,14 +220,6 @@ std::pair<int, std::unique_ptr<MainOpt>> parse_opt(int argc, char **argv) {
 }
 
 void MainOpt::init_logger() {
-  if (!KafkaGELFAddress.empty()) {
-    Forwarder::URI uri(KafkaGELFAddress);
-    log_kafka_gelf_start(uri.HostPort, uri.Topic);
-    LOG(spdlog::level::err, "Enabled kafka_gelf: //{}/{}", uri.HostPort,
-        uri.Topic);
-  }
-  if (!GraylogLoggerAddress.empty()) {
-    fwd_graylog_logger_enable(GraylogLoggerAddress);
-  }
+  setUpLogging(LoggingLevel, LogFilename, GraylogLoggerAddress);
 }
 } // namespace Forwarder

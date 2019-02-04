@@ -16,7 +16,7 @@ void BrokerSettings::apply(RdKafka::Conf *RdKafkaConfiguration) const {
       std::string ThrowMessage =
           fmt::format("Failure setting config: {} = {}",
                       ConfigurationItem.first, ConfigurationItem.second);
-      LOG(Sev::Warning, ThrowMessage.c_str());
+      LOG(spdlog::level::warn, ThrowMessage.c_str());
       throw std::runtime_error(ThrowMessage);
     }
   }

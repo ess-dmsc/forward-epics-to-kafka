@@ -44,9 +44,9 @@ void Consumer::updateMetadata() {
 }
 
 Consumer::~Consumer() {
-  LOG(Sev::Debug, "~Consumer()");
+  LOG(spdlog::level::debug, "~Consumer()");
   if (KafkaConsumer != nullptr) {
-    LOG(Sev::Debug, "Close the consumer");
+    LOG(spdlog::level::debug, "Close the consumer");
     KafkaConsumer->close();
   }
 }

@@ -54,10 +54,6 @@ int main(int argc, char **argv) {
   auto op = Forwarder::parse_opt(argc, argv);
   auto &opt = *op.second;
 
-  if (!opt.LogFilename.empty()) {
-    use_log_file(opt.LogFilename);
-  }
-
   opt.init_logger();
 
   if (op.first != 0) {
