@@ -37,7 +37,7 @@ COPY CMakeLists.txt ../forwarder_src
 COPY src/ ../forwarder_src/src
 
 RUN cd forwarder && \
-    cmake -DCONAN="MANUAL" ../forwarder_src && \
+    cmake -DCONAN="MANUAL" --target=forward-epics-to-kafka ../forwarder_src && \
     make -j4 forward-epics-to-kafka VERBOSE=1
 
 ADD docker_launch.sh /
