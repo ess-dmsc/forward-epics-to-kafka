@@ -30,8 +30,8 @@ std::shared_ptr<Converter> Converter::create(FlatBufs::SchemaRegistry const &,
 }
 
 std::unique_ptr<FlatBufs::FlatbufferMessage>
-Converter::convert(FlatBufs::EpicsPVUpdate const &up) {
-  return conv->create(up);
+Converter::convert(FlatBufs::EpicsPVUpdate const &up, std::string &Units) {
+  return conv->create(up, Units);
 }
 
 std::map<std::string, double> Converter::stats() { return conv->getStats(); }

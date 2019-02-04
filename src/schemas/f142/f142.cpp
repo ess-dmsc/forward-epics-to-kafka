@@ -5,6 +5,7 @@
 #include "../../logger.h"
 #include "schemas/f142_logdata_generated.h"
 #include <atomic>
+#include <f142_logdata_generated.h>
 #include <mutex>
 #include <pv/nt.h>
 #include <pv/ntndarray.h>
@@ -354,7 +355,7 @@ public:
   ~Converter() override { LOG(Sev::Error, "~Converter"); }
 
   std::unique_ptr<FlatBufs::FlatbufferMessage>
-  create(EpicsPVUpdate const &PVUpdate) override {
+  create(EpicsPVUpdate const &PVUpdate, std::string &Units) override {
     auto &PVStructure = PVUpdate.epics_pvstr;
     auto FlatbufferMessage = make_unique<FlatBufs::FlatbufferMessage>();
 
@@ -362,11 +363,26 @@ public:
     // this is the field type ID string: up.pvstr->getStructure()->getID()
     auto PVName = Builder->CreateString(PVUpdate.channel);
     auto Value = makeValue(*Builder, PVStructure, true, Stats);
-
     LogDataBuilder LogDataBuilder(*Builder);
     LogDataBuilder.add_source_name(PVName);
     LogDataBuilder.add_value_type(Value.Type);
     LogDataBuilder.add_value(Value.Offset);
+
+    /////////////////////////////////// attempt to get units
+
+    auto PVDisplay =
+        PVStructure->getSubField<epics::pvData::PVStructure>("display");
+    auto NewUnits =
+        (PVDisplay
+             ->getSubField<epics::pvData::PVScalarValue<std::string>>("units")
+             ->get());
+    LOG(Sev::Debug, "Is this a real field {}  is this just fantasy?", NewUnits);
+
+    if (NewUnits != Units) {
+      LOG(Sev::Notice, "Units changed from {} to {}.", Units, NewUnits);
+    }
+
+    ///////////////////////////////////
 
     if (auto PVTimeStamp =
             PVStructure->getSubField<epics::pvData::PVStructure>("timeStamp")) {
@@ -395,6 +411,8 @@ public:
 
   RangeSet<uint64_t> seqs;
   Statistics Stats;
+  // private:
+  //    static std::string Units="";
 };
 
 class Info : public SchemaInfo {

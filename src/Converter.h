@@ -15,7 +15,7 @@ public:
   create(FlatBufs::SchemaRegistry const &schema_registry, std::string schema,
          MainOpt const &main_opt);
   std::unique_ptr<FlatBufs::FlatbufferMessage>
-  convert(FlatBufs::EpicsPVUpdate const &up);
+  convert(FlatBufs::EpicsPVUpdate const &up, std::string &Units);
   std::map<std::string, double> stats();
   std::string schema_name() const;
 
