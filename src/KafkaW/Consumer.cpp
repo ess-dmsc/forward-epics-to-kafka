@@ -87,7 +87,7 @@ void Consumer::addTopic(const std::string &Topic) {
     int64_t Low, High;
     KafkaConsumer->query_watermark_offsets(Topic, PartitionID, &Low, &High,
                                            1000);
-    TopicPartition->set_offset(Low);
+    TopicPartition->set_offset(High);
     TopicPartitionsWithOffsets.push_back(TopicPartition);
   }
   RdKafka::ErrorCode Err = KafkaConsumer->assign(TopicPartitionsWithOffsets);
