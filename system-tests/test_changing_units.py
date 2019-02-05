@@ -28,7 +28,7 @@ def teardown_function(function):
 def test_logs_error_when_units_change(docker_compose_units_change):
     sleep(5)
     change_pv_value ("{}.EGU".format(PVDOUBLE),"test")
-    change_pv_value ("{}.EGU".format(PVDOUBLE),"testdifferent")
+    change_pv_value (PVDOUBLE,"testdifferent")
     sleep(5)
     found=False
     test_string = "Units changed from"
