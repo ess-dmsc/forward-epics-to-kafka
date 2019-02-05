@@ -30,3 +30,10 @@ def test_logs_error_when_units_change(docker_compose_units_change):
     change_pv_value ("{}.EGU".format(PVDOUBLE),"test")
     change_pv_value ("{}.EGU".format(PVDOUBLE),"testdifferent")
     sleep(5)
+    found=False
+    test_string = "Units changed from"
+    with open("logs/forwarder_tests_units.log",'r') as file :
+        for line in file.readlines():
+            if test_string in line:
+                found=True
+    assert found
