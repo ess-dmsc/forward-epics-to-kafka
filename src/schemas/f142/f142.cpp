@@ -376,11 +376,13 @@ public:
           PVDisplay
               ->getSubField<epics::pvData::PVScalarValue<std::string>>("units")
               ->get();
-      if (UnitsLocal.empty()) {
-        UnitsLocal = NewUnits;
+      if (CachedUnits.empty() && !NewUnits.empty()) {
+        CachedUnits = NewUnits;
+        // todo: remove Units
         Units = NewUnits;
-      } else if (NewUnits != UnitsLocal) {
-        LOG(Sev::Error, "Units changed from {} to {}.", UnitsLocal, NewUnits);
+      } else if (NewUnits != CachedUnits) {
+        LOG(Sev::Error, "Units changed in PV {} from {} to {}.",
+            PVUpdate.channel, CachedUnits, NewUnits);
       }
     }
 
@@ -415,7 +417,7 @@ public:
   Statistics Stats;
 
 private:
-  std::string UnitsLocal = "";
+  std::string CachedUnits = "";
 };
 
 class Info : public SchemaInfo {

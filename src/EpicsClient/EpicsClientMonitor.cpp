@@ -68,7 +68,10 @@ public:
     // Can also specify subfields, e.g. "value, timeStamp"  or also
     // "field(value)"
     // We need to be more explicit here for compatibility with channel access.
-    std::string request = "field(value,timeStamp,alarm,display)";
+    // display.units added here to only populate the units field in the PV
+    // Structure as we don't want to check anything else to see if it has
+    // changed
+    std::string request = "field(value,timeStamp,display.units)";
     PVStructure::shared_pointer pvreq =
         epics::pvData::CreateRequest::create()->createRequest(request);
     if (monitor) {
