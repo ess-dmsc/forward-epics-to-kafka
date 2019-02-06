@@ -27,10 +27,9 @@ ConversionPath::~ConversionPath() {
   }
 }
 
-int ConversionPath::emit(std::shared_ptr<FlatBufs::EpicsPVUpdate> up,
-                         std::string &Units) {
+int ConversionPath::emit(std::shared_ptr<FlatBufs::EpicsPVUpdate> up) {
 
-  auto fb = converter->convert(*up, Units);
+  auto fb = converter->convert(*up);
   if (fb == nullptr) {
     LOG(Sev::Info, "empty converted flat buffer");
     return 1;

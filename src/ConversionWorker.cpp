@@ -36,14 +36,13 @@ int ConversionWorker::run() {
       auto qf = queue.MAX_SUBQUEUE_SIZE - qs;
       scheduler->fill(queue, qf, id);
     }
-    std::string Units = "";
     while (true) {
       std::unique_ptr<ConversionWorkPacket> p;
       bool found = queue.try_dequeue(p);
       if (!found)
         break;
       auto cwp = std::move(p);
-      cwp->cp->emit(std::move(cwp->up), Units);
+      cwp->cp->emit(std::move(cwp->up));
     }
     auto t2 = CLK::now();
     auto dt = std::chrono::duration_cast<MS>(t2 - t1);

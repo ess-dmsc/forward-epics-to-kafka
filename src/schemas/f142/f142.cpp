@@ -355,7 +355,7 @@ public:
   ~Converter() override { LOG(Sev::Error, "~Converter"); }
 
   std::unique_ptr<FlatBufs::FlatbufferMessage>
-  create(EpicsPVUpdate const &PVUpdate, std::string &Units) override {
+  create(EpicsPVUpdate const &PVUpdate) override {
     auto &PVStructure = PVUpdate.epics_pvstr;
     auto FlatbufferMessage = make_unique<FlatBufs::FlatbufferMessage>();
 
@@ -368,8 +368,6 @@ public:
     LogDataBuilder.add_value_type(Value.Type);
     LogDataBuilder.add_value(Value.Offset);
 
-    /////////////////////////////////// attempt to get units
-
     if (auto PVDisplay =
             PVStructure->getSubField<epics::pvData::PVStructure>("display")) {
       auto NewUnits =
@@ -378,15 +376,11 @@ public:
               ->get();
       if (CachedUnits.empty() && !NewUnits.empty()) {
         CachedUnits = NewUnits;
-        // todo: remove Units
-        Units = NewUnits;
       } else if (NewUnits != CachedUnits) {
         LOG(Sev::Error, "Units changed in PV {} from {} to {}.",
             PVUpdate.channel, CachedUnits, NewUnits);
       }
     }
-
-    ///////////////////////////////////
 
     if (auto PVTimeStamp =
             PVStructure->getSubField<epics::pvData::PVStructure>("timeStamp")) {
@@ -417,7 +411,7 @@ public:
   Statistics Stats;
 
 private:
-  std::string CachedUnits = "";
+  std::string CachedUnits;
 };
 
 class Info : public SchemaInfo {
