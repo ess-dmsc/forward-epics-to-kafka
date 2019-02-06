@@ -368,36 +368,9 @@ public:
     LogDataBuilder.add_value_type(Value.Type);
     LogDataBuilder.add_value(Value.Offset);
 
-    if (auto PVDisplay =
-            PVStructure->getSubField<epics::pvData::PVStructure>("display")) {
-      auto NewUnits =
-          PVDisplay
-              ->getSubField<epics::pvData::PVScalarValue<std::string>>("units")
-              ->get();
-      if (CachedUnits.empty() && !NewUnits.empty()) {
-        CachedUnits = NewUnits;
-      } else if (NewUnits != CachedUnits) {
-        LOG(Sev::Error, "Units changed in PV {} from {} to {}.",
-            PVUpdate.channel, CachedUnits, NewUnits);
-      }
-    }
+    checkUnits(PVUpdate);
 
-    if (auto PVTimeStamp =
-            PVStructure->getSubField<epics::pvData::PVStructure>("timeStamp")) {
-      uint64_t TimeStamp = static_cast<uint64_t>(
-          PVTimeStamp
-              ->getSubField<epics::pvData::PVScalarValue<int64_t>>(
-                  "secondsPastEpoch")
-              ->get());
-      TimeStamp *= 1000000000;
-      TimeStamp += PVTimeStamp
-                       ->getSubField<epics::pvData::PVScalarValue<int32_t>>(
-                           "nanoseconds")
-                       ->get();
-      LogDataBuilder.add_timestamp(TimeStamp);
-    } else {
-      ++Stats.err_timestamp_not_available;
-    }
+    getTimestamp(PVStructure, LogDataBuilder);
 
     FinishLogDataBuffer(*Builder, LogDataBuilder.Finish());
     return FlatbufferMessage;
@@ -411,6 +384,44 @@ public:
   Statistics Stats;
 
 private:
+  void getTimestamp(
+      const std::tr1::shared_ptr<epics::pvData::PVStructure> &PVStructure,
+      LogDataBuilder &LogDataBuilder) {
+    if (auto PVTimeStamp =
+            PVStructure->getSubField<epics::pvData::PVStructure>("timeStamp")) {
+      uint64_t TimeStamp = static_cast<uint64_t>(
+          PVTimeStamp
+              ->getSubField<epics::pvData::PVScalarValue<int64_t>>(
+                  "secondsPastEpoch")
+              ->get());
+      TimeStamp *= 1000000000;
+      TimeStamp += PVTimeStamp
+                       ->getSubField<epics::pvData::PVScalarValue<int32_t>>(
+                           "nanoseconds")
+                       ->get();
+
+      LogDataBuilder.add_timestamp(TimeStamp);
+    } else {
+      ++Stats.err_timestamp_not_available;
+    }
+  }
+
+  void checkUnits(EpicsPVUpdate const &PVUpdate) {
+    auto &PVStructure = PVUpdate.epics_pvstr;
+    if (auto PVDisplay =
+            PVStructure->getSubField<epics::pvData::PVStructure>("display")) {
+      auto NewUnits =
+          PVDisplay
+              ->getSubField<epics::pvData::PVScalarValue<std::string>>("units")
+              ->get();
+      if (CachedUnits.empty() && !NewUnits.empty()) {
+        CachedUnits = NewUnits;
+      } else if (NewUnits != CachedUnits) {
+        LOG(Sev::Error, "Units changed in PV {} from {} to {}.",
+            PVUpdate.channel, CachedUnits, NewUnits);
+      }
+    }
+  }
   std::string CachedUnits;
 };
 

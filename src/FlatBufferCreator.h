@@ -13,7 +13,7 @@ struct EpicsPVUpdate;
 class FlatBufferCreator {
 public:
   virtual ~FlatBufferCreator() = default;
-  virtual std::unique_ptr<FlatBufs::FlatbufferMessage>
+  virtual std::unique_ptr<FlatbufferMessage>
   create(EpicsPVUpdate const &up) = 0;
   virtual void
   config(std::map<std::string, std::string> const &KafkaConfiguration);
