@@ -137,6 +137,7 @@ void Logger::dwlog_inner(int level, int color, char const *file, int line,
       lmsg = fmt::format("{}:{} [{}]:  {}\n", f1, line, level, s1);
     }
     fwrite(lmsg.c_str(), 1, lmsg.size(), log_file);
+    fflush(stdout);
   }
   if (level < 7 && do_run_kafka.load()) {
     // Format again without color
