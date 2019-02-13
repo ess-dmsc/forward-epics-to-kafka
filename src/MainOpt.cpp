@@ -150,6 +150,7 @@ std::pair<int, std::unique_ptr<MainOpt>> parse_opt(int argc, char **argv) {
   App.add_option("--conversion-worker-queue-size",
                  opt.MainSettings.ConversionWorkerQueueSize,
                  "Conversion worker queue size", true);
+  App.add_option("--service-id", opt.MainSettings.ServiceID, "ServiceID");
   App.add_option("--main-poll-interval", opt.MainSettings.MainPollInterval,
                  "Main Poll interval", true);
   addKafkaOption(App, "-S,--kafka-config", opt.MainSettings.KafkaConfiguration,

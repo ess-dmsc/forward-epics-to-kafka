@@ -211,6 +211,7 @@ void Forwarder::forward_epics_to_kafka() {
 void Forwarder::report_status() {
   using nlohmann::json;
   auto Status = json::object();
+  Status["service_id"] = main_opt.MainSettings.ServiceID;
   auto Streams = json::array();
   auto StreamVector = streams.getStreams();
   std::transform(StreamVector.cbegin(), StreamVector.cend(),
