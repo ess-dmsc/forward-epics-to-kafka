@@ -139,7 +139,7 @@ void Forwarder::forward_epics_to_kafka() {
   using MS = std::chrono::milliseconds;
   auto Dt = MS(main_opt.MainSettings.MainPollInterval);
   auto t_lf_last = CLK::now();
-  auto t_status_last = CLK::now();
+  auto t_status_last = CLK::now() - MS(4000);
   ConfigCB config_cb(*this);
   {
     std::lock_guard<std::mutex> lock(conversion_workers_mx);
