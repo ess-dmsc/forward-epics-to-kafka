@@ -1,3 +1,5 @@
+#pragma once
+#include "EpicsClientInterface.h"
 #include <pv/pvAccess.h>
 #include <pv/pvData.h>
 #include <string>
@@ -5,15 +7,12 @@
 namespace Forwarder {
 namespace EpicsClient {
 
-char const *channelStateName(epics::pvAccess::Channel::ConnectionState x);
-
-class EpicsClientMonitor_impl;
+char const *connectionStateName(epics::pvAccess::Channel::ConnectionState x);
 
 /// Provides channel state information for PVs.
 class ChannelRequester : public epics::pvAccess::ChannelRequester {
 public:
-  explicit ChannelRequester(EpicsClientMonitor_impl *EpicsClientImpl)
-      : EpicsClientImpl(EpicsClientImpl){};
+  explicit ChannelRequester(EpicsClientInterface *EpicsClient);
 
   std::string getRequesterName() override;
 
@@ -36,7 +35,7 @@ public:
       epics::pvAccess::Channel::ConnectionState ConnectionState) override;
 
 private:
-  EpicsClientMonitor_impl *EpicsClientImpl = nullptr;
+  EpicsClientInterface *EpicsClient = nullptr;
 };
 }
 } // namespace Forwarder

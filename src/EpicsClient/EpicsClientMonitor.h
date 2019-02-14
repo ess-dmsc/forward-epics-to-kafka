@@ -16,7 +16,7 @@ namespace EpicsClient {
 using std::array;
 using std::vector;
 
-class EpicsClientMonitor_impl;
+class EpicsClientMonitorImpl;
 
 /// Epics client implementation which monitors for PV updates.
 class EpicsClientMonitor : public EpicsClientInterface {
@@ -49,13 +49,19 @@ public:
 
   void emitCachedValue();
 
+  std::string getConnectionStatus() override;
+
+  void handleChannelRequesterError(std::string const &) override;
+  void handleConnectionStateChange(std::string const &ConnectionState) override;
+
 private:
-  std::unique_ptr<EpicsClientMonitor_impl> Impl;
+  std::unique_ptr<EpicsClientMonitorImpl> Impl;
   std::shared_ptr<
       moodycamel::ConcurrentQueue<std::shared_ptr<FlatBufs::EpicsPVUpdate>>>
       EmitQueue;
   std::shared_ptr<FlatBufs::EpicsPVUpdate> CachedUpdate;
   std::atomic<int> status_{0};
+  std::string ConnectionStatus = "NEVER_CONNECTED";
 };
 } // namespace EpicsClient
 } // namespace Forwarder

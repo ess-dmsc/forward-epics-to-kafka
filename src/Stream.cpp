@@ -156,7 +156,8 @@ nlohmann::json Stream::getStatusJson() {
   auto Document = json::object();
   auto const &ChannelInfo = getChannelInfo();
   Document["channel_name"] = ChannelInfo.channel_name;
-  Document["getQueueSize"] = getQueueSize();
+  Document["epics_connection_status"] = Client->getConnectionStatus();
+  Document["queue_size"] = getQueueSize();
   {
     std::lock_guard<std::mutex> lock(SeqDataEmitted.Mutex);
     auto const &Set = SeqDataEmitted.set;

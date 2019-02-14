@@ -225,7 +225,7 @@ void Forwarder::report_status() {
   if (StatusStringSize > 1000) {
     auto StatusStringShort =
         StatusString.substr(0, 1000) +
-        fmt::format(" ... {} chars total ...", StatusStringSize);
+        fmt::format(" ... {} chars total", StatusStringSize);
     LOG(Sev::Debug, "status: {}", StatusStringShort);
   } else {
     LOG(Sev::Debug, "status: {}", StatusString);

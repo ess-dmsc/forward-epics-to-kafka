@@ -13,6 +13,9 @@ public:
   virtual int stop() = 0;
   virtual void errorInEpics() = 0;
   virtual int status() = 0;
+  virtual std::string getConnectionStatus() = 0;
+  virtual void handleChannelRequesterError(std::string const &){};
+  virtual void handleConnectionStateChange(std::string const &){};
 };
 }
 }
