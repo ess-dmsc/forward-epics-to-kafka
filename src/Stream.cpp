@@ -118,7 +118,7 @@ uint32_t Stream::fillConversionQueue(
     for (auto &ConversionPath : ConversionPaths) {
       auto ConversionPacket = ::make_unique<ConversionWorkPacket>();
       cwp_last[ConversionPathID] = ConversionPacket.get();
-      ConversionPacket->cp = ConversionPath.get();
+      ConversionPacket->Path = ConversionPath.get();
       ConversionPacket->up = EpicsUpdate;
       bool QueuedSuccessful = Queue.enqueue(std::move(ConversionPacket));
       if (!QueuedSuccessful) {

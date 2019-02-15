@@ -8,7 +8,7 @@ namespace Forwarder {
 
 ConversionWorkPacket::~ConversionWorkPacket() {
   if (stream) {
-    cp->transit--;
+    Path->transit--;
   }
 }
 
@@ -42,7 +42,7 @@ int ConversionWorker::run() {
       if (!found) {
         break;
       }
-      Packet->cp->emit(std::move(Packet->up));
+      Packet->Path->emit(std::move(Packet->up));
     }
     auto t2 = CLK::now();
     auto dt = std::chrono::duration_cast<MS>(t2 - t1);
