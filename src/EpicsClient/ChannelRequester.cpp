@@ -92,13 +92,10 @@ void ChannelRequester::channelStateChange(
       LOG(Sev::Debug, "ChannelRequester::channelStateChange  channelinfo: {}",
           channelInfo(Channel));
     }
-    // TODO EpicsClientImpl->monitoringStart();
   } else if (ConnectionState == Channel::DISCONNECTED) {
     LOG(Sev::Debug, "Epics channel disconnect");
-    // TODO EpicsClientImpl->monitoringStop();
   } else if (ConnectionState == Channel::DESTROYED) {
     LOG(Sev::Debug, "Epics channel destroyed");
-    // TODO EpicsClientImpl->channelDestroyed();
   } else {
     auto Message =
         fmt::format("Unhandled channel state change: {} {}", ConnectionState,

@@ -77,13 +77,6 @@ public:
     return 0;
   }
 
-  /// Logs that the channel has been destroyed and stops monitoring.
-  int channelDestroyed() {
-    LOG(Sev::Warning, "channelDestroyed()");
-    monitoringStop();
-    return 0;
-  }
-
   /// Stops the EPICS monitor loop.
   int stop() {
     RLOCK();

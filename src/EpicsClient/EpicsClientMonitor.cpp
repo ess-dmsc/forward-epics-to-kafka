@@ -74,7 +74,12 @@ void EpicsClientMonitor::handleConnectionStateChange(
     std::string const &ConnectionState) {
   LOG(Sev::Info, "EpicsClientMonitor::handleConnectionStateChange  {}",
       ConnectionState);
-  this->ConnectionStatus = ConnectionState;
+  ConnectionStatus = ConnectionState;
+  if (ConnectionStatus == "CONNECTED") {
+    Impl->monitoringStart();
+  } else {
+    Impl->monitoringStop();
+  }
 }
 
 void EpicsClientMonitor::handleChannelRequesterError(
