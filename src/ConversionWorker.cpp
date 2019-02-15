@@ -37,12 +37,12 @@ int ConversionWorker::run() {
       scheduler->fill(queue, qf, id);
     }
     while (true) {
-      std::unique_ptr<ConversionWorkPacket> p;
-      bool found = queue.try_dequeue(p);
-      if (!found)
+      std::unique_ptr<ConversionWorkPacket> Packet;
+      bool found = queue.try_dequeue(Packet);
+      if (!found) {
         break;
-      auto cwp = std::move(p);
-      cwp->cp->emit(std::move(cwp->up));
+      }
+      Packet->cp->emit(std::move(Packet->up));
     }
     auto t2 = CLK::now();
     auto dt = std::chrono::duration_cast<MS>(t2 - t1);
