@@ -384,6 +384,13 @@ void Forwarder::addMapping(StreamSettings const &StreamInfo) {
           std::shared_ptr<FlatBufs::EpicsPVUpdate>>>();
       auto EpicsClient = std::make_shared<EpicsClient::EpicsClientMonitor>(
           ChannelInfo, UpdateQueue);
+      if (true) {
+        auto ConnectionStatusProducer = KafkaInstanceSet->SetUpProducerTopic(
+            URI("//127.0.0.1/tmp_fwd_data"));
+        EpicsClient->ConnectionStatusProducer =
+            make_unique<KafkaW::ProducerTopic>(
+                std::move(ConnectionStatusProducer));
+      }
       Stream = findOrAddStream<EpicsClient::EpicsClientMonitor>(
           ChannelInfo, EpicsClient, UpdateQueue);
     }

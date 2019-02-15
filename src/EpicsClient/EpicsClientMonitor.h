@@ -54,6 +54,8 @@ public:
   void handleChannelRequesterError(std::string const &) override;
   void handleConnectionStateChange(std::string const &ConnectionState) override;
 
+  std::unique_ptr<KafkaW::ProducerTopic> ConnectionStatusProducer;
+
 private:
   std::unique_ptr<EpicsClientMonitorImpl> Impl;
   std::shared_ptr<
