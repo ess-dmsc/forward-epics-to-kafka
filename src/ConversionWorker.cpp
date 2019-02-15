@@ -42,7 +42,7 @@ int ConversionWorker::run() {
       if (!found) {
         break;
       }
-      Packet->Path->emit(std::move(Packet->up));
+      Packet->Path->emit(std::move(Packet->Update));
     }
     auto t2 = CLK::now();
     auto dt = std::chrono::duration_cast<MS>(t2 - t1);

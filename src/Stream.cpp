@@ -119,7 +119,7 @@ uint32_t Stream::fillConversionQueue(
       auto ConversionPacket = ::make_unique<ConversionWorkPacket>();
       cwp_last[ConversionPathID] = ConversionPacket.get();
       ConversionPacket->Path = ConversionPath.get();
-      ConversionPacket->up = EpicsUpdate;
+      ConversionPacket->Update = EpicsUpdate;
       bool QueuedSuccessful = Queue.enqueue(std::move(ConversionPacket));
       if (!QueuedSuccessful) {
         LOG(Sev::Info, "Conversion work queue is full");
