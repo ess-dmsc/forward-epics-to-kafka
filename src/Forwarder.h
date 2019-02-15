@@ -8,6 +8,7 @@
 #include <atomic>
 #include <list>
 #include <map>
+#include <memory>
 #include <mutex>
 #include <stdexcept>
 
@@ -59,7 +60,11 @@ private:
   void createFakePVUpdateTimerIfRequired();
   void createPVUpdateTimerIfRequired();
   template <typename T>
-  std::shared_ptr<Stream> findOrAddStream(ChannelInfo &ChannelInfo);
+  std::shared_ptr<Stream> findOrAddStream(
+      ChannelInfo &ChannelInfo, std::shared_ptr<T> EpicsClient,
+      std::shared_ptr<
+          moodycamel::ConcurrentQueue<std::shared_ptr<FlatBufs::EpicsPVUpdate>>>
+          UpdateQueue);
   MainOpt &main_opt;
   std::shared_ptr<InstanceSet> KafkaInstanceSet;
   std::unique_ptr<Config::Listener> config_listener;

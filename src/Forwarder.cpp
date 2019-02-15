@@ -366,7 +366,12 @@ void Forwarder::addMapping(StreamSettings const &StreamInfo) {
     ChannelInfo ChannelInfo{StreamInfo.EpicsProtocol, StreamInfo.Name};
     std::shared_ptr<Stream> Stream;
     if (GenerateFakePVUpdateTimer != nullptr) {
-      Stream = findOrAddStream<EpicsClient::EpicsClientRandom>(ChannelInfo);
+      auto UpdateQueue = std::make_shared<moodycamel::ConcurrentQueue<
+          std::shared_ptr<FlatBufs::EpicsPVUpdate>>>();
+      auto EpicsClient = std::make_shared<EpicsClient::EpicsClientRandom>(
+          ChannelInfo, UpdateQueue);
+      Stream = findOrAddStream<EpicsClient::EpicsClientRandom>(
+          ChannelInfo, EpicsClient, UpdateQueue);
       auto Client = Stream->getEpicsClient();
       auto RandomClient =
           dynamic_cast<EpicsClient::EpicsClientRandom *>(Client.get());
@@ -375,7 +380,12 @@ void Forwarder::addMapping(StreamSettings const &StreamInfo) {
             [Client, RandomClient]() { RandomClient->generateFakePVUpdate(); });
       }
     } else {
-      Stream = findOrAddStream<EpicsClient::EpicsClientMonitor>(ChannelInfo);
+      auto UpdateQueue = std::make_shared<moodycamel::ConcurrentQueue<
+          std::shared_ptr<FlatBufs::EpicsPVUpdate>>>();
+      auto EpicsClient = std::make_shared<EpicsClient::EpicsClientMonitor>(
+          ChannelInfo, UpdateQueue);
+      Stream = findOrAddStream<EpicsClient::EpicsClientMonitor>(
+          ChannelInfo, EpicsClient, UpdateQueue);
     }
 
     if (PVUpdateTimer != nullptr) {
@@ -395,19 +405,20 @@ void Forwarder::addMapping(StreamSettings const &StreamInfo) {
 }
 
 template <typename T>
-std::shared_ptr<Stream> Forwarder::findOrAddStream(ChannelInfo &ChannelInfo) {
+std::shared_ptr<Stream> Forwarder::findOrAddStream(
+    ChannelInfo &ChannelInfo, std::shared_ptr<T> EpicsClient,
+    std::shared_ptr<
+        moodycamel::ConcurrentQueue<std::shared_ptr<FlatBufs::EpicsPVUpdate>>>
+        UpdateQueue) {
   std::shared_ptr<Stream> FoundStream =
       streams.getStreamByChannelName(ChannelInfo.channel_name);
   if (FoundStream != nullptr) {
     return FoundStream;
   }
-  auto PVUpdateRing = std::make_shared<
-      moodycamel::ConcurrentQueue<std::shared_ptr<FlatBufs::EpicsPVUpdate>>>();
-  auto client = std::make_shared<T>(ChannelInfo, PVUpdateRing);
   auto EpicsClientInterfacePtr =
-      std::static_pointer_cast<EpicsClient::EpicsClientInterface>(client);
+      std::static_pointer_cast<EpicsClient::EpicsClientInterface>(EpicsClient);
   auto NewStream = std::make_shared<Stream>(
-      ChannelInfo, EpicsClientInterfacePtr, PVUpdateRing);
+      ChannelInfo, EpicsClientInterfacePtr, UpdateQueue);
   streams.add(NewStream);
   return NewStream;
 }
