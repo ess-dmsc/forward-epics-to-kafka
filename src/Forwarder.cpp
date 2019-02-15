@@ -31,7 +31,7 @@ static KafkaW::BrokerSettings make_broker_opt(MainOpt const &opt) {
 
 /// Main program entry class.
 Forwarder::Forwarder(MainOpt &opt)
-    : main_opt(opt), kafka_instance_set(InstanceSet::Set(make_broker_opt(opt))),
+    : main_opt(opt), KafkaInstanceSet(InstanceSet::Set(make_broker_opt(opt))),
       conversion_scheduler(this) {
 
   for (size_t i = 0; i < opt.MainSettings.ConversionThreads; ++i) {
@@ -167,7 +167,7 @@ void Forwarder::forward_epics_to_kafka() {
       t_lf_last = t1;
       do_stats = true;
     }
-    kafka_instance_set->poll();
+    KafkaInstanceSet->poll();
 
     auto t2 = CLK::now();
     auto dt = std::chrono::duration_cast<MS>(t2 - t1);
@@ -178,7 +178,7 @@ void Forwarder::forward_epics_to_kafka() {
       t_status_last = t2;
     }
     if (do_stats) {
-      kafka_instance_set->log_stats();
+      KafkaInstanceSet->log_stats();
       report_stats(dt.count());
     }
     if (dt >= Dt) {
@@ -248,7 +248,7 @@ void Forwarder::report_stats(int dt) {
       b2, b1);
   if (CURLReporter::HaveCURL && !main_opt.InfluxURI.empty()) {
     int i1 = 0;
-    for (auto &s : kafka_instance_set->getStatsForAllProducers()) {
+    for (auto &s : KafkaInstanceSet->getStatsForAllProducers()) {
       StatsBuffer.write("forward-epics-to-kafka,hostname={},set={}",
                         main_opt.Hostname.data(), i1);
       StatsBuffer.write(" produced={}", s.produced);
@@ -353,7 +353,7 @@ void Forwarder::pushConverterToStream(ConverterSettings const &ConverterInfo,
   }
 
   // Create a conversion path then add it
-  auto Topic = kafka_instance_set->SetUpProducerTopic(std::move(TopicURI));
+  auto Topic = KafkaInstanceSet->SetUpProducerTopic(std::move(TopicURI));
   auto cp = ::make_unique<ConversionPath>(
       std::move(ConverterShared), ::make_unique<KafkaOutput>(std::move(Topic)));
 

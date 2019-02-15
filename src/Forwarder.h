@@ -61,7 +61,7 @@ private:
   template <typename T>
   std::shared_ptr<Stream> findOrAddStream(ChannelInfo &ChannelInfo);
   MainOpt &main_opt;
-  std::shared_ptr<InstanceSet> kafka_instance_set;
+  std::shared_ptr<InstanceSet> KafkaInstanceSet;
   std::unique_ptr<Config::Listener> config_listener;
   std::unique_ptr<Timer> PVUpdateTimer;
   std::unique_ptr<Timer> GenerateFakePVUpdateTimer;
