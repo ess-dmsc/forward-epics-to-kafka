@@ -80,6 +80,11 @@ void EpicsClientMonitor::handleConnectionStateChange(
   } else {
     Impl->monitoringStop();
   }
+  if (ConnectionStatusProducer != nullptr) {
+    auto Message = fmt::format("ConnectionStatus: {}", ConnectionStatus);
+    ConnectionStatusProducer->produce((unsigned char *)Message.data(),
+                                      Message.size());
+  }
 }
 
 void EpicsClientMonitor::handleChannelRequesterError(
