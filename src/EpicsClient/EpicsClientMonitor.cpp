@@ -26,8 +26,8 @@ EpicsClientMonitor::EpicsClientMonitor(
     ChannelInfo &ChannelInfo,
     std::shared_ptr<
         moodycamel::ConcurrentQueue<std::shared_ptr<FlatBufs::EpicsPVUpdate>>>
-        Ring)
-    : EmitQueue(std::move(Ring)) {
+        EmitQueue)
+    : EmitQueue(std::move(EmitQueue)) {
   Impl.reset(new EpicsClientMonitorImpl(this));
   LOG(Sev::Debug, "channel_name: {}", ChannelInfo.channel_name);
   Impl->channel_name = ChannelInfo.channel_name;

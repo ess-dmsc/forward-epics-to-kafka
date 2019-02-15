@@ -28,7 +28,7 @@ public:
       ChannelInfo &ChannelInfo,
       std::shared_ptr<
           moodycamel::ConcurrentQueue<std::shared_ptr<FlatBufs::EpicsPVUpdate>>>
-          Ring);
+          EmitQueue);
   ~EpicsClientMonitor() override;
 
   /// Pushes the PV update onto the emit_queue ring buffer.
