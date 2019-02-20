@@ -1,4 +1,4 @@
-from helpers.epics_helpers import change_pv_value, stop_forwarder
+from helpers.epics_helpers import change_pv_value
 from helpers.PVs import PVDOUBLE
 from time import sleep
 from helpers.producerwrapper import ProducerWrapper
