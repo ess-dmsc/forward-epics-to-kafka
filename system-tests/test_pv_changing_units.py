@@ -1,9 +1,9 @@
-from helpers.epics_helpers import change_pv_value
+from helpers.epics_helpers import change_pv_value, stop_forwarder
 from helpers.PVs import PVDOUBLE
 from time import sleep
 from helpers.producerwrapper import ProducerWrapper
 
-CONFIG_TOPIC = "TEST_forwarderConfigUnits"
+CONFIG_TOPIC = "TEST_forwarderConfig"
 
 
 def test_logs_error_when_units_change(docker_compose_units_change):
@@ -14,7 +14,7 @@ def test_logs_error_when_units_change(docker_compose_units_change):
     change_pv_value(PVDOUBLE, 0.0)
     prod = ProducerWrapper("localhost:9092", CONFIG_TOPIC, "")
     prod.exit_forwarder()
-    sleep(30)
+    sleep(20)
     found = False
     test_string = "Units changed in PV SIMPLE:DOUBLE from test1 to test2"
     with open("logs/forwarder_tests_units.log", 'r') as file:
