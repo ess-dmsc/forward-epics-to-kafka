@@ -14,7 +14,7 @@ def test_logs_error_when_units_change(docker_compose_units_change):
     change_pv_value(PVDOUBLE, 0.0)
     prod = ProducerWrapper("localhost:9092", CONFIG_TOPIC, "")
     prod.exit_forwarder()
-    sleep(20)
+    sleep(30)
     found = False
     test_string = "Units changed in PV SIMPLE:DOUBLE from test1 to test2"
     with open("logs/forwarder_tests_units.log", 'r') as file:
