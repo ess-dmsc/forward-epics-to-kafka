@@ -216,3 +216,18 @@ def docker_compose_lr(request):
     options["--file"] = ["compose/docker-compose-long-running.yml"]
 
     build_and_run(options, request)
+
+
+@pytest.fixture(scope="module")
+def docker_compose_units_change(request):
+    """
+    :type request: _pytest.python.FixtureRequest
+    """
+    print("Started preparing test environment...", flush=True)
+
+    # Options must be given as long form
+    options = common_options
+    options["--project-name"] = "units"
+    options["--file"] = ["compose/docker-compose-units.yml"]
+
+    build_and_run(options, request)

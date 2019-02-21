@@ -12,15 +12,15 @@ namespace Forwarder {
 class Converter {
 public:
   static std::shared_ptr<Converter>
-  create(FlatBufs::SchemaRegistry const &schema_registry, std::string schema,
-         MainOpt const &main_opt);
+  create(FlatBufs::SchemaRegistry const &schema_registry, std::string Schema,
+         MainOpt const &Options);
   std::unique_ptr<FlatBufs::FlatbufferMessage>
-  convert(FlatBufs::EpicsPVUpdate const &up);
+  convert(FlatBufs::EpicsPVUpdate const &Update);
   std::map<std::string, double> stats();
-  std::string schema_name() const;
+  std::string getSchemaID() const;
 
 private:
-  std::string schema;
-  std::unique_ptr<FlatBufs::FlatBufferCreator> conv;
+  std::string SchemaID;
+  std::unique_ptr<FlatBufs::FlatBufferCreator> FlatBufCreator;
 };
 } // namespace Forwarder
