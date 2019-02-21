@@ -30,7 +30,7 @@ else()
 endif()
 
 include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
-conan_basic_setup(${OUTPUT_DIRS} SKIP_RPATH)
+conan_basic_setup(${OUTPUT_DIRS} KEEP_RPATHS)
 
 # for static build etc.
 set(FETK_EXTRA_LIBRARIES "" CACHE STRING "Extra Libraries")
