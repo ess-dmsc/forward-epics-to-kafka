@@ -21,11 +21,11 @@ properties([[
 
 images = [
         'centos7': [
-                'name': 'essdmscdm/centos7-build-node:3.5.1',
+                'name': 'essdmscdm/centos7-build-node:3.0.0',
                 'sh'  : '/usr/bin/scl enable rh-python35 devtoolset-6 -- /bin/bash -e'
         ],
         'centos7-release': [
-                'name': 'essdmscdm/centos7-build-node:3.5.1',
+                'name': 'essdmscdm/centos7-build-node:3.0.0',
                 'sh'  : '/usr/bin/scl enable rh-python35 devtoolset-6 -- /bin/bash -e'
         ],
         'debian9'    : [
@@ -33,7 +33,7 @@ images = [
                 'sh'  : 'bash -e'
         ],
         'ubuntu1804'  : [
-                'name': 'essdmscdm/ubuntu18.04-build-node:1.3.1',
+                'name': 'essdmscdm/ubuntu18.04-build-node:1.1.0',
                 'sh'  : 'bash -e'
         ]
 ]
@@ -367,7 +367,7 @@ def get_win10_pipeline() {
 
 	 stage("win10: Build") {
            bat """cd _build
-	     cmake .. -G \"Visual Studio 15 2017 Win64\" -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTS=FALSE
+	     cmake .. -G \"Visual Studio 15 2017 Win64\" -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTS=FALSE
 	     cmake --build .
 	     """
         }  // stage
