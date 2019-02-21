@@ -21,11 +21,11 @@ properties([[
 
 images = [
         'centos7': [
-                'name': 'essdmscdm/centos7-build-node:3.5.1',
+                'name': 'essdmscdm/centos7-build-node:3.0.0',
                 'sh'  : '/usr/bin/scl enable rh-python35 devtoolset-6 -- /bin/bash -e'
         ],
         'centos7-release': [
-                'name': 'essdmscdm/centos7-build-node:3.5.1',
+                'name': 'essdmscdm/centos7-build-node:3.0.0',
                 'sh'  : '/usr/bin/scl enable rh-python35 devtoolset-6 -- /bin/bash -e'
         ],
         'debian9'    : [
@@ -33,7 +33,7 @@ images = [
                 'sh'  : 'bash -e'
         ],
         'ubuntu1804'  : [
-                'name': 'essdmscdm/ubuntu18.04-build-node:1.3.1',
+                'name': 'essdmscdm/ubuntu18.04-build-node:1.1.0',
                 'sh'  : 'bash -e'
         ]
 ]
@@ -84,7 +84,6 @@ def docker_dependencies(image_key) {
                         conan remote add \
                             --insert 0 \
                             ${conan_remote} ${local_conan_server}
-                        conan install --build=missing ../${project}/conan
                     """
         sh "docker exec ${container_name(image_key)} ${custom_sh} -c \"${dependencies_script}\""
     } catch (e) {
@@ -112,7 +111,6 @@ def docker_cmake(image_key) {
         def configure_script = """
                     cd build
                     ${configure_epics}
-                    . ./activate_run.sh
                     cmake ../${project} ${coverage_on}
                 """
 
@@ -127,7 +125,6 @@ def docker_cmake_release(image_key) {
         def custom_sh = images[image_key]['sh']
         def configure_script = """
                         cd build
-                        . ./activate_run.sh
                         cmake ../${project} \
                             -DCMAKE_BUILD_TYPE=Release \
                             -DCMAKE_SKIP_RPATH=FALSE \
@@ -370,7 +367,7 @@ def get_win10_pipeline() {
 
 	 stage("win10: Build") {
            bat """cd _build
-	     cmake .. -G \"Visual Studio 15 2017 Win64\" -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTS=FALSE
+	     cmake .. -G \"Visual Studio 15 2017 Win64\" -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTS=FALSE
 	     cmake --build .
 	     """
         }  // stage
