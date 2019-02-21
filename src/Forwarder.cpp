@@ -249,7 +249,7 @@ void Forwarder::report_stats(int dt) {
     int i1 = 0;
     for (auto &s : kafka_instance_set->getStatsForAllProducers()) {
       fmt::format_to(StatsBuffer, "forward-epics-to-kafka,hostname={},set={}",
-                        main_opt.Hostname.data(), i1);
+                     main_opt.Hostname.data(), i1);
       fmt::format_to(StatsBuffer, " produced={}", s.produced);
       fmt::format_to(StatsBuffer, ",produce_fail={}", s.produce_fail);
       fmt::format_to(StatsBuffer, ",local_queue_full={}", s.local_queue_full);
@@ -257,7 +257,8 @@ void Forwarder::report_stats(int dt) {
       fmt::format_to(StatsBuffer, ",produce_cb_fail={}", s.produce_cb_fail);
       fmt::format_to(StatsBuffer, ",poll_served={}", s.poll_served);
       fmt::format_to(StatsBuffer, ",msg_too_large={}", s.msg_too_large);
-      fmt::format_to(StatsBuffer, ",produced_bytes={}", double(s.produced_bytes));
+      fmt::format_to(StatsBuffer, ",produced_bytes={}",
+                     double(s.produced_bytes));
       fmt::format_to(StatsBuffer, ",outq={}", s.out_queue);
       fmt::format_to(StatsBuffer, "\n");
       ++i1;
@@ -269,7 +270,7 @@ void Forwarder::report_stats(int dt) {
       for (auto &c : converters) {
         auto stats = c.second.lock()->stats();
         fmt::format_to(StatsBuffer, "forward-epics-to-kafka,hostname={},set={}",
-                          main_opt.Hostname.data(), i1);
+                       main_opt.Hostname.data(), i1);
         int i2 = 0;
         for (auto x : stats) {
           if (i2 > 0) {
