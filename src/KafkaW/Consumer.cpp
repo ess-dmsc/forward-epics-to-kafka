@@ -114,6 +114,10 @@ std::unique_ptr<ConsumerMessage> Consumer::poll() {
     } else {
       return ::make_unique<ConsumerMessage>(PollStatus::Empty);
     }
+  case RdKafka::ERR__TIMED_OUT:
+    // No message or event within time out - this is usually normal (see
+    // librdkafka docs)
+    return ::make_unique<ConsumerMessage>(PollStatus::TimedOut);
   case RdKafka::ERR__PARTITION_EOF:
     return ::make_unique<ConsumerMessage>(PollStatus::EndOfPartition);
   default:
