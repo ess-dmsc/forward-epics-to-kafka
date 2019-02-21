@@ -376,11 +376,8 @@ public:
   }
 
   std::map<std::string, double> getStats() override {
-    return {{"ranges_n", seqs.size()}};
+    return {{"ranges_n", Seqs.size()}};
   }
-
-  RangeSet<uint64_t> seqs;
-  Statistics Stats;
 
 private:
   void getTimestamp(
@@ -421,6 +418,8 @@ private:
       }
     }
   }
+  RangeSet<uint64_t> Seqs;
+  Statistics Stats;
   std::string CachedUnits;
 };
 

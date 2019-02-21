@@ -41,7 +41,7 @@ int ConversionPath::emit(std::shared_ptr<FlatBufs::EpicsPVUpdate> up) {
 nlohmann::json ConversionPath::status_json() const {
   using nlohmann::json;
   auto Document = json::object();
-  Document["schema"] = converter->schema_name();
+  Document["schema"] = converter->getSchemaID();
   Document["broker"] = kafka_output->Output.brokerAddress();
   Document["topic"] = kafka_output->topic_name();
   return Document;
@@ -52,7 +52,7 @@ std::string ConversionPath::getKafkaTopicName() const {
 }
 
 std::string ConversionPath::getSchemaName() const {
-  return converter->schema_name();
+  return converter->getSchemaID();
 }
 
 Stream::Stream(
