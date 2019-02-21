@@ -3,7 +3,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ..)
 message(STATUS "CMAKE_BUILD_TYPE: ${CMAKE_BUILD_TYPE}")
 
 find_package(EPICSV4)
-find_package(fmt REQUIRED)
+find_package(fmt REQUIRED CONFIG)
 find_package(RdKafka REQUIRED)
 find_package(FlatBuffers REQUIRED)
 find_package(CLI11 REQUIRED)
