@@ -29,23 +29,8 @@ else()
   set(OUTPUT_DIRS "NO_OUTPUT_DIRS")
 endif()
 
-if(${CONAN} MATCHES "AUTO")
-    include(${CMAKE_MODULE_PATH}/conan.cmake)
-    conan_cmake_run(CONANFILE conan/conanfile.txt
-            PROFILE ${CONAN_PROFILE}
-            BASIC_SETUP ${OUTPUT_DIRS} SKIP_RPATH
-            BUILD_TYPE "None"
-            BUILD outdated)
-elseif(${CONAN} MATCHES "MANUAL")
-    if(EXISTS "${CMAKE_BINARY_DIR}/conanbuildinfo.cmake")
-        include("${CMAKE_BINARY_DIR}/conanbuildinfo.cmake")
-        conan_basic_setup(${OUTPUT_DIRS} SKIP_RPATH)
-    else()
-        MESSAGE(FATAL_ERROR "CONAN set to MANUAL but no file named conanbuildinfo.cmake found in build directory")
-    endif()
-elseif(NOT ${CONAN} MATCHES "DISABLE")
-    MESSAGE(FATAL_ERROR "Unrecognised option for CONAN, use AUTO, MANUAL or DISABLE")
-endif()
+include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
+conan_basic_setup(${OUTPUT_DIRS} SKIP_RPATH)
 
 # for static build etc.
 set(FETK_EXTRA_LIBRARIES "" CACHE STRING "Extra Libraries")
