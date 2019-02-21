@@ -2,6 +2,7 @@
 #include "ChannelRequester.h"
 #include "EpicsClientMonitorImpl.h"
 #include "EpicsPVUpdate.h"
+#include "flatbuffers/flatbuffers.h"
 #include "logger.h"
 #include <atomic>
 #include <memory>
@@ -14,6 +15,10 @@
 
 namespace Forwarder {
 namespace EpicsClient {
+
+namespace ep00 {
+#include <ep00_generated.h>
+}
 
 using epics::pvAccess::Channel;
 using epics::pvData::PVStructure;
@@ -80,6 +85,22 @@ void EpicsClientMonitor::handleConnectionStateChange(
     auto Message = fmt::format("ConnectionStatus: {}", ConnectionStatus);
     ConnectionStatusProducer->produce((unsigned char *)Message.data(),
                                       Message.size());
+    flatbuffers::FlatBufferBuilder Builder;
+    auto PVName = Builder.CreateString(Impl->channel_name);
+    auto InfoBuffer = ep00::EpicsConnectionInfoBuilder(Builder);
+    InfoBuffer.add_pv_name(PVName);
+    if (ConnectionStatus == "CONNECTED") {
+      InfoBuffer.add_type(ep00::EventType::CONNECT);
+    }
+    if (ConnectionStatus == "DISCONNECTED") {
+      InfoBuffer.add_type(ep00::EventType::DISCONNECT);
+    }
+    if (ConnectionStatus == "DESTROYED") {
+      InfoBuffer.add_type(ep00::EventType::CLOSE);
+    }
+    ep00::FinishEpicsConnectionInfoBuffer(Builder, InfoBuffer.Finish());
+    ConnectionStatusProducer->produce(Builder.GetBufferPointer(),
+                                      Builder.GetSize());
   }
 }
 
