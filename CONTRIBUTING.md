@@ -1,35 +1,40 @@
 # Contributing
 
-We use `clang-format` v3.9 LLVM default style.
-Due to availability of `clang-format` on the different systems that we use for
-development, we decided on this lowest common denominator.
+## The project
+See [here](https://confluence.esss.lu.se/display/ECDC/Data+Aggregation+and+Streaming) for more details on how the project works.
 
-The `.clang-format` is just a `-dump-config` of the default LLVM style from
-`clang-format` v3.9.
+To summarise:
+- For issues that require changes in the functionality of the code (i.e. not documentation changes or typos) create a ticket on the [ESS JIRA board](https://jira.esss.lu.se/secure/RapidBoard.jspa?rapidView=167&view=detail&quickFilter=2154) with the label `FW&FW`.
 
-## Issues
+- These tickets need to be approved by the steering committee before work is started.
 
-For issues that require changes in the functionality of the code (i.e. not tiny bits of refactoring) create a ticket on the [ESS JIRA board](https://jira.esss.lu.se/secure/RapidBoard.jspa?rapidView=167&view=detail&quickFilter=2154) with the label `FW&FW`
+## The repository
 
-## Feature requests
-Feel free to create a GitHub issue if you have a feature request or, even better, implement it
-yourself on a branch and create a pull request!
+### Branching
 
-## Branching
-
-- Branch your feature off from 'master'
-
-- Before creating pull requests, rebase your feature branch
-  - Reorder and squash small successive commits which may have occurred
-    during iterative development to improve readability of the feature
-    branch.
+- Branch your feature off 'master'
 
 - Create pull requests against 'master'.
 
-## Naming conventions
+### Branch naming
+The names should start with the ticket number and contain a brief description. For example:
 
-- Branch: `issuenumber_issue_decription`, e.g. `314_throw_error_if_branch_name_invalid`
+`DM-1014_byebye_dead_code`
 
-- Commits: `re #issuenumber commit message`, e.g. `re #42 remove dead code`
+### Pull requests
+There is a template for pull requests. This should contain enough information for the reviewer to be able to review the code efficiently.
 
-Please avoid special characters like `'` and `` ` `` as this may prevent Jenkins from successful building.
+## Code
+
+### Style
+We use `clang-format` v3.9 LLVM default style.
+We also follow the LLVM coding standards for naming conventions etc. and use Doxygen for documentation.
+
+Please refer to [LLVM documentation](https://llvm.org/docs/CodingStandards.html).
+
+### Unit tests
+Unit tests should be written/modified for any code added or changed (within reason, of course).
+
+### System tests
+System tests should be written/modified for any changes that affect the "public" API of the application, i.e. anything
+that affects another component of the data streaming pipeline.

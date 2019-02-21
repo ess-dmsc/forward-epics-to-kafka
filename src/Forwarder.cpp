@@ -12,12 +12,7 @@
 #include <algorithm>
 #include <nlohmann/json.hpp>
 #include <sys/types.h>
-#ifdef _MSC_VER
-#include "process.h"
-#define getpid _getpid
-#else
-#include <unistd.h>
-#endif
+
 #include "CURLReporter.h"
 
 namespace Forwarder {
@@ -33,8 +28,6 @@ static KafkaW::BrokerSettings make_broker_opt(MainOpt const &opt) {
   ret.Address = opt.brokers_as_comma_list();
   return ret;
 }
-
-using ulock = std::unique_lock<std::mutex>;
 
 /// Main program entry class.
 Forwarder::Forwarder(MainOpt &opt)
@@ -58,10 +51,11 @@ Forwarder::Forwarder(MainOpt &opt)
   }
   if (use_config) {
     KafkaW::BrokerSettings bopt;
-    bopt.KafkaConfiguration["group.id"] =
-        fmt::format("forwarder-command-listener--pid{}", getpid());
-    config_listener.reset(
-        new Config::Listener{bopt, main_opt.MainSettings.BrokerConfig});
+    bopt.Address = main_opt.MainSettings.BrokerConfig.HostPort;
+    bopt.PollTimeoutMS = 0;
+    auto NewConsumer = make_unique<KafkaW::Consumer>(bopt);
+    config_listener.reset(new Config::Listener{
+        main_opt.MainSettings.BrokerConfig, std::move(NewConsumer)});
   }
   createPVUpdateTimerIfRequired();
   createFakePVUpdateTimerIfRequired();
@@ -109,7 +103,7 @@ void Forwarder::createFakePVUpdateTimerIfRequired() {
 
 int Forwarder::conversion_workers_clear() {
   LOG(Sev::Debug, "Main::conversion_workers_clear()  begin");
-  std::unique_lock<std::mutex> lock(conversion_workers_mx);
+  std::lock_guard<std::mutex> lock(conversion_workers_mx);
   if (!conversion_workers.empty()) {
     for (auto &x : conversion_workers) {
       x->stop();
@@ -122,7 +116,7 @@ int Forwarder::conversion_workers_clear() {
 
 int Forwarder::converters_clear() {
   if (!conversion_workers.empty()) {
-    std::unique_lock<std::mutex> lock(converters_mutex);
+    auto lock = get_lock_converters();
     conversion_workers.clear();
   }
   return 0;
@@ -148,7 +142,7 @@ void Forwarder::forward_epics_to_kafka() {
   auto t_status_last = CLK::now();
   ConfigCB config_cb(*this);
   {
-    std::unique_lock<std::mutex> lock(conversion_workers_mx);
+    std::lock_guard<std::mutex> lock(conversion_workers_mx);
     for (auto &x : conversion_workers) {
       x->start();
     }
@@ -253,7 +247,7 @@ void Forwarder::report_stats(int dt) {
       b2, b1);
   if (CURLReporter::HaveCURL && !main_opt.InfluxURI.empty()) {
     int i1 = 0;
-    for (auto &s : kafka_instance_set->stats_all()) {
+    for (auto &s : kafka_instance_set->getStatsForAllProducers()) {
       fmt::format_to(StatsBuffer, "forward-epics-to-kafka,hostname={},set={}",
                         main_opt.Hostname.data(), i1);
       fmt::format_to(StatsBuffer, " produced={}", s.produced);
@@ -358,7 +352,7 @@ void Forwarder::pushConverterToStream(ConverterSettings const &ConverterInfo,
   }
 
   // Create a conversion path then add it
-  auto Topic = kafka_instance_set->producer_topic(std::move(TopicURI));
+  auto Topic = kafka_instance_set->SetUpProducerTopic(std::move(TopicURI));
   auto cp = ::make_unique<ConversionPath>(
       std::move(ConverterShared), ::make_unique<KafkaOutput>(std::move(Topic)));
 
@@ -366,16 +360,12 @@ void Forwarder::pushConverterToStream(ConverterSettings const &ConverterInfo,
 }
 
 void Forwarder::addMapping(StreamSettings const &StreamInfo) {
-  std::unique_lock<std::mutex> lock(streams_mutex);
+  auto lock = get_lock_streams();
   try {
     ChannelInfo ChannelInfo{StreamInfo.EpicsProtocol, StreamInfo.Name};
     std::shared_ptr<Stream> Stream;
     if (GenerateFakePVUpdateTimer != nullptr) {
       Stream = findOrAddStream<EpicsClient::EpicsClientRandom>(ChannelInfo);
-    } else {
-      Stream = findOrAddStream<EpicsClient::EpicsClientMonitor>(ChannelInfo);
-    }
-    if (GenerateFakePVUpdateTimer != nullptr) {
       auto Client = Stream->getEpicsClient();
       auto RandomClient =
           dynamic_cast<EpicsClient::EpicsClientRandom *>(Client.get());
@@ -383,7 +373,10 @@ void Forwarder::addMapping(StreamSettings const &StreamInfo) {
         GenerateFakePVUpdateTimer->addCallback(
             [Client, RandomClient]() { RandomClient->generateFakePVUpdate(); });
       }
+    } else {
+      Stream = findOrAddStream<EpicsClient::EpicsClientMonitor>(ChannelInfo);
     }
+
     if (PVUpdateTimer != nullptr) {
       auto Client = Stream->getEpicsClient();
       auto PeriodicClient =
@@ -391,6 +384,7 @@ void Forwarder::addMapping(StreamSettings const &StreamInfo) {
       PVUpdateTimer->addCallback(
           [Client, PeriodicClient]() { PeriodicClient->emitCachedValue(); });
     }
+
     for (auto &Converter : StreamInfo.Converters) {
       pushConverterToStream(Converter, Stream);
     }

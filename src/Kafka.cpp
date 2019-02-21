@@ -7,85 +7,72 @@ namespace Forwarder {
 static std::mutex ProducerMutex;
 static std::shared_ptr<InstanceSet> kset;
 
-sptr<InstanceSet> InstanceSet::Set(KafkaW::BrokerSettings Settings) {
-  std::lock_guard<std::mutex> Lock(ProducerMutex);
+std::unique_lock<std::mutex> InstanceSet::getProducersByHostMutexLock() {
+  std::unique_lock<std::mutex> lock(ProducersByHostMutex);
+  return lock;
+}
+
+std::shared_ptr<InstanceSet>
+InstanceSet::Set(KafkaW::BrokerSettings BrokerSettings) {
+  std::lock_guard<std::mutex> lock(ProducerMutex);
   LOG(Sev::Warning, "Kafka InstanceSet with rdkafka version: {}",
-      rd_kafka_version_str());
+      RdKafka::version());
   if (!kset) {
-    Settings.PollTimeoutMS = 0;
-    kset.reset(new InstanceSet(Settings));
+    BrokerSettings.PollTimeoutMS = 0;
+    kset.reset(new InstanceSet(BrokerSettings));
   }
   return kset;
 }
 
 void InstanceSet::clear() {
-  std::lock_guard<std::mutex> Lock(ProducerMutex);
+  std::lock_guard<std::mutex> lock(ProducerMutex);
   kset.reset();
 }
 
-InstanceSet::InstanceSet(KafkaW::BrokerSettings Settings)
-    : BrokerSettings(std::move(Settings)) {}
+InstanceSet::InstanceSet(KafkaW::BrokerSettings BrokerSettings)
+    : BrokerSettings(std::move(BrokerSettings)) {}
 
-static void prod_delivery_ok(rd_kafka_message_t const *msg) {
-  if (auto x = msg->_private) {
-    auto p = static_cast<KafkaW::Producer::Msg *>(x);
-    p->deliveryOk();
-    delete p;
-  }
-}
-
-static void prod_delivery_failed(rd_kafka_message_t const *msg) {
-  if (auto x = msg->_private) {
-    auto p = static_cast<KafkaW::Producer::Msg *>(x);
-    p->deliveryError();
-    delete p;
-  }
-}
-
-KafkaW::Producer::Topic InstanceSet::producer_topic(Forwarder::URI uri) {
+KafkaW::ProducerTopic InstanceSet::SetUpProducerTopic(Forwarder::URI uri) {
   LOG(Sev::Debug, "InstanceSet::producer_topic  for:  {}, {}", uri.HostPort,
       uri.Topic);
   auto host_port = uri.HostPort;
-  auto it = producers_by_host.find(host_port);
-  if (it != producers_by_host.end()) {
-    return KafkaW::Producer::Topic(it->second, uri.Topic);
+  auto it = ProducersByHost.find(host_port);
+  if (it != ProducersByHost.end()) {
+    return KafkaW::ProducerTopic(it->second, uri.Topic);
   }
   auto BrokerSettings = this->BrokerSettings;
   BrokerSettings.Address = host_port;
-  auto p = std::make_shared<KafkaW::Producer>(BrokerSettings);
-  p->on_delivery_ok = prod_delivery_ok;
-  p->on_delivery_failed = prod_delivery_failed;
+  auto Producer = std::make_shared<KafkaW::Producer>(BrokerSettings);
   {
-    std::lock_guard<std::mutex> Lock(mx_producers_by_host);
-    producers_by_host[host_port] = p;
+    auto lock = getProducersByHostMutexLock();
+    ProducersByHost[host_port] = Producer;
   }
-  return KafkaW::Producer::Topic(p, uri.Topic);
+  return KafkaW::ProducerTopic(Producer, uri.Topic);
 }
 
 int InstanceSet::poll() {
-  std::lock_guard<std::mutex> Lock(mx_producers_by_host);
-  for (auto const &m : producers_by_host) {
-    auto &p = m.second;
-    p->poll();
+  auto lock = getProducersByHostMutexLock();
+  for (auto const &ProducerMap : ProducersByHost) {
+    auto &Producer = ProducerMap.second;
+    Producer->poll();
   }
   return 0;
 }
 
 void InstanceSet::log_stats() {
-  std::lock_guard<std::mutex> Lock(mx_producers_by_host);
-  for (auto const &m : producers_by_host) {
-    auto &p = m.second;
+  auto lock = getProducersByHostMutexLock();
+  for (auto const &m : ProducersByHost) {
+    auto &Producer = m.second;
     LOG(Sev::Info, "Broker: {}  total: {}  outq: {}", m.first,
-        p->TotalMessagesProduced, p->outputQueueLength());
+        Producer->TotalMessagesProduced, Producer->outputQueueLength());
   }
 }
 
-std::vector<KafkaW::ProducerStats> InstanceSet::stats_all() {
+std::vector<KafkaW::ProducerStats> InstanceSet::getStatsForAllProducers() {
   std::vector<KafkaW::ProducerStats> ret;
-  std::lock_guard<std::mutex> Lock(mx_producers_by_host);
+  auto lock = getProducersByHostMutexLock();
   std::transform(
-      producers_by_host.cbegin(), producers_by_host.cend(),
-      std::back_inserter(ret),
+      ProducersByHost.cbegin(), ProducersByHost.cend(), std::back_inserter(ret),
       [](const std::pair<std::string, std::shared_ptr<KafkaW::Producer>>
              &CProducer) { return CProducer.second->Stats; });
   return ret;

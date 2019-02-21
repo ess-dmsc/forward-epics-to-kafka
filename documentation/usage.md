@@ -34,21 +34,21 @@ The forwarder can be also set up with a configuration file:
 with an `ini` file for command line options:
 
 ```ini
-config-topic=//kakfabroker:9092/the_config_topic
-status-topic=//kafkabroker:9092/the_status_topic
+config-topic=//<host>[:port]/the_config_topic
+status-topic=//<host>[:port]/the_status_topic
 streams-json=./streams.json
 kafka-config=consumer.timeout.ms 501 fetch.message.max.bytes 1234 api.version.request true
 verbosity=5
 ```
 
-and/or a `json` file for the list of streams to add:
+and/or a `JSON` file for the list of streams to add:
 
 ```json
 {
 	"streams": [
 		{
 			"channel": "Epics_PV_name",
-			"converter": { "schema": "f142", "topic": "Kafka_topic_name" }
+			"converter": { "schema": "f142", "topic": "//<host>[:port]/kafka_topic_name" }
 		}
 	]
 }
@@ -77,14 +77,14 @@ using `ca` Channel Access:
       "channel": "<EPICS PV name>",
       "converter": {
         "schema": "<schema-id>",
-        "topic": "<Kafka-topic>"
+        "topic": "//<host>[:port]/<Kafka-topic>"
       }
     },
     {
       "channel": "<EPICS PV name..>",
       "converter": {
         "schema": "<schema-id>",
-        "topic": "//<host-if-we-do-not-like-the-default-host>[:port]/<Kafka-topic..>"
+        "topic": "//<host>[:port]/<Kafka-topic..>"
       }
     },
     {
@@ -92,16 +92,13 @@ using `ca` Channel Access:
       "channel_provider_type": "ca",
       "converter": {
         "schema": "<schema-id>",
-        "topic": "<Kafka-topic..>"
+        "topic": "//<host>[:port]/<Kafka-topic..>"
       }
     }
   ]
 }
 ```
 
-The `topic` in the above stream configuration can contain the Kafka broker
-hostname like `//<host>[:port]/<topic>` otherwise the default broker given in
-the configuration file or at the command line is used.
 
 #### Stop channel
 
@@ -138,8 +135,8 @@ through multiple converters:
 {
   "channel": "Epics_PV_name",
   "converter": [
-    { "schema": "f142", "topic": "Kafka_topic_name" },
-    { "schema": "f999", "topic": "some_other_topic" }
+    { "schema": "f142", "topic": "//<host>[:port]/kafka_topic_name" },
+    { "schema": "f999", "topic": "//<host>[:port]/some_other_topic" }
   ]
 }
 ```
@@ -158,11 +155,11 @@ Example:
   "streams": [
     {
       "channel": "Epics_PV_One",
-      "converter": {"schema": "f142", "name": "my-named-conv", "topic": "Kafka_topic_name" }
+      "converter": {"schema": "f142", "name": "my-named-conv", "topic": "//<host>[:port]/kafka_topic_name" }
     },
     {
       "channel": "Epics_PV_Two",
-      "converter": {"schema": "f142", "name": "my-named-conv", "topic": "Kafka_topic_name" }
+      "converter": {"schema": "f142", "name": "my-named-conv", "topic": "//<host>[:port]/kafka_topic_name" }
     }
   ]
 }

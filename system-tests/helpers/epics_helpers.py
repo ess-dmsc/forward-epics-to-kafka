@@ -17,4 +17,7 @@ def change_pv_value(pvname, value):
             break
     if not container:
         raise Exception("IOC Container not found")
-    container.exec_run("caput {} {}".format(pvname, value), privileged=True)
+    exit_code, output = container.exec_run("caput {} {}".format(pvname, value), privileged=True)
+    assert exit_code == 0
+    print("Updating PV value using caput: ")
+    print(output.decode("utf-8"), flush=True)

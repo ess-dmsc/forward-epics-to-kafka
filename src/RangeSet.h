@@ -9,12 +9,12 @@
 /// A set of continuous inclusive ranges.
 template <typename T> struct RangeSet {
   size_t size() {
-    std::unique_lock<std::mutex> lock(Mutex);
+    std::lock_guard<std::mutex> lock(Mutex);
     return set.size();
   }
 
   std::string to_string() {
-    std::unique_lock<std::mutex> lock(Mutex);
+    std::lock_guard<std::mutex> lock(Mutex);
     fmt::memory_buffer mw;
     fmt::format_to(mw, "[");
     int i1 = 0;

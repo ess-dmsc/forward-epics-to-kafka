@@ -28,6 +28,7 @@ ConversionPath::~ConversionPath() {
 }
 
 int ConversionPath::emit(std::shared_ptr<FlatBufs::EpicsPVUpdate> up) {
+
   auto fb = converter->convert(*up);
   if (fb == nullptr) {
     LOG(Sev::Info, "empty converted flat buffer");
@@ -40,9 +41,8 @@ int ConversionPath::emit(std::shared_ptr<FlatBufs::EpicsPVUpdate> up) {
 nlohmann::json ConversionPath::status_json() const {
   using nlohmann::json;
   auto Document = json::object();
-  Document["schema"] = converter->schema_name();
-  Document["broker"] =
-      kafka_output->Output.KafkaProducer->ProducerBrokerSettings.Address;
+  Document["schema"] = converter->getSchemaID();
+  Document["broker"] = kafka_output->Output.brokerAddress();
   Document["topic"] = kafka_output->topic_name();
   return Document;
 }
@@ -52,7 +52,7 @@ std::string ConversionPath::getKafkaTopicName() const {
 }
 
 std::string ConversionPath::getSchemaName() const {
-  return converter->schema_name();
+  return converter->getSchemaID();
 }
 
 Stream::Stream(
@@ -71,7 +71,7 @@ Stream::~Stream() {
 }
 
 int Stream::addConverter(std::unique_ptr<ConversionPath> Path) {
-  std::unique_lock<std::mutex> lock(ConversionPathsMutex);
+  std::lock_guard<std::mutex> lock(ConversionPathsMutex);
 
   auto FoundPath = std::find_if(
       ConversionPaths.cbegin(), ConversionPaths.cend(),
@@ -159,7 +159,7 @@ nlohmann::json Stream::getStatusJson() {
   Document["channel_name"] = ChannelInfo.channel_name;
   Document["getQueueSize"] = getQueueSize();
   {
-    std::unique_lock<std::mutex> lock(SeqDataEmitted.Mutex);
+    std::lock_guard<std::mutex> lock(SeqDataEmitted.Mutex);
     auto const &Set = SeqDataEmitted.set;
     auto Last = Set.rbegin();
     if (Last != Set.rend()) {

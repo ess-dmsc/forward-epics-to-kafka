@@ -9,21 +9,23 @@
 #include <string>
 #include <vector>
 
+namespace KafkaW {
+class ConsumerInterface;
+}
+
 namespace Forwarder {
 class ConfigCB;
 namespace Config {
 
-struct Listener_impl;
-
 class Listener {
 public:
-  Listener(KafkaW::BrokerSettings BrokerSettings, URI Uri);
+  Listener(URI uri, std::unique_ptr<KafkaW::ConsumerInterface> NewConsumer);
   Listener(Listener const &) = delete;
-  ~Listener();
+  ~Listener() = default;
   void poll(::Forwarder::ConfigCB &cb);
 
 private:
-  std::unique_ptr<Listener_impl> impl;
+  std::unique_ptr<KafkaW::ConsumerInterface> Consumer;
 };
 } // namespace Config
 } // namespace Forwarder

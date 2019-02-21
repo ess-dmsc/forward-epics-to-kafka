@@ -8,6 +8,9 @@ cli11/1.5.3@bincrafters/stable
 jsonformoderncpp/3.1.0@vthiery/stable
 concurrentqueue/8f7e861@ess-dmsc/stable
 
+[options]
+librdkafka:shared=True
+
 [generators]
 cmake
 virtualrunenv

@@ -3,6 +3,10 @@ import uuid
 from helpers.f142_logdata import LogData
 
 
+class MsgErrorException(Exception):
+    pass
+
+
 def poll_for_valid_message(consumer):
     """
     Polls the subscribed topics by the consumer and checks the buffer is not empty or malformed.
@@ -10,8 +14,10 @@ def poll_for_valid_message(consumer):
     :param consumer: The consumer object.
     :return: The message object received from polling.
     """
-    msg = consumer.poll()
-    assert not msg.error()
+    msg = consumer.poll(timeout=1.0)
+    assert msg is not None
+    if msg.error():
+        raise MsgErrorException("Consumer error when polling: {}".format(msg.error()))
     return LogData.LogData.GetRootAsLogData(msg.value(), 0)
 
 

@@ -71,10 +71,17 @@ class ProducerWrapper:
             print("Sending data {}".format(pv))
             self.producer.produce(self.topic, value=pv)
 
-    def stop_all(self):
+    def stop_all_pvs(self):
         """
         Sends a stop_all command to the forwarder to clear all configuration.
 
         :return: None
         """
         self.producer.produce(self.topic, value="{\"cmd\": \"stop_all\"}")
+
+    def exit_forwarder(self):
+        """
+        Sends an exit command to the forwarder to stop the program.
+        :return: None
+        """
+        self.producer.produce(self.topic, value="{\"cmd\": \"exit\"}")

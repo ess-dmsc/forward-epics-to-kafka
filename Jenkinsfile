@@ -47,7 +47,6 @@ def Object container_name(image_key) {
 def failure_function(exception_obj, failureMessage) {
     def toEmails = [[$class: 'DevelopersRecipientProvider']]
     emailext body: '${DEFAULT_CONTENT}\n\"' + failureMessage + '\"\n\nCheck console output at $BUILD_URL to view the results.', recipientProviders: toEmails, subject: '${DEFAULT_SUBJECT}'
-    slackSend color: 'danger', message: "${project}: " + failureMessage
     throw exception_obj
 }
 
@@ -380,7 +379,7 @@ def get_win10_pipeline() {
 
 def get_system_tests_pipeline() {
     return {
-        node('integration-test') {
+        node('system-test') {
             cleanWs()
             dir("${project}") {
                 try{
@@ -395,7 +394,7 @@ def get_system_tests_pipeline() {
                     stage("System tests: Run") {
                         sh """docker stop \$(docker ps -a -q) && docker rm \$(docker ps -a -q) || true
                                                 """
-			timeout(time: 30, activity: true){     
+			timeout(time: 30, activity: true){
                             sh """cd system-tests/
                             scl enable rh-python35 -- python -m pytest -s  --junitxml=./SystemTestsOutput.xml ./
                             """
