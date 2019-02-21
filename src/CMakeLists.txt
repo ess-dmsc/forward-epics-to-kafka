@@ -2,6 +2,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ..)
 
 message(STATUS "CMAKE_BUILD_TYPE: ${CMAKE_BUILD_TYPE}")
 
+message(STATUS "Prefix path: ${CMAKE_PREFIX_PATH}")
 find_package(EPICSV4)
 find_package(fmt REQUIRED CONFIG)
 find_package(RdKafka REQUIRED)
