@@ -7,12 +7,12 @@ namespace EpicsClient {
 
 char const *channelStateName(epics::pvAccess::Channel::ConnectionState x);
 
-class EpicsClientMonitor_impl;
+class EpicsClientMonitorImpl;
 
 /// Provides channel state information for PVs.
 class ChannelRequester : public epics::pvAccess::ChannelRequester {
 public:
-  explicit ChannelRequester(EpicsClientMonitor_impl *EpicsClientImpl)
+  explicit ChannelRequester(EpicsClientMonitorImpl *EpicsClientImpl)
       : EpicsClientImpl(EpicsClientImpl){};
 
   std::string getRequesterName() override;
@@ -36,7 +36,7 @@ public:
       epics::pvAccess::Channel::ConnectionState ConnectionState) override;
 
 private:
-  EpicsClientMonitor_impl *EpicsClientImpl = nullptr;
+  EpicsClientMonitorImpl *EpicsClientImpl = nullptr;
 };
 }
 } // namespace Forwarder
