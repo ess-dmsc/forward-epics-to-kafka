@@ -5,13 +5,7 @@
 
 namespace KafkaW {
 
-enum class PollStatus {
-  Message,
-  Error,
-  EndOfPartition,
-  Empty,
-  TimedOut
-};
+enum class PollStatus { Message, Error, EndOfPartition, Empty, TimedOut };
 
 class ConsumerMessage {
 public:

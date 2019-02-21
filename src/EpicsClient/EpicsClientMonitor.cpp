@@ -1,14 +1,14 @@
 #include "EpicsClientMonitor.h"
 #include "ChannelRequester.h"
+#include "EpicsPVUpdate.h"
 #include "FwdMonitorRequester.h"
+#include "RangeSet.h"
+#include "logger.h"
 #include <atomic>
 #include <memory>
 #include <mutex>
-#include <utility>
-#include "EpicsPVUpdate.h"
-#include "RangeSet.h"
-#include "logger.h"
 #include <pv/pvAccess.h>
+#include <utility>
 #ifdef _MSC_VER
 #include <iso646.h>
 #endif
