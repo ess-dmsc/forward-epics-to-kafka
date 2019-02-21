@@ -38,7 +38,6 @@ ${path_library_epics_NT}
 ${RDKAFKA_LIBRARIES}
 ${CURL_LIBRARIES}
 ${FETK_EXTRA_LIBRARIES}
-fmt::fmt
 )
 
 if (UNIX)
