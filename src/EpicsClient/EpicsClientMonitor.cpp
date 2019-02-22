@@ -82,10 +82,6 @@ void EpicsClientMonitor::handleConnectionStateChange(
     Impl->monitoringStop();
   }
   if (ConnectionStatusProducer != nullptr) {
-    auto Message = fmt::format("ConnectionStatus: {}", ConnectionStatus);
-    LOG(Sev::Error, "{}", Message);
-    ConnectionStatusProducer->produce((unsigned char *)Message.data(),
-                                      Message.size());
     flatbuffers::FlatBufferBuilder Builder;
     auto PVName = Builder.CreateString(Impl->channel_name);
     auto Timestamp = ep00::NanosecondsSinceEpoch(static_cast<uint64_t>(
