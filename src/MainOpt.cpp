@@ -16,7 +16,6 @@
 
 namespace Forwarder {
 
-
 std::string MainOpt::brokers_as_comma_list() const {
   std::string CommaList;
   bool MultipleBrokers = false;
