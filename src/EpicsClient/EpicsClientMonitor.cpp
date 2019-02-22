@@ -17,7 +17,7 @@ namespace Forwarder {
 namespace EpicsClient {
 
 namespace ep00 {
-#include <ep00_generated.h>
+#include <ep00_epics_connection_info_generated.h>
 }
 
 using epics::pvAccess::Channel;
@@ -84,17 +84,17 @@ void EpicsClientMonitor::handleConnectionStateChange(
   if (ConnectionStatusProducer != nullptr) {
     flatbuffers::FlatBufferBuilder Builder;
     auto PVName = Builder.CreateString(Impl->channel_name);
-    auto Timestamp = ep00::NanosecondsSinceEpoch(static_cast<uint64_t>(
+    auto Timestamp = static_cast<uint64_t>(
         std::chrono::duration_cast<std::chrono::nanoseconds>(
             std::chrono::system_clock::now().time_since_epoch())
-            .count()));
+            .count());
     auto InfoBuffer = ep00::EpicsConnectionInfoBuilder(Builder);
-    InfoBuffer.add_timestamp(&Timestamp);
+    InfoBuffer.add_timestamp_ns(Timestamp);
     InfoBuffer.add_channel_name(PVName);
     if (ConnectionState == ChannelConnectionState::CONNECTED) {
-      InfoBuffer.add_type(ep00::EventType::CONNECT);
+      InfoBuffer.add_type(ep00::EventType::CONNECTED);
     } else {
-      InfoBuffer.add_type(ep00::EventType::DISCONNECT);
+      InfoBuffer.add_type(ep00::EventType::DISCONNECTED);
     }
     ep00::FinishEpicsConnectionInfoBuffer(Builder, InfoBuffer.Finish());
     ConnectionStatusProducer->produce(Builder.GetBufferPointer(),
