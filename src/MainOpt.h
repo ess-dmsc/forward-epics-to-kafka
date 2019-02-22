@@ -24,7 +24,6 @@ struct MainOpt {
   uint32_t FakePVPeriodMS = 0;
   FlatBufs::SchemaRegistry schema_registry;
   KafkaW::BrokerSettings broker_opt;
-  MainOpt();
   void init_logger();
 };
 
