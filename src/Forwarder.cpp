@@ -12,6 +12,25 @@
 #include <algorithm>
 #include <nlohmann/json.hpp>
 #include <sys/types.h>
+#ifdef _MSC_VER
+std::vector<char> getHostname() {
+  std::vector<char> Hostname;
+  return Hostname;
+}
+#else
+#include <unistd.h>
+std::vector<char> getHostname() {
+  std::vector<char> Hostname;
+  Hostname.resize(256);
+  gethostname(Hostname.data(), Hostname.size());
+  if (Hostname.back() != 0) {
+    // likely an error
+    Hostname.back() = 0;
+  }
+  return Hostname;
+}
+
+#endif
 
 #include "CURLReporter.h"
 
@@ -246,10 +265,12 @@ void Forwarder::report_stats(int dt) {
   LOG(Sev::Info, "dt: {:4}  m: {:4}.{:03}  b: {:3}.{:03}.{:03}", dt, m2, m1, b3,
       b2, b1);
   if (CURLReporter::HaveCURL && !main_opt.InfluxURI.empty()) {
+    std::vector<char> Hostname = getHostname();
+
     int i1 = 0;
     for (auto &s : kafka_instance_set->getStatsForAllProducers()) {
       fmt::format_to(StatsBuffer, "forward-epics-to-kafka,hostname={},set={}",
-                     main_opt.Hostname.data(), i1);
+                     Hostname.data(), i1);
       fmt::format_to(StatsBuffer, " produced={}", s.produced);
       fmt::format_to(StatsBuffer, ",produce_fail={}", s.produce_fail);
       fmt::format_to(StatsBuffer, ",local_queue_full={}", s.local_queue_full);
@@ -270,7 +291,7 @@ void Forwarder::report_stats(int dt) {
       for (auto &c : converters) {
         auto stats = c.second.lock()->stats();
         fmt::format_to(StatsBuffer, "forward-epics-to-kafka,hostname={},set={}",
-                       main_opt.Hostname.data(), i1);
+                       Hostname.data(), i1);
         int i2 = 0;
         for (auto x : stats) {
           if (i2 > 0) {
