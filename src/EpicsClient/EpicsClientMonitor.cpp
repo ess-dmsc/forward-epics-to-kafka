@@ -89,8 +89,8 @@ void EpicsClientMonitor::handleConnectionStateChange(
             std::chrono::system_clock::now().time_since_epoch())
             .count());
     auto InfoBuffer = ep00::EpicsConnectionInfoBuilder(Builder);
-    InfoBuffer.add_timestamp_ns(Timestamp);
-    InfoBuffer.add_channel_name(PVName);
+    InfoBuffer.add_timestamp(Timestamp);
+    InfoBuffer.add_source_name(PVName);
     if (ConnectionState == ChannelConnectionState::CONNECTED) {
       InfoBuffer.add_type(ep00::EventType::CONNECTED);
     } else {
