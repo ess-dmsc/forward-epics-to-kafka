@@ -28,7 +28,7 @@ public:
   /// Generate a fake EpicsPVUpdate and emit it
   void generateFakePVUpdate();
 
-  std::string getConnectionStatus() override { return "EpicsClientRandom"; }
+  std::string getConnectionState() override { return "EpicsClientRandom"; }
 
 private:
   /// Get current time since unix epoch in nanoseconds

@@ -67,16 +67,16 @@ int EpicsClientMonitor::emitWithoutCaching(
   return 0;
 }
 
-std::string EpicsClientMonitor::getConnectionStatus() {
-  return ConnectionStatus;
+std::string EpicsClientMonitor::getConnectionState() {
+  return toString(ConnectionState);
 }
 
 void EpicsClientMonitor::handleConnectionStateChange(
-    std::string const &ConnectionState) {
+    ChannelConnectionState ConnectionState) {
   LOG(Sev::Info, "EpicsClientMonitor::handleConnectionStateChange  {}",
-      ConnectionState);
-  ConnectionStatus = ConnectionState;
-  if (ConnectionStatus == "CONNECTED") {
+      toString(ConnectionState));
+  this->ConnectionState = ConnectionState;
+  if (ConnectionState == ChannelConnectionState::CONNECTED) {
     Impl->monitoringStart();
   } else {
     Impl->monitoringStop();
@@ -91,14 +91,10 @@ void EpicsClientMonitor::handleConnectionStateChange(
     auto InfoBuffer = ep00::EpicsConnectionInfoBuilder(Builder);
     InfoBuffer.add_timestamp(&Timestamp);
     InfoBuffer.add_channel_name(PVName);
-    if (ConnectionStatus == "CONNECTED") {
+    if (ConnectionState == ChannelConnectionState::CONNECTED) {
       InfoBuffer.add_type(ep00::EventType::CONNECT);
-    }
-    if (ConnectionStatus == "DISCONNECTED") {
+    } else {
       InfoBuffer.add_type(ep00::EventType::DISCONNECT);
-    }
-    if (ConnectionStatus == "DESTROYED") {
-      InfoBuffer.add_type(ep00::EventType::CLOSE);
     }
     ep00::FinishEpicsConnectionInfoBuffer(Builder, InfoBuffer.Finish());
     ConnectionStatusProducer->produce(Builder.GetBufferPointer(),

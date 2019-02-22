@@ -32,7 +32,7 @@ public:
   /// Checks the channel state and sets the epics client channel status.
   void channelStateChange(
       epics::pvAccess::Channel::shared_pointer const &Channel,
-      epics::pvAccess::Channel::ConnectionState ConnectionState) override;
+      epics::pvAccess::Channel::ConnectionState EpicsConnectionState) override;
 
 private:
   EpicsClientInterface *EpicsClient = nullptr;

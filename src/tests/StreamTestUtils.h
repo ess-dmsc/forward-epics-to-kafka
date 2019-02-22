@@ -14,7 +14,7 @@ public:
   void errorInEpics() override { status_ = -1; }
   int status() override { return status_; }
   bool IsStopped{false};
-  std::string getConnectionStatus() override { return "FakeEpicsClient"; }
+  std::string getConnectionState() override { return "FakeEpicsClient"; }
 
 private:
   int status_{0};

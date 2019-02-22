@@ -49,10 +49,11 @@ public:
 
   void emitCachedValue();
 
-  std::string getConnectionStatus() override;
+  std::string getConnectionState() override;
 
   void handleChannelRequesterError(std::string const &) override;
-  void handleConnectionStateChange(std::string const &ConnectionState) override;
+  void
+  handleConnectionStateChange(ChannelConnectionState ConnectionState) override;
 
   std::unique_ptr<KafkaW::ProducerTopic> ConnectionStatusProducer;
 
@@ -63,7 +64,8 @@ private:
       EmitQueue;
   std::shared_ptr<FlatBufs::EpicsPVUpdate> CachedUpdate;
   std::atomic<int> status_{0};
-  std::string ConnectionStatus = "NEVER_CONNECTED";
+  ChannelConnectionState ConnectionState =
+      ChannelConnectionState::NEVER_CONNECTED;
 };
 } // namespace EpicsClient
 } // namespace Forwarder

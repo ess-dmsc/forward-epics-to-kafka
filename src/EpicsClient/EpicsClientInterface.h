@@ -5,6 +5,16 @@
 namespace Forwarder {
 namespace EpicsClient {
 
+enum class ChannelConnectionState : uint8_t {
+  UNKNOWN,
+  NEVER_CONNECTED,
+  CONNECTED,
+  DISCONNECTED,
+  DESTROYED,
+};
+
+std::string toString(ChannelConnectionState const &State);
+
 /// Pure virtual interface for EPICS communication
 class EpicsClientInterface {
 public:
@@ -13,9 +23,10 @@ public:
   virtual int stop() = 0;
   virtual void errorInEpics() = 0;
   virtual int status() = 0;
-  virtual std::string getConnectionStatus() = 0;
+  virtual std::string getConnectionState() = 0;
   virtual void handleChannelRequesterError(std::string const &){};
-  virtual void handleConnectionStateChange(std::string const &){};
+  virtual void handleConnectionStateChange(
+      ChannelConnectionState /* ConnectionState */){};
 };
 }
 }

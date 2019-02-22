@@ -24,7 +24,7 @@ char const *connectionStateName(epics::pvAccess::Channel::ConnectionState x) {
 }
 
 static std::string
-channelInfo(epics::pvAccess::Channel::shared_pointer const &Channel) {
+getChannelInfoString(epics::pvAccess::Channel::shared_pointer const &Channel) {
   std::ostringstream ss;
   Channel->printInfo(ss);
   return ss.str();
@@ -73,36 +73,36 @@ void ChannelRequester::channelCreated(epics::pvData::Status const &Status,
   }
 }
 
+static ChannelConnectionState
+createChannelConnectionState(Channel::ConnectionState EpicsConnectionState) {
+  using State = Channel::ConnectionState;
+  switch (EpicsConnectionState) {
+  case State::NEVER_CONNECTED:
+    return ChannelConnectionState::NEVER_CONNECTED;
+  case State::CONNECTED:
+    return ChannelConnectionState::CONNECTED;
+  case State::DISCONNECTED:
+    return ChannelConnectionState::DISCONNECTED;
+  case State::DESTROYED:
+    return ChannelConnectionState::DESTROYED;
+  default:
+    return ChannelConnectionState::UNKNOWN;
+  }
+}
+
 void ChannelRequester::channelStateChange(
     Channel::shared_pointer const &Channel,
-    Channel::ConnectionState ConnectionState) {
-  LOG(Sev::Debug, "channel state change: {}",
-      connectionStateName(ConnectionState));
+    Channel::ConnectionState EpicsConnectionState) {
+  LOG(Sev::Debug, "channel state change: {}  for: {}",
+      connectionStateName(EpicsConnectionState), getChannelInfoString(Channel));
   if (!Channel) {
     LOG(Sev::Error, "no channel, even though we should have.  state: {}",
-        connectionStateName(ConnectionState));
+        connectionStateName(EpicsConnectionState));
     EpicsClient->handleChannelRequesterError("No channel given");
     return;
   }
   EpicsClient->handleConnectionStateChange(
-      connectionStateName(ConnectionState));
-  if (ConnectionState == Channel::CONNECTED) {
-    LOG(Sev::Debug, "Epics channel connected");
-    if (log_level >= 9) {
-      LOG(Sev::Debug, "ChannelRequester::channelStateChange  channelinfo: {}",
-          channelInfo(Channel));
-    }
-  } else if (ConnectionState == Channel::DISCONNECTED) {
-    LOG(Sev::Debug, "Epics channel disconnect");
-  } else if (ConnectionState == Channel::DESTROYED) {
-    LOG(Sev::Debug, "Epics channel destroyed");
-  } else {
-    auto Message =
-        fmt::format("Unhandled channel state change: {} {}", ConnectionState,
-                    connectionStateName(ConnectionState));
-    LOG(Sev::Error, "{}", Message);
-    EpicsClient->handleChannelRequesterError(Message);
-  }
+      createChannelConnectionState(EpicsConnectionState));
 }
 
 } // namespace EpicsClient
