@@ -68,6 +68,7 @@ common_options = {"--no-deps": False,
                   }
 
 
+@pytest.fixture(scope="session", autouse=True)
 def build_forwarder_image():
     client = docker.from_env()
     print("Building Forwarder image", flush=True)
@@ -90,7 +91,6 @@ def run_containers(cmd, options):
 
 
 def build_and_run(options, request):
-    build_forwarder_image()
     project = project_from_options(os.path.dirname(__file__), options)
     cmd = TopLevelCommand(project)
     run_containers(cmd, options)
