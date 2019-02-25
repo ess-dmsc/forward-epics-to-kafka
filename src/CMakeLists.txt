@@ -22,7 +22,6 @@ ${JSONFORMODERNCPP_INCLUDE_DIR}
 ${CLI11_INCLUDE_DIR}
 ${RDKAFKA_INCLUDE_DIR}
 ${FLATBUFFERS_INCLUDE_DIR}
-${CURL_INCLUDE_DIRS}
 ${PROJECT_SOURCE_DIR}/src
 ${PROJECT_BINARY_DIR}/src
 )
@@ -31,14 +30,12 @@ set(path_include_common_suppressed_warnings
         ${EPICSV4_INCLUDE_DIRS}
         )
 
-
 set(libraries_common
 ${path_library_epics_ca}
 ${path_library_epics_pvData}
 ${path_library_epics_pvAccess}
 ${path_library_epics_NT}
 ${RDKAFKA_LIBRARIES}
-${CURL_LIBRARIES}
 ${FETK_EXTRA_LIBRARIES}
 )
 
@@ -46,12 +43,12 @@ if (UNIX)
   list(APPEND libraries_common pthread)
 endif()
 
-
-
 set(compile_defs_common "")
 
 if (CURL_FOUND)
 	list(APPEND compile_defs_common "HAVE_CURL=1")
+    list(APPEND libraries_common ${CURL_LIBRARIES})
+    list(APPEND path_include_common ${CURL_INCLUDE_DIRS})
 endif()
 
 set(INCLUDES
