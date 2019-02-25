@@ -385,8 +385,9 @@ void Forwarder::addMapping(StreamSettings const &StreamInfo) {
       auto EpicsClient = std::make_shared<EpicsClient::EpicsClientMonitor>(
           ChannelInfo, UpdateQueue);
       if (StreamInfo.Converters.size() > 0) {
-        auto ConnectionStatusProducer = KafkaInstanceSet->SetUpProducerTopic(
-            URI(StreamInfo.Converters.at(0).Topic));
+        auto const &Converter = StreamInfo.Converters.at(0);
+        auto ConnectionStatusProducer =
+            KafkaInstanceSet->SetUpProducerTopic(URI(Converter.Topic));
         EpicsClient->ConnectionStatusProducer =
             make_unique<KafkaW::ProducerTopic>(
                 std::move(ConnectionStatusProducer));
