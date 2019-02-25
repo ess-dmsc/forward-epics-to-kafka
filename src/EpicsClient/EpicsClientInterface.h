@@ -27,6 +27,7 @@ public:
   virtual void handleChannelRequesterError(std::string const &){};
   virtual void handleConnectionStateChange(
       ChannelConnectionState /* ConnectionState */){};
+  virtual void setServiceID(std::string /* ServiceID */){};
 };
 }
 }

@@ -57,6 +57,8 @@ public:
 
   std::unique_ptr<KafkaW::ProducerTopic> ConnectionStatusProducer;
 
+  void setServiceID(std::string ServiceID) override;
+
 private:
   std::unique_ptr<EpicsClientMonitorImpl> Impl;
   std::shared_ptr<
@@ -66,6 +68,7 @@ private:
   std::atomic<int> status_{0};
   ChannelConnectionState ConnectionState =
       ChannelConnectionState::NEVER_CONNECTED;
+  std::string ServiceID;
 };
 } // namespace EpicsClient
 } // namespace Forwarder

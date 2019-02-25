@@ -404,6 +404,7 @@ void Forwarder::addMapping(StreamSettings const &StreamInfo) {
           [Client, PeriodicClient]() { PeriodicClient->emitCachedValue(); });
     }
 
+    Stream->getEpicsClient()->setServiceID(main_opt.MainSettings.ServiceID);
     for (auto &Converter : StreamInfo.Converters) {
       pushConverterToStream(Converter, Stream);
     }

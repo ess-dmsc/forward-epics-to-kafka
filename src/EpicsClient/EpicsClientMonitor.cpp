@@ -84,6 +84,7 @@ void EpicsClientMonitor::handleConnectionStateChange(
   if (ConnectionStatusProducer != nullptr) {
     flatbuffers::FlatBufferBuilder Builder;
     auto PVName = Builder.CreateString(Impl->channel_name);
+    auto ServiceID = Builder.CreateString(this->ServiceID);
     auto Timestamp = static_cast<uint64_t>(
         std::chrono::duration_cast<std::chrono::nanoseconds>(
             std::chrono::system_clock::now().time_since_epoch())
@@ -91,6 +92,7 @@ void EpicsClientMonitor::handleConnectionStateChange(
     auto InfoBuffer = ep00::EpicsConnectionInfoBuilder(Builder);
     InfoBuffer.add_timestamp(Timestamp);
     InfoBuffer.add_source_name(PVName);
+    InfoBuffer.add_service_id(ServiceID);
     if (ConnectionState == ChannelConnectionState::CONNECTED) {
       InfoBuffer.add_type(ep00::EventType::CONNECTED);
     } else {
@@ -105,6 +107,10 @@ void EpicsClientMonitor::handleConnectionStateChange(
 void EpicsClientMonitor::handleChannelRequesterError(
     std::string const &Message) {
   LOG(Sev::Warning, "EpicsClientMonitor received: {}", Message);
+}
+
+void EpicsClientMonitor::setServiceID(std::string ServiceID) {
+  this->ServiceID = ServiceID;
 }
 
 } // namespace EpicsClient
