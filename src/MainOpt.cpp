@@ -1,7 +1,6 @@
 #include "MainOpt.h"
 
 #ifdef _MSC_VER
-#include "WinSock2.h"
 #include <iso646.h>
 #else
 #include <unistd.h>
@@ -16,15 +15,6 @@
 #include <streambuf>
 
 namespace Forwarder {
-
-MainOpt::MainOpt() {
-  Hostname.resize(256);
-  gethostname(Hostname.data(), Hostname.size());
-  if (Hostname.back() != 0) {
-    // likely an error
-    Hostname.back() = 0;
-  }
-}
 
 std::string MainOpt::brokers_as_comma_list() const {
   std::string CommaList;
