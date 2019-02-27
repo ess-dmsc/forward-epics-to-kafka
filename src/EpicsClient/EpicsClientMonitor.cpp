@@ -28,12 +28,12 @@ using urlock = std::unique_lock<std::recursive_mutex>;
 #define RLOCK() urlock lock(mx);
 
 /// Implementation for EPICS client monitor.
-class EpicsClientMonitor_impl {
+class EpicsClientMonitorImpl {
 public:
-  explicit EpicsClientMonitor_impl(EpicsClientInterface *epics_client)
+  explicit EpicsClientMonitorImpl(EpicsClientInterface *epics_client)
       : epics_client(epics_client) {}
-  ~EpicsClientMonitor_impl() {
-      LOG(spdlog::level::trace, "EpicsClientMonitor_implor_impl");
+  ~EpicsClientMonitorImpl() {
+      LOG(spdlog::level::trace, "EpicsClientMonitorImplor_impl");
   }
 
   /// Starts the EPICS channel access provider loop and the monitor requester
@@ -248,7 +248,7 @@ void ChannelRequester::channelCreated(epics::pvData::Status const &Status,
       std::string cname = Channel->getChannelName();
         LOG(spdlog::level::err, "  failure is in channel: {}", cname);
     }
-    EpicsClientMonitor_impl::error_channel_requester();
+    EpicsClientMonitorImpl::error_channel_requester();
   }
 }
 
@@ -261,7 +261,7 @@ void ChannelRequester::channelStateChange(
         LOG(spdlog::level::err,
             "no channel, even though we should have.  state: {}",
             channelStateName(ConnectionState));
-        EpicsClientMonitor_impl::error_channel_requester();
+        EpicsClientMonitorImpl::error_channel_requester();
         return;
     }
     if (ConnectionState == Channel::CONNECTED) {

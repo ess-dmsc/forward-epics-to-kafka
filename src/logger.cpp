@@ -1,4 +1,5 @@
 #include "logger.h"
+#include "URI.h"
 
 void setUpLogging(const spdlog::level::level_enum &LoggingLevel,
                   const std::string &LogFile, const std::string &GraylogURI) {
