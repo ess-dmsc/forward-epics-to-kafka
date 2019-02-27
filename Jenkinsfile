@@ -267,8 +267,8 @@ def docker_coverage(image_key) {
                 cd ${project}
                 export WORKSPACE='.'
                 export JENKINS_URL=${JENKINS_URL}
-                pip install --user codecov
-                python -m codecov -t ${TOKEN} --commit ${scm_vars.GIT_COMMIT} -f ../build/coverage.info
+                python3.6 -m pip install --user codecov
+                python3.6 -m codecov -t ${TOKEN} --commit ${scm_vars.GIT_COMMIT} -f ../build/coverage.info
                 """
             sh "docker exec ${container_name(image_key)} ${custom_sh} -c \"${codecov_upload_script}\""
         }
@@ -387,8 +387,8 @@ def get_system_tests_pipeline() {
                         checkout scm
                     }  // stage
                     stage("System tests: Install requirements") {
-                        sh """python3.6 -m pip install --user --upgrade pip
-                        python3.6 -m pip install --user -r system-tests/requirements.txt
+                        sh """pip3.6 install --user --upgrade pip
+                        pip3.6 install --user -r system-tests/requirements.txt
                         """
                     }  // stage
                     stage("System tests: Run") {
