@@ -68,6 +68,7 @@ common_options = {"--no-deps": False,
                   }
 
 
+@pytest.fixture(scope="session", autouse=True)
 def build_forwarder_image():
     client = docker.from_env()
     print("Building Forwarder image", flush=True)
@@ -90,7 +91,6 @@ def run_containers(cmd, options):
 
 
 def build_and_run(options, request):
-    build_forwarder_image()
     project = project_from_options(os.path.dirname(__file__), options)
     cmd = TopLevelCommand(project)
     run_containers(cmd, options)
@@ -214,5 +214,20 @@ def docker_compose_lr(request):
     options = common_options
     options["--project-name"] = "lr"
     options["--file"] = ["compose/docker-compose-long-running.yml"]
+
+    build_and_run(options, request)
+
+
+@pytest.fixture(scope="module")
+def docker_compose_units_change(request):
+    """
+    :type request: _pytest.python.FixtureRequest
+    """
+    print("Started preparing test environment...", flush=True)
+
+    # Options must be given as long form
+    options = common_options
+    options["--project-name"] = "units"
+    options["--file"] = ["compose/docker-compose-units.yml"]
 
     build_and_run(options, request)

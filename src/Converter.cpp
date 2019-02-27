@@ -3,38 +3,39 @@
 
 namespace Forwarder {
 
-std::shared_ptr<Converter> Converter::create(FlatBufs::SchemaRegistry const &,
-                                             std::string schema,
-                                             MainOpt const &main_opt) {
+    std::shared_ptr<Converter> Converter::create(FlatBufs::SchemaRegistry const &,
+                                                 std::string Schema,
+                                                 MainOpt const &Options) {
   auto ret = std::make_shared<Converter>();
-  ret->schema = schema;
-  auto r1 = FlatBufs::SchemaRegistry::items().find(schema);
+        ConverterPtr->SchemaID = Schema;
+  auto r1 = FlatBufs::SchemaRegistry::items().find(Schema);
   if (r1 == FlatBufs::SchemaRegistry::items().end()) {
-    LOG(spdlog::level::err, "can not handle (yet?) schema id {}", schema);
+      LOG(spdlog::level::err, "can not handle (yet?) schema id {}", Schema);
     return nullptr;
   }
-  ret->conv = r1->second->createConverter();
-  auto &conv = ret->conv;
-  if (!conv) {
-    LOG(spdlog::level::err, "can not create a converter");
-    return ret;
+        ConverterPtr->FlatBufCreator = SchemaInRegistry->second->createConverter();
+        auto &Creator = ConverterPtr->FlatBufCreator;
+  if (!Creator) {
+      LOG(spdlog::level::err, "can not create a converter");    return ret;
   }
 
-  auto It = main_opt.MainSettings.GlobalConverters.find(schema);
-  if (It != main_opt.MainSettings.GlobalConverters.end()) {
-    auto GlobalConv = main_opt.MainSettings.GlobalConverters.at(schema);
-    conv->config(GlobalConv);
-  }
+    if (Options.MainSettings.GlobalConverters.find(Schema) !=
+        Options.MainSettings.GlobalConverters.end()) {
+        auto GlobalConv = Options.MainSettings.GlobalConverters.at(Schema);
+        Creator->config(GlobalConv);
+    }
 
-  return ret;
+    return ConverterPtr;
 }
 
-std::unique_ptr<FlatBufs::FlatbufferMessage>
-Converter::convert(FlatBufs::EpicsPVUpdate const &up) {
-  return conv->create(up);
-}
+    std::unique_ptr<FlatBufs::FlatbufferMessage>
+    Converter::convert(FlatBufs::EpicsPVUpdate const &Update) {
+        return FlatBufCreator->create(Update);
+    }
 
-std::map<std::string, double> Converter::stats() { return conv->getStats(); }
+    std::map<std::string, double> Converter::stats() {
+        return FlatBufCreator->getStats();
+    }
 
-std::string Converter::schema_name() const { return schema; }
+    std::string Converter::getSchemaID() const { return SchemaID; }
 } // namespace Forwarder

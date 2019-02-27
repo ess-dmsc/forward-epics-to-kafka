@@ -12,6 +12,7 @@ concurrentqueue/8f7e861@ess-dmsc/stable
 
 [options]
 librdkafka:shared=True
+fmt:header_only=True
 
 [generators]
 cmake

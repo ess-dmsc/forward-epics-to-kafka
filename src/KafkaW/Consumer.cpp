@@ -87,7 +87,7 @@ void Consumer::addTopic(const std::string &Topic) {
     int64_t Low, High;
     KafkaConsumer->query_watermark_offsets(Topic, PartitionID, &Low, &High,
                                            1000);
-    TopicPartition->set_offset(Low);
+    TopicPartition->set_offset(High);
     TopicPartitionsWithOffsets.push_back(TopicPartition);
   }
   RdKafka::ErrorCode Err = KafkaConsumer->assign(TopicPartitionsWithOffsets);
@@ -114,6 +114,10 @@ std::unique_ptr<ConsumerMessage> Consumer::poll() {
     } else {
       return ::make_unique<ConsumerMessage>(PollStatus::Empty);
     }
+  case RdKafka::ERR__TIMED_OUT:
+    // No message or event within time out - this is usually normal (see
+    // librdkafka docs)
+    return ::make_unique<ConsumerMessage>(PollStatus::TimedOut);
   case RdKafka::ERR__PARTITION_EOF:
     return ::make_unique<ConsumerMessage>(PollStatus::EndOfPartition);
   default:

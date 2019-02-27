@@ -33,7 +33,7 @@ public:
   explicit EpicsClientMonitor_impl(EpicsClientInterface *epics_client)
       : epics_client(epics_client) {}
   ~EpicsClientMonitor_impl() {
-    LOG(spdlog::level::trace, "EpicsClientMonitor_implor_impl");
+      LOG(spdlog::level::trace, "EpicsClientMonitor_implor_impl");
   }
 
   /// Starts the EPICS channel access provider loop and the monitor requester
@@ -45,7 +45,7 @@ public:
       provider = ::epics::pvAccess::getChannelProviderRegistry()->getProvider(
           epics_channel_provider_type);
       if (!provider) {
-        LOG(spdlog::level::err, "Can not initialize provider");
+          LOG(spdlog::level::err, "Can not initialize provider");
         return 1;
       }
       channel_requester.reset(new ChannelRequester(this));
@@ -59,11 +59,10 @@ public:
   int monitoringStart() {
     RLOCK();
     if (!channel) {
-      LOG(spdlog::level::warn,
-          "monitoringStart:  want to start but we have no channel");
-      return -1;
+        LOG(spdlog::level::warn,
+            "monitoringStart:  want to start but we have no channel");      return -1;
     }
-    LOG(spdlog::level::debug, "monitoringStart");
+      LOG(spdlog::level::debug, "monitoringStart");
     // Leaving it empty seems to be the full channel, including name.  That's
     // good.
     // Can also specify subfields, e.g. "value, timeStamp"  or also
@@ -79,7 +78,7 @@ public:
         new FwdMonitorRequester(epics_client, channel_name));
     monitor = channel->createMonitor(monitor_requester, pvreq);
     if (!monitor) {
-      LOG(spdlog::level::warn, "could not create EPICS monitor instance");
+        LOG(spdlog::level::warn, "could not create EPICS monitor instance");
       return -2;
     }
     return 0;
@@ -88,7 +87,7 @@ public:
   /// Stops the EPICS monitor loop in monitor_requester and resets the pointer.
   int monitoringStop() {
     RLOCK();
-    LOG(spdlog::level::trace, "monitoringStop");
+      LOG(spdlog::level::debug, "monitoringStop");
     if (monitor) {
       monitor->stop();
       monitor->destroy();
@@ -100,7 +99,7 @@ public:
 
   /// Logs that the channel has been destroyed and stops monitoring.
   int channelDestroyed() {
-    LOG(spdlog::level::warn, "channelDestroyed()");
+      LOG(spdlog::level::warn, "channelDestroyed()");
     monitoringStop();
     return 0;
   }
@@ -134,7 +133,7 @@ public:
 
   /// Logging function.
   static void error_channel_requester() {
-    LOG(spdlog::level::warn, "error_channel_requester()");
+      LOG(spdlog::level::warn, "error_channel_requester()");
   }
 
   epics::pvData::MonitorRequester::shared_pointer monitor_requester;
@@ -154,8 +153,8 @@ EpicsClientMonitor::EpicsClientMonitor(
         moodycamel::ConcurrentQueue<std::shared_ptr<FlatBufs::EpicsPVUpdate>>>
         Ring)
     : EmitQueue(std::move(Ring)) {
-  Impl.reset(new EpicsClientMonitor_impl(this));
-  LOG(spdlog::level::trace, "channel_name: {}", ChannelInfo.channel_name);
+    Impl.reset(new EpicsClientMonitorImpl(this));
+    LOG(spdlog::level::trace, "channel_name: {}", ChannelInfo.channel_name);
   Impl->channel_name = ChannelInfo.channel_name;
   if (Impl->init(ChannelInfo.provider_type) != 0) {
     Impl.reset();
@@ -164,7 +163,7 @@ EpicsClientMonitor::EpicsClientMonitor(
 }
 
 EpicsClientMonitor::~EpicsClientMonitor() {
-  LOG(spdlog::level::trace, "EpicsClientMonitorMonitor");
+    LOG(spdlog::level::trace, "EpicsClientMonitorMonitor");
 }
 
 int EpicsClientMonitor::stop() { return Impl->stop(); }
@@ -184,7 +183,7 @@ void EpicsClientMonitor::emitCachedValue() {
 int EpicsClientMonitor::emitWithoutCaching(
     std::shared_ptr<FlatBufs::EpicsPVUpdate> Update) {
   if (!Update) {
-    LOG(spdlog::level::info, "empty update?");
+      LOG(spdlog::level::info, "empty update?");
     // should never happen, ignore
     return 1;
   }
@@ -221,8 +220,8 @@ std::string ChannelRequester::getRequesterName() { return "ChannelRequester"; }
 
 void ChannelRequester::message(std::string const &Message,
                                epics::pvData::MessageType MessageType) {
-  LOG(spdlog::level::warn, "Message for: {}  msg: {}  msgtype: {}",
-      getRequesterName(), Message, getMessageTypeName(MessageType));
+    LOG(spdlog::level::warn, "Message for: {}  msg: {}  msgtype: {}",
+        getRequesterName(), Message, getMessageTypeName(MessageType));
 }
 
 void ChannelRequester::channelCreated(epics::pvData::Status const &Status,
@@ -230,24 +229,24 @@ void ChannelRequester::channelCreated(epics::pvData::Status const &Status,
   // Seems that channel creation is actually a synchronous operation
   // and that this requester callback is called from the same stack
   // from which the channel creation was initiated.
-  LOG(spdlog::level::trace,
-      "ChannelRequester::channelCreated:  (int)status.isOK(): {}",
-      (int)Status.isOK());
+    LOG(spdlog::level::debug,
+        "ChannelRequester::channelCreated:  (int)status.isOK(): {}",
+        (int)Status.isOK());
   if (!Status.isOK() or !Status.isSuccess()) {
     // quick fix until decided on logging system..
     std::ostringstream s1;
     s1 << Status;
-    LOG(spdlog::level::warn, "WARNING ChannelRequester::channelCreated:  {}",
-        s1.str());
+      LOG(spdlog::level::warn, "WARNING ChannelRequester::channelCreated:  {}",
+          s1.str());
   }
   if (!Status.isSuccess()) {
     std::ostringstream s1;
     s1 << Status;
-    LOG(spdlog::level::err, "ChannelRequester::channelCreated:  failure: {}",
-        s1.str());
-    if (Channel) {
+      LOG(spdlog::level::err, "ChannelRequester::channelCreated:  failure: {}",        s1.str());
+
+      if (Channel) {
       std::string cname = Channel->getChannelName();
-      LOG(spdlog::level::err, "  failure is in channel: {}", cname);
+        LOG(spdlog::level::err, "  failure is in channel: {}", cname);
     }
     EpicsClientMonitor_impl::error_channel_requester();
   }
@@ -256,31 +255,31 @@ void ChannelRequester::channelCreated(epics::pvData::Status const &Status,
 void ChannelRequester::channelStateChange(
     Channel::shared_pointer const &Channel,
     Channel::ConnectionState ConnectionState) {
-  LOG(spdlog::level::trace, "channel state change: {}",
-      channelStateName(ConnectionState));
-  if (!Channel) {
-    LOG(spdlog::level::err,
-        "no channel, even though we should have.  state: {}",
+    LOG(spdlog::level::trace, "channel state change: {}",
         channelStateName(ConnectionState));
-    EpicsClientMonitor_impl::error_channel_requester();
-    return;
-  }
-  if (ConnectionState == Channel::CONNECTED) {
-    LOG(spdlog::level::trace, "Epics channel connected");
-    LOG(spdlog::level::debug,
-        "ChannelRequester::channelStateChange  channelinfo: {}",
-        channelInfo(Channel));
-    EpicsClientImpl->monitoringStart();
-  } else if (ConnectionState == Channel::DISCONNECTED) {
-    LOG(spdlog::level::trace, "Epics channel disconnect");
-    EpicsClientImpl->monitoringStop();
-  } else if (ConnectionState == Channel::DESTROYED) {
-    LOG(spdlog::level::trace, "Epics channel destroyed");
-    EpicsClientImpl->channelDestroyed();
-  } else {
-    LOG(spdlog::level::err, "Unhandled channel state change: {} {}",
-        ConnectionState, channelStateName(ConnectionState));
-    EpicsClientMonitor_impl::error_channel_requester();
+    if (!Channel) {
+        LOG(spdlog::level::err,
+            "no channel, even though we should have.  state: {}",
+            channelStateName(ConnectionState));
+        EpicsClientMonitor_impl::error_channel_requester();
+        return;
+    }
+    if (ConnectionState == Channel::CONNECTED) {
+        LOG(spdlog::level::trace, "Epics channel connected");
+        LOG(spdlog::level::debug,
+            "ChannelRequester::channelStateChange  channelinfo: {}",
+            channelInfo(Channel));
+        EpicsClientImpl->monitoringStart();
+    } else if (ConnectionState == Channel::DISCONNECTED) {
+        LOG(spdlog::level::trace, "Epics channel disconnect");
+        EpicsClientImpl->monitoringStop();
+    } else if (ConnectionState == Channel::DESTROYED) {
+        LOG(spdlog::level::trace, "Epics channel destroyed");
+        EpicsClientImpl->channelDestroyed();
+    } else {
+        LOG(spdlog::level::err, "Unhandled channel state change: {} {}",
+            ConnectionState, channelStateName(ConnectionState));
+      EpicsClientMonitorImpl::error_channel_requester();
   }
 }
 } // namespace EpicsClient

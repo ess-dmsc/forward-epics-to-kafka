@@ -1,23 +1,22 @@
 #pragma once
 
-#include "URI.h"
 #include <fmt/format.h>
+#include <string>
 // clang-format off
 #include <spdlog/spdlog.h>
 #include <spdlog/sinks/basic_file_sink.h>
 #include <spdlog/sinks/stdout_color_sinks.h>
 // clang-format on
-#include <string>
-//#include <spdlog/sinks/graylog_sink.h>
 #ifdef _MSC_VER
 
-// The levels used in the LOG macro are defined in the spdlog::level namespace
-// in spdlog.h
 #define LOG(level, fmt, ...)                                                   \
-  { spdlog::get("filewriterlogger")->log(level, fmt, __VA_ARGS__); }
+  dwlog(static_cast<int>(level), 0, fmt, __FILE__, __LINE__, __FUNCSIG__,      \
+        __VA_ARGS__);
 #else
+
 #define LOG(level, fmt, args...)                                               \
-  { spdlog::get("filewriterlogger")->log(level, fmt, ##args); }
+  dwlog(static_cast<int>(level), 0, fmt, __FILE__, __LINE__,                   \
+        __PRETTY_FUNCTION__, ##args);
 #endif
 
 #define UNUSED_ARG(x) (void)x;
