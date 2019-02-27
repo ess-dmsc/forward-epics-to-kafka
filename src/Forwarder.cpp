@@ -20,14 +20,14 @@ std::vector<char> getHostname() {
 #else
 #include <unistd.h>
 std::vector<char> getHostname() {
-    std::vector<char> Hostname;
-    Hostname.resize(256);
-    gethostname(Hostname.data(), Hostname.size());
-    if (Hostname.back() != 0) {
-        // likely an error
-        Hostname.back() = 0;
-    }
-    return Hostname;
+  std::vector<char> Hostname;
+  Hostname.resize(256);
+  gethostname(Hostname.data(), Hostname.size());
+  if (Hostname.back() != 0) {
+    // likely an error
+    Hostname.back() = 0;
+  }
+  return Hostname;
 }
 
 #endif
@@ -60,11 +60,11 @@ Forwarder::Forwarder(MainOpt &opt)
 
   bool use_config = true;
   if (main_opt.MainSettings.BrokerConfig.Topic.empty()) {
-      LOG(spdlog::level::err, "Name for configuration topic is empty");
+    Logger->error("Name for configuration topic is empty");
     use_config = false;
   }
   if (main_opt.MainSettings.BrokerConfig.HostPort.empty()) {
-      LOG(spdlog::level::err, "Host for configuration topic broker is empty");
+    Logger->error("Host for configuration topic broker is empty");
     use_config = false;
   }
   if (use_config) {
@@ -82,8 +82,8 @@ Forwarder::Forwarder(MainOpt &opt)
     try {
       addMapping(Stream);
     } catch (std::exception &e) {
-        LOG(spdlog::level::warn, "Could not add mapping: {}  {}", Stream.Name,
-            e.what());    }
+      Logger->warn("Could not add mapping: {}  {}", Stream.Name, e.what());
+    }
   }
 
   if (!main_opt.MainSettings.StatusReportURI.HostPort.empty()) {
@@ -96,7 +96,7 @@ Forwarder::Forwarder(MainOpt &opt)
 }
 
 Forwarder::~Forwarder() {
-    LOG(spdlog::level::trace, "~Main");
+  Logger->trace("~Main");
   streams.clearStreams();
   conversion_workers_clear();
   converters_clear();
@@ -120,7 +120,7 @@ void Forwarder::createFakePVUpdateTimerIfRequired() {
 }
 
 int Forwarder::conversion_workers_clear() {
-    LOG(spdlog::level::trace, "Main::conversion_workers_clear()  begin");
+  Logger->trace("Main::conversion_workers_clear()  begin");
   std::lock_guard<std::mutex> lock(conversion_workers_mx);
   if (!conversion_workers.empty()) {
     for (auto &x : conversion_workers) {
@@ -128,7 +128,7 @@ int Forwarder::conversion_workers_clear() {
     }
     conversion_workers.clear();
   }
-    LOG(spdlog::level::trace, "Main::conversion_workers_clear()  end");
+  Logger->trace("Main::conversion_workers_clear()  end");
   return 0;
 }
 
@@ -200,15 +200,16 @@ void Forwarder::forward_epics_to_kafka() {
       report_stats(dt.count());
     }
     if (dt >= Dt) {
-        LOG(spdlog::level::err, "slow main loop: {}", dt.count());
+      Logger->error("slow main loop: {}", dt.count());
     } else {
       std::this_thread::sleep_for(Dt - dt);
     }
   }
   if (isStopDueToSignal(ForwardingRunFlag.load())) {
-      LOG(spdlog::level::info, "Forwarder stopping due to signal.");
+    Logger->info("Forwarder stopping due to signal.");
   }
-        LOG(spdlog::level::info, "Main::forward_epics_to_kafka shutting down");  conversion_workers_clear();
+  Logger->info("Main::forward_epics_to_kafka shutting down");
+  conversion_workers_clear();
   streams.clearStreams();
 
   if (PVUpdateTimer != nullptr) {
@@ -221,7 +222,7 @@ void Forwarder::forward_epics_to_kafka() {
     GenerateFakePVUpdateTimer->waitForStop();
   }
 
-        LOG(spdlog::level::info, "ForwardingStatus::STOPPED");
+  Logger->info("ForwardingStatus::STOPPED");
   forwarding_status.store(ForwardingStatus::STOPPED);
 }
 
@@ -242,9 +243,9 @@ void Forwarder::report_status() {
     auto StatusStringShort =
         StatusString.substr(0, 1000) +
         fmt::format(" ... {} chars total ...", StatusStringSize);
-      LOG(spdlog::level::info, "ForwardingStatus::STOPPED");
+    Logger->info("ForwardingStatus::STOPPED");
   } else {
-      LOG(spdlog::level::trace, "status: {}", StatusString);
+    Logger->trace("status: {}", StatusString);
   }
   status_producer_topic->produce((unsigned char *)StatusString.c_str(),
                                  StatusString.size());
@@ -260,47 +261,47 @@ void Forwarder::report_stats(int dt) {
   b1 %= 1024;
   auto b3 = b2 / 1024;
   b2 %= 1024;
-    LOG(spdlog::level::info, "dt: {:4}  m: {:4}.{:03}  b: {:3}.{:03}.{:03}", dt,
-        m2, m1, b3, b2, b1);
+  Logger->info("dt: {:4}  m: {:4}.{:03}  b: {:3}.{:03}.{:03}", dt, m2, m1, b3,
+               b2, b1);
   if (CURLReporter::HaveCURL && !main_opt.InfluxURI.empty()) {
-      std::vector<char> Hostname = getHostname();
+    std::vector<char> Hostname = getHostname();
 
-      int i1 = 0;
+    int i1 = 0;
     for (auto &s : kafka_instance_set->getStatsForAllProducers()) {
-        fmt::format_to(StatsBuffer, "forward-epics-to-kafka,hostname={},set={}",
-                       Hostname.data(), i1);
-        fmt::format_to(StatsBuffer, " produced={}", s.produced);
-        fmt::format_to(StatsBuffer, ",produce_fail={}", s.produce_fail);
-        fmt::format_to(StatsBuffer, ",local_queue_full={}", s.local_queue_full);
-        fmt::format_to(StatsBuffer, ",produce_cb={}", s.produce_cb);
-        fmt::format_to(StatsBuffer, ",produce_cb_fail={}", s.produce_cb_fail);
-        fmt::format_to(StatsBuffer, ",poll_served={}", s.poll_served);
-        fmt::format_to(StatsBuffer, ",msg_too_large={}", s.msg_too_large);
-        fmt::format_to(StatsBuffer, ",produced_bytes={}",
-                       double(s.produced_bytes));
-        fmt::format_to(StatsBuffer, ",outq={}", s.out_queue);
-        fmt::format_to(StatsBuffer, "\n");
-        ++i1;
+      fmt::format_to(StatsBuffer, "forward-epics-to-kafka,hostname={},set={}",
+                     Hostname.data(), i1);
+      fmt::format_to(StatsBuffer, " produced={}", s.produced);
+      fmt::format_to(StatsBuffer, ",produce_fail={}", s.produce_fail);
+      fmt::format_to(StatsBuffer, ",local_queue_full={}", s.local_queue_full);
+      fmt::format_to(StatsBuffer, ",produce_cb={}", s.produce_cb);
+      fmt::format_to(StatsBuffer, ",produce_cb_fail={}", s.produce_cb_fail);
+      fmt::format_to(StatsBuffer, ",poll_served={}", s.poll_served);
+      fmt::format_to(StatsBuffer, ",msg_too_large={}", s.msg_too_large);
+      fmt::format_to(StatsBuffer, ",produced_bytes={}",
+                     double(s.produced_bytes));
+      fmt::format_to(StatsBuffer, ",outq={}", s.out_queue);
+      fmt::format_to(StatsBuffer, "\n");
+      ++i1;
     }
     {
       auto lock = get_lock_converters();
-        LOG(spdlog::level::info, "N converters: {}", converters.size());
+      Logger->info("N converters: {}", converters.size());
       i1 = 0;
       for (auto &c : converters) {
         auto stats = c.second.lock()->stats();
-          fmt::format_to(StatsBuffer,"forward-epics-to-kafka,hostname={},set={}",
-                          main_opt.Hostname.data(), i1);
+        fmt::format_to(StatsBuffer, "forward-epics-to-kafka,hostname={},set={}",
+                       main_opt.Hostname.data(), i1);
         int i2 = 0;
         for (auto x : stats) {
           if (i2 > 0) {
-              fmt::format_to(StatsBuffer, ",");
+            fmt::format_to(StatsBuffer, ",");
           } else {
-              fmt::format_to(StatsBuffer, " ");
+            fmt::format_to(StatsBuffer, " ");
           }
-            fmt::format_to(StatsBuffer, "{}={}", x.first, x.second);
+          fmt::format_to(StatsBuffer, "{}={}", x.first, x.second);
           ++i2;
         }
-          fmt::format_to(StatsBuffer, "\n");
+        fmt::format_to(StatsBuffer, "\n");
         ++i1;
       }
     }
