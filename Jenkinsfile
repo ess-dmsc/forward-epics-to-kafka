@@ -387,8 +387,8 @@ def get_system_tests_pipeline() {
                         checkout scm
                     }  // stage
                     stage("System tests: Install requirements") {
-                        sh """pip3.6 install --user --upgrade pip
-                        pip3.6 install --user -r system-tests/requirements.txt
+                        sh """python3.6 -m pip install --user --upgrade pip
+                        python3.6 -m pip install --user -r system-tests/requirements.txt
                         """
                     }  // stage
                     stage("System tests: Run") {
