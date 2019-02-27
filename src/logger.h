@@ -17,6 +17,7 @@
 #define LOG(level, fmt, args...)                                               \
   { spdlog::get("filewriterlogger")->log(level, fmt, ##args); }
 #endif
+#define UNUSED_ARG(x) (void)x;
 
 void setUpLogging(const spdlog::level::level_enum &LoggingLevel,
         const std::string &LogFile,
