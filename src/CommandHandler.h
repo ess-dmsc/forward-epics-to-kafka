@@ -32,6 +32,7 @@ private:
   void handleCommandStopChannel(nlohmann::json const &Document);
   void handleCommandStopAll();
   void handleCommandExit();
+  std::shared_ptr<spdlog::logger> Logger = spdlog::get("ForwarderLogger");
 };
 
 } // namespace Forwarder

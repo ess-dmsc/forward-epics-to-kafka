@@ -6,17 +6,18 @@ namespace Forwarder {
 std::shared_ptr<Converter> Converter::create(FlatBufs::SchemaRegistry const &,
                                              std::string Schema,
                                              MainOpt const &Options) {
+  auto Logger = spdlog::get("ForwarderLogger");
   auto ConverterPtr = std::make_shared<Converter>();
   ConverterPtr->SchemaID = Schema;
   auto SchemaInRegistry = FlatBufs::SchemaRegistry::items().find(Schema);
   if (SchemaInRegistry == FlatBufs::SchemaRegistry::items().end()) {
-    LOG(spdlog::level::err, "can not handle (yet?) schema id {}", Schema);
+    Logger->error("can not handle (yet?) schema id {}", Schema);
     return nullptr;
   }
   ConverterPtr->FlatBufCreator = SchemaInRegistry->second->createConverter();
   auto &Creator = ConverterPtr->FlatBufCreator;
   if (!Creator) {
-    LOG(spdlog::level::err, "can not create a converter");
+    Logger->error("can not create a converter");
     return ConverterPtr;
   }
 

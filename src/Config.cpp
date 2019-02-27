@@ -14,7 +14,7 @@ Listener::Listener(URI uri,
   try {
     Consumer->addTopic(uri.Topic);
   } catch (MetadataException &E) {
-    LOG(spdlog::level::err, "{}", E.what());
+    Logger->error("{}", E.what());
   }
 }
 
