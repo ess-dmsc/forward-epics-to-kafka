@@ -413,7 +413,7 @@ private:
       if (CachedUnits.empty() && !NewUnits.empty()) {
         CachedUnits = NewUnits;
       } else if (NewUnits != CachedUnits) {
-        LOG(Sev::Error, "Units changed in PV {} from {} to {}.",
+        LOG(spdlog::level::err, "Units changed in PV {} from {} to {}.",
             PVUpdate.channel, CachedUnits, NewUnits);
       }
     }
