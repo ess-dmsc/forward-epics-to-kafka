@@ -15,10 +15,9 @@
   { spdlog::get("filewriterlogger")->log(level, fmt, __VA_ARGS__); }
 #else
 #define LOG(level, fmt, args...)                                               \
-  { spdlog::get("filewriterlogger")->log(level, fmt, ##args); }
+  { spdlog::get("ForwarderLogger")->log(level, fmt, ##args); }
 #endif
 #define UNUSED_ARG(x) (void)x;
 
 void setUpLogging(const spdlog::level::level_enum &LoggingLevel,
-        const std::string &LogFile,
-                  const std::string &GraylogURI);
+                  const std::string &LogFile, const std::string &GraylogURI);
