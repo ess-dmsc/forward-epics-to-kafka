@@ -347,93 +347,67 @@ Value_t makeValue(flatbuffers::FlatBufferBuilder &Builder,
   return {Value::NONE, 0};
 }
 
-class Converter : public FlatBufferCreator {
-public:
-  Converter() = default;
+    class Converter : public FlatBufferCreator {
+    public:
+        Converter() = default;
 
-  ~Converter() override { Logger->debug("~Converter"); }
+        ~Converter() override {  Logger->debug("~Converter"); }
 
-  std::unique_ptr<FlatBufs::FlatbufferMessage>
-  create(EpicsPVUpdate const &PVUpdate) override {
-    auto &PVStructure = PVUpdate.epics_pvstr;
-    auto FlatbufferMessage = make_unique<FlatBufs::FlatbufferMessage>();
+        std::unique_ptr<FlatBufs::FlatbufferMessage>
+        create(EpicsPVUpdate const &PVUpdate) override {
+            auto &PVStructure = PVUpdate.epics_pvstr;
+            auto FlatbufferMessage = make_unique<FlatBufs::FlatbufferMessage>();
 
-    auto Builder = FlatbufferMessage->builder.get();
-    // this is the field type ID string: up.pvstr->getStructure()->getID()
-    auto PVName = Builder->CreateString(PVUpdate.channel);
-    auto Value = makeValue(*Builder, PVStructure, true, Stats);
-    LogDataBuilder LogDataBuilder(*Builder);
-    LogDataBuilder.add_source_name(PVName);
-    LogDataBuilder.add_value_type(Value.Type);
-    LogDataBuilder.add_value(Value.Offset);
+            auto Builder = FlatbufferMessage->builder.get();
+            // this is the field type ID string: up.pvstr->getStructure()->getID()
+            auto PVName = Builder->CreateString(PVUpdate.channel);
+            auto Value = makeValue(*Builder, PVStructure, true, Stats);
 
-    checkUnits(PVUpdate);
+            LogDataBuilder LogDataBuilder(*Builder);
+            LogDataBuilder.add_source_name(PVName);
+            LogDataBuilder.add_value_type(Value.Type);
+            LogDataBuilder.add_value(Value.Offset);
 
-    getTimestamp(PVStructure, LogDataBuilder);
+            if (auto PVTimeStamp =
+                    PVStructure->getSubField<epics::pvData::PVStructure>("timeStamp")) {
+                uint64_t TimeStamp = static_cast<uint64_t>(
+                        PVTimeStamp
+                                ->getSubField<epics::pvData::PVScalarValue<int64_t>>(
+                                        "secondsPastEpoch")
+                                ->get());
+                TimeStamp *= 1000000000;
+                TimeStamp += PVTimeStamp
+                        ->getSubField<epics::pvData::PVScalarValue<int32_t>>(
+                                "nanoseconds")
+                        ->get();
+                LogDataBuilder.add_timestamp(TimeStamp);
+            } else {
+                ++Stats.err_timestamp_not_available;
+            }
 
-    FinishLogDataBuffer(*Builder, LogDataBuilder.Finish());
-    return FlatbufferMessage;
-  }
+            FinishLogDataBuffer(*Builder, LogDataBuilder.Finish());
+            return FlatbufferMessage;
+        }
 
-  std::map<std::string, double> getStats() override {
-    return {{"ranges_n", Seqs.size()}};
-  }
+        std::map<std::string, double> getStats() override {
+            return {{"ranges_n", seqs.size()}};
+        }
 
-private:
-  void getTimestamp(
-      const std::tr1::shared_ptr<epics::pvData::PVStructure> &PVStructure,
-      LogDataBuilder &LogDataBuilder) {
-    if (auto PVTimeStamp =
-            PVStructure->getSubField<epics::pvData::PVStructure>("timeStamp")) {
-      uint64_t TimeStamp = static_cast<uint64_t>(
-          PVTimeStamp
-              ->getSubField<epics::pvData::PVScalarValue<int64_t>>(
-                  "secondsPastEpoch")
-              ->get());
-      TimeStamp *= 1000000000;
-      TimeStamp += PVTimeStamp
-                       ->getSubField<epics::pvData::PVScalarValue<int32_t>>(
-                           "nanoseconds")
-                       ->get();
+        RangeSet<uint64_t> seqs;
+        Statistics Stats;
+        std::shared_ptr<spdlog::logger> Logger = spdlog::get("ForwarderLogger");
+    };
 
-      LogDataBuilder.add_timestamp(TimeStamp);
-    } else {
-      ++Stats.err_timestamp_not_available;
+    class Info : public SchemaInfo {
+    public:
+        std::unique_ptr<FlatBufferCreator> createConverter() override;
+    };
+
+    std::unique_ptr<FlatBufferCreator> Info::createConverter() {
+        return make_unique<Converter>();
     }
-  }
 
-  void checkUnits(EpicsPVUpdate const &PVUpdate) {
-    auto &PVStructure = PVUpdate.epics_pvstr;
-    if (auto PVDisplay =
-            PVStructure->getSubField<epics::pvData::PVStructure>("display")) {
-      auto NewUnits =
-          PVDisplay
-              ->getSubField<epics::pvData::PVScalarValue<std::string>>("units")
-              ->get();
-      if (CachedUnits.empty() && !NewUnits.empty()) {
-        CachedUnits = NewUnits;
-      } else if (NewUnits != CachedUnits) {
-        Logger->error("Units changed in PV {} from {} to {}.", PVUpdate.channel,
-                      CachedUnits, NewUnits);
-      }
-    }
-  }
-  RangeSet<uint64_t> Seqs;
-  Statistics Stats;
-  std::string CachedUnits;
-  std::shared_ptr<spdlog::logger> Logger = spdlog::get("ForwarderLogger");
-};
-
-class Info : public SchemaInfo {
-public:
-  std::unique_ptr<FlatBufferCreator> createConverter() override;
-};
-
-std::unique_ptr<FlatBufferCreator> Info::createConverter() {
-  return make_unique<Converter>();
-}
-
-FlatBufs::SchemaRegistry::Registrar<Info> g_registrar_info("f142",
-                                                           Info::ptr(new Info));
+    FlatBufs::SchemaRegistry::Registrar<Info> g_registrar_info("f142",
+                                                               Info::ptr(new Info));
 } // namespace f142
 } // namespace FlatBufs

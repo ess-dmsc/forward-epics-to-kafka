@@ -39,5 +39,5 @@ std::map<std::string, double> Converter::stats() {
   return FlatBufCreator->getStats();
 }
 
-std::string Converter::getSchemaID() const { return SchemaID; }
+std::string Converter::schema_name() const { return SchemaID; }
 } // namespace Forwarder
