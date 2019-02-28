@@ -12,115 +12,115 @@ find_package(StreamingDataTypes COMPONENTS ce9a4745431e54bc45b0c927857a866fa77b8
 find_package(CURL)
 find_package(StaticData COMPONENTS "schema-config-global.json")
 find_package(GitCommitExtract)
-find_package(spdlog REQUIRED)
+#find_package(spdlog REQUIRED)
 
 set(path_include_common
-${CONCURRENTQUEUE_INCLUDE_DIR}
-${JSONFORMODERNCPP_INCLUDE_DIR}
-${CLI11_INCLUDE_DIR}
-${RDKAFKA_INCLUDE_DIR}
-${FLATBUFFERS_INCLUDE_DIR}
-${PROJECT_SOURCE_DIR}/src
-${PROJECT_BINARY_DIR}/src
-)
+        ${CONCURRENTQUEUE_INCLUDE_DIR}
+        ${JSONFORMODERNCPP_INCLUDE_DIR}
+        ${CLI11_INCLUDE_DIR}
+        ${RDKAFKA_INCLUDE_DIR}
+        ${FLATBUFFERS_INCLUDE_DIR}
+        ${PROJECT_SOURCE_DIR}/src
+        ${PROJECT_BINARY_DIR}/src
+        )
 
 set(path_include_common_suppressed_warnings
         ${EPICSV4_INCLUDE_DIRS}
         )
 
 set(libraries_common
-${path_library_epics_ca}
-${path_library_epics_pvData}
-${path_library_epics_pvAccess}
-${path_library_epics_NT}
-${RDKAFKA_LIBRARIES}
-${FETK_EXTRA_LIBRARIES}
-spdlog::spdlog
-)
+        ${path_library_epics_ca}
+        ${path_library_epics_pvData}
+        ${path_library_epics_pvAccess}
+        ${path_library_epics_NT}
+        ${RDKAFKA_LIBRARIES}
+        ${FETK_EXTRA_LIBRARIES}
+#        spdlog::spdlog
+        )
 
 if (UNIX)
-  list(APPEND libraries_common pthread)
+    list(APPEND libraries_common pthread)
 endif()
 
 set(compile_defs_common "")
 
 if (CURL_FOUND)
-	list(APPEND compile_defs_common "HAVE_CURL=1")
+    list(APPEND compile_defs_common "HAVE_CURL=1")
     list(APPEND libraries_common ${CURL_LIBRARIES})
     list(APPEND path_include_common ${CURL_INCLUDE_DIRS})
 endif()
 
 set(INCLUDES
-    EpicsClient/EpicsClientMonitor.h
-    EpicsClient/EpicsClientRandom.h
-    EpicsClient/EpicsClientFactory.h
-    EpicsClient/FwdMonitorRequester.h
-    EpicsClient/EpicsClientInterface.h
-    EpicsClient/ChannelRequester.h
-    Config.h
-    ConfigParser.h
-    ConversionWorker.h
-    Converter.h
-    CommandHandler.h
-    CURLReporter.h
-    EpicsPVUpdate.h
-    FlatbufferMessage.h
-    FlatbufferMessageSlice.h
-    Forwarder.h
-    FlatBufferCreator.h
-    git_commit_current.h
-    helper.h
-    json.h
-    Kafka.h
-    KafkaW/BrokerSettings.h
-    KafkaW/Consumer.h
-    KafkaW/ConsumerMessage.h
-    KafkaW/Producer.h
-    KafkaW/ProducerMessage.h
-    KafkaW/ProducerDeliveryCb.h
-    KafkaW/ProducerStats.h
-    KafkaW/ProducerTopic.h
-    KafkaW/KafkaEventCb.h
-    KafkaW/MetadataException.h
-    KafkaOutput.h
-    logger.h
-    MainOpt.h
-    RangeSet.h
-    SchemaRegistry.h
-    Stream.h
-    Streams.h
-    Timer.h
-    URI.h)
+        EpicsClient/EpicsClientMonitor.h
+        EpicsClient/EpicsClientRandom.h
+        EpicsClient/EpicsClientFactory.h
+        EpicsClient/FwdMonitorRequester.h
+        EpicsClient/EpicsClientInterface.h
+        EpicsClient/ChannelRequester.h
+        Config.h
+        ConfigParser.h
+        ConversionWorker.h
+        Converter.h
+        CommandHandler.h
+        CURLReporter.h
+        EpicsPVUpdate.h
+        FlatbufferMessage.h
+        FlatbufferMessageSlice.h
+        Forwarder.h
+        FlatBufferCreator.h
+        git_commit_current.h
+        helper.h
+        json.h
+        Kafka.h
+        KafkaW/BrokerSettings.h
+        KafkaW/Consumer.h
+        KafkaW/ConsumerMessage.h
+        KafkaW/Producer.h
+        KafkaW/ProducerMessage.h
+        KafkaW/ProducerDeliveryCb.h
+        KafkaW/ProducerStats.h
+        KafkaW/ProducerTopic.h
+        KafkaW/KafkaEventCb.h
+        KafkaW/MetadataException.h
+        KafkaOutput.h
+        logger.h
+        MainOpt.h
+        RangeSet.h
+        SchemaRegistry.h
+        Stream.h
+        Streams.h
+        Timer.h
+        URI.h)
 
 set(SOURCES
-    MainOpt.cpp
-    Forwarder.cpp
-    ConfigParser.cpp
-    CommandHandler.cpp
-    EpicsClient/EpicsClientMonitor.cpp
-    EpicsClient/EpicsClientRandom.cpp
-    EpicsClient/FwdMonitorRequester.cpp
-    EpicsClient/EpicsClientFactory.cpp
-    logger.cpp
-    Kafka.cpp
-    KafkaW/BrokerSettings.cpp
-    KafkaW/Consumer.cpp
-    KafkaW/Producer.cpp
-    KafkaW/ProducerTopic.cpp
-    ConversionWorker.cpp
-    Config.cpp
-    FlatbufferMessage.cpp
-    SchemaRegistry.cpp
-    FlatBufferCreator.cpp
-    URI.cpp
-    json.cpp
-    Converter.cpp
-    KafkaOutput.cpp
-    Stream.cpp
-    Streams.cpp
-    schemas/f142/f142.cpp
-    Timer.cpp
-    ${CMAKE_CURRENT_BINARY_DIR}/git_commit_current.cpp)
+        MainOpt.cpp
+        Forwarder.cpp
+        ConfigParser.cpp
+        CommandHandler.cpp
+        EpicsClient/EpicsClientMonitor.cpp
+        EpicsClient/EpicsClientRandom.cpp
+        EpicsClient/FwdMonitorRequester.cpp
+        EpicsClient/EpicsClientFactory.cpp
+        logger.cpp
+        Kafka.cpp
+        KafkaW/BrokerSettings.cpp
+        KafkaW/Consumer.cpp
+        KafkaW/Producer.cpp
+        KafkaW/ProducerTopic.cpp
+        ConversionWorker.cpp
+        Config.cpp
+        FlatbufferMessage.cpp
+        SchemaRegistry.cpp
+        FlatBufferCreator.cpp
+        URI.cpp
+        json.cpp
+        Converter.cpp
+        KafkaOutput.cpp
+        Stream.cpp
+        Streams.cpp
+        schemas/f142/f142.cpp
+        Timer.cpp
+        ${CMAKE_CURRENT_BINARY_DIR}/git_commit_current.cpp)
 
 set(tgt __objects)
 add_library(${tgt} OBJECT ${SOURCES} ${INCLUDES})
@@ -144,8 +144,8 @@ target_compile_definitions(${tgt} PRIVATE ${compile_defs_common})
 set(tgt forward-epics-to-kafka)
 add_executable(${tgt}
         Main.cpp
-$<TARGET_OBJECTS:__objects>
-)
+        $<TARGET_OBJECTS:__objects>
+        )
 
 if (WIN32)
     # Skip git_commit_current
@@ -165,5 +165,5 @@ endif(WIN32)
 target_link_libraries(${tgt} ${libraries_common})
 
 if (have_gtest)
-add_subdirectory(tests)
+    add_subdirectory(tests)
 endif()
