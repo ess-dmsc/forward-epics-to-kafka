@@ -2,6 +2,7 @@
 #include "EpicsPVUpdate.h"
 #include "RangeSet.h"
 #include "Stream.h"
+#include "logger.h"
 #include <atomic>
 #include <concurrentqueue/concurrentqueue.h>
 #include <mutex>

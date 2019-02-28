@@ -1,8 +1,10 @@
 #pragma once
 #include "Config.h"
 #include "Forwarder.h"
+#include "logger.h"
 #include "nlohmann/json.hpp"
 #include <string>
+
 namespace Forwarder {
 class Forwarder;
 

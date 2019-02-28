@@ -17,7 +17,7 @@ std::unique_ptr<EpicsClientFactoryInit> EpicsClientFactoryInit::factory_init() {
 }
 
 EpicsClientFactoryInit::EpicsClientFactoryInit() {
-  LOG(spdlog::level::trace, "EpicsClientFactoryInit");
+  Logger->trace("EpicsClientFactoryInit");
   std::lock_guard<std::mutex> lock(MutexLock);
   auto c = Count++;
   if (c == 0) {
@@ -28,18 +28,18 @@ EpicsClientFactoryInit::EpicsClientFactoryInit() {
 }
 
 EpicsClientFactoryInit::~EpicsClientFactoryInit() {
-  LOG(spdlog::level::trace, "~EpicsClientFactoryInit");
+  Logger->trace("~EpicsClientFactoryInit");
   std::lock_guard<std::mutex> lock(MutexLock);
   auto c = --Count;
   if (c < 0) {
-    LOG(spdlog::level::err,
+    Logger->error(
         "Reference count {} is not consistent, should never happen, but "
         "ignoring for now.",
         c);
     c = 0;
   }
   if (c == 0) {
-    LOG(spdlog::level::trace, "STOP   Epics factories");
+    Logger->trace("STOP   Epics factories");
     ::epics::pvAccess::ClientFactory::stop();
     ::epics::pvAccess::ca::CAClientFactory::stop();
   }

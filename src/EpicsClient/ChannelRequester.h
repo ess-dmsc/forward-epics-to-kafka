@@ -37,6 +37,7 @@ public:
 
 private:
   EpicsClientMonitorImpl *EpicsClientImpl = nullptr;
+  std::shared_ptr<spdlog::logger> Logger = spdlog::get("ForwarderLogger");
 };
 }
 } // namespace Forwarder

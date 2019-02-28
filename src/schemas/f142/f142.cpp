@@ -351,7 +351,7 @@ class Converter : public FlatBufferCreator {
 public:
   Converter() = default;
 
-  ~Converter() override { LOG(spdlog::level::err, "~Converter"); }
+  ~Converter() override { Logger->debug("~Converter"); }
 
   std::unique_ptr<FlatBufs::FlatbufferMessage>
   create(EpicsPVUpdate const &PVUpdate) override {
@@ -413,14 +413,15 @@ private:
       if (CachedUnits.empty() && !NewUnits.empty()) {
         CachedUnits = NewUnits;
       } else if (NewUnits != CachedUnits) {
-        LOG(spdlog::level::err, "Units changed in PV {} from {} to {}.",
-            PVUpdate.channel, CachedUnits, NewUnits);
+        Logger->error("Units changed in PV {} from {} to {}.", PVUpdate.channel,
+                      CachedUnits, NewUnits);
       }
     }
   }
   RangeSet<uint64_t> Seqs;
   Statistics Stats;
   std::string CachedUnits;
+  std::shared_ptr<spdlog::logger> Logger = spdlog::get("ForwarderLogger");
 };
 
 class Info : public SchemaInfo {

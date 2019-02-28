@@ -34,5 +34,6 @@ private:
   KafkaW::BrokerSettings BrokerSettings;
   std::mutex ProducersByHostMutex;
   std::map<std::string, std::shared_ptr<KafkaW::Producer>> ProducersByHost;
+  std::shared_ptr<spdlog::logger> Logger = spdlog::get("ForwarderLogger");
 };
 } // namespace Forwarder

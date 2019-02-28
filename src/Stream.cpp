@@ -17,12 +17,12 @@ ConversionPath::ConversionPath(std::shared_ptr<Converter> conv,
     : converter(std::move(conv)), kafka_output(std::move(ko)) {}
 
 ConversionPath::~ConversionPath() {
-  LOG(spdlog::level::trace, "~ConversionPath");
+  Logger->trace("~ConversionPath");
   while (true) {
     auto x = transit.load();
     if (x == 0)
       break;
-    LOG(spdlog::level::trace, "~ConversionPath  still has transit {}", transit);
+    Logger->trace("~ConversionPath  still has transit {}", transit);
     std::this_thread::sleep_for(std::chrono::milliseconds(1000));
   }
 }
@@ -31,7 +31,7 @@ int ConversionPath::emit(std::shared_ptr<FlatBufs::EpicsPVUpdate> up) {
 
   auto fb = converter->convert(*up);
   if (fb == nullptr) {
-    LOG(spdlog::level::info, "empty converted flat buffer");
+    Logger->info("empty converted flat buffer");
     return 1;
   }
   kafka_output->emit(std::move(fb));
@@ -64,10 +64,10 @@ Stream::Stream(
       OutputQueue(std::move(Queue)) {}
 
 Stream::~Stream() {
-  LOG(spdlog::level::trace, "~Stream");
+  Logger->trace("~Stream");
   stop();
-  LOG(spdlog::level::trace, "~Stop DONE");
-  LOG(spdlog::level::info, "SeqDataEmitted: {}", SeqDataEmitted.to_string());
+  Logger->trace("~Stop DONE");
+  Logger->info("SeqDataEmitted: {}", SeqDataEmitted.to_string());
 }
 
 int Stream::addConverter(std::unique_ptr<ConversionPath> Path) {
@@ -83,10 +83,10 @@ int Stream::addConverter(std::unique_ptr<ConversionPath> Path) {
     ConversionPaths.push_back(std::move(Path));
     return 0;
   }
-  LOG(spdlog::level::warn, "Stream with channel name: {}  KafkaTopicName: {}  "
-                           "SchemaName: {} already exists.",
-      ChannelInfo_.channel_name, Path->getKafkaTopicName(),
-      Path->getSchemaName());
+  Logger->warn("Stream with channel name: {}  KafkaTopicName: {}  "
+               "SchemaName: {} already exists.",
+               ChannelInfo_.channel_name, Path->getKafkaTopicName(),
+               Path->getSchemaName());
   return 1;
 }
 
@@ -107,12 +107,12 @@ uint32_t Stream::fillConversionQueue(
     std::shared_ptr<FlatBufs::EpicsPVUpdate> EpicsUpdate;
     auto found = OutputQueue->try_dequeue(EpicsUpdate);
     if (!found) {
-      LOG(spdlog::level::info, "Conversion worker buffer is empty");
+      Logger->info("Conversion worker buffer is empty");
       break;
     }
     NumDequeued += 1;
     if (!EpicsUpdate) {
-      LOG(spdlog::level::info, "Empty EPICS PV update");
+      Logger->info("Empty EPICS PV update");
       continue;
     }
     size_t ConversionPathID = 0;
@@ -123,7 +123,7 @@ uint32_t Stream::fillConversionQueue(
       ConversionPacket->up = EpicsUpdate;
       bool QueuedSuccessful = Queue.enqueue(std::move(ConversionPacket));
       if (!QueuedSuccessful) {
-        LOG(spdlog::level::info, "Conversion work queue is full");
+        Logger->info("Conversion work queue is full");
         break;
       }
       ConversionPathID += 1;
