@@ -83,7 +83,8 @@ void EpicsClientMonitor::handleConnectionStateChange(
   }
   if (ConnectionStatusProducer != nullptr) {
     flatbuffers::FlatBufferBuilder Builder;
-    auto PVName = Builder.CreateString(Impl->channel_name);
+    auto PVName =
+        Builder.CreateString(Impl->channel_name + "_epics_connection_info");
     auto ServiceID = Builder.CreateString(this->ServiceID);
     auto Timestamp = static_cast<uint64_t>(
         std::chrono::duration_cast<std::chrono::nanoseconds>(
