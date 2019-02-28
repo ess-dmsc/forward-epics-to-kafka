@@ -16,7 +16,7 @@ namespace EpicsClient {
 using std::array;
 using std::vector;
 
-class EpicsClientMonitorImpl;
+class EpicsClientMonitor_impl;
 
 /// Epics client implementation which monitors for PV updates.
 class EpicsClientMonitor : public EpicsClientInterface {
@@ -50,7 +50,7 @@ public:
   void emitCachedValue();
 
 private:
-  std::unique_ptr<EpicsClientMonitorImpl> Impl;
+  std::unique_ptr<EpicsClientMonitor_impl> Impl;
   std::shared_ptr<
       moodycamel::ConcurrentQueue<std::shared_ptr<FlatBufs::EpicsPVUpdate>>>
       EmitQueue;

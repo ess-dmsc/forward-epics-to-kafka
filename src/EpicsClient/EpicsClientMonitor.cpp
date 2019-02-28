@@ -1,14 +1,16 @@
 #include "EpicsClientMonitor.h"
 #include "ChannelRequester.h"
-#include "EpicsPVUpdate.h"
 #include "FwdMonitorRequester.h"
-#include "RangeSet.h"
-#include "logger.h"
 #include <atomic>
 #include <memory>
 #include <mutex>
-#include <pv/pvAccess.h>
 #include <utility>
+// EPICS 4 supports access via the channel access protocol as well,
+// and we need it because some hardware speaks EPICS base.
+#include "EpicsPVUpdate.h"
+#include "RangeSet.h"
+#include "logger.h"
+#include <pv/pvAccess.h>
 #ifdef _MSC_VER
 #include <iso646.h>
 #endif
@@ -26,11 +28,11 @@ using urlock = std::unique_lock<std::recursive_mutex>;
 #define RLOCK() urlock lock(mx);
 
 /// Implementation for EPICS client monitor.
-class EpicsClientMonitorImpl {
+class EpicsClientMonitor_impl {
 public:
-  explicit EpicsClientMonitorImpl(EpicsClientInterface *epics_client)
+  explicit EpicsClientMonitor_impl(EpicsClientInterface *epics_client)
       : epics_client(epics_client) {}
-  ~EpicsClientMonitorImpl() {
+  ~EpicsClientMonitor_impl() {
     LOG(Sev::Debug, "EpicsClientMonitor_implor_impl");
   }
 
@@ -61,11 +63,12 @@ public:
       return -1;
     }
     LOG(Sev::Debug, "monitoringStart");
-    // We need to be explicit here with what data we want for
-    // compatibility with channel access.
-    // display.units only populates the units field in the PV
-    // Structure as we don't want other display changes.
-    std::string request = "field(value,timeStamp,display.units)";
+    // Leaving it empty seems to be the full channel, including name.  That's
+    // good.
+    // Can also specify subfields, e.g. "value, timeStamp"  or also
+    // "field(value)"
+    // We need to be more explicit here for compatibility with channel access.
+    std::string request = "field(value,timeStamp,alarm)";
     PVStructure::shared_pointer pvreq =
         epics::pvData::CreateRequest::create()->createRequest(request);
     if (monitor) {
@@ -150,7 +153,7 @@ EpicsClientMonitor::EpicsClientMonitor(
         moodycamel::ConcurrentQueue<std::shared_ptr<FlatBufs::EpicsPVUpdate>>>
         Ring)
     : EmitQueue(std::move(Ring)) {
-  Impl.reset(new EpicsClientMonitorImpl(this));
+  Impl.reset(new EpicsClientMonitor_impl(this));
   LOG(Sev::Debug, "channel_name: {}", ChannelInfo.channel_name);
   Impl->channel_name = ChannelInfo.channel_name;
   if (Impl->init(ChannelInfo.provider_type) != 0) {
@@ -243,7 +246,7 @@ void ChannelRequester::channelCreated(epics::pvData::Status const &Status,
       std::string cname = Channel->getChannelName();
       LOG(Sev::Error, "  failure is in channel: {}", cname);
     }
-    EpicsClientMonitorImpl::error_channel_requester();
+    EpicsClientMonitor_impl::error_channel_requester();
   }
 }
 
@@ -255,7 +258,7 @@ void ChannelRequester::channelStateChange(
   if (!Channel) {
     LOG(Sev::Error, "no channel, even though we should have.  state: {}",
         channelStateName(ConnectionState));
-    EpicsClientMonitorImpl::error_channel_requester();
+    EpicsClientMonitor_impl::error_channel_requester();
     return;
   }
   if (ConnectionState == Channel::CONNECTED) {
@@ -274,7 +277,7 @@ void ChannelRequester::channelStateChange(
   } else {
     LOG(Sev::Error, "Unhandled channel state change: {} {}", ConnectionState,
         channelStateName(ConnectionState));
-    EpicsClientMonitorImpl::error_channel_requester();
+    EpicsClientMonitor_impl::error_channel_requester();
   }
 }
 } // namespace EpicsClient
