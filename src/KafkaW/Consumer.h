@@ -44,6 +44,7 @@ private:
   std::unique_ptr<RdKafka::Conf> Conf;
   BrokerSettings ConsumerBrokerSettings;
   KafkaEventCb EventCallback;
+  std::shared_ptr<spdlog::logger> Logger = spdlog::get("ForwarderLogger");
 
   /// Get all partition numbers for a topic.
   ///

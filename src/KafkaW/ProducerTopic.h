@@ -30,5 +30,6 @@ private:
   std::string Name;
 
   bool DoCopyMsg{false};
+  std::shared_ptr<spdlog::logger> Logger = spdlog::get("ForwarderLogger");
 };
 }

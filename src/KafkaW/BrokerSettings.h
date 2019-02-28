@@ -1,5 +1,6 @@
 #pragma once
 
+#include "logger.h"
 #include <map>
 #include <string>
 
@@ -29,5 +30,8 @@ struct BrokerSettings {
       {"heartbeat.interval.ms", "500"},     // 0.5 Secs
       {"statistics.interval.ms", "600000"}, // 1 Min
   };
+
+private:
+  std::shared_ptr<spdlog::logger> Logger = spdlog::get("ForwarderLogger");
 };
 } // namespace KafkaW
