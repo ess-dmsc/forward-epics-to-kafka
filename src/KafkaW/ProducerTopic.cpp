@@ -29,8 +29,8 @@ ProducerTopic::ProducerTopic(ProducerTopic &&x) noexcept {
 struct Msg_ : public ProducerMessage {
   std::vector<unsigned char> v;
   void finalize() {
-    data = v.data();
-    size = v.size();
+    Data = v.data();
+    Size = v.size();
   }
 };
 
@@ -58,17 +58,17 @@ int ProducerTopic::produce(std::unique_ptr<ProducerMessage> &Msg) {
   int MsgFlags = 0;
   auto &ProducerStats = KafkaProducer->Stats;
 
-  if (!Msg->key.empty()) {
-    key = Msg->key.c_str();
-    key_len = Msg->key.size();
+  if (!Msg->Key.empty()) {
+    key = Msg->Key.c_str();
+    key_len = Msg->Key.size();
   }
 
   switch (KafkaProducer->produce(
-      RdKafkaTopic.get(), RdKafka::Topic::PARTITION_UA, MsgFlags, Msg->data,
-      Msg->size, key, key_len, Msg.get())) {
+      RdKafkaTopic.get(), RdKafka::Topic::PARTITION_UA, MsgFlags, Msg->Data,
+      Msg->Size, key, key_len, Msg.get())) {
   case RdKafka::ERR_NO_ERROR:
     ++ProducerStats.produced;
-    ProducerStats.produced_bytes += static_cast<uint64_t>(Msg->size);
+    ProducerStats.produced_bytes += static_cast<uint64_t>(Msg->Size);
     ++KafkaProducer->TotalMessagesProduced;
     Msg.release(); // we clean up the message after it has been sent, see
                    // comment by MsgFlags declaration
@@ -82,7 +82,7 @@ int ProducerTopic::produce(std::unique_ptr<ProducerMessage> &Msg) {
 
   case RdKafka::ERR_MSG_SIZE_TOO_LARGE:
     ++ProducerStats.msg_too_large;
-    LOG(Sev::Error, "Message size too large to publish, size: {}", Msg->size);
+    LOG(Sev::Error, "Message size too large to publish, size: {}", Msg->Size);
     break;
 
   default:

@@ -311,5 +311,6 @@ def test_updates_from_the_same_pv_reach_the_same_partition(docker_compose):
             return True
         return False
 
+    # Must find three messages with the same key in at least one of the two partitions
     assert test_all_messages_for_pv_are_in_one_partition(consumer_partition_0) or \
            test_all_messages_for_pv_are_in_one_partition(consumer_partition_1)

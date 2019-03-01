@@ -16,8 +16,8 @@ int KafkaOutput::emit(std::unique_ptr<FlatBufs::FlatbufferMessage> fb) {
     return -1024;
   }
   auto m1 = fb->message();
-  fb->data = m1.data;
-  fb->size = m1.size;
+  fb->Data = m1.data;
+  fb->Size = m1.size;
   std::unique_ptr<KafkaW::ProducerMessage> msg(fb.release());
   auto x = Output.produce(msg);
   if (x == 0) {

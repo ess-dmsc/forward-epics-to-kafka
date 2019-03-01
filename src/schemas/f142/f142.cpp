@@ -370,7 +370,7 @@ public:
 
     // Use the PV name as the message key so that all messages for the same PV
     // end up in the same Kafka partition and thus have publish order maintained
-    FlatbufferMessage->key = PVUpdate.channel;
+    FlatbufferMessage->Key = PVUpdate.channel;
 
     if (auto PVTimeStamp =
             PVStructure->getSubField<epics::pvData::PVStructure>("timeStamp")) {
