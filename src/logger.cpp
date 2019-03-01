@@ -4,10 +4,10 @@
 void setUpLogging(const spdlog::level::level_enum &LoggingLevel,
                   const std::string &LogFile, const std::string &GraylogURI) {
   spdlog::set_level(LoggingLevel);
-  if (not LogFile.empty()) {
+  if (!LogFile.empty()) {
     spdlog::basic_logger_mt("ForwarderLogger", LogFile);
   }
-  if (not GraylogURI.empty()) {
+  if (!GraylogURI.empty()) {
     Forwarder::URI TempURI(GraylogURI);
     // Set up URI interface here
     // auto grayloginterface = spdlog::graylog_sink(TempURI.HostPort,
