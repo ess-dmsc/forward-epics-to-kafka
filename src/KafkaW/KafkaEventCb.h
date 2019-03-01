@@ -2,6 +2,17 @@
 #include "logger.h"
 #include <librdkafka/rdkafkacpp.h>
 
+#ifdef _MSC_VER
+
+// The levels used in the LOG macro are defined in the spdlog::level namespace
+// in spdlog.h
+#define LOG(level, fmt, ...)                                                   \
+  { spdlog::get("filewriterlogger")->log(level, fmt, __VA_ARGS__); }
+#else
+#define LOG(level, fmt, args...)                                               \
+  { spdlog::get("ForwarderLogger")->log(level, fmt, ##args); }
+#endif
+
 namespace KafkaW {
 
 class KafkaEventCb : public RdKafka::EventCb {
@@ -10,11 +21,10 @@ public:
     switch (Event.type()) {
     case RdKafka::Event::EVENT_ERROR:
       LOG(spdlog::level::level_enum(LogLevels.at(Event.severity())),
-          "Kafka EVENT_ERROR id: {}  broker: {}  errno: {}  errorname: {}  "
+          "Kafka EVENT_ERROR id: {}  broker: {}  errorname: {}  "
           "errorstring: {}",
           Event.broker_id(), Event.broker_name().c_str(),
-          std::to_string(Event.type()), RdKafka::err2str(Event.err()),
-          Event.str());
+          RdKafka::err2str(Event.err()), Event.str());
       break;
     case RdKafka::Event::EVENT_STATS:
       LOG(spdlog::level::level_enum(LogLevels.at(Event.severity())),
