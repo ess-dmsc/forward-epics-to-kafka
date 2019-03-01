@@ -7,6 +7,6 @@ struct ProducerMessage {
   virtual ~ProducerMessage() = default;
   unsigned char *data;
   uint32_t size;
-  std::string key;  // Used by producer if not empty
+  std::string key; // Used by producer if not empty
 };
 }
