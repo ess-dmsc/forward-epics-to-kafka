@@ -18,11 +18,11 @@ FwdMonitorRequester::FwdMonitorRequester(
       RequesterName(fmt::format("FwdMonitorRequester-{}", GlobalIdCounter)),
       epics_client(EpicsClientMonitor) {
   ++GlobalIdCounter;
-  LOG(spdlog::level::trace, "FwdMonitorRequester {}", RequesterName);
+  Logger->trace("FwdMonitorRequester {}", RequesterName);
 }
 
 FwdMonitorRequester::~FwdMonitorRequester() {
-  LOG(spdlog::level::info, "~FwdMonitorRequester");
+  Logger->info("~FwdMonitorRequester");
 }
 
 std::string FwdMonitorRequester::getRequesterName() { return RequesterName; }
@@ -30,8 +30,8 @@ std::string FwdMonitorRequester::getRequesterName() { return RequesterName; }
 void FwdMonitorRequester::message(std::string const &Message,
                                   ::epics::pvData::MessageType MessageType) {
   UNUSED_ARG(MessageType);
-  LOG(spdlog::level::trace, "FwdMonitorRequester::message: {}:  {}",
-      RequesterName, Message);
+  Logger->trace("FwdMonitorRequester::message: {}:  {}", RequesterName,
+                Message);
 }
 
 void FwdMonitorRequester::monitorConnect(
@@ -43,15 +43,14 @@ void FwdMonitorRequester::monitorConnect(
     // NOTE
     // Docs does not say anything about whether we are responsible for any
     // handling of the monitor if non-null?
-    LOG(spdlog::level::err, "monitorConnect is != success for {}",
-        RequesterName);
+    Logger->error("monitorConnect is != success for {}", RequesterName);
     epics_client->errorInEpics();
   } else {
     if (Status.isOK()) {
-      LOG(spdlog::level::trace, "success and OK");
+      Logger->trace("success and OK");
       Monitor->start();
     } else {
-      LOG(spdlog::level::trace, "success with warning");
+      Logger->trace("success with warning");
     }
   }
 }
@@ -88,14 +87,14 @@ void FwdMonitorRequester::monitorEvent(
   for (auto &up : Updates) {
     auto x = epics_client->emit(up);
     if (x != 0) {
-      LOG(spdlog::level::info, "Cannot push update {}", up->channel);
+      Logger->info("Cannot push update {}", up->channel);
     }
   }
 }
 
 void FwdMonitorRequester::unlisten(epics::pvData::MonitorPtr const &Monitor) {
   UNUSED_ARG(Monitor);
-  LOG(spdlog::level::trace, "FwdMonitorRequester::unlisten  {}", RequesterName);
+  Logger->trace("FwdMonitorRequester::unlisten  {}", RequesterName);
 }
 } // namespace EpicsClient
 } // namespace Forwarder

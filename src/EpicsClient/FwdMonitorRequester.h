@@ -1,6 +1,7 @@
 #pragma once
 #include "EpicsClientInterface.h"
 #include "RangeSet.h"
+#include "logger.h"
 #include <atomic>
 #include <pv/monitor.h>
 namespace Forwarder {
@@ -58,6 +59,7 @@ private:
   std::string RequesterName;
   EpicsClientInterface *epics_client = nullptr;
   static std::atomic<uint32_t> GlobalIdCounter;
+  std::shared_ptr<spdlog::logger> Logger = spdlog::get("ForwarderLogger");
 };
 }
 }

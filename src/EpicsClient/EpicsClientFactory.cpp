@@ -21,7 +21,7 @@ EpicsClientFactoryInit::EpicsClientFactoryInit() {
   std::lock_guard<std::mutex> lock(MutexLock);
   auto c = Count++;
   if (c == 0) {
-    LOG(spdlog::level::info, "START  Epics factories");
+    Logger->info("START  Epics factories");
     ::epics::pvAccess::ClientFactory::start();
     ::epics::pvAccess::ca::CAClientFactory::start();
   }
