@@ -58,6 +58,12 @@ int ProducerTopic::produce(std::unique_ptr<ProducerMessage> &Msg) {
   int MsgFlags = 0;
   auto &ProducerStats = KafkaProducer->Stats;
 
+  if (!Msg->key.empty()) {
+    LOG(Sev::Error, "Message key is {}", Msg->key)
+    key = Msg->key.c_str();
+    key_len = Msg->key.size();
+  }
+
   switch (KafkaProducer->produce(
       RdKafkaTopic.get(), RdKafka::Topic::PARTITION_UA, MsgFlags, Msg->data,
       Msg->size, key, key_len, Msg.get())) {

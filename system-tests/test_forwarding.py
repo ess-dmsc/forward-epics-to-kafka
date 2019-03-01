@@ -283,7 +283,7 @@ def test_updates_from_the_same_pv_reach_the_same_partition(docker_compose):
     consumer_partition_1 = create_consumer()
     consumer_partition_1.assign([TopicPartition(data_topic, partition=1)])
 
-    sleep(2)
+    sleep(5)
 
     # There should be 3 messages in total for each PV
     # (the initial value and these two updates)
@@ -297,17 +297,19 @@ def test_updates_from_the_same_pv_reach_the_same_partition(docker_compose):
     change_pv_value(PVLONG, 2)
     sleep(0.5)
 
-    sleep(2)
+    sleep(5)
 
     def test_all_messages_for_pv_are_in_one_partition(consumer):
         messages = get_all_available_messages(consumer)
         # if we have any messages in this partition
         if len(messages) != 0:
-            pv_name = messages[1].key()
+            pv_name = messages[0].key()
             assert pv_name is not None
-            count_of_messages_with_pv_name = sum(1 for message in messages if message.key == pv_name)
+            count_of_messages_with_pv_name = sum(1 for message in messages if message.key() == pv_name)
             # then we expect exactly 3 with the same key as the first message
             assert count_of_messages_with_pv_name == 3
+            return True
+        return False
 
-    test_all_messages_for_pv_are_in_one_partition(consumer_partition_0)
-    test_all_messages_for_pv_are_in_one_partition(consumer_partition_1)
+    assert test_all_messages_for_pv_are_in_one_partition(consumer_partition_0) or \
+           test_all_messages_for_pv_are_in_one_partition(consumer_partition_1)
