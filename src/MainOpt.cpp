@@ -183,13 +183,14 @@ std::pair<int, std::unique_ptr<MainOpt>> parse_opt(int argc, char **argv) {
                  "LibRDKafka options");
   App.set_config("-c,--config-file", "", "Read configuration from an ini file",
                  false);
-
+  ::setUpInitializationLogging();
   try {
     App.parse(argc, argv);
   } catch (CLI::CallForHelp const &e) {
     ret.first = 1;
   } catch (CLI::ParseError const &e) {
-    LOG(spdlog::level::err, "Can not parse command line options: {}", e.what());
+    auto Logger = spdlog::get("InitializationLogger");
+    Logger->error("Can not parse command line options: {}", e.what());
     ret.first = 1;
   }
   if (ret.first == 1) {
@@ -200,8 +201,8 @@ std::pair<int, std::unique_ptr<MainOpt>> parse_opt(int argc, char **argv) {
     try {
       opt.MainSettings.StreamsInfo = parseStreamsJson(opt.StreamsFile);
     } catch (std::exception const &e) {
-      LOG(spdlog::level::warn, "Can not parse configuration file: {}",
-          e.what());
+      auto Logger = spdlog::get("InitializationLogger");
+      Logger->warn("Can not parse configuration file: {}", e.what());
       ret.first = 1;
       return ret;
     }

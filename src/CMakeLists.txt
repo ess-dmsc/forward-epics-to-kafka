@@ -10,9 +10,9 @@ find_package(JSONForModernCPP REQUIRED)
 find_package(ConcurrentQueue REQUIRED)
 find_package(StreamingDataTypes COMPONENTS ce9a4745431e54bc45b0c927857a866fa77b84ec)
 find_package(CURL)
+find_package(GraylogLogger)
 find_package(StaticData COMPONENTS "schema-config-global.json")
 find_package(GitCommitExtract)
-#find_package(spdlog REQUIRED)
 
 set(path_include_common
         ${CONCURRENTQUEUE_INCLUDE_DIR}
@@ -35,7 +35,6 @@ set(libraries_common
         ${path_library_epics_NT}
         ${RDKAFKA_LIBRARIES}
         ${FETK_EXTRA_LIBRARIES}
-#        spdlog::spdlog
         )
 
 if (UNIX)
@@ -57,6 +56,11 @@ set(INCLUDES
         EpicsClient/FwdMonitorRequester.h
         EpicsClient/EpicsClientInterface.h
         EpicsClient/ChannelRequester.h
+        KafkaW/ConsumerMessage.h
+        KafkaW/Producer.h
+        KafkaW/ProducerTopic.h
+        KafkaW/Consumer.h
+        KafkaW/BrokerSettings.h
         Config.h
         ConfigParser.h
         ConversionWorker.h
@@ -161,6 +165,15 @@ target_include_directories(${tgt} SYSTEM PRIVATE ${path_include_common_suppresse
 if (WIN32)
     target_link_libraries(${tgt} Ws2_32.lib dbghelp.lib)
 endif(WIN32)
+
+if (${GRAYLOGLOGGER_FOUND} AND ${USE_GRAYLOG_LOGGER})
+    message(STATUS "Using graylog_logger")
+    target_compile_definitions(${tgt} PRIVATE HAVE_GRAYLOG_LOGGER=1)
+    target_include_directories(${tgt} PRIVATE ${GRAYLOGLOGGER_INCLUDE_DIR})
+    target_link_libraries(${tgt} libgraylog_logger)
+elseif(NOT GRAYLOGLOGGER_FOUND AND USE_GRAYLOG_LOGGER)
+    message(WARNING "graylog_logger requested but not found")
+endif()
 
 target_link_libraries(${tgt} ${libraries_common})
 

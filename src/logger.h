@@ -19,5 +19,7 @@
 #endif
 #define UNUSED_ARG(x) (void)x;
 
+void setUpInitializationLogging();
+
 void setUpLogging(const spdlog::level::level_enum &LoggingLevel,
                   const std::string &LogFile, const std::string &GraylogURI);

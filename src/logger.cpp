@@ -16,3 +16,8 @@ void setUpLogging(const spdlog::level::level_enum &LoggingLevel,
     spdlog::stdout_color_mt("ForwarderLogger");
   }
 }
+
+void setUpInitializationLogging() {
+  spdlog::set_level(spdlog::level::err);
+  spdlog::stdout_color_mt("InitializationLogger");
+}
