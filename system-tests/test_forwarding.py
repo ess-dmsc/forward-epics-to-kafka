@@ -1,10 +1,11 @@
 ﻿from helpers.producerwrapper import ProducerWrapper
 from helpers.f142_logdata.Value import Value
 from time import sleep
-from helpers.kafka_helpers import create_consumer, poll_for_valid_message
+from helpers.kafka_helpers import create_consumer, poll_for_valid_message, get_all_available_messages
 from helpers.flatbuffer_helpers import check_expected_values, check_multiple_expected_values
 from helpers.epics_helpers import change_pv_value
 from helpers.PVs import PVDOUBLE, PVSTR, PVLONG, PVENUM
+from confluent_kafka import TopicPartition
 
 CONFIG_TOPIC = "TEST_forwarderConfig"
 
@@ -258,3 +259,55 @@ def test_forwarder_updates_pv_when_config_changed_from_two_pvs(docker_compose):
     messages = [poll_for_valid_message(cons), poll_for_valid_message(cons), poll_for_valid_message(cons)]
     check_multiple_expected_values(messages, expected_values)
     cons.close()
+
+
+def test_updates_from_the_same_pv_reach_the_same_partition(docker_compose):
+    """
+    We want updates for a particular PV to all reach the same partition in Kafka
+    so that their order is maintained
+
+    By default the messages would be published to different partitions
+    as a round robin approach is used to balance load, and this test would fail
+    But we have used the PV name as the message key, which should ensure
+    all messages from the same PV end up in the same partition
+    """
+    # This topic was created in the docker-compose and has 2 partitions
+    data_topic = "TEST_forwarderData_2_partitions"
+    pvs = [PVSTR, PVLONG]
+    prod = ProducerWrapper("localhost:9092", CONFIG_TOPIC, data_topic)
+    prod.add_config(pvs)
+
+    consumer_partition_0 = create_consumer()
+    consumer_partition_0.assign([TopicPartition(data_topic, partition=0)])
+
+    consumer_partition_1 = create_consumer()
+    consumer_partition_1.assign([TopicPartition(data_topic, partition=1)])
+
+    sleep(2)
+
+    # There should be 3 messages in total for each PV
+    # (the initial value and these two updates)
+    change_pv_value(PVSTR, "1")
+    sleep(0.5)
+    change_pv_value(PVSTR, "2")
+    sleep(0.5)
+
+    change_pv_value(PVLONG, 1)
+    sleep(0.5)
+    change_pv_value(PVLONG, 2)
+    sleep(0.5)
+
+    sleep(2)
+
+    def test_all_messages_for_pv_are_in_one_partition(consumer):
+        messages = get_all_available_messages(consumer)
+        # if we have any messages in this partition
+        if len(messages) != 0:
+            pv_name = messages[1].key()
+            assert pv_name is not None
+            count_of_messages_with_pv_name = sum(1 for message in messages if message.key == pv_name)
+            # then we expect exactly 3 with the same key as the first message
+            assert count_of_messages_with_pv_name == 3
+
+    test_all_messages_for_pv_are_in_one_partition(consumer_partition_0)
+    test_all_messages_for_pv_are_in_one_partition(consumer_partition_1)
