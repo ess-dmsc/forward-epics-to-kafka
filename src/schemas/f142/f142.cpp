@@ -3,8 +3,8 @@
 #include "../../SchemaRegistry.h"
 #include "../../helper.h"
 #include "../../logger.h"
+#include "schemas/f142_logdata_generated.h"
 #include <atomic>
-#include <f142_logdata_generated.h>
 #include <mutex>
 #include <pv/nt.h>
 #include <pv/ntndarray.h>
@@ -362,27 +362,12 @@ public:
     // this is the field type ID string: up.pvstr->getStructure()->getID()
     auto PVName = Builder->CreateString(PVUpdate.channel);
     auto Value = makeValue(*Builder, PVStructure, true, Stats);
+
     LogDataBuilder LogDataBuilder(*Builder);
     LogDataBuilder.add_source_name(PVName);
     LogDataBuilder.add_value_type(Value.Type);
     LogDataBuilder.add_value(Value.Offset);
 
-    checkUnits(PVUpdate);
-
-    getTimestamp(PVStructure, LogDataBuilder);
-
-    FinishLogDataBuffer(*Builder, LogDataBuilder.Finish());
-    return FlatbufferMessage;
-  }
-
-  std::map<std::string, double> getStats() override {
-    return {{"ranges_n", Seqs.size()}};
-  }
-
-private:
-  void getTimestamp(
-      const std::tr1::shared_ptr<epics::pvData::PVStructure> &PVStructure,
-      LogDataBuilder &LogDataBuilder) {
     if (auto PVTimeStamp =
             PVStructure->getSubField<epics::pvData::PVStructure>("timeStamp")) {
       uint64_t TimeStamp = static_cast<uint64_t>(
@@ -395,32 +380,21 @@ private:
                        ->getSubField<epics::pvData::PVScalarValue<int32_t>>(
                            "nanoseconds")
                        ->get();
-
       LogDataBuilder.add_timestamp(TimeStamp);
     } else {
       ++Stats.err_timestamp_not_available;
     }
+
+    FinishLogDataBuffer(*Builder, LogDataBuilder.Finish());
+    return FlatbufferMessage;
   }
 
-  void checkUnits(EpicsPVUpdate const &PVUpdate) {
-    auto &PVStructure = PVUpdate.epics_pvstr;
-    if (auto PVDisplay =
-            PVStructure->getSubField<epics::pvData::PVStructure>("display")) {
-      auto NewUnits =
-          PVDisplay
-              ->getSubField<epics::pvData::PVScalarValue<std::string>>("units")
-              ->get();
-      if (CachedUnits.empty() && !NewUnits.empty()) {
-        CachedUnits = NewUnits;
-      } else if (NewUnits != CachedUnits) {
-        LOG(Sev::Error, "Units changed in PV {} from {} to {}.",
-            PVUpdate.channel, CachedUnits, NewUnits);
-      }
-    }
+  std::map<std::string, double> getStats() override {
+    return {{"ranges_n", seqs.size()}};
   }
-  RangeSet<uint64_t> Seqs;
+
+  RangeSet<uint64_t> seqs;
   Statistics Stats;
-  std::string CachedUnits;
 };
 
 class Info : public SchemaInfo {

@@ -28,7 +28,6 @@ ConversionPath::~ConversionPath() {
 }
 
 int ConversionPath::emit(std::shared_ptr<FlatBufs::EpicsPVUpdate> up) {
-
   auto fb = converter->convert(*up);
   if (fb == nullptr) {
     LOG(Sev::Info, "empty converted flat buffer");
@@ -41,7 +40,7 @@ int ConversionPath::emit(std::shared_ptr<FlatBufs::EpicsPVUpdate> up) {
 nlohmann::json ConversionPath::status_json() const {
   using nlohmann::json;
   auto Document = json::object();
-  Document["schema"] = converter->getSchemaID();
+  Document["schema"] = converter->schema_name();
   Document["broker"] = kafka_output->Output.brokerAddress();
   Document["topic"] = kafka_output->topic_name();
   return Document;
@@ -52,7 +51,7 @@ std::string ConversionPath::getKafkaTopicName() const {
 }
 
 std::string ConversionPath::getSchemaName() const {
-  return converter->getSchemaID();
+  return converter->schema_name();
 }
 
 Stream::Stream(

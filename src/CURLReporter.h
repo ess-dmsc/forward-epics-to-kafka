@@ -20,14 +20,14 @@ struct InitCURL {
 
 bool const HaveCURL{true};
 
-void send(fmt::MemoryWriter &MemoryWriter, std::string const &URL) {
+void send(fmt::memory_buffer &MemoryWriter, std::string const &URL) {
   static InitCURL Initializer;
   CURL *curl;
   CURLcode res;
   curl = curl_easy_init();
   if (curl) {
     curl_easy_setopt(curl, CURLOPT_URL, URL.c_str());
-    curl_easy_setopt(curl, CURLOPT_POSTFIELDS, MemoryWriter.c_str());
+    curl_easy_setopt(curl, CURLOPT_POSTFIELDS, MemoryWriter.data());
     res = curl_easy_perform(curl);
     if (res != CURLE_OK) {
       LOG(Sev::Notice, "curl_easy_perform() failed: {}",
@@ -39,7 +39,7 @@ void send(fmt::MemoryWriter &MemoryWriter, std::string const &URL) {
 
 #else
 bool const HaveCURL{false};
-void send(fmt::MemoryWriter &, std::string const &) {}
+void send(fmt::memory_buffer &, std::string const &) {}
 #endif
 } // namespace CURLReporter
 } // namespace Forwarder

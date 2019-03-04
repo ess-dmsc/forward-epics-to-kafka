@@ -3,7 +3,6 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ..)
 message(STATUS "CMAKE_BUILD_TYPE: ${CMAKE_BUILD_TYPE}")
 
 find_package(EPICSV4)
-find_package(Fmt REQUIRED)
 find_package(RdKafka REQUIRED)
 find_package(FlatBuffers REQUIRED)
 find_package(CLI11 REQUIRED)
@@ -16,7 +15,6 @@ find_package(StaticData COMPONENTS "schema-config-global.json")
 find_package(GitCommitExtract)
 
 set(path_include_common
-${FMT_INCLUDE_DIR}
 ${CONCURRENTQUEUE_INCLUDE_DIR}
 ${JSONFORMODERNCPP_INCLUDE_DIR}
 ${CLI11_INCLUDE_DIR}
@@ -129,7 +127,6 @@ set(SOURCES
     Stream.cpp
     Streams.cpp
     schemas/f142/f142.cpp
-    ${FMT_SRC}
     Timer.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/git_commit_current.cpp)
 

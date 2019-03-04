@@ -21,19 +21,19 @@ properties([[
 
 images = [
         'centos7': [
-                'name': 'essdmscdm/centos7-build-node:3.0.0',
-                'sh'  : '/usr/bin/scl enable rh-python35 devtoolset-6 -- /bin/bash -e'
+                'name': 'essdmscdm/centos7-build-node:4.0.0',
+                'sh'  : '/usr/bin/scl enable devtoolset-6 -- /bin/bash -e'
         ],
         'centos7-release': [
-                'name': 'essdmscdm/centos7-build-node:3.0.0',
-                'sh'  : '/usr/bin/scl enable rh-python35 devtoolset-6 -- /bin/bash -e'
+                'name': 'essdmscdm/centos7-build-node:4.0.0',
+                'sh'  : '/usr/bin/scl enable devtoolset-6 -- /bin/bash -e'
         ],
         'debian9'    : [
-                'name': 'essdmscdm/debian9-build-node:2.5.2',
+                'name': 'essdmscdm/debian9-build-node:2.6.0',
                 'sh'  : 'bash -e'
         ],
         'ubuntu1804'  : [
-                'name': 'essdmscdm/ubuntu18.04-build-node:1.1.0',
+                'name': 'essdmscdm/ubuntu18.04-build-node:1.4.0',
                 'sh'  : 'bash -e'
         ]
 ]
@@ -267,8 +267,8 @@ def docker_coverage(image_key) {
                 cd ${project}
                 export WORKSPACE='.'
                 export JENKINS_URL=${JENKINS_URL}
-                pip install --user codecov
-                python -m codecov -t ${TOKEN} --commit ${scm_vars.GIT_COMMIT} -f ../build/coverage.info
+                python3.6 -m pip install --user codecov
+                python3.6 -m codecov -t ${TOKEN} --commit ${scm_vars.GIT_COMMIT} -f ../build/coverage.info
                 """
             sh "docker exec ${container_name(image_key)} ${custom_sh} -c \"${codecov_upload_script}\""
         }
@@ -387,8 +387,8 @@ def get_system_tests_pipeline() {
                         checkout scm
                     }  // stage
                     stage("System tests: Install requirements") {
-                        sh """scl enable rh-python35 -- python -m pip install --user --upgrade pip
-                        scl enable rh-python35 -- python -m pip install --user -r system-tests/requirements.txt
+                        sh """python3.6 -m pip install --user --upgrade pip
+                        python3.6 -m pip install --user -r system-tests/requirements.txt
                         """
                     }  // stage
                     stage("System tests: Run") {
@@ -396,7 +396,7 @@ def get_system_tests_pipeline() {
                                                 """
 			timeout(time: 30, activity: true){
                             sh """cd system-tests/
-                            scl enable rh-python35 -- python -m pytest -s  --junitxml=./SystemTestsOutput.xml ./
+                            python3.6 -m pytest -s  --junitxml=./SystemTestsOutput.xml ./
                             """
 			}
                     }  // stage
