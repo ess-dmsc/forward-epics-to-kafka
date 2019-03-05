@@ -28,8 +28,8 @@ int ConversionWorker::stop() {
 int ConversionWorker::run() {
   using CLK = std::chrono::steady_clock;
   using MS = std::chrono::milliseconds;
-  auto Dt = MS(100);
-  auto t1 = CLK::now();
+  auto MinTimeDifference = MS(100);
+  auto TimeBegin = CLK::now();
   while (do_run) {
     auto qs = queue.size_approx();
     if (qs == 0) {
@@ -38,18 +38,18 @@ int ConversionWorker::run() {
     }
     while (true) {
       std::unique_ptr<ConversionWorkPacket> Packet;
-      bool found = queue.try_dequeue(Packet);
-      if (!found) {
+      bool Found = queue.try_dequeue(Packet);
+      if (!Found) {
         break;
       }
       Packet->Path->emit(std::move(Packet->Update));
     }
-    auto t2 = CLK::now();
-    auto dt = std::chrono::duration_cast<MS>(t2 - t1);
-    if (dt < Dt) {
-      std::this_thread::sleep_for(Dt - dt);
+    auto TimeEnd = CLK::now();
+    auto TimeDifference = std::chrono::duration_cast<MS>(TimeEnd - TimeBegin);
+    if (TimeDifference < MinTimeDifference) {
+      std::this_thread::sleep_for(MinTimeDifference - TimeDifference);
     }
-    t1 = t2;
+    TimeBegin = TimeEnd;
   }
   return 0;
 }
