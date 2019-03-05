@@ -3,9 +3,10 @@
 
 void setUpLogging(const spdlog::level::level_enum &LoggingLevel,
                   const std::string &LogFile, const std::string &GraylogURI) {
-  spdlog::set_level(LoggingLevel);
+  std::vector<spdlog::sink_ptr> sinks;
   if (!LogFile.empty()) {
-    spdlog::basic_logger_mt("ForwarderLogger", LogFile);
+    sinks.push_back(
+        std::make_shared<spdlog::sinks::basic_file_sink_mt>(LogFile));
   }
   if (!GraylogURI.empty()) {
     Forwarder::URI TempURI(GraylogURI);
@@ -13,8 +14,12 @@ void setUpLogging(const spdlog::level::level_enum &LoggingLevel,
     // auto grayloginterface = spdlog::graylog_sink(TempURI.HostPort,
     // TempURI.Topic);
   } else {
-    spdlog::stdout_color_mt("ForwarderLogger");
+    sinks.push_back(std::make_shared<spdlog::sinks::stdout_color_sink_mt>());
   }
+  auto combined_logger = std::make_shared<spdlog::logger>(
+      "ForwarderLogger", begin(sinks), end(sinks));
+  spdlog::register_logger(combined_logger);
+  spdlog::set_level(LoggingLevel);
 }
 
 void setUpInitializationLogging() {
