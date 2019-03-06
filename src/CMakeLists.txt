@@ -96,7 +96,9 @@ set(INCLUDES
     Stream.h
     Streams.h
     Timer.h
-    URI.h)
+    URI.h
+    schemas/tdc_time/TdcTime.cpp
+  )
 
 set(SOURCES
     MainOpt.cpp
@@ -125,6 +127,7 @@ set(SOURCES
     Stream.cpp
     Streams.cpp
     schemas/f142/f142.cpp
+    schemas/tdc_time/TdcTime.cpp
     Timer.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/git_commit_current.cpp)
 
