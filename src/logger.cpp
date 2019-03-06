@@ -1,5 +1,7 @@
 #include "logger.h"
 #include "URI.h"
+#include <graylog_logger/Log.hpp>
+using my_sink_mt = spdlog::sinks::graylog_sink<std::mutex>;
 
 void setUpLogging(const spdlog::level::level_enum &LoggingLevel,
                   const std::string &LogFile, const std::string &GraylogURI) {
@@ -8,10 +10,21 @@ void setUpLogging(const spdlog::level::level_enum &LoggingLevel,
     sinks.push_back(
         std::make_shared<spdlog::sinks::basic_file_sink_mt>(LogFile));
   }
-  if (!GraylogURI.empty()) {
+  if (GraylogURI.empty()) {
     Forwarder::URI TempURI(GraylogURI);
-    // Set up URI interface here
-    // auto grayloginterface = spdlog::graylog_sink(TempURI.HostPort,
+    //     Set up URI interface here
+    std::string lel = "localhost";
+    int a = 9000;
+
+    //    auto Sink = std::make_shared<my_sink_mt>(lel, a);
+    //    auto GraylogLogger = std::make_shared<spdlog::logger>("graylog",
+    //    Sink);
+
+    sinks.push_back(
+        std::make_shared<spdlog::sinks::graylog_sink<std::mutex>>(lel, a));
+
+    //       auto grayloginterface =
+    //       spdlog::sinks::graylog_sink<std::mutex>(TempURI.HostPort,
     // TempURI.Topic);
   } else {
     sinks.push_back(std::make_shared<spdlog::sinks::stdout_color_sink_mt>());
