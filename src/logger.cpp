@@ -5,32 +5,23 @@ using my_sink_mt = spdlog::sinks::graylog_sink<std::mutex>;
 
 void setUpLogging(const spdlog::level::level_enum &LoggingLevel,
                   const std::string &LogFile, const std::string &GraylogURI) {
-  std::vector<spdlog::sink_ptr> sinks;
+  std::vector<spdlog::sink_ptr> Sinks;
   if (!LogFile.empty()) {
-    sinks.push_back(
+    Sinks.push_back(
         std::make_shared<spdlog::sinks::basic_file_sink_mt>(LogFile));
   }
-  if (GraylogURI.empty()) {
+  if (!GraylogURI.empty()) {
     Forwarder::URI TempURI(GraylogURI);
     //     Set up URI interface here
-    std::string lel = "localhost";
-    int a = 9000;
-
-    //    auto Sink = std::make_shared<my_sink_mt>(lel, a);
-    //    auto GraylogLogger = std::make_shared<spdlog::logger>("graylog",
-    //    Sink);
-
-    sinks.push_back(
-        std::make_shared<spdlog::sinks::graylog_sink<std::mutex>>(lel, a));
-
-    //       auto grayloginterface =
-    //       spdlog::sinks::graylog_sink<std::mutex>(TempURI.HostPort,
-    // TempURI.Topic);
+    //    std::string Host = "localhost";
+    //    int Port = 12201;
+    //    Sinks.push_back(std::make_shared<spdlog::sinks::graylog_sink_mt>(Host,
+    //    Port));
   } else {
-    sinks.push_back(std::make_shared<spdlog::sinks::stdout_color_sink_mt>());
+    Sinks.push_back(std::make_shared<spdlog::sinks::stdout_color_sink_mt>());
   }
   auto combined_logger = std::make_shared<spdlog::logger>(
-      "ForwarderLogger", begin(sinks), end(sinks));
+      "ForwarderLogger", begin(Sinks), end(Sinks));
   spdlog::register_logger(combined_logger);
   spdlog::set_level(LoggingLevel);
 }

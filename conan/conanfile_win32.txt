@@ -8,7 +8,7 @@ streaming-data-types/3e85b23@ess-dmsc/stable
 cli11/1.5.3@bincrafters/stable
 jsonformoderncpp/3.1.0@vthiery/stable
 concurrentqueue/8f7e861@ess-dmsc/stable
-spdlog-graylog/1.2.1-dm1@ess-dmsc/testing
+spdlog-graylog/1.2.1-dm5@ess-dmsc/testing
 
 [options]
 librdkafka:shared=True

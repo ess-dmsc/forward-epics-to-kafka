@@ -10,7 +10,6 @@ find_package(JSONForModernCPP REQUIRED)
 find_package(ConcurrentQueue REQUIRED)
 find_package(StreamingDataTypes COMPONENTS ce9a4745431e54bc45b0c927857a866fa77b84ec)
 find_package(CURL)
-find_package(GraylogLogger)
 find_package(StaticData COMPONENTS "schema-config-global.json")
 find_package(GitCommitExtract)
 
@@ -175,7 +174,8 @@ elseif(NOT GRAYLOGLOGGER_FOUND AND USE_GRAYLOG_LOGGER)
     message(WARNING "graylog_logger requested but not found")
 endif()
 
-target_link_libraries(${tgt} ${libraries_common})
+target_link_libraries(${tgt} ${libraries_common}
+        )
 
 if (have_gtest)
     add_subdirectory(tests)
