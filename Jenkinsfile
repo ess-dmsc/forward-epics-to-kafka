@@ -371,9 +371,14 @@ def get_win10_pipeline() {
 
 	 stage("win10: Build") {
            bat """cd _build
-	     cmake .. -G \"Visual Studio 15 2017 Win64\" -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTS=FALSE
-	     cmake --build .
-	     """
+      dir
+      conan.exe install --generator virtualrunenv cmake_installer/3.10.0@conan/stable
+      dir
+      activate_run.bat
+	    cmake --version
+	    cmake .. -G \"Visual Studio 15 2017 Win64\" -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTS=FALSE
+	    cmake --build .
+	    """
         }  // stage
       }  // dir
       }
