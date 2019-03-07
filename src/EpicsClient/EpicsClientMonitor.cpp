@@ -98,10 +98,14 @@ void EpicsClientMonitor::handleConnectionStateChange(
     InfoBuffer.add_timestamp(Timestamp);
     InfoBuffer.add_source_name(PVName);
     InfoBuffer.add_service_id(ServiceID);
-    if (ConnectionState == ChannelConnectionState::CONNECTED) {
+    if (ConnectionState == ChannelConnectionState::NEVER_CONNECTED) {
+      InfoBuffer.add_type(ep00::EventType::NEVER_CONNECTED);
+    } else if (ConnectionState == ChannelConnectionState::CONNECTED) {
       InfoBuffer.add_type(ep00::EventType::CONNECTED);
-    } else {
+    } else if (ConnectionState == ChannelConnectionState::DISCONNECTED) {
       InfoBuffer.add_type(ep00::EventType::DISCONNECTED);
+    } else if (ConnectionState == ChannelConnectionState::DESTROYED) {
+      InfoBuffer.add_type(ep00::EventType::DESTROYED);
     }
     ep00::FinishEpicsConnectionInfoBuffer(Builder, InfoBuffer.Finish());
     ConnectionStatusProducer->produce(Builder.GetBufferPointer(),
