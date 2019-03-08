@@ -42,7 +42,7 @@ public:
     factory_init = EpicsClientFactoryInit::factory_init();
     {
       RLOCK();
-      provider = ::epics::pvAccess::getChannelProviderRegistry()->getProvider(
+      provider = epics::pvAccess::ChannelProviderRegistry::clients()->getProvider(
           epics_channel_provider_type);
       if (!provider) {
         LOG(Sev::Error, "Can not initialize provider");

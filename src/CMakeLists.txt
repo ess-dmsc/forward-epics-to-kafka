@@ -25,15 +25,12 @@ ${PROJECT_BINARY_DIR}/src
 )
 
 set(path_include_common_suppressed_warnings
-        ${EPICSV4_INCLUDE_DIRS}
+        ${EPICS_INCLUDE_DIR}
         )
 
 set(libraries_common
-${path_library_epics_ca}
-${path_library_epics_pvData}
-${path_library_epics_pvAccess}
-${path_library_epics_NT}
 ${RDKAFKA_LIBRARIES}
+${EPICS_LIBRARIES}
 ${FETK_EXTRA_LIBRARIES}
 )
 
