@@ -12,11 +12,11 @@ void setUpLogging(const spdlog::level::level_enum &LoggingLevel,
   }
   if (!GraylogURI.empty()) {
     Forwarder::URI TempURI(GraylogURI);
-    //     Set up URI interface here
-    //    std::string Host = "localhost";
-    //    int Port = 12201;
-    //    Sinks.push_back(std::make_shared<spdlog::sinks::graylog_sink_mt>(Host,
-    //    Port));
+    //    Set up URI interface here
+    std::string Host = "localhost";
+    int Port = 12201;
+    Sinks.push_back(
+        std::make_shared<spdlog::sinks::graylog_sink_mt>(Host, Port));
   } else {
     Sinks.push_back(std::make_shared<spdlog::sinks::stdout_color_sink_mt>());
   }

@@ -12,6 +12,8 @@ find_package(StreamingDataTypes COMPONENTS ce9a4745431e54bc45b0c927857a866fa77b8
 find_package(CURL)
 find_package(StaticData COMPONENTS "schema-config-global.json")
 find_package(GitCommitExtract)
+find_package(GraylogLogger REQUIRED)
+
 
 set(path_include_common
         ${CONCURRENTQUEUE_INCLUDE_DIR}
@@ -21,6 +23,7 @@ set(path_include_common
         ${FLATBUFFERS_INCLUDE_DIR}
         ${PROJECT_SOURCE_DIR}/src
         ${PROJECT_BINARY_DIR}/src
+        ${GRAYLOGLOGGER_INCLUDE_DIR}
         )
 
 set(path_include_common_suppressed_warnings
@@ -34,6 +37,7 @@ set(libraries_common
         ${path_library_epics_NT}
         ${RDKAFKA_LIBRARIES}
         ${FETK_EXTRA_LIBRARIES}
+        ${GRAYLOGLOGGER_LIBRARY}
         )
 
 if (UNIX)
@@ -165,14 +169,14 @@ if (WIN32)
     target_link_libraries(${tgt} Ws2_32.lib dbghelp.lib)
 endif(WIN32)
 
-if (${GRAYLOGLOGGER_FOUND} AND ${USE_GRAYLOG_LOGGER})
-    message(STATUS "Using graylog_logger")
-    target_compile_definitions(${tgt} PRIVATE HAVE_GRAYLOG_LOGGER=1)
-    target_include_directories(${tgt} PRIVATE ${GRAYLOGLOGGER_INCLUDE_DIR})
-    target_link_libraries(${tgt} libgraylog_logger)
-elseif(NOT GRAYLOGLOGGER_FOUND AND USE_GRAYLOG_LOGGER)
-    message(WARNING "graylog_logger requested but not found")
-endif()
+#if (${GRAYLOGLOGGER_FOUND} AND ${USE_GRAYLOG_LOGGER})
+#    message(STATUS "Using graylog_logger")
+#    target_compile_definitions(${tgt} PRIVATE HAVE_GRAYLOG_LOGGER=1)
+#    target_include_directories(${tgt} PRIVATE ${GRAYLOGLOGGER_INCLUDE_DIR})
+#    target_link_libraries(${tgt} libgraylog_logger)
+#elseif(NOT GRAYLOGLOGGER_FOUND AND USE_GRAYLOG_LOGGER)
+#    message(WARNING "graylog_logger requested but not found")
+#endif()
 
 target_link_libraries(${tgt} ${libraries_common}
         )
