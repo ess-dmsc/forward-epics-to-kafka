@@ -12,7 +12,7 @@ void setUpLogging(const spdlog::level::level_enum &LoggingLevel,
   if (!GraylogURI.empty()) {
     Forwarder::URI TempURI(GraylogURI);
     Sinks.push_back(std::make_shared<spdlog::sinks::graylog_sink_mt>(
-            TempURI.HostPort.substr(0, TempURI.HostPort.find(":")), TempURI.Port));
+        TempURI.HostPort.substr(0, TempURI.HostPort.find(":")), TempURI.Port));
   } else {
     Sinks.push_back(std::make_shared<spdlog::sinks::stdout_color_sink_mt>());
   }
