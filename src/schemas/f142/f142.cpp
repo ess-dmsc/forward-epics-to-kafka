@@ -3,8 +3,8 @@
 #include "../../SchemaRegistry.h"
 #include "../../helper.h"
 #include "../../logger.h"
+#include "schemas/f142_logdata_generated.h"
 #include <atomic>
-#include <f142_logdata_generated.h>
 #include <mutex>
 #include <pv/nt.h>
 #include <pv/ntndarray.h>
