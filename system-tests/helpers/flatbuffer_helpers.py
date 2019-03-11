@@ -20,6 +20,7 @@ def check_expected_values(log_data, value_type, pv_name, expected_value=None):
     """
     assert value_type == log_data.ValueType()
     assert bytes(pv_name, encoding='utf-8') == log_data.SourceName()
+    assert log_data.Timestamp() > 0
     if expected_value is not None:
         union_val = ValueTypes[value_type]()
         union_val.Init(log_data.Value().Bytes, log_data.Value().Pos)
@@ -43,6 +44,7 @@ def check_multiple_expected_values(message_list, expected_values):
     for log_data in message_list:
         name = str(log_data.SourceName(), encoding='utf-8')
         assert name in expected_values.keys() and name not in used_pv_names
+        assert log_data.Timestamp() > 0
         used_pv_names.append(name)
         assert expected_values[name][0] == log_data.ValueType()
         union_val = ValueTypes[log_data.ValueType()]()
