@@ -3,7 +3,7 @@
 #include "../../SchemaRegistry.h"
 #include "../../helper.h"
 #include "../../logger.h"
-#include <f142_logdata_generated.h>
+#include <senv_data_generated.h>
 #include "TdcTime.h"
 #include <atomic>
 #include <mutex>
@@ -12,11 +12,28 @@
 #include <pv/ntndarrayAttribute.h>
 #include <pv/ntutils.h>
 #include <pv/pvEnumerated.h>
+#include <string>
+#include <algorithm>
 
 namespace TdcTime {
   
   namespace pvNT = epics::nt;
   namespace pv = epics::pvData;
+  
+  template <typename pvScalarArrType>
+  std::vector<std::uint64_t> CalcTimestamps(pv::PVFieldPtr scalarArray) {
+    auto pvValues = dynamic_cast<pvScalarArrType*>(scalarArray.get());
+    size_t NrOfElements = pvValues->getLength();
+    if (NrOfElements % 2 != 0) {
+      throw std::runtime_error("Size of pvAccess array is not a power of two.");
+    }
+    const auto pvArrPtr = pvValues->view().data();
+    std::vector<std::uint64_t> RetVector;
+    for (size_t i = 0; i < NrOfElements; i+=2) {
+      RetVector.push_back(pvArrPtr[i] * 1000000000L + pvArrPtr[i + 1]);
+    }
+    return RetVector;
+  }
   
   std::unique_ptr<FlatBufs::FlatbufferMessage>
   Converter::create(FlatBufs::EpicsPVUpdate const &PvData) {
@@ -32,10 +49,42 @@ namespace TdcTime {
     if (ElementType != pv::ScalarType::pvInt) {
       LOG(Sev::Error, "Array elements are not of expected type.");
       return {};
+    } else {
+      auto ConvertField = ntScalarData->getValue();
+      try {
+        auto NewTimestamps = CalcTimestamps<pv::PVIntArray>(ConvertField);
+        if (NewTimestamps.empty()) {
+          return {};
+        }
+        return generateFlatbufferFromData(PvData.channel, NewTimestamps);
+      } catch (std::runtime_error &E) {
+        LOG(Sev::Critical, "Unable to convert pv-array into timestamps: {}", E.what());
+        return {};
+      }
     }
     return {};
   }
   
+  std::unique_ptr<FlatBufs::FlatbufferMessage> generateFlatbufferFromData(std::string const &Name, std::vector<std::uint64_t> Timestamps) {
+    auto ReturnMessage = make_unique<FlatBufs::FlatbufferMessage>();
+    auto Builder = ReturnMessage->builder.get();
+    std::vector<std::uint16_t> ZeroValues(Timestamps.size());
+    std::fill(ZeroValues.begin(), ZeroValues.end(), 0);
+    auto ElementVector = Builder->CreateVector(ZeroValues);
+    auto TimestampVector = Builder->CreateVector(Timestamps);
+    auto FBNameString = Builder->CreateString(Name);
+    auto SenvData = SampleEnvironmentDataBuilder(*Builder);
+    SenvData.add_Name(FBNameString);
+    SenvData.add_Values(ElementVector);
+    SenvData.add_Timestamps(TimestampVector);
+    SenvData.add_Channel(0);
+    SenvData.add_TimeDelta(0.0);
+    SenvData.add_MessageCounter(0);
+    SenvData.add_TimestampLocation(Location::Middle);
+    SenvData.add_PacketTimestamp(Timestamps[0]);
+    FinishSampleEnvironmentDataBuffer(*Builder, SenvData.Finish());
+    return ReturnMessage;
+  }
   
   void Converter::config(std::map<std::string, std::string> const &) {
     
