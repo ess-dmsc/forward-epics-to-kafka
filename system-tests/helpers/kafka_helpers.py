@@ -7,12 +7,29 @@ class MsgErrorException(Exception):
     pass
 
 
+def get_all_available_messages(consumer):
+    """
+    Consumes all available messages topics subscribed to by the consumer
+    :param consumer: The consumer object
+    :return: list of messages, empty if none available
+    """
+    messages = []
+    low_offset, high_offset = consumer.get_watermark_offsets(consumer.assignment()[0], cached=False)
+    number_of_messages_available = high_offset - low_offset
+    while len(messages) < number_of_messages_available:
+        message = consumer.poll(timeout=2.0)
+        if message is None or message.error():
+            continue
+        messages.append(message)
+    return messages
+
+
 def poll_for_valid_message(consumer):
     """
     Polls the subscribed topics by the consumer and checks the buffer is not empty or malformed.
 
-    :param consumer: The consumer object.
-    :return: The message object received from polling.
+    :param consumer: The consumer object
+    :return: The LogData flatbuffer from the message payload
     """
     msg = consumer.poll(timeout=1.0)
     assert msg is not None
