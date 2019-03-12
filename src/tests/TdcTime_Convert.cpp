@@ -1,81 +1,81 @@
-#include <gtest/gtest.h>
+#include "../EpicsPVUpdate.h"
+#include "../schemas/tdc_time/TdcTime.h"
+#include <ctime>
 #include <flatbuffers/flatbuffers.h>
-#include <pv/ntscalarArray.h>
+#include <gtest/gtest.h>
+#include <map>
 #include <pv/nt.h>
+#include <pv/ntscalarArray.h>
 #include <pv/pvTimeStamp.h>
 #include <pv/timeStamp.h>
-#include <ctime>
-#include <map>
-#include <vector>
-#include "../schemas/tdc_time/TdcTime.h"
-#include "../EpicsPVUpdate.h"
 #include <senv_data_generated.h>
+#include <vector>
 
 namespace pvNT = epics::nt;
 namespace pv = epics::pvData;
 
 class ConvertTDCTest : public ::testing::Test {
 public:
-    virtual void SetUp() {
-      TestConverter = TdcTime::Converter();
-//        fb_builder.Clear();
-    };
-    
-    virtual void TearDown(){
-        
-    };
+  virtual void SetUp() {
+    TestConverter = TdcTime::Converter();
+    //        fb_builder.Clear();
+  };
+
+  virtual void TearDown(){
+
+  };
   TdcTime::Converter TestConverter;
 };
 
-template <typename scalarArrayType>
-pv::ScalarType GetElementType() {
-    if (std::is_same<scalarArrayType, pv::PVByteArray>::value) {
-        return pv::ScalarType::pvByte;
-    } else if (std::is_same<scalarArrayType, pv::PVUByteArray>::value) {
-        return pv::ScalarType::pvUByte;
-    } else if (std::is_same<scalarArrayType, pv::PVShortArray>::value) {
-        return pv::ScalarType::pvShort;
-    } else if (std::is_same<scalarArrayType, pv::PVUShortArray>::value) {
-        return pv::ScalarType::pvUShort;
-    } else if (std::is_same<scalarArrayType, pv::PVIntArray>::value) {
-        return pv::ScalarType::pvInt;
-    } else if (std::is_same<scalarArrayType, pv::PVUIntArray>::value) {
-        return pv::ScalarType::pvUInt;
-    } else if (std::is_same<scalarArrayType, pv::PVLongArray>::value) {
-        return pv::ScalarType::pvLong;
-    } else if (std::is_same<scalarArrayType, pv::PVULongArray>::value) {
-        return pv::ScalarType::pvULong;
-    } else if (std::is_same<scalarArrayType, pv::PVFloatArray>::value) {
-        return pv::ScalarType::pvFloat;
-    } else if (std::is_same<scalarArrayType, pv::PVDoubleArray>::value) {
-        return pv::ScalarType::pvDouble;
-    } else {
-        assert(false);
-    }
+template <typename scalarArrayType> pv::ScalarType GetElementType() {
+  if (std::is_same<scalarArrayType, pv::PVByteArray>::value) {
+    return pv::ScalarType::pvByte;
+  } else if (std::is_same<scalarArrayType, pv::PVUByteArray>::value) {
+    return pv::ScalarType::pvUByte;
+  } else if (std::is_same<scalarArrayType, pv::PVShortArray>::value) {
+    return pv::ScalarType::pvShort;
+  } else if (std::is_same<scalarArrayType, pv::PVUShortArray>::value) {
+    return pv::ScalarType::pvUShort;
+  } else if (std::is_same<scalarArrayType, pv::PVIntArray>::value) {
     return pv::ScalarType::pvInt;
+  } else if (std::is_same<scalarArrayType, pv::PVUIntArray>::value) {
+    return pv::ScalarType::pvUInt;
+  } else if (std::is_same<scalarArrayType, pv::PVLongArray>::value) {
+    return pv::ScalarType::pvLong;
+  } else if (std::is_same<scalarArrayType, pv::PVULongArray>::value) {
+    return pv::ScalarType::pvULong;
+  } else if (std::is_same<scalarArrayType, pv::PVFloatArray>::value) {
+    return pv::ScalarType::pvFloat;
+  } else if (std::is_same<scalarArrayType, pv::PVDoubleArray>::value) {
+    return pv::ScalarType::pvDouble;
+  } else {
+    assert(false);
+  }
+  return pv::ScalarType::pvInt;
 }
 
-template<typename scalarArrType>
+template <typename scalarArrType>
 pv::PVStructure::shared_pointer CreateTestNTScalarArray(size_t elements) {
-    pvNT::NTScalarArrayBuilderPtr builder = pvNT::NTScalarArray::createBuilder();
-    pvNT::NTScalarArrayPtr ntScalarArray = builder->value(GetElementType<scalarArrType>())->addTimeStamp()->create();
-    
-    typename scalarArrType::svector someValues;
-    for (int i = 0; i < elements; i++) {
-        someValues.push_back(i*2);
-    }
-    
-    auto pvValueField = ntScalarArray->getValue<scalarArrType>();
-    pvValueField->replace(freeze(someValues));
-    
-    pv::TimeStamp timeStamp;
-    timeStamp.fromTime_t(time(nullptr));
-    timeStamp += 0.123456789;
-    pv::PVTimeStamp pvTimeStamp;
-    ntScalarArray->attachTimeStamp(pvTimeStamp);
-    pvTimeStamp.set(timeStamp);
-    
-    return ntScalarArray->getPVStructure();
+  pvNT::NTScalarArrayBuilderPtr builder = pvNT::NTScalarArray::createBuilder();
+  pvNT::NTScalarArrayPtr ntScalarArray =
+      builder->value(GetElementType<scalarArrType>())->addTimeStamp()->create();
+
+  typename scalarArrType::svector someValues;
+  for (int i = 0; i < elements; i++) {
+    someValues.push_back(i * 2);
+  }
+
+  auto pvValueField = ntScalarArray->getValue<scalarArrType>();
+  pvValueField->replace(freeze(someValues));
+
+  pv::TimeStamp timeStamp;
+  timeStamp.fromTime_t(time(nullptr));
+  timeStamp += 0.123456789;
+  pv::PVTimeStamp pvTimeStamp;
+  ntScalarArray->attachTimeStamp(pvTimeStamp);
+  pvTimeStamp.set(timeStamp);
+
+  return ntScalarArray->getPVStructure();
 }
 
 pv::PVStructure::shared_pointer CreateTestScalarStruct() {
@@ -89,7 +89,6 @@ pv::PVStructure::shared_pointer CreateTestScalarStruct() {
   PVStruct->attachTimeStamp(pvTS);
   return PVStruct->getPVStructure();
 }
-
 
 TEST_F(ConvertTDCTest, TwoElementSuccess) {
   auto TestData = CreateTestNTScalarArray<pv::PVIntArray>(60);
