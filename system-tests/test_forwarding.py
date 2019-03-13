@@ -6,6 +6,7 @@ from helpers.flatbuffer_helpers import check_expected_values, check_multiple_exp
 from helpers.epics_helpers import change_pv_value
 from helpers.PVs import PVDOUBLE, PVSTR, PVLONG, PVENUM
 from confluent_kafka import TopicPartition
+import json
 
 CONFIG_TOPIC = "TEST_forwarderConfig"
 
@@ -124,6 +125,7 @@ def test_forwarder_updates_pv_when_config_changed_from_two_pvs_to_three(docker_c
     THEN Forwarder publishes value for all PVs
     """
     data_topic = "TEST_forwarderData_change_config"
+    status_topic = "TEST_forwarderStatus"
     pvs = [PVSTR, PVLONG]
     prod = ProducerWrapper("localhost:9092", CONFIG_TOPIC, data_topic)
     prod.add_config(pvs)
@@ -133,18 +135,24 @@ def test_forwarder_updates_pv_when_config_changed_from_two_pvs_to_three(docker_c
     sleep(5)
     cons = create_consumer()
     sleep(2)
-    cons.subscribe([data_topic])
-    sleep(5)
+    cons.assign([TopicPartition(status_topic, partition=0)])
+    sleep(2)
 
-    # Ignore the first two messages which result from the first configuration message
-    # When the new configuration message is received, the value of all three PVs will be published
-    poll_for_valid_message(cons)
-    poll_for_valid_message(cons)
+    # Get the last available status message
+    partitions = cons.assignment()
+    _, hi = cons.get_watermark_offsets(partitions[0], cached=False, timeout=2.0)
+    last_msg_offset = hi - 1
+    cons.assign([TopicPartition(status_topic, partition=0, offset=last_msg_offset)])
+    status_msg = poll_for_valid_message(cons, expected_file_identifier=None)
 
-    expected_values = {PVSTR: (Value.String, b''), PVLONG: (Value.Int, 0), PVDOUBLE: (Value.Double, 0.0)}
+    status_json = json.loads(status_msg)
+    names_of_channels_being_forwarded = {stream['channel_name'] for stream in status_json['streams']}
+    expected_names_of_channels_being_forwarded = {PVDOUBLE, PVSTR, PVLONG}
 
-    messages = [poll_for_valid_message(cons), poll_for_valid_message(cons), poll_for_valid_message(cons)]
-    check_multiple_expected_values(messages, expected_values)
+    assert expected_names_of_channels_being_forwarded == names_of_channels_being_forwarded, \
+        f"Expect these channels to be configured as forwarded: {expected_names_of_channels_being_forwarded}, " \
+            f"but status message report these as forwarded: {names_of_channels_being_forwarded}"
+
     cons.close()
 
 

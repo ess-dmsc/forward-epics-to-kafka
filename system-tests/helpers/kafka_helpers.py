@@ -36,10 +36,15 @@ def poll_for_valid_message(consumer, expected_file_identifier=b"f142"):
     assert msg is not None
     if msg.error():
         raise MsgErrorException("Consumer error when polling: {}".format(msg.error()))
-    message_file_id = msg.value()[4:8]
-    assert (expected_file_identifier == message_file_id), \
-        f"Expected message to have schema id of {expected_file_identifier}, but it has {message_file_id}"
-    return LogData.LogData.GetRootAsLogData(msg.value(), 0)
+
+    if expected_file_identifier is not None:
+        message_file_id = msg.value()[4:8]
+        assert (expected_file_identifier == message_file_id), \
+            f"Expected message to have schema id of {expected_file_identifier}, but it has {message_file_id}"
+    if expected_file_identifier == b"f142":
+        return LogData.LogData.GetRootAsLogData(msg.value(), 0)
+    else:
+        return msg.value()
 
 
 def create_consumer(offset_reset="earliest"):
