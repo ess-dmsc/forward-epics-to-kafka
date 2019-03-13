@@ -38,7 +38,7 @@ def poll_for_valid_message(consumer, expected_file_identifier=b"f142"):
         raise MsgErrorException("Consumer error when polling: {}".format(msg.error()))
     message_file_id = msg.value()[4:8]
     assert (expected_file_identifier == message_file_id), \
-        f"Expected message to have schema id of {expected_file_identifier}, but it has {msg.value()[4:8]}"
+        f"Expected message to have schema id of {expected_file_identifier}, but it has {message_file_id}"
     return LogData.LogData.GetRootAsLogData(msg.value(), 0)
 
 
