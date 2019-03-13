@@ -13,7 +13,6 @@ CONFIG_TOPIC = "TEST_forwarderConfig"
 def teardown_function(function):
     """
     Stops forwarder pv listening and resets any values in EPICS
-    :param docker_compose: test fixture to apply to
     """
     print("Resetting PVs", flush=True)
     prod = ProducerWrapper("localhost:9092", CONFIG_TOPIC, "")
@@ -35,12 +34,11 @@ def teardown_function(function):
 
 def test_config_file_channel_created_correctly(docker_compose):
     """
-    Test that the channel defined in the config file is forwarded.
-    The PV in this test is configured to be forwarded in
-    forwarder_config.json rather than via a configuration message
-    through Kafka.
+    GIVEN Forwarder is started with a config file specifying a PV to forward (forwarder_config.json)
+    WHEN PV value is updated
+    THEN Forwarder publishes the update to Kafka
 
-    :param docker_compose: Test fixture
+    :param docker_compose: Test fixture (see https://docs.pytest.org/en/latest/fixture.html)
     """
     cons = create_consumer()
     cons.subscribe(['TEST_forwarderData_pv_from_config'])
@@ -61,12 +59,12 @@ def test_config_file_channel_created_correctly(docker_compose):
 
 def test_forwarder_sends_pv_updates_single_pv_enum(docker_compose):
     """
-    Test the forwarder pushes new PV value when the value is updated.
+    GIVEN PV of enum type is configured to be forwarded
+    WHEN PV value is updated
+    THEN Forwarder publishes the update to Kafka
 
     NOTE: Enums are converted to Ints in the forwarder.
-    :param docker_compose: Test fixture
     """
-
     data_topic = "TEST_forwarderData_enum_pv_update"
     pvs = [PVENUM]
 
@@ -92,6 +90,11 @@ def test_forwarder_sends_pv_updates_single_pv_enum(docker_compose):
 
 
 def test_forwarder_updates_multiple_pvs(docker_compose):
+    """
+    GIVEN multiple PVs (string and long types) are configured to be forwarded
+    WHEN PV value is updated
+    THEN Forwarder publishes the updates to Kafka
+    """
     data_topic = "TEST_forwarderData_multiple"
 
     pvs = [PVSTR, PVLONG]
@@ -115,6 +118,11 @@ def test_forwarder_updates_multiple_pvs(docker_compose):
 
 
 def test_forwarder_updates_pv_when_config_changed_from_one_pv(docker_compose):
+    """
+    GIVEN Separate configuration messages add two PVs (long and double types) to be forwarded
+    WHEN PV values change on the two PVs
+    THEN Forwarder publishes updates for both PVs
+    """
     data_topic = "TEST_forwarderData_change_config"
     prod = ProducerWrapper("localhost:9092", CONFIG_TOPIC, data_topic)
     prod.add_config([PVLONG])
