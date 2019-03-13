@@ -12,4 +12,4 @@ def test_forwarder_sends_fake_pv_updates(docker_compose_fake_epics):
     sleep(5)
     msg = poll_for_valid_message(consumer)
     # We should see PV updates in Kafka despite there being no IOC running
-    check_expected_values(msg, Value.Value.Double, "FakePV")
+    check_expected_values(msg, Value.Value.Double, "FakePV", None)

@@ -6,6 +6,7 @@ from helpers.flatbuffer_helpers import check_expected_values, check_multiple_exp
 from helpers.epics_helpers import change_pv_value
 from helpers.PVs import PVDOUBLE, PVSTR, PVLONG, PVENUM
 from confluent_kafka import TopicPartition
+import json
 
 CONFIG_TOPIC = "TEST_forwarderConfig"
 
@@ -13,8 +14,6 @@ CONFIG_TOPIC = "TEST_forwarderConfig"
 def teardown_function(function):
     """
     Stops forwarder pv listening and resets any values in EPICS
-    :param docker_compose: test fixture to apply to
-    :return:
     """
     print("Resetting PVs", flush=True)
     prod = ProducerWrapper("localhost:9092", CONFIG_TOPIC, "")
@@ -36,10 +35,11 @@ def teardown_function(function):
 
 def test_config_file_channel_created_correctly(docker_compose):
     """
-    Test that the channel defined in the config file is created.
+    GIVEN Forwarder is started with a config file specifying a PV to forward (forwarder_config.json)
+    WHEN PV value is updated
+    THEN Forwarder publishes the update to Kafka
 
-    :param docker_compose: Test fixture
-    :return: None
+    :param docker_compose: Test fixture (see https://docs.pytest.org/en/latest/fixture.html)
     """
     cons = create_consumer()
     cons.subscribe(['TEST_forwarderData_pv_from_config'])
@@ -58,116 +58,14 @@ def test_config_file_channel_created_correctly(docker_compose):
     cons.close()
 
 
-def test_forwarder_sends_pv_updates_single_pv_double(docker_compose):
-    """
-    Test the forwarder pushes new PV value when the value is updated.
-
-    :param docker_compose: Test fixture
-    :return: None
-    """
-
-    data_topic = "TEST_forwarderData_double_pv_update"
-    pvs = [PVDOUBLE]
-
-    prod = ProducerWrapper("localhost:9092", CONFIG_TOPIC, data_topic)
-    prod.add_config(pvs)
-    # Wait for config to be pushed
-    sleep(2)
-
-    cons = create_consumer()
-    cons.subscribe([data_topic])
-    # Update value
-    change_pv_value(PVDOUBLE, 5)
-    # Wait for PV to be updated
-    sleep(5)
-
-    first_msg = poll_for_valid_message(cons)
-    check_expected_values(first_msg, Value.Double, PVDOUBLE, 0.0)
-
-    second_msg = poll_for_valid_message(cons)
-    check_expected_values(second_msg, Value.Double, PVDOUBLE, 5.0)
-    cons.close()
-
-
-def test_forwarder_sends_pv_updates_single_pv_string(docker_compose):
-    """
-    Test the forwarder pushes new PV value when the value is updated.
-
-    :param docker_compose: Test fixture
-    :return: None
-    """
-
-    data_topic = "TEST_forwarderData_string_pv_update"
-    pvs = [PVSTR]
-
-    prod = ProducerWrapper("localhost:9092", CONFIG_TOPIC, data_topic)
-    prod.add_config(pvs)
-    # Wait for config to be pushed
-    sleep(2)
-
-    cons = create_consumer()
-    # Update value
-    change_pv_value(PVSTR, "stop")
-
-    # Wait for PV to be updated
-    sleep(5)
-    cons.subscribe([data_topic])
-
-    # Poll for empty update - initial value of PVSTR is nothing
-    poll_for_valid_message(cons)
-    # Poll for message which should contain forwarded PV update
-    data_msg = poll_for_valid_message(cons)
-
-    check_expected_values(data_msg, Value.String, PVSTR, b'stop')
-    cons.close()
-
-
-def test_forwarder_sends_pv_updates_single_pv_long(docker_compose):
-    """
-    Test the forwarder pushes new PV value when the value is updated.
-
-    NOTE: longs are converted to ints in the forwarder as they will fit in a 32 bit integer
-    :param docker_compose: Test fixture
-    :return: None
-    """
-
-    data_topic = "TEST_forwarderData_long_pv_update"
-    pvs = [PVLONG]
-
-    prod = ProducerWrapper("localhost:9092", CONFIG_TOPIC, data_topic)
-    prod.add_config(pvs)
-    # Wait for config to be pushed
-    sleep(2)
-
-    cons = create_consumer()
-
-    # Set initial PV value
-    change_pv_value(PVLONG, 0)
-    sleep(2)
-
-    # Update value
-    change_pv_value(PVLONG, 5)
-    # Wait for PV to be updated
-    sleep(2)
-    cons.subscribe([data_topic])
-
-    first_msg = poll_for_valid_message(cons)
-    check_expected_values(first_msg, Value.Int, PVLONG, 0)
-
-    second_msg = poll_for_valid_message(cons)
-    check_expected_values(second_msg, Value.Int, PVLONG, 5)
-    cons.close()
-
-
 def test_forwarder_sends_pv_updates_single_pv_enum(docker_compose):
     """
-    Test the forwarder pushes new PV value when the value is updated.
+    GIVEN PV of enum type is configured to be forwarded
+    WHEN PV value is updated
+    THEN Forwarder publishes the update to Kafka
 
     NOTE: Enums are converted to Ints in the forwarder.
-    :param docker_compose: Test fixture
-    :return: None
     """
-
     data_topic = "TEST_forwarderData_enum_pv_update"
     pvs = [PVENUM]
 
@@ -193,6 +91,11 @@ def test_forwarder_sends_pv_updates_single_pv_enum(docker_compose):
 
 
 def test_forwarder_updates_multiple_pvs(docker_compose):
+    """
+    GIVEN multiple PVs (string and long types) are configured to be forwarded
+    WHEN PV value is updated
+    THEN Forwarder publishes the updates to Kafka
+    """
     data_topic = "TEST_forwarderData_multiple"
 
     pvs = [PVSTR, PVLONG]
@@ -215,57 +118,52 @@ def test_forwarder_updates_multiple_pvs(docker_compose):
     cons.close()
 
 
-def test_forwarder_updates_pv_when_config_changed_from_one_pv(docker_compose):
+def test_forwarder_updates_pv_when_config_changed_from_two_pvs_to_three(docker_compose):
+    """
+    GIVEN A message configures two PVs (str and long types) to be forwarded
+    WHEN A message configures an additional PV (double type) to be forwarded
+    THEN Forwarder publishes value for all PVs
+    """
     data_topic = "TEST_forwarderData_change_config"
-    prod = ProducerWrapper("localhost:9092", CONFIG_TOPIC, data_topic)
-    prod.add_config([PVLONG])
-    prod.add_config([PVDOUBLE])
-
-    sleep(2)
-    cons = create_consumer()
-    sleep(2)
-    cons.subscribe([data_topic])
-    sleep(2)
-
-    expected_values = {PVLONG: (Value.Int, 0), PVDOUBLE: (Value.Double, 0.0)}
-
-    first_msg = poll_for_valid_message(cons)
-    second_msg = poll_for_valid_message(cons)
-    messages = [first_msg, second_msg]
-
-    check_multiple_expected_values(messages, expected_values)
-    cons.close()
-
-
-def test_forwarder_updates_pv_when_config_changed_from_two_pvs(docker_compose):
-    data_topic = "TEST_forwarderData_change_config"
+    status_topic = "TEST_forwarderStatus"
     pvs = [PVSTR, PVLONG]
     prod = ProducerWrapper("localhost:9092", CONFIG_TOPIC, data_topic)
     prod.add_config(pvs)
     sleep(2)
     prod.add_config([PVDOUBLE])
 
-    sleep(2)
+    sleep(5)
     cons = create_consumer()
     sleep(2)
-    cons.subscribe([data_topic])
+    cons.assign([TopicPartition(status_topic, partition=0)])
     sleep(2)
 
-    poll_for_valid_message(cons)
-    poll_for_valid_message(cons)
+    # Get the last available status message
+    partitions = cons.assignment()
+    _, hi = cons.get_watermark_offsets(partitions[0], cached=False, timeout=2.0)
+    last_msg_offset = hi - 1
+    cons.assign([TopicPartition(status_topic, partition=0, offset=last_msg_offset)])
+    status_msg = poll_for_valid_message(cons, expected_file_identifier=None)
 
-    expected_values = {PVSTR: (Value.String, b''), PVLONG: (Value.Int, 0), PVDOUBLE: (Value.Double, 0.0)}
+    status_json = json.loads(status_msg)
+    names_of_channels_being_forwarded = {stream['channel_name'] for stream in status_json['streams']}
+    expected_names_of_channels_being_forwarded = {PVDOUBLE, PVSTR, PVLONG}
 
-    messages = [poll_for_valid_message(cons), poll_for_valid_message(cons), poll_for_valid_message(cons)]
-    check_multiple_expected_values(messages, expected_values)
+    assert expected_names_of_channels_being_forwarded == names_of_channels_being_forwarded, \
+        f"Expect these channels to be configured as forwarded: {expected_names_of_channels_being_forwarded}, " \
+            f"but status message report these as forwarded: {names_of_channels_being_forwarded}"
+
     cons.close()
 
 
 def test_updates_from_the_same_pv_reach_the_same_partition(docker_compose):
     """
+    GIVEN Topic to publish data to has multiple partitions and multiple PVs are configured to be forwarded
+    WHEN PVs values change
+    THEN All PV updates for a particular PV are published to the same partition
+
     We want updates for a particular PV to all reach the same partition in Kafka
     so that their order is maintained
-
     By default the messages would be published to different partitions
     as a round robin approach is used to balance load, and this test would fail
     But we have used the PV name as the message key, which should ensure
