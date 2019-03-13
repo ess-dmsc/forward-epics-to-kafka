@@ -27,7 +27,6 @@ RUN export DEBIAN_FRONTEND=noninteractive \
     && conan install --build=outdated ../forwarder_src/conan/conanfile.txt
 
 # Second copy for everything so that the cached image can be used if only the source files change.
-# The conan install step doesn't have to run again as it is after this copy.
 COPY ./ ../forwarder_src/
 
 RUN cd forwarder \
