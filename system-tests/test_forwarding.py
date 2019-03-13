@@ -117,34 +117,12 @@ def test_forwarder_updates_multiple_pvs(docker_compose):
     cons.close()
 
 
-def test_forwarder_updates_pv_when_config_changed_from_one_pv(docker_compose):
+def test_forwarder_updates_pv_when_config_changed_from_two_pvs_to_three(docker_compose):
     """
-    GIVEN Separate configuration messages add two PVs (long and double types) to be forwarded
-    WHEN PV values change on the two PVs
-    THEN Forwarder publishes updates for both PVs
+    GIVEN A message configures two PVs (str and long types) to be forwarded
+    WHEN A message configures an additional PV (double type) to be forwarded
+    THEN Forwarder publishes value for all PVs
     """
-    data_topic = "TEST_forwarderData_change_config"
-    prod = ProducerWrapper("localhost:9092", CONFIG_TOPIC, data_topic)
-    prod.add_config([PVLONG])
-    prod.add_config([PVDOUBLE])
-
-    sleep(2)
-    cons = create_consumer()
-    sleep(2)
-    cons.subscribe([data_topic])
-    sleep(2)
-
-    expected_values = {PVLONG: (Value.Int, 0), PVDOUBLE: (Value.Double, 0.0)}
-
-    first_msg = poll_for_valid_message(cons)
-    second_msg = poll_for_valid_message(cons)
-    messages = [first_msg, second_msg]
-
-    check_multiple_expected_values(messages, expected_values)
-    cons.close()
-
-
-def test_forwarder_updates_pv_when_config_changed_from_two_pvs(docker_compose):
     data_topic = "TEST_forwarderData_change_config"
     pvs = [PVSTR, PVLONG]
     prod = ProducerWrapper("localhost:9092", CONFIG_TOPIC, data_topic)
@@ -170,9 +148,12 @@ def test_forwarder_updates_pv_when_config_changed_from_two_pvs(docker_compose):
 
 def test_updates_from_the_same_pv_reach_the_same_partition(docker_compose):
     """
+    GIVEN Topic to publish data to has multiple partitions and multiple PVs are configured to be forwarded
+    WHEN PVs values change
+    THEN All PV updates for a particular PV are published to the same partition
+
     We want updates for a particular PV to all reach the same partition in Kafka
     so that their order is maintained
-
     By default the messages would be published to different partitions
     as a round robin approach is used to balance load, and this test would fail
     But we have used the PV name as the message key, which should ensure
