@@ -14,7 +14,6 @@ def teardown_function(function):
     """
     Stops forwarder pv listening and resets any values in EPICS
     :param docker_compose: test fixture to apply to
-    :return:
     """
     print("Resetting PVs", flush=True)
     prod = ProducerWrapper("localhost:9092", CONFIG_TOPIC, "")
@@ -36,10 +35,12 @@ def teardown_function(function):
 
 def test_config_file_channel_created_correctly(docker_compose):
     """
-    Test that the channel defined in the config file is created.
+    Test that the channel defined in the config file is forwarded.
+    The PV in this test is configured to be forwarded in
+    forwarder_config.json rather than via a configuration message
+    through Kafka.
 
     :param docker_compose: Test fixture
-    :return: None
     """
     cons = create_consumer()
     cons.subscribe(['TEST_forwarderData_pv_from_config'])
@@ -58,114 +59,12 @@ def test_config_file_channel_created_correctly(docker_compose):
     cons.close()
 
 
-def test_forwarder_sends_pv_updates_single_pv_double(docker_compose):
-    """
-    Test the forwarder pushes new PV value when the value is updated.
-
-    :param docker_compose: Test fixture
-    :return: None
-    """
-
-    data_topic = "TEST_forwarderData_double_pv_update"
-    pvs = [PVDOUBLE]
-
-    prod = ProducerWrapper("localhost:9092", CONFIG_TOPIC, data_topic)
-    prod.add_config(pvs)
-    # Wait for config to be pushed
-    sleep(2)
-
-    cons = create_consumer()
-    cons.subscribe([data_topic])
-    # Update value
-    change_pv_value(PVDOUBLE, 5)
-    # Wait for PV to be updated
-    sleep(5)
-
-    first_msg = poll_for_valid_message(cons)
-    check_expected_values(first_msg, Value.Double, PVDOUBLE, 0.0)
-
-    second_msg = poll_for_valid_message(cons)
-    check_expected_values(second_msg, Value.Double, PVDOUBLE, 5.0)
-    cons.close()
-
-
-def test_forwarder_sends_pv_updates_single_pv_string(docker_compose):
-    """
-    Test the forwarder pushes new PV value when the value is updated.
-
-    :param docker_compose: Test fixture
-    :return: None
-    """
-
-    data_topic = "TEST_forwarderData_string_pv_update"
-    pvs = [PVSTR]
-
-    prod = ProducerWrapper("localhost:9092", CONFIG_TOPIC, data_topic)
-    prod.add_config(pvs)
-    # Wait for config to be pushed
-    sleep(2)
-
-    cons = create_consumer()
-    # Update value
-    change_pv_value(PVSTR, "stop")
-
-    # Wait for PV to be updated
-    sleep(5)
-    cons.subscribe([data_topic])
-
-    # Poll for empty update - initial value of PVSTR is nothing
-    poll_for_valid_message(cons)
-    # Poll for message which should contain forwarded PV update
-    data_msg = poll_for_valid_message(cons)
-
-    check_expected_values(data_msg, Value.String, PVSTR, b'stop')
-    cons.close()
-
-
-def test_forwarder_sends_pv_updates_single_pv_long(docker_compose):
-    """
-    Test the forwarder pushes new PV value when the value is updated.
-
-    NOTE: longs are converted to ints in the forwarder as they will fit in a 32 bit integer
-    :param docker_compose: Test fixture
-    :return: None
-    """
-
-    data_topic = "TEST_forwarderData_long_pv_update"
-    pvs = [PVLONG]
-
-    prod = ProducerWrapper("localhost:9092", CONFIG_TOPIC, data_topic)
-    prod.add_config(pvs)
-    # Wait for config to be pushed
-    sleep(2)
-
-    cons = create_consumer()
-
-    # Set initial PV value
-    change_pv_value(PVLONG, 0)
-    sleep(2)
-
-    # Update value
-    change_pv_value(PVLONG, 5)
-    # Wait for PV to be updated
-    sleep(2)
-    cons.subscribe([data_topic])
-
-    first_msg = poll_for_valid_message(cons)
-    check_expected_values(first_msg, Value.Int, PVLONG, 0)
-
-    second_msg = poll_for_valid_message(cons)
-    check_expected_values(second_msg, Value.Int, PVLONG, 5)
-    cons.close()
-
-
 def test_forwarder_sends_pv_updates_single_pv_enum(docker_compose):
     """
     Test the forwarder pushes new PV value when the value is updated.
 
     NOTE: Enums are converted to Ints in the forwarder.
     :param docker_compose: Test fixture
-    :return: None
     """
 
     data_topic = "TEST_forwarderData_enum_pv_update"
