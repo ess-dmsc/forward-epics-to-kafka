@@ -6,7 +6,6 @@ ARG https_proxy
 
 ARG local_conan_server
 
-# Replace the default profile and remotes with the ones from our Ubuntu build node
 ADD "https://raw.githubusercontent.com/ess-dmsc/docker-ubuntu18.04-build-node/master/files/registry.json" "/root/.conan/registry.json"
 ADD "https://raw.githubusercontent.com/ess-dmsc/docker-ubuntu18.04-build-node/master/files/default_profile" "/root/.conan/profiles/default"
 
@@ -27,13 +26,15 @@ RUN export DEBIAN_FRONTEND=noninteractive \
     && cd forwarder \
     && conan install --build=outdated ../forwarder_src/conan/conanfile.txt
 
-COPY cmake/ ../forwarder_src/cmake/
-COPY CMakeLists.txt ../forwarder_src
-COPY src/ ../forwarder_src/src/
+# Second copy for everything so that the cached image can be used if only the source files change.
+# The conan install step doesn't have to run again as it is after this copy.
+COPY ./ ../forwarder_src/
 
-RUN cd forwarder && \
-    cmake -DCONAN="MANUAL" ../forwarder_src && \
-    make -j4 forward-epics-to-kafka VERBOSE=1 && apt-get remove --purge -y build-essential git python-pip cmake && rm -rf ../forwarder_src
+RUN cd forwarder \
+    && cmake -DCONAN="MANUAL" --target="forward-epics-to-kafka" -DGOOGLETEST_DISABLE="ON" ../forwarder_src \
+    && make -j4 forward-epics-to-kafka VERBOSE=1 \
+    && apt-get remove --purge -y build-essential git python-pip cmake \
+    && mv ../forwarder_src/docker_launch.sh /docker_launch.sh \
+    && rm -rf ../forwarder_src /tmp/* /var/tmp/*
 
-ADD docker_launch.sh /
-CMD ["./docker_launch.sh"]
+CMD ["/docker_launch.sh"]
