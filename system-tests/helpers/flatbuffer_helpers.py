@@ -25,13 +25,14 @@ def check_expected_values(log_data, value_type, pv_name, expected_value):
 
     assert log_data.Timestamp() > 0
 
-    union_val = ValueTypes[value_type]()
-    union_val.Init(log_data.Value().Bytes, log_data.Value().Pos)
-    print(f'expected value: {expected_value}, value from message: {union_val.Value()}', flush=True)
-    if isinstance(expected_value, float):
-        assert isclose(expected_value, union_val.Value())
-    else:
-        assert expected_value == union_val.Value()
+    if expected_value is not None:
+        union_val = ValueTypes[value_type]()
+        union_val.Init(log_data.Value().Bytes, log_data.Value().Pos)
+        print(f'expected value: {expected_value}, value from message: {union_val.Value()}', flush=True)
+        if isinstance(expected_value, float):
+            assert isclose(expected_value, union_val.Value())
+        else:
+            assert expected_value == union_val.Value()
 
 
 def check_multiple_expected_values(message_list, expected_values):

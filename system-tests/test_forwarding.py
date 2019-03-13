@@ -130,12 +130,14 @@ def test_forwarder_updates_pv_when_config_changed_from_two_pvs_to_three(docker_c
     sleep(2)
     prod.add_config([PVDOUBLE])
 
-    sleep(2)
+    sleep(5)
     cons = create_consumer()
     sleep(2)
     cons.subscribe([data_topic])
-    sleep(2)
+    sleep(5)
 
+    # Ignore the first two messages which result from the first configuration message
+    # When the new configuration message is received, the value of all three PVs will be published
     poll_for_valid_message(cons)
     poll_for_valid_message(cons)
 
