@@ -24,18 +24,27 @@ def get_all_available_messages(consumer):
     return messages
 
 
-def poll_for_valid_message(consumer):
+def poll_for_valid_message(consumer, expected_file_identifier=b"f142"):
     """
     Polls the subscribed topics by the consumer and checks the buffer is not empty or malformed.
 
     :param consumer: The consumer object
+    :param expected_file_identifier: The schema id we expect to find in the message
     :return: The LogData flatbuffer from the message payload
     """
     msg = consumer.poll(timeout=1.0)
     assert msg is not None
     if msg.error():
         raise MsgErrorException("Consumer error when polling: {}".format(msg.error()))
-    return LogData.LogData.GetRootAsLogData(msg.value(), 0)
+
+    if expected_file_identifier is not None:
+        message_file_id = msg.value()[4:8]
+        assert (expected_file_identifier == message_file_id), \
+            f"Expected message to have schema id of {expected_file_identifier}, but it has {message_file_id}"
+    if expected_file_identifier == b"f142":
+        return LogData.LogData.GetRootAsLogData(msg.value(), 0)
+    else:
+        return msg.value()
 
 
 def create_consumer(offset_reset="earliest"):
