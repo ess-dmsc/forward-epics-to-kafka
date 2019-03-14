@@ -415,7 +415,7 @@ def get_system_tests_pipeline() {
     }  // return
 }  // def
 
-node('docker') {
+node('docker && eee') {
     cleanWs()
 
     stage('Checkout') {
