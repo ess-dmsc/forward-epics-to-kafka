@@ -2,10 +2,6 @@ project = "forward-epics-to-kafka"
 clangformat_os = "debian9"
 test_and_coverage_os = "centos7"
 release_os = "centos7-release"
-eee_os = "centos7"
-
-epics_dir = "/opt/epics"
-epics_profile_file = "/etc/profile.d/ess_epics_env.sh"
 
 // Set number of old builds to keep.
 properties([[
@@ -61,8 +57,6 @@ def Object create_container(image_key) {
         --env http_proxy=${env.http_proxy} \
         --env https_proxy=${env.https_proxy} \
         --env local_conan_server=${env.local_conan_server} \
-        --mount=type=bind,src=${epics_dir},dst=${epics_dir},readonly \
-        --mount=type=bind,src=${epics_profile_file},dst=${epics_profile_file},readonly \
         ")
 }
 
@@ -99,18 +93,8 @@ def docker_cmake(image_key) {
             coverage_on = "-DCOV=1"
         }
 
-        def configure_epics = ""
-        if (image_key == eee_os) {
-            // Only use the host machine's EPICS environment on eee_os
-            configure_epics = ". ${epics_profile_file}"
-        } else {
-            // A problem is caused by "&& \" if left empty
-            configure_epics = "true"
-        }
-
         def configure_script = """
                     cd build
-                    ${configure_epics}
                     cmake ../${project} ${coverage_on}
                 """
 
@@ -415,7 +399,7 @@ def get_system_tests_pipeline() {
     }  // return
 }  // def
 
-node('docker && eee') {
+node('docker') {
     cleanWs()
 
     stage('Checkout') {
