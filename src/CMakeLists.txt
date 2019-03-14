@@ -49,6 +49,15 @@ if (CURL_FOUND)
     list(APPEND path_include_common ${CURL_INCLUDE_DIRS})
 endif()
 
+if (${GraylogLogger_FOUND})
+  message(STATUS "Using graylog_logger")
+  list(APPEND compile_defs_common "HAVE_GRAYLOG_LOGGER=1")
+  list(APPEND path_include_common ${GRAYLOGLOGGER_INCLUDE_DIR})
+  list(APPEND libraries_common GraylogLogger::graylog_logger)
+else()
+  message(WARNING "graylog_logger not found")
+endif()
+
 set(INCLUDES
     EpicsClient/EpicsClientMonitor.h
     EpicsClient/EpicsClientRandom.h
@@ -170,15 +179,6 @@ target_include_directories(${tgt} SYSTEM PRIVATE ${path_include_common_suppresse
 if (WIN32)
     target_link_libraries(${tgt} Ws2_32.lib dbghelp.lib)
 endif(WIN32)
-
-if (${GRAYLOGLOGGER_FOUND})
-    message(STATUS "Using graylog_logger")
-    target_compile_definitions(${tgt} PRIVATE HAVE_GRAYLOG_LOGGER=1)
-    target_include_directories(${tgt} PRIVATE ${GRAYLOGLOGGER_INCLUDE_DIR})
-    target_link_libraries(${tgt} libgraylog_logger)
-else()
-    message(WARNING "graylog_logger not found")
-endif()
 
 target_link_libraries(${tgt} ${libraries_common})
 

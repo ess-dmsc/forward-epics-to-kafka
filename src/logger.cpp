@@ -46,7 +46,6 @@ public:
 
 private:
   std::atomic<bool> do_run_kafka{false};
-  std::atomic<bool> do_use_graylog_logger{false};
   std::shared_ptr<KafkaW::Producer> producer;
   std::unique_ptr<KafkaW::ProducerTopic> topic;
   std::thread thread_poll;
@@ -100,8 +99,7 @@ void Logger::fwd_graylog_logger_enable(std::string const &address) {
   }
   Log::RemoveAllHandlers();
   LOG(Sev::Warning, "Enable graylog_logger on {}:{}", addr, port);
-  Log::AddLogHandler(new GraylogInterface(addr, port));
-  do_use_graylog_logger = true;
+  Log::AddLogHandler(new Log::GraylogInterface(addr, port));
 #else
   LOG(Sev::Emergency, "Not compiled with support for graylog_logger {}",
       address);
@@ -155,11 +153,8 @@ void Logger::dwlog_inner(int level, int color, char const *file, int line,
                    DocumentString.size());
   }
 #ifdef HAVE_GRAYLOG_LOGGER
-  if (do_use_graylog_logger.load() and level < 7) {
-    // Format again without color
-    auto lmsg = fmt::format("{}:{} [{}]:  {}\n", f1, line, level, s1);
-    Log::Msg(level, lmsg);
-  }
+  auto lmsg = fmt::format("{}:{} [{}]:  {}\n", f1, line, level, s1);
+  Log::Msg(level, lmsg);
 #endif
 }
 
