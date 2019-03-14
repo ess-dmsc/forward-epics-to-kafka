@@ -34,6 +34,6 @@ RUN cd forwarder \
     && make -j4 forward-epics-to-kafka VERBOSE=1 \
     && apt-get remove --purge -y build-essential git python-pip cmake \
     && mv ../forwarder_src/docker_launch.sh /docker_launch.sh \
-    && rm -rf ../forwarder_src /tmp/* /var/tmp/*
+    && rm -rf ../forwarder_src /tmp/* /var/tmp/* /root/.conan/ /forwarder/src
 
 CMD ["/docker_launch.sh"]
