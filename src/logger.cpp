@@ -100,6 +100,7 @@ void Logger::fwd_graylog_logger_enable(std::string const &address) {
   Log::RemoveAllHandlers();
   LOG(Sev::Warning, "Enable graylog_logger on {}:{}", addr, port);
   Log::AddLogHandler(new Log::GraylogInterface(addr, port));
+  Log::SetMinimumSeverity(Log::Severity(log_level));
 #else
   LOG(Sev::Emergency, "Not compiled with support for graylog_logger {}",
       address);
