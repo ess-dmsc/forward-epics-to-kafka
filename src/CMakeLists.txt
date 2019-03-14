@@ -97,7 +97,7 @@ set(INCLUDES
     Streams.h
     Timer.h
     URI.h
-    schemas/tdc_time/TdcTime.cpp
+    schemas/tdc_time/TdcTime.h
   )
 
 set(SOURCES
