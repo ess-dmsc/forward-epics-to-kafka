@@ -2,3 +2,12 @@
 .gitignore
 ansible
 /src/scripts/
+/src/tests/
+system-tests/
+*.md
+.clang-format
+.dockerignore
+codecov.yml
+Dockerfile
+Jenkinsfile
+*.conf
