@@ -71,9 +71,12 @@ Consumer::getTopicPartitionNumbers(const std::string &Topic) {
   std::vector<int32_t> TopicPartitionNumbers;
   const RdKafka::TopicMetadata::PartitionMetadataVector *PartitionMetadata =
       matchedTopic->partitions();
+
+  // cppcheck-suppress useStlAlgorithm ; readability
   for (const auto &Partition : *PartitionMetadata) {
     TopicPartitionNumbers.push_back(Partition->id());
   }
+
   sort(TopicPartitionNumbers.begin(), TopicPartitionNumbers.end());
   return TopicPartitionNumbers;
 }

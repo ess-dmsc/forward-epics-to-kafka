@@ -56,6 +56,7 @@ void FwdMonitorRequester::monitorConnect(
   }
 }
 
+// cppcheck-suppress unusedFunction ; used inside EPICS
 void FwdMonitorRequester::monitorEvent(
     ::epics::pvData::MonitorPtr const &Monitor) {
   std::vector<std::shared_ptr<FlatBufs::EpicsPVUpdate>> Updates;

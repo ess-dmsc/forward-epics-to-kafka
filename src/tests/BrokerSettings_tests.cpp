@@ -11,8 +11,6 @@ using ::testing::Return;
 using namespace KafkaW;
 
 class BrokerSettingsTests : public ::testing::Test {
-protected:
-  void SetUp() override {}
 };
 
 TEST_F(BrokerSettingsTests, callingApplyCallsSetOnKafkaConfObject) {
