@@ -26,13 +26,13 @@ Producer::~Producer() {
 }
 
 Producer::Producer(BrokerSettings Settings)
-    : ProducerBrokerSettings(std::move(Settings)) {
+    : ProducerBrokerSettings(std::move(Settings)),
+    Conf(std::unique_ptr<RdKafka::Conf>(
+        RdKafka::Conf::create(RdKafka::Conf::CONF_GLOBAL))){
   ProducerID = ProducerInstanceCount++;
 
   std::string ErrorString;
 
-  Conf = std::unique_ptr<RdKafka::Conf>(
-      RdKafka::Conf::create(RdKafka::Conf::CONF_GLOBAL));
   try {
     ProducerBrokerSettings.apply(Conf.get());
   } catch (std::runtime_error &e) {

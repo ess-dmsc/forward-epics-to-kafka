@@ -14,6 +14,7 @@ struct ProducerStats {
   std::atomic<uint64_t> produced_bytes{0};
   std::atomic<uint32_t> out_queue{0};
   ProducerStats() = default;
+  // cppcheck-suppress useInitializationList
   ProducerStats(ProducerStats const &x) {
     produced = x.produced.load();
     produce_fail = x.produce_fail.load();
