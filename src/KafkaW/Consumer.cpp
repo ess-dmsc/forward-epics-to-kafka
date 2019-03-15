@@ -74,6 +74,7 @@ Consumer::getTopicPartitionNumbers(const std::string &Topic) {
       matchedTopic->partitions();
 
   for (const auto &Partition : *PartitionMetadata) {
+    // cppcheck-suppress useStlAlgorithm ; readability
     TopicPartitionNumbers.push_back(Partition->id());
   }
 
