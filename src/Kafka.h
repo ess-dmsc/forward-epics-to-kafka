@@ -20,7 +20,8 @@ namespace Forwarder {
 
 class InstanceSet {
 public:
-  static std::shared_ptr<InstanceSet> Set(KafkaW::BrokerSettings BrokerSettings);
+  static std::shared_ptr<InstanceSet>
+  Set(KafkaW::BrokerSettings BrokerSettings);
   static void clear();
   KafkaW::ProducerTopic SetUpProducerTopic(URI uri);
   int poll();

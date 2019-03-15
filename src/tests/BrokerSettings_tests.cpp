@@ -10,8 +10,7 @@ using ::testing::Return;
 
 using namespace KafkaW;
 
-class BrokerSettingsTests : public ::testing::Test {
-};
+class BrokerSettingsTests : public ::testing::Test {};
 
 TEST_F(BrokerSettingsTests, callingApplyCallsSetOnKafkaConfObject) {
   BrokerSettings Settings;

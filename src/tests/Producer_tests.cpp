@@ -69,7 +69,7 @@ class FakeTopic : public RdKafka::Topic {
 public:
   FakeTopic() = default;
   ~FakeTopic() override = default;
-  const std::string name() const override {};
+  const std::string name() const override{};
   // cppcheck-suppress unusedFunction
   bool partition_available(int32_t partition) const override { return true; };
   // cppcheck-suppress unusedFunction

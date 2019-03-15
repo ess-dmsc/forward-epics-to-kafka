@@ -103,7 +103,7 @@ public:
 
 class ConsumerStandIn : public Consumer {
 public:
- explicit ConsumerStandIn(BrokerSettings &Settings) : Consumer(Settings) {}
+  explicit ConsumerStandIn(BrokerSettings &Settings) : Consumer(Settings) {}
   using Consumer::KafkaConsumer;
 };
 

@@ -13,9 +13,8 @@
 namespace KafkaW {
 Consumer::Consumer(BrokerSettings &Settings)
     : ConsumerBrokerSettings(std::move(Settings)),
-    Conf(std::unique_ptr<RdKafka::Conf>(
-        RdKafka::Conf::create(RdKafka::Conf::CONF_GLOBAL)))
-    {
+      Conf(std::unique_ptr<RdKafka::Conf>(
+          RdKafka::Conf::create(RdKafka::Conf::CONF_GLOBAL))) {
   std::string ErrorString;
 
   Conf->set("event_cb", &EventCallback, ErrorString);
