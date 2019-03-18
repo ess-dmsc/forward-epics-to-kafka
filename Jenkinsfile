@@ -283,7 +283,7 @@ def docker_cppcheck(image_key) {
         def test_output = "cppcheck.txt"
         def cppcheck_script = """
                         cd forward-epics-to-kafka
-                        cppcheck --inline-suppr --enable=all --inconclusive --template="{file},{line},{severity},{id},{message}" src/ 2> ${test_output}
+                        cppcheck --inline-suppr --enable=all --inconclusive src/ 2> ${test_output}
                     """
         sh "docker exec ${container_name(image_key)} ${custom_sh} -c \"${cppcheck_script}\""
         sh "docker cp ${container_name(image_key)}:/home/jenkins/forward-epics-to-kafka/${test_output} ."
