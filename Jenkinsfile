@@ -95,7 +95,7 @@ def docker_cmake(image_key) {
 
         def configure_script = """
                     cd build
-                    cmake -DCMAKE_BUILD_TYPE=Debug ../${project} ${coverage_on}
+                    cmake ../${project} ${coverage_on}
                 """
 
         sh "docker exec ${container_name(image_key)} ${custom_sh} -c \"${configure_script}\""
@@ -208,7 +208,7 @@ def docker_archive(image_key) {
                     cd build
                     rm -rf forward-epics-to-kafka; mkdir forward-epics-to-kafka
                     mkdir -p forward-epics-to-kafka/bin
-                    cp ./bin/forward-epics-to-kafka forward-epics-to-kafka/bin/
+                    cp ./forward-epics-to-kafka forward-epics-to-kafka/bin/
                     cp -r ./lib forward-epics-to-kafka/
                     cp -r ./licenses forward-epics-to-kafka/
                     tar czf ${archive_output} forward-epics-to-kafka
@@ -303,7 +303,7 @@ def get_pipeline(image_key) {
                         docker_coverage(image_key)
                     }
                     else if (image_key == release_os) {
-                        docker_test(image_key, "bin")
+                        docker_test(image_key, "tests")
                     }
                     else {
                         docker_test(image_key, "tests")
