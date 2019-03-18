@@ -16,22 +16,22 @@ properties([[
 ]]);
 
 images = [
-        'centos7': [
+/*        'centos7': [
                 'name': 'essdmscdm/centos7-build-node:4.1.0',
                 'sh'  : '/usr/bin/scl enable devtoolset-6 -- /bin/bash -e'
-        ],
+        ],*/
         'centos7-release': [
                 'name': 'essdmscdm/centos7-build-node:4.1.0',
                 'sh'  : '/usr/bin/scl enable devtoolset-6 -- /bin/bash -e'
         ],
-        'debian9'    : [
+/*        'debian9'    : [
                 'name': 'essdmscdm/debian9-build-node:3.1.0',
                 'sh'  : 'bash -e'
         ],
         'ubuntu1804'  : [
                 'name': 'essdmscdm/ubuntu18.04-build-node:2.1.0',
                 'sh'  : 'bash -e'
-        ]
+        ]*/
 ]
 
 base_container_name = "${project}-${env.BRANCH_NAME}-${env.BUILD_NUMBER}"
@@ -303,7 +303,7 @@ def get_pipeline(image_key) {
                         docker_coverage(image_key)
                     }
                     else if (image_key == release_os) {
-                        docker_test(image_key, "bin")
+/*                        docker_test(image_key, "tests")*/
                     }
                     else {
                         docker_test(image_key, "tests")
