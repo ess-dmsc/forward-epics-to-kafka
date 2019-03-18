@@ -95,7 +95,7 @@ def docker_cmake(image_key) {
 
         def configure_script = """
                     cd build
-                    cmake ../${project} ${coverage_on}
+                    cmake -DCMAKE_BUILD_TYPE=Debug ../${project} ${coverage_on}
                 """
 
         sh "docker exec ${container_name(image_key)} ${custom_sh} -c \"${configure_script}\""
@@ -110,7 +110,7 @@ def docker_cmake_release(image_key) {
         def configure_script = """
                         cd build
                         cmake ../${project} \
-                            -DCMAKE_BUILD_TYPE=Release \
+                            -DCMAKE_BUILD_TYPE=Debug \
                             -DCMAKE_SKIP_RPATH=FALSE \
                             -DCMAKE_INSTALL_RPATH='\\\\\\\$ORIGIN/../lib' \
                             -DCMAKE_BUILD_WITH_INSTALL_RPATH=TRUE \
