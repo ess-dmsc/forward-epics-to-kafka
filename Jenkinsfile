@@ -208,7 +208,7 @@ def docker_archive(image_key) {
                     cd build
                     rm -rf forward-epics-to-kafka; mkdir forward-epics-to-kafka
                     mkdir -p forward-epics-to-kafka/bin
-                    cp ./forward-epics-to-kafka forward-epics-to-kafka/bin/
+                    cp forward-epics-to-kafka forward-epics-to-kafka/bin/
                     cp -r ./lib forward-epics-to-kafka/
                     cp -r ./licenses forward-epics-to-kafka/
                     tar czf ${archive_output} forward-epics-to-kafka
