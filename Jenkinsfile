@@ -444,7 +444,7 @@ node('docker && eee') {
 	
     stage('CppCheck') {
 	docker_cppcheck(clangformat_os)
-        recordIssues sourceCodeEncoding: 'UTF-8', qualityGates: [[threshold: 1, type: 'TOTAL', unstable: false]], tools: [cppCheck(pattern: 'cppcheck.xml', reportEncoding: 'UTF-8')]
+        recordIssues sourceCodeEncoding: 'UTF-8', qualityGates: [[threshold: 2, type: 'TOTAL', unstable: true]], tools: [cppCheck(pattern: 'cppcheck.xml', reportEncoding: 'UTF-8')]
 	sh "docker stop ${container_name(clangformat_os)}"
         sh "docker rm -f ${container_name(clangformat_os)}"
     }
