@@ -311,8 +311,6 @@ def get_pipeline(image_key) {
 
                 if (image_key == clangformat_os) {
                     docker_formatting(image_key)
-                    docker_cppcheck(image_key)
-		    recordIssues sourceCodeEncoding: 'UTF-8', qualityGates: [[threshold: 1, type: 'TOTAL', unstable: true]], tools: [cppCheck(pattern: 'cppcheck.txt', reportEncoding: 'UTF-8')]
                 } else {
                     docker_build(image_key)
                     if (image_key == test_and_coverage_os && !env.CHANGE_ID) {
@@ -400,7 +398,7 @@ def get_system_tests_pipeline() {
                             """
 			}
                     }  // stage
-                }finally {
+                } finally {
 		    stage("System tests: Cleanup") {
                         sh """docker stop \$(docker ps -a -q) && docker rm \$(docker ps -a -q) || true
                         """
@@ -440,6 +438,11 @@ node('docker && eee') {
     }
 
     parallel builders
+	
+    stage('CppCheck') {
+	docker_cppcheck(clangformat_os)
+        recordIssues sourceCodeEncoding: 'UTF-8', qualityGates: [[threshold: 1, type: 'TOTAL', unstable: true]], tools: [cppCheck(pattern: 'cppcheck.txt', reportEncoding: 'UTF-8')]     
+    }
 
     // Delete workspace when build is done
     cleanWs()
