@@ -312,7 +312,7 @@ def get_pipeline(image_key) {
                 if (image_key == clangformat_os) {
                     docker_formatting(image_key)
                     docker_cppcheck(image_key)
-		    recordIssues qualityGates: [[threshold: 2, type: 'TOTAL', unstable: true]], tools: [cppCheck(pattern: 'cppcheck.txt')]
+		    recordIssues sourceCodeEncoding: 'UTF-8', qualityGates: [[threshold: 2, type: 'TOTAL', unstable: true]], tools: [cppCheck(pattern: 'cppcheck.txt', reportEncoding: 'UTF-8')]
                 } else {
                     docker_build(image_key)
                     if (image_key == test_and_coverage_os && !env.CHANGE_ID) {
