@@ -5,7 +5,7 @@
 #include "KafkaOutput.h"
 #include "RangeSet.h"
 #include "SchemaRegistry.h"
-#include "uri.h"
+#include "URI.h"
 #include <EpicsClient/EpicsClientInterface.h>
 #include <array>
 #include <atomic>

@@ -8,37 +8,26 @@
 #endif
 
 namespace Forwarder {
-
 /// CURLReporter is used to push metrics into InfluxDB via the HTTP endpoint.
 /// It allow to easily send a message to a given URL.
 /// It also provides the fact whether or not we have CURL support.
-
-class CURLReporter {
-public:
-  /// Set to true if we are compiled with CURL support
-  static bool const HaveCURL;
-  CURLReporter();
-  ~CURLReporter();
-  /// Delivers a message in form of the given MemoryWriter.
-  /// If CURL is not available, this is a no-op.
-  void send(fmt::MemoryWriter &MemoryWriter, std::string const &URL);
+namespace CURLReporter {
+#if HAVE_CURL
+struct InitCURL {
+  InitCURL() { curl_global_init(CURL_GLOBAL_ALL); }
+  ~InitCURL() { curl_global_cleanup(); }
 };
 
-#if HAVE_CURL
-bool const CURLReporter::HaveCURL = true;
+bool const HaveCURL{true};
 
-CURLReporter::CURLReporter() { curl_global_init(CURL_GLOBAL_ALL); }
-
-CURLReporter::~CURLReporter() { curl_global_cleanup(); }
-
-void CURLReporter::send(fmt::MemoryWriter &MemoryWriter,
-                        std::string const &URL) {
+void send(fmt::memory_buffer &MemoryWriter, std::string const &URL) {
+  static InitCURL Initializer;
   CURL *curl;
   CURLcode res;
   curl = curl_easy_init();
   if (curl) {
     curl_easy_setopt(curl, CURLOPT_URL, URL.c_str());
-    curl_easy_setopt(curl, CURLOPT_POSTFIELDS, MemoryWriter.c_str());
+    curl_easy_setopt(curl, CURLOPT_POSTFIELDS, MemoryWriter.data());
     res = curl_easy_perform(curl);
     if (res != CURLE_OK) {
       LOG(Sev::Notice, "curl_easy_perform() failed: {}",
@@ -49,17 +38,8 @@ void CURLReporter::send(fmt::MemoryWriter &MemoryWriter,
 }
 
 #else
-bool const CURLReporter::HaveCURL = false;
-
-CURLReporter::CURLReporter() {}
-
-CURLReporter::~CURLReporter() {}
-
-void CURLReporter::send(fmt::MemoryWriter &MemoryWriter,
-                        std::string const &URL) {
-  UNUSED_ARG(MemoryWriter);
-  UNUSED_ARG(URL);
-}
-
+bool const HaveCURL{false};
+void send(fmt::memory_buffer &, std::string const &) {}
 #endif
+} // namespace CURLReporter
 } // namespace Forwarder

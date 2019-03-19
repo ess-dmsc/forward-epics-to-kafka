@@ -1,72 +1,64 @@
 #pragma once
 
 #include "BrokerSettings.h"
-#include "Msg.h"
-#include "PollStatus.h"
-#include <functional>
-#include <librdkafka/rdkafka.h>
+#include "ConsumerMessage.h"
+#include "KafkaEventCb.h"
+#include "helper.h"
+#include <vector>
 
 namespace KafkaW {
 
-class Inspect;
-
-class Consumer {
+class ConsumerInterface {
 public:
-  explicit Consumer(BrokerSettings opt);
+  ConsumerInterface() = default;
+  virtual ~ConsumerInterface() = default;
+  virtual void addTopic(const std::string &Topic) = 0;
+  virtual std::unique_ptr<ConsumerMessage> poll() = 0;
+};
+
+class Consumer : public ConsumerInterface {
+public:
+  /// The constructor.
+  ///
+  /// \param Settings The broker settings.
+  explicit Consumer(BrokerSettings &Settings);
   Consumer(Consumer &&) = delete;
   Consumer(Consumer const &) = delete;
-  ~Consumer();
-  void init();
-  void addTopic(std::string Topic);
-  void dumpCurrentSubscription();
-  PollStatus poll();
-  std::function<void(rd_kafka_topic_partition_list_t *plist)>
-      on_rebalance_assign;
-  std::function<void(rd_kafka_topic_partition_list_t *plist)>
-      on_rebalance_start;
-  rd_kafka_t *RdKafka = nullptr;
+  ~Consumer() override;
+
+  /// Adds topic to consumer.
+  ///
+  /// \param Topic The topic name.
+  void addTopic(const std::string &Topic) override;
+
+  /// Polls for new messages.
+  ///
+  /// \return Any new messages received.
+  std::unique_ptr<ConsumerMessage> poll() override;
+
+protected:
+  std::unique_ptr<RdKafka::KafkaConsumer> KafkaConsumer;
 
 private:
   BrokerSettings ConsumerBrokerSettings;
+  std::unique_ptr<RdKafka::Metadata> Metadata;
+  std::unique_ptr<RdKafka::Conf> Conf;
+  KafkaEventCb EventCallback;
 
-  /// The log callback for Kafka.
+  /// Get all partition numbers for a topic.
   ///
-  /// \param rk The Kafka handle.
-  /// \param level The log level.
-  /// \param fac ?
-  /// \param buf The message buffer.
-  static void logCallback(rd_kafka_t const *rk, int level, char const *fac,
-                          char const *buf);
+  /// \param Topic The topic name.
+  /// \return A sorted list of all partitions on a topic.
+  virtual std::vector<int32_t>
+  getTopicPartitionNumbers(const std::string &Topic);
 
-  /// The statistics callback for Kafka.
+  /// Get the specified topic's metadata.
   ///
-  /// \param rk The Kafka handle.
-  /// \param json The statistics data in JSON format.
-  /// \param json_size The size of the JSON string.
-  /// \param opaque The opaque.
-  /// \return The error code.
-  static int statsCallback(rd_kafka_t *rk, char *json, size_t json_size,
-                           void *opaque);
+  /// \param Topic The topic name.
+  /// \return The metadata.
+  const RdKafka::TopicMetadata *findTopic(const std::string &Topic);
 
-  /// Error callback method for Kafka.
-  ///
-  /// \param rk The Kafka handle.
-  /// \param err_i The error code.
-  /// \param reason The error string.
-  /// \param opaque The opaque object.
-  static void errorCallback(rd_kafka_t *rk, int err_i, char const *reason,
-                            void *opaque);
-
-  /// The rebalance callback for Kafka.
-  ///
-  /// \param rk The Kafka handle.
-  /// \param err The error response.
-  /// \param plist The partition list.
-  /// \param opaque The opaque object.
-  static void rebalanceCallback(rd_kafka_t *rk, rd_kafka_resp_err_t err,
-                                rd_kafka_topic_partition_list_t *plist,
-                                void *opaque);
-  rd_kafka_topic_partition_list_t *PartitionList = nullptr;
-  int id = 0;
+  /// Update the stored metadata.
+  void updateMetadata();
 };
 } // namespace KafkaW

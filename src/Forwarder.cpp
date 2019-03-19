@@ -9,14 +9,29 @@
 #include <EpicsClient/EpicsClientInterface.h>
 #include <EpicsClient/EpicsClientMonitor.h>
 #include <EpicsClient/EpicsClientRandom.h>
+#include <algorithm>
 #include <nlohmann/json.hpp>
 #include <sys/types.h>
 #ifdef _MSC_VER
-#include "process.h"
-#define getpid _getpid
+std::vector<char> getHostname() {
+  std::vector<char> Hostname;
+  return Hostname;
+}
 #else
 #include <unistd.h>
+std::vector<char> getHostname() {
+  std::vector<char> Hostname;
+  Hostname.resize(256);
+  gethostname(Hostname.data(), Hostname.size());
+  if (Hostname.back() != 0) {
+    // likely an error
+    Hostname.back() = 0;
+  }
+  return Hostname;
+}
+
 #endif
+
 #include "CURLReporter.h"
 
 namespace Forwarder {
@@ -33,8 +48,6 @@ static KafkaW::BrokerSettings make_broker_opt(MainOpt const &opt) {
   return ret;
 }
 
-using ulock = std::unique_lock<std::mutex>;
-
 /// Main program entry class.
 Forwarder::Forwarder(MainOpt &opt)
     : main_opt(opt), kafka_instance_set(InstanceSet::Set(make_broker_opt(opt))),
@@ -47,20 +60,21 @@ Forwarder::Forwarder(MainOpt &opt)
   }
 
   bool use_config = true;
-  if (main_opt.MainSettings.BrokerConfig.topic.empty()) {
+  if (main_opt.MainSettings.BrokerConfig.Topic.empty()) {
     LOG(Sev::Error, "Name for configuration topic is empty");
     use_config = false;
   }
-  if (main_opt.MainSettings.BrokerConfig.host.empty()) {
+  if (main_opt.MainSettings.BrokerConfig.HostPort.empty()) {
     LOG(Sev::Error, "Host for configuration topic broker is empty");
     use_config = false;
   }
   if (use_config) {
     KafkaW::BrokerSettings bopt;
-    bopt.ConfigurationStrings["group.id"] =
-        fmt::format("forwarder-command-listener--pid{}", getpid());
-    config_listener.reset(
-        new Config::Listener{bopt, main_opt.MainSettings.BrokerConfig});
+    bopt.Address = main_opt.MainSettings.BrokerConfig.HostPort;
+    bopt.PollTimeoutMS = 0;
+    auto NewConsumer = make_unique<KafkaW::Consumer>(bopt);
+    config_listener.reset(new Config::Listener{
+        main_opt.MainSettings.BrokerConfig, std::move(NewConsumer)});
   }
   createPVUpdateTimerIfRequired();
   createFakePVUpdateTimerIfRequired();
@@ -73,13 +87,12 @@ Forwarder::Forwarder(MainOpt &opt)
     }
   }
 
-  curl = ::make_unique<CURLReporter>();
-  if (!main_opt.MainSettings.StatusReportURI.host.empty()) {
+  if (!main_opt.MainSettings.StatusReportURI.HostPort.empty()) {
     KafkaW::BrokerSettings BrokerSettings;
-    BrokerSettings.Address = main_opt.MainSettings.StatusReportURI.host_port;
+    BrokerSettings.Address = main_opt.MainSettings.StatusReportURI.HostPort;
     status_producer = std::make_shared<KafkaW::Producer>(BrokerSettings);
     status_producer_topic = ::make_unique<KafkaW::ProducerTopic>(
-        status_producer, main_opt.MainSettings.StatusReportURI.topic);
+        status_producer, main_opt.MainSettings.StatusReportURI.Topic);
   }
 }
 
@@ -109,7 +122,7 @@ void Forwarder::createFakePVUpdateTimerIfRequired() {
 
 int Forwarder::conversion_workers_clear() {
   LOG(Sev::Debug, "Main::conversion_workers_clear()  begin");
-  std::unique_lock<std::mutex> lock(conversion_workers_mx);
+  std::lock_guard<std::mutex> lock(conversion_workers_mx);
   if (!conversion_workers.empty()) {
     for (auto &x : conversion_workers) {
       x->stop();
@@ -122,7 +135,7 @@ int Forwarder::conversion_workers_clear() {
 
 int Forwarder::converters_clear() {
   if (!conversion_workers.empty()) {
-    std::unique_lock<std::mutex> lock(converters_mutex);
+    auto lock = get_lock_converters();
     conversion_workers.clear();
   }
   return 0;
@@ -148,17 +161,19 @@ void Forwarder::forward_epics_to_kafka() {
   auto t_status_last = CLK::now();
   ConfigCB config_cb(*this);
   {
-    std::unique_lock<std::mutex> lock(conversion_workers_mx);
+    std::lock_guard<std::mutex> lock(conversion_workers_mx);
     for (auto &x : conversion_workers) {
       x->start();
     }
   }
 
-  if (PVUpdateTimer != nullptr)
+  if (PVUpdateTimer != nullptr) {
     PVUpdateTimer->start();
+  }
 
-  if (GenerateFakePVUpdateTimer != nullptr)
+  if (GenerateFakePVUpdateTimer != nullptr) {
     GenerateFakePVUpdateTimer->start();
+  }
 
   while (ForwardingRunFlag.load() == ForwardingRunState::RUN) {
     auto do_stats = false;
@@ -216,9 +231,12 @@ void Forwarder::report_status() {
   using nlohmann::json;
   auto Status = json::object();
   auto Streams = json::array();
-  for (auto const &Stream : streams.getStreams()) {
-    Streams.push_back(Stream->getStatusJson());
-  }
+  auto StreamVector = streams.getStreams();
+  std::transform(StreamVector.cbegin(), StreamVector.cend(),
+                 std::back_inserter(Streams),
+                 [](const std::shared_ptr<Stream> &CStream) {
+                   return CStream->getStatusJson();
+                 });
   Status["streams"] = Streams;
   auto StatusString = Status.dump();
   auto StatusStringSize = StatusString.size();
@@ -230,12 +248,12 @@ void Forwarder::report_status() {
   } else {
     LOG(Sev::Debug, "status: {}", StatusString);
   }
-  status_producer_topic->produce((KafkaW::uchar *)StatusString.c_str(),
+  status_producer_topic->produce((unsigned char *)StatusString.c_str(),
                                  StatusString.size());
 }
 
 void Forwarder::report_stats(int dt) {
-  fmt::MemoryWriter influxbuf;
+  fmt::memory_buffer StatsBuffer;
   auto m1 = g__total_msgs_to_kafka.load();
   auto m2 = m1 / 1000;
   m1 = m1 % 1000;
@@ -247,21 +265,23 @@ void Forwarder::report_stats(int dt) {
   LOG(Sev::Info, "dt: {:4}  m: {:4}.{:03}  b: {:3}.{:03}.{:03}", dt, m2, m1, b3,
       b2, b1);
   if (CURLReporter::HaveCURL && !main_opt.InfluxURI.empty()) {
+    std::vector<char> Hostname = getHostname();
+
     int i1 = 0;
-    for (auto &s : kafka_instance_set->stats_all()) {
-      auto &m1 = influxbuf;
-      m1.write("forward-epics-to-kafka,hostname={},set={}",
-               main_opt.Hostname.data(), i1);
-      m1.write(" produced={}", s.produced);
-      m1.write(",produce_fail={}", s.produce_fail);
-      m1.write(",local_queue_full={}", s.local_queue_full);
-      m1.write(",produce_cb={}", s.produce_cb);
-      m1.write(",produce_cb_fail={}", s.produce_cb_fail);
-      m1.write(",poll_served={}", s.poll_served);
-      m1.write(",msg_too_large={}", s.msg_too_large);
-      m1.write(",produced_bytes={}", double(s.produced_bytes));
-      m1.write(",outq={}", s.out_queue);
-      m1.write("\n");
+    for (auto &s : kafka_instance_set->getStatsForAllProducers()) {
+      fmt::format_to(StatsBuffer, "forward-epics-to-kafka,hostname={},set={}",
+                     Hostname.data(), i1);
+      fmt::format_to(StatsBuffer, " produced={}", s.produced);
+      fmt::format_to(StatsBuffer, ",produce_fail={}", s.produce_fail);
+      fmt::format_to(StatsBuffer, ",local_queue_full={}", s.local_queue_full);
+      fmt::format_to(StatsBuffer, ",produce_cb={}", s.produce_cb);
+      fmt::format_to(StatsBuffer, ",produce_cb_fail={}", s.produce_cb_fail);
+      fmt::format_to(StatsBuffer, ",poll_served={}", s.poll_served);
+      fmt::format_to(StatsBuffer, ",msg_too_large={}", s.msg_too_large);
+      fmt::format_to(StatsBuffer, ",produced_bytes={}",
+                     double(s.produced_bytes));
+      fmt::format_to(StatsBuffer, ",outq={}", s.out_queue);
+      fmt::format_to(StatsBuffer, "\n");
       ++i1;
     }
     {
@@ -270,51 +290,61 @@ void Forwarder::report_stats(int dt) {
       i1 = 0;
       for (auto &c : converters) {
         auto stats = c.second.lock()->stats();
-        auto &m1 = influxbuf;
-        m1.write("forward-epics-to-kafka,hostname={},set={}",
-                 main_opt.Hostname.data(), i1);
+        fmt::format_to(StatsBuffer, "forward-epics-to-kafka,hostname={},set={}",
+                       Hostname.data(), i1);
         int i2 = 0;
         for (auto x : stats) {
           if (i2 > 0) {
-            m1.write(",");
+            fmt::format_to(StatsBuffer, ",");
           } else {
-            m1.write(" ");
+            fmt::format_to(StatsBuffer, " ");
           }
-          m1.write("{}={}", x.first, x.second);
+          fmt::format_to(StatsBuffer, "{}={}", x.first, x.second);
           ++i2;
         }
-        m1.write("\n");
+        fmt::format_to(StatsBuffer, "\n");
         ++i1;
       }
     }
-    curl->send(influxbuf, main_opt.InfluxURI);
+    CURLReporter::send(StatsBuffer, main_opt.InfluxURI);
   }
+}
+
+URI Forwarder::createTopicURI(ConverterSettings const &ConverterInfo) const {
+  URI BrokerURI;
+  if (!main_opt.MainSettings.Brokers.empty()) {
+    BrokerURI = main_opt.MainSettings.Brokers[0];
+  }
+
+  URI TopicURI;
+  if (!BrokerURI.HostPort.empty()) {
+    TopicURI.HostPort = BrokerURI.HostPort;
+  }
+
+  if (BrokerURI.Port != 0) {
+    TopicURI.Port = BrokerURI.Port;
+  }
+  try {
+    TopicURI.parse(ConverterInfo.Topic);
+  } catch (std::runtime_error &e) {
+    throw MappingAddException(
+        fmt::format("Invalid topic {} in converter, not added to stream. May "
+                    "require broker and/or host slashes.",
+                    ConverterInfo.Topic));
+  }
+  return TopicURI;
 }
 
 void Forwarder::pushConverterToStream(ConverterSettings const &ConverterInfo,
                                       std::shared_ptr<Stream> &Stream) {
-
   // Check schema exists
-  auto r1 = main_opt.schema_registry.items().find(ConverterInfo.Schema);
-  if (r1 == main_opt.schema_registry.items().end()) {
+  auto r1 = FlatBufs::SchemaRegistry::items().find(ConverterInfo.Schema);
+  if (r1 == FlatBufs::SchemaRegistry::items().end()) {
     throw MappingAddException(fmt::format(
         "Cannot handle flatbuffer schema id {}", ConverterInfo.Schema));
   }
 
-  URI Uri;
-  if (!main_opt.MainSettings.Brokers.empty()) {
-    Uri = main_opt.MainSettings.Brokers[0];
-  }
-
-  URI TopicURI;
-  if (!Uri.host.empty()) {
-    TopicURI.host = Uri.host;
-  }
-
-  if (Uri.port != 0) {
-    TopicURI.port = Uri.port;
-  }
-  TopicURI.parse(ConverterInfo.Topic);
+  URI TopicURI = createTopicURI(ConverterInfo);
 
   std::shared_ptr<Converter> ConverterShared;
   if (!ConverterInfo.Name.empty()) {
@@ -343,7 +373,7 @@ void Forwarder::pushConverterToStream(ConverterSettings const &ConverterInfo,
   }
 
   // Create a conversion path then add it
-  auto Topic = kafka_instance_set->producer_topic(std::move(TopicURI));
+  auto Topic = kafka_instance_set->SetUpProducerTopic(std::move(TopicURI));
   auto cp = ::make_unique<ConversionPath>(
       std::move(ConverterShared), ::make_unique<KafkaOutput>(std::move(Topic)));
 
@@ -351,16 +381,12 @@ void Forwarder::pushConverterToStream(ConverterSettings const &ConverterInfo,
 }
 
 void Forwarder::addMapping(StreamSettings const &StreamInfo) {
-  std::unique_lock<std::mutex> lock(streams_mutex);
+  auto lock = get_lock_streams();
   try {
     ChannelInfo ChannelInfo{StreamInfo.EpicsProtocol, StreamInfo.Name};
     std::shared_ptr<Stream> Stream;
     if (GenerateFakePVUpdateTimer != nullptr) {
       Stream = findOrAddStream<EpicsClient::EpicsClientRandom>(ChannelInfo);
-    } else {
-      Stream = findOrAddStream<EpicsClient::EpicsClientMonitor>(ChannelInfo);
-    }
-    if (GenerateFakePVUpdateTimer != nullptr) {
       auto Client = Stream->getEpicsClient();
       auto RandomClient =
           dynamic_cast<EpicsClient::EpicsClientRandom *>(Client.get());
@@ -368,7 +394,10 @@ void Forwarder::addMapping(StreamSettings const &StreamInfo) {
         GenerateFakePVUpdateTimer->addCallback(
             [Client, RandomClient]() { RandomClient->generateFakePVUpdate(); });
       }
+    } else {
+      Stream = findOrAddStream<EpicsClient::EpicsClientMonitor>(ChannelInfo);
     }
+
     if (PVUpdateTimer != nullptr) {
       auto Client = Stream->getEpicsClient();
       auto PeriodicClient =
@@ -376,6 +405,7 @@ void Forwarder::addMapping(StreamSettings const &StreamInfo) {
       PVUpdateTimer->addCallback(
           [Client, PeriodicClient]() { PeriodicClient->emitCachedValue(); });
     }
+
     for (auto &Converter : StreamInfo.Converters) {
       pushConverterToStream(Converter, Stream);
     }

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "FlatbufferMessageSlice.h"
-#include "KafkaW/KafkaW.h"
+#include "KafkaW/ProducerMessage.h"
 #include <flatbuffers/flatbuffers.h>
 #include <memory>
 #include <utility>
@@ -17,10 +17,9 @@ class Converter;
 /// Holds the flatbuffer until it has been sent.
 ///
 /// Basically POD.  Holds the flatbuffer until no longer needed.
-/// Also holds some internal counters for performance testing.
 /// If you want to implement your own custom memory management, this is the
 /// class to inherit from.
-class FlatbufferMessage : public KafkaW::Producer::Msg {
+class FlatbufferMessage : public KafkaW::ProducerMessage {
 public:
   /// Constructs a standard FlatBufferBuilder.
   FlatbufferMessage();

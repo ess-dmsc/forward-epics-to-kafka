@@ -61,7 +61,7 @@ ConversionScheduler::ConversionScheduler(Forwarder *main) : main(main) {}
 int ConversionScheduler::fill(
     moodycamel::ConcurrentQueue<std::unique_ptr<ConversionWorkPacket>> &queue,
     uint32_t const nfm, uint32_t wid) {
-  std::unique_lock<std::mutex> lock(mx);
+  std::lock_guard<std::mutex> lock(mx);
   if (main->streams.size() == 0) {
     return 0;
   }
@@ -91,4 +91,4 @@ int ConversionScheduler::fill(
 ConversionScheduler::~ConversionScheduler() {
   LOG(Sev::Info, "~ConversionScheduler");
 }
-}
+} // namespace Forwarder

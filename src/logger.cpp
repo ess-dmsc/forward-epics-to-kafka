@@ -41,14 +41,14 @@ public:
   int is_tty = 1;
   void dwlog_inner(int level, int color, char const *file, int line,
                    char const *func, std::string const &s1);
-  int prefix_len();
-  void fwd_graylog_logger_enable(std::string const &address);
+  static int prefix_len();
+  static void fwd_graylog_logger_enable(std::string const &address);
 
 private:
   std::atomic<bool> do_run_kafka{false};
   std::atomic<bool> do_use_graylog_logger{false};
   std::shared_ptr<KafkaW::Producer> producer;
-  std::unique_ptr<KafkaW::Producer::Topic> topic;
+  std::unique_ptr<KafkaW::ProducerTopic> topic;
   std::thread thread_poll;
 };
 
@@ -76,7 +76,7 @@ void Logger::log_kafka_gelf_start(std::string const &address,
   KafkaW::BrokerSettings BrokerSettings;
   BrokerSettings.Address = address;
   producer = std::make_shared<KafkaW::Producer>(BrokerSettings);
-  topic.reset(new KafkaW::Producer::Topic(producer, topicname));
+  topic.reset(new KafkaW::ProducerTopic(producer, topicname));
   topic->enableCopy();
   thread_poll = std::thread([this] {
     while (do_run_kafka.load()) {
@@ -151,7 +151,7 @@ void Logger::dwlog_inner(int level, int color, char const *file, int line,
     Document["_FILE"] = file;
     Document["_LINE"] = line;
     auto DocumentString = Document.dump();
-    topic->produce((KafkaW::uchar *)DocumentString.c_str(),
+    topic->produce((unsigned char *)DocumentString.c_str(),
                    DocumentString.size());
   }
 #ifdef HAVE_GRAYLOG_LOGGER

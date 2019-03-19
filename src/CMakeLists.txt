@@ -3,7 +3,6 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ..)
 message(STATUS "CMAKE_BUILD_TYPE: ${CMAKE_BUILD_TYPE}")
 
 find_package(EPICSV4)
-find_package(Fmt REQUIRED)
 find_package(RdKafka REQUIRED)
 find_package(FlatBuffers REQUIRED)
 find_package(CLI11 REQUIRED)
@@ -16,13 +15,11 @@ find_package(StaticData COMPONENTS "schema-config-global.json")
 find_package(GitCommitExtract)
 
 set(path_include_common
-${FMT_INCLUDE_DIR}
 ${CONCURRENTQUEUE_INCLUDE_DIR}
 ${JSONFORMODERNCPP_INCLUDE_DIR}
 ${CLI11_INCLUDE_DIR}
 ${RDKAFKA_INCLUDE_DIR}
 ${FLATBUFFERS_INCLUDE_DIR}
-${CURL_INCLUDE_DIRS}
 ${PROJECT_SOURCE_DIR}/src
 ${PROJECT_BINARY_DIR}/src
 )
@@ -31,14 +28,12 @@ set(path_include_common_suppressed_warnings
         ${EPICSV4_INCLUDE_DIRS}
         )
 
-
 set(libraries_common
 ${path_library_epics_ca}
 ${path_library_epics_pvData}
 ${path_library_epics_pvAccess}
 ${path_library_epics_NT}
 ${RDKAFKA_LIBRARIES}
-${CURL_LIBRARIES}
 ${FETK_EXTRA_LIBRARIES}
 )
 
@@ -46,12 +41,12 @@ if (UNIX)
   list(APPEND libraries_common pthread)
 endif()
 
-
-
 set(compile_defs_common "")
 
 if (CURL_FOUND)
 	list(APPEND compile_defs_common "HAVE_CURL=1")
+    list(APPEND libraries_common ${CURL_LIBRARIES})
+    list(APPEND path_include_common ${CURL_INCLUDE_DIRS})
 endif()
 
 set(INCLUDES
@@ -61,6 +56,12 @@ set(INCLUDES
     EpicsClient/FwdMonitorRequester.h
     EpicsClient/EpicsClientInterface.h
     EpicsClient/ChannelRequester.h
+    KafkaW/ConsumerMessage.h
+    KafkaW/KafkaW.h
+    KafkaW/Producer.h
+    KafkaW/ProducerTopic.h
+    KafkaW/Consumer.h
+    KafkaW/BrokerSettings.h
     Config.h
     ConfigParser.h
     ConversionWorker.h
@@ -76,6 +77,17 @@ set(INCLUDES
     helper.h
     json.h
     Kafka.h
+    KafkaW/BrokerSettings.h
+    KafkaW/Consumer.h
+    KafkaW/ConsumerMessage.h
+    KafkaW/KafkaW.h
+    KafkaW/Producer.h
+    KafkaW/ProducerMessage.h
+    KafkaW/ProducerDeliveryCb.h
+    KafkaW/ProducerStats.h
+    KafkaW/ProducerTopic.h
+    KafkaW/KafkaEventCb.h
+    KafkaW/MetadataException.h
     KafkaOutput.h
     logger.h
     MainOpt.h
@@ -84,7 +96,7 @@ set(INCLUDES
     Stream.h
     Streams.h
     Timer.h
-    uri.h)
+    URI.h)
 
 set(SOURCES
     MainOpt.cpp
@@ -95,33 +107,26 @@ set(SOURCES
     EpicsClient/EpicsClientRandom.cpp
     EpicsClient/FwdMonitorRequester.cpp
     EpicsClient/EpicsClientFactory.cpp
-    helper.cpp
     logger.cpp
     Kafka.cpp
     KafkaW/BrokerSettings.cpp
     KafkaW/Consumer.cpp
-    KafkaW/KafkaW.cpp
-    KafkaW/Msg.cpp
-    KafkaW/PollStatus.cpp
     KafkaW/Producer.cpp
     KafkaW/ProducerTopic.cpp
-    KafkaW/TopicSettings.cpp
     ConversionWorker.cpp
     Config.cpp
     FlatbufferMessage.cpp
     SchemaRegistry.cpp
     FlatBufferCreator.cpp
-    uri.cpp
+    URI.cpp
     json.cpp
     Converter.cpp
     KafkaOutput.cpp
     Stream.cpp
     Streams.cpp
     schemas/f142/f142.cpp
-    ${FMT_SRC}
     Timer.cpp
-    ${CMAKE_CURRENT_BINARY_DIR}/git_commit_current.cpp
-)
+    ${CMAKE_CURRENT_BINARY_DIR}/git_commit_current.cpp)
 
 set(tgt __objects)
 add_library(${tgt} OBJECT ${SOURCES} ${INCLUDES})

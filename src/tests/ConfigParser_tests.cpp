@@ -12,23 +12,21 @@
 
 TEST(ConfigParserTest, using_broker_list_creates_multiple_brokers_) {
   Forwarder::MainOpt MainOpt;
-  Forwarder::ConfigParser Config("{}");
-  std::string Brokers = "localhost1,localhost2";
-  Config.setBrokers(Brokers, MainOpt.MainSettings);
-  ASSERT_EQ("localhost1", MainOpt.MainSettings.Brokers.at(0).host);
-  ASSERT_EQ("localhost2", MainOpt.MainSettings.Brokers.at(1).host);
-  ASSERT_EQ(Brokers, MainOpt.brokers_as_comma_list());
+  std::string Brokers = "//localhost1:9092, //localhost2:9092";
+  Forwarder::ConfigParser::setBrokers(Brokers, MainOpt.MainSettings);
+  ASSERT_EQ("localhost1:9092", MainOpt.MainSettings.Brokers.at(0).HostPort);
+  ASSERT_EQ("localhost2:9092", MainOpt.MainSettings.Brokers.at(1).HostPort);
+  ASSERT_EQ("localhost1:9092,localhost2:9092", MainOpt.brokers_as_comma_list());
 }
 
 TEST(ConfigParserTest,
      set_brokers_with_one_broker_and_topic_parses_one_broker) {
   Forwarder::MainOpt MainOpt;
-  Forwarder::ConfigParser Config("{}");
-  std::string Brokers = "localhost:9092/TEST_forwarderConfig";
-  Config.setBrokers(Brokers, MainOpt.MainSettings);
-  ASSERT_EQ("localhost", MainOpt.MainSettings.Brokers.at(0).host);
-  ASSERT_EQ(9092, MainOpt.MainSettings.Brokers.at(0).port);
-  ASSERT_EQ("TEST_forwarderConfig", MainOpt.MainSettings.Brokers.at(0).topic);
+  std::string Brokers = "//localhost:9092/TEST_forwarderConfig";
+  Forwarder::ConfigParser::setBrokers(Brokers, MainOpt.MainSettings);
+  ASSERT_EQ("localhost:9092", MainOpt.MainSettings.Brokers.at(0).HostPort);
+  ASSERT_EQ(9092, MainOpt.MainSettings.Brokers.at(0).Port);
+  ASSERT_EQ("TEST_forwarderConfig", MainOpt.MainSettings.Brokers.at(0).Topic);
   ASSERT_EQ(1, MainOpt.MainSettings.Brokers.size());
   ASSERT_EQ("localhost:9092", MainOpt.brokers_as_comma_list());
 }
@@ -260,4 +258,70 @@ TEST(
 
   ASSERT_EQ("Kafka_topic_name", Converter1.Topic);
   ASSERT_EQ("Another_topic", Converter2.Topic);
+}
+
+TEST(ConfigParserTest, setBrokers_with_comma) {
+  Forwarder::ConfigSettings Settings;
+  Forwarder::ConfigParser::setBrokers("//hello, //world!", Settings);
+  Forwarder::URI first("//hello");
+  Forwarder::URI second("//world!");
+  ASSERT_EQ(first.HostPort, Settings.Brokers.at(0).HostPort);
+  ASSERT_EQ(second.HostPort, Settings.Brokers.at(1).HostPort);
+}
+
+TEST(ConfigParserTest, setBrokers_single_item) {
+  Forwarder::ConfigSettings Settings;
+  Forwarder::ConfigParser::setBrokers("//abc", Settings);
+  Forwarder::URI first("//abc");
+  ASSERT_EQ(first.HostPort, Settings.Brokers.at(0).HostPort);
+  ASSERT_EQ(1, Settings.Brokers.size());
+}
+
+TEST(ConfigParserTest, setBrokers_with_comma_before_brokers) {
+  Forwarder::ConfigSettings Settings;
+  Forwarder::ConfigParser::setBrokers(",//a,//b", Settings);
+  Forwarder::URI first("//a");
+  Forwarder::URI second("//b");
+  ASSERT_EQ(first.HostPort, Settings.Brokers.at(0).HostPort);
+  ASSERT_EQ(second.HostPort, Settings.Brokers.at(1).HostPort);
+}
+
+TEST(
+    ConfigParserTest,
+    setBrokers_does_not_split_all_characters_and_returns_vector_of_words_between_split_character) {
+  Forwarder::ConfigSettings Settings;
+  Forwarder::ConfigParser::setBrokers("//ac,//dc,", Settings);
+  Forwarder::URI first("//ac");
+  Forwarder::URI second("//dc");
+  ASSERT_EQ(first.HostPort, Settings.Brokers.at(0).HostPort);
+  ASSERT_EQ(second.HostPort, Settings.Brokers.at(1).HostPort);
+}
+
+TEST(
+    ConfigParserTest,
+    setBrokers_adds_no_blank_characters_with_character_before_and_after_string) {
+  Forwarder::ConfigSettings Settings;
+  Forwarder::ConfigParser::setBrokers(",//ac,//dc,", Settings);
+  Forwarder::URI first("//ac");
+  Forwarder::URI second("//dc");
+  ASSERT_EQ(first.HostPort, Settings.Brokers.at(0).HostPort);
+  ASSERT_EQ(second.HostPort, Settings.Brokers.at(1).HostPort);
+}
+
+TEST(ConfigParserTest,
+     setBrokers_adds_multiple_words_before_and_after_characters) {
+  Forwarder::ConfigSettings Settings;
+  Forwarder::ConfigParser::setBrokers(
+      ",//some,//longer,//thing,//for,//testing", Settings);
+  Forwarder::URI first("//some");
+  Forwarder::URI second("//longer");
+  Forwarder::URI third("//thing");
+  Forwarder::URI fourth("//for");
+  Forwarder::URI fifth("//testing");
+  ASSERT_EQ(5, Settings.Brokers.size());
+  ASSERT_EQ(first.HostPort, Settings.Brokers.at(0).HostPort);
+  ASSERT_EQ(second.HostPort, Settings.Brokers.at(1).HostPort);
+  ASSERT_EQ(third.HostPort, Settings.Brokers.at(2).HostPort);
+  ASSERT_EQ(fourth.HostPort, Settings.Brokers.at(3).HostPort);
+  ASSERT_EQ(fifth.HostPort, Settings.Brokers.at(4).HostPort);
 }

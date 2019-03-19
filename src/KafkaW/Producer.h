@@ -1,108 +1,70 @@
 #pragma once
 
 #include "BrokerSettings.h"
-#include "Msg.h"
+#include "KafkaEventCb.h"
+#include "ProducerDeliveryCb.h"
+#include "ProducerMessage.h"
+#include "ProducerStats.h"
 #include <atomic>
 #include <functional>
-#include <librdkafka/rdkafka.h>
 
 namespace KafkaW {
 
 class ProducerTopic;
 
-class ProducerMsg {
+class ProducerInterface {
 public:
-  virtual ~ProducerMsg() = default;
-  virtual void deliveryOk();
-  virtual void deliveryError();
-  uchar *data;
-  uint32_t size;
-};
-
-struct ProducerStats {
-  std::atomic<uint64_t> produced{0};
-  std::atomic<uint32_t> produce_fail{0};
-  std::atomic<uint32_t> local_queue_full{0};
-  std::atomic<uint64_t> produce_cb{0};
-  std::atomic<uint64_t> produce_cb_fail{0};
-  std::atomic<uint64_t> poll_served{0};
-  std::atomic<uint64_t> msg_too_large{0};
-  std::atomic<uint64_t> produced_bytes{0};
-  std::atomic<uint32_t> out_queue{0};
-  ProducerStats() = default;
-  ProducerStats(ProducerStats const &);
-};
-
-class Producer {
-public:
-  typedef ProducerTopic Topic;
-  typedef ProducerMsg Msg;
-  explicit Producer(BrokerSettings ProducerBrokerSettings_);
-  Producer(Producer const &) = delete;
-  Producer(Producer &&x) noexcept;
-  ~Producer();
-  void pollWhileOutputQueueFilled();
-  void poll();
-  uint64_t totalMessagesProduced();
-  uint64_t outputQueueLength();
-
-  /// The message delivered callback for Kafka.
-  ///
-  /// \param rk The Kafka handle.
-  /// \param msg The message
-  /// \param opaque The opaque object.
-  static void deliveredCallback(rd_kafka_t *rk, rd_kafka_message_t const *msg,
-                                void *opaque);
-
-  /// The error callback for Kafka.
-  ///
-  /// \param rk The Kafka handle.
-  /// \param err_i The error code.
-  /// \param reason The error string.
-  /// \param opaque The opaque object.
-  static void errorCallback(rd_kafka_t *rk, int err_i, char const *reason,
-                            void *opaque);
-
-  /// The statistics callback for Kafka.
-  ///
-  /// \param rk The Kafka handle.
-  /// \param json The statistics data in JSON format.
-  /// \param json_size The size of the JSON string.
-  /// \param opaque The opaque.
-  /// \return The error code.
-  static int statsCallback(rd_kafka_t *rk, char *json, size_t json_len,
-                           void *opaque);
-
-  /// The log callback for Kafka.
-  ///
-  /// \param rk The Kafka handle.
-  /// \param level The log level.
-  /// \param fac ?
-  /// \param buf The message buffer.
-  static void logCallback(rd_kafka_t const *rk, int level, char const *fac,
-                          char const *buf);
-
-  /// The throttle callback for Kafka.
-  ///
-  /// \param rk The Kafka handle.
-  /// \param broker_name The broker name.
-  /// \param broker_id  The broker id.
-  /// \param throttle_time_ms The throttle time in milliseconds.
-  /// \param opaque The opaque.
-  static void throttleCallback(rd_kafka_t *rk, char const *broker_name,
-                               int32_t broker_id, int throttle_time_ms,
-                               void *opaque);
-  rd_kafka_t *getRdKafkaPtr() const;
-  std::function<void(rd_kafka_message_t const *msg)> on_delivery_ok;
-  std::function<void(rd_kafka_message_t const *msg)> on_delivery_failed;
-  std::function<void(Producer *, rd_kafka_resp_err_t)> on_error;
-  // Currently it's nice to have access to these two for statistics:
-  BrokerSettings ProducerBrokerSettings;
-  rd_kafka_t *RdKafkaPtr = nullptr;
-  std::atomic<uint64_t> TotalMessagesProduced{0};
+  ProducerInterface() = default;
+  virtual ~ProducerInterface() = default;
+  virtual void poll() = 0;
+  virtual int outputQueueLength() = 0;
+  virtual RdKafka::Producer *getRdKafkaPtr() const = 0;
   ProducerStats Stats;
+};
+
+class Producer : public ProducerInterface {
+public:
+  /// The constructor.
+  ///
+  /// \param Settings_ The BrokerSettings.
+  explicit Producer(BrokerSettings Settings);
+  ~Producer() override;
+
+  /// Polls Kafka for events.
+  void poll() override;
+
+  /// Gets the number of messages not send.
+  ///
+  /// \return The number of messages.
+  int outputQueueLength() override;
+
+  RdKafka::Producer *getRdKafkaPtr() const override;
+
+  /// Send a message to Kafka.
+  ///
+  /// \param Topic The topic to publish to.
+  /// \param Partition The topic partition to publish to.
+  /// \param MessageFlags
+  /// \param Payload The actual message data.
+  /// \param PayloadSize The size of the payload.
+  /// \param Key The message's key.
+  /// \param KeySize The size of the key.
+  /// \param OpaqueMessage Points to the whole message.
+  /// \return The Kafka RESP error code.
+  RdKafka::ErrorCode produce(RdKafka::Topic *Topic, int32_t Partition,
+                             int MessageFlags, void *Payload,
+                             size_t PayloadSize, const void *Key,
+                             size_t KeySize, void *OpaqueMessage);
+  BrokerSettings ProducerBrokerSettings;
+  std::atomic<uint64_t> TotalMessagesProduced{0};
+
+protected:
+  int ProducerID = 0;
+  std::unique_ptr<RdKafka::Handle> ProducerPtr = nullptr;
 
 private:
-  int id = 0;
+  std::unique_ptr<RdKafka::Conf> Conf;
+  ProducerDeliveryCb DeliveryCb{Stats};
+  KafkaEventCb EventCb;
 };
 } // namespace KafkaW

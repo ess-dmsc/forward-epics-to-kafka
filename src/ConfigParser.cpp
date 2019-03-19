@@ -7,12 +7,30 @@
 
 namespace Forwarder {
 
-ConfigParser::ConfigParser(const std::string &RawJson) {
-  Json = nlohmann::json::parse(RawJson);
+static std::vector<std::string> split(const std::string &Brokers) {
+  std::vector<std::string> ret;
+  std::string::size_type i1 = 0;
+  while (true) {
+    auto i2 = Brokers.find(',', i1);
+    if (i2 == std::string::npos) {
+      break;
+    }
+    if (i2 > i1) {
+      ret.push_back(Brokers.substr(i1, i2 - i1));
+    }
+    i1 = i2 + 1;
+  }
+  if (i1 != Brokers.size()) {
+    ret.push_back(Brokers.substr(i1));
+  }
+  return ret;
 }
 
+ConfigParser::ConfigParser(const std::string &RawJson)
+    : Json(nlohmann::json::parse(RawJson)) {}
+
 ConfigSettings ConfigParser::extractStreamInfo() {
-  ConfigSettings Settings;
+  ConfigSettings Settings{};
   using nlohmann::json;
   if (auto StreamsMaybe = find<json>("streams", Json)) {
     auto Streams = StreamsMaybe.inner();
@@ -44,11 +62,9 @@ ConfigSettings ConfigParser::extractStreamInfo() {
 void ConfigParser::setBrokers(std::string const &Brokers,
                               ConfigSettings &Settings) {
   Settings.Brokers.clear();
-  auto a = split(Brokers, ",");
-  for (auto &x : a) {
-    URI u1;
-    u1.require_host_slashes = false;
-    u1.parse(x);
+  std::vector<std::string> ret = split(Brokers);
+  for (auto &x : ret) {
+    URI u1(x);
     Settings.Brokers.push_back(u1);
   }
 }

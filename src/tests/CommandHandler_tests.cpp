@@ -114,8 +114,8 @@ TEST(CommandHandlerTest, stop_command_removes_stream_correctly) {
 }
 
 class ExtractCommandsTest : public ::testing::TestWithParam<const char *> {
-  virtual void SetUp() { command = (*GetParam()); }
-  virtual void TearDown() {}
+  // cppcheck-suppress unusedFunction
+  void SetUp() override { command = (*GetParam()); }
 
 protected:
   std::string command;
@@ -124,17 +124,14 @@ protected:
 TEST_P(ExtractCommandsTest, extracting_command_gets_command_name) {
   std::ostringstream os;
   os << "{"
-     << "  \"cmd\": \"" << command << "\""
+     << R"(  "cmd": ")" << command << "\""
      << "}";
 
   std::string RawJson = os.str();
 
   nlohmann::json Json = nlohmann::json::parse(RawJson);
-  Forwarder::MainOpt MainOpt;
-  Forwarder::Forwarder Main(MainOpt);
-  Forwarder::ConfigCB config(Main);
 
-  auto Cmd = config.findCommand(Json);
+  auto Cmd = Forwarder::ConfigCB::findCommand(Json);
 
   ASSERT_EQ(command, Cmd);
 }

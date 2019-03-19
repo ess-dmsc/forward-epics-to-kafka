@@ -15,14 +15,14 @@ properties([[
         artifactDaysToKeepStr: '',
         artifactNumToKeepStr: '3',
         daysToKeepStr: '',
-        numToKeepStr: ''
+        numToKeepStr: '10'
     ]
 ]]);
 
 images = [
         'centos7-release': [
-                'name': 'essdmscdm/centos7-build-node:3.0.0',
-                'sh'  : '/usr/bin/scl enable rh-python35 devtoolset-6 -- /bin/bash -e'
+                'name': 'essdmscdm/centos7-build-node:4.2.0',
+                'sh'  : '/usr/bin/scl enable devtoolset-6 -- /bin/bash -e'
         ]
 ]
 
@@ -35,7 +35,6 @@ def Object container_name(image_key) {
 def failure_function(exception_obj, failureMessage) {
     def toEmails = [[$class: 'DevelopersRecipientProvider']]
     emailext body: '${DEFAULT_CONTENT}\n\"' + failureMessage + '\"\n\nCheck console output at $BUILD_URL to view the results.', recipientProviders: toEmails, subject: '${DEFAULT_SUBJECT}'
-    slackSend color: 'danger', message: "${project}: " + failureMessage
     throw exception_obj
 }
 
@@ -158,17 +157,50 @@ def docker_test(image_key, test_dir) {
 }
 
 def docker_formatting(image_key) {
+    if (!env.CHANGE_ID) {
+        // Ignore non-PRs
+        return
+    }
+
     try {
         def custom_sh = images[image_key]['sh']
         def script = """
-                    clang-format -version
-                    cd ${project}
-                    find . \\\\( -name '*.cpp' -or -name '*.cxx' -or -name '*.h' -or -name '*.hpp' \\\\) \\
-                        -exec clangformatdiff.sh {} +
-                  """
-        sh "docker exec ${container_name(image_key)} ${custom_sh} -c \"${script}\""
+                     clang-format -version
+                     cd ${project}
+                     find . \\\\( -name '*.cpp' -or -name '*.cxx' -or -name '*.h' -or -name '*.hpp' \\\\) \\
+                       -exec clang-format -i {} +
+                     """
+        sh """
+           docker exec ${container_name(image_key)} ${custom_sh} -c \"${script}\"
+           docker cp -a ${container_name(image_key)}:/home/jenkins/${project} ${project}-test
+           cd ${project}-test
+           git config user.email 'dm-jenkins-integration@esss.se'
+           git config user.name 'cow-bot'
+           git status -s
+           git add -u
+           git commit -m \"GO FORMAT YOURSELF\"
+           """
+        withCredentials([
+                  usernamePassword(
+                    credentialsId: 'cow-bot-username',
+                    usernameVariable: 'USERNAME',
+                    passwordVariable: 'PASSWORD'
+                  )
+                ]) {
+                  sh """
+                     cd ${project}-test
+                     git push https://${USERNAME}:${PASSWORD}@github.com/ess-dmsc/forward-epics-to-kafka.git HEAD:${CHANGE_BRANCH}
+                     """
+        } // withCredentials
     } catch (e) {
-        failure_function(e, "Check formatting step for (${container_name(image_key)}) failed")
+        // Okay to fail as there could be no badly formatted files to commit
+    } finally {
+        // Clean up
+        try {
+            sh "rm -rf ${project}-test"
+        } catch (e) {
+            // Can ignore exception
+        }
     }
 }
 
@@ -223,8 +255,8 @@ def docker_coverage(image_key) {
                 cd ${project}
                 export WORKSPACE='.'
                 export JENKINS_URL=${JENKINS_URL}
-                pip install --user codecov
-                python -m codecov -t ${TOKEN} --commit ${scm_vars.GIT_COMMIT} -f ../build/coverage.info
+                python3.6 -m pip install --user codecov
+                python3.6 -m codecov -t ${TOKEN} --commit ${scm_vars.GIT_COMMIT} -f ../build/coverage.info
                 """
             sh "docker exec ${container_name(image_key)} ${custom_sh} -c \"${codecov_upload_script}\""
         }
@@ -236,10 +268,10 @@ def docker_coverage(image_key) {
 def docker_cppcheck(image_key) {
     try {
         def custom_sh = images[image_key]['sh']
-        def test_output = "cppcheck.txt"
+        def test_output = "cppcheck.xml"
         def cppcheck_script = """
                         cd forward-epics-to-kafka
-                        cppcheck --enable=all --inconclusive --template="{file},{line},{severity},{id},{message}" src/ 2> ${test_output}
+                        cppcheck --xml --inline-suppr --enable=all --inconclusive src/ 2> ${test_output}
                     """
         sh "docker exec ${container_name(image_key)} ${custom_sh} -c \"${cppcheck_script}\""
         sh "docker cp ${container_name(image_key)}:/home/jenkins/forward-epics-to-kafka/${test_output} ."
@@ -267,8 +299,6 @@ def get_pipeline(image_key) {
 
                 if (image_key == clangformat_os) {
                     docker_formatting(image_key)
-                    docker_cppcheck(image_key)
-                    step([$class: 'WarningsPublisher', parserConfigurations: [[parserName: 'Cppcheck Parser', pattern: 'cppcheck.txt']]])
                 } else {
                     docker_build(image_key)
                     if (image_key == test_and_coverage_os && !env.CHANGE_ID) {
@@ -289,8 +319,11 @@ def get_pipeline(image_key) {
             } catch (e) {
                 failure_function(e, "Unknown build failure for ${image_key}")
             } finally {
-                sh "docker stop ${container_name(image_key)}"
-                sh "docker rm -f ${container_name(image_key)}"
+		if (image_key != clangformat_os) {
+		    // Keep one docker up for static analysers
+                    sh "docker stop ${container_name(image_key)}"
+                    sh "docker rm -f ${container_name(image_key)}"
+		}
             }
         }
     }

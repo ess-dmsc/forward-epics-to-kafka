@@ -1,40 +1,31 @@
 #pragma once
 
+#include "CommandHandler.h"
 #include "KafkaW/KafkaW.h"
-#include "uri.h"
+#include "URI.h"
 #include <atomic>
 #include <chrono>
 #include <memory>
 #include <string>
 #include <vector>
 
+namespace KafkaW {
+class ConsumerInterface;
+}
+
 namespace Forwarder {
-
-class Remote_T;
-
+class ConfigCB;
 namespace Config {
-
-using std::string;
-
-/// Interface to react on configuration messages.
-class Callback {
-public:
-  virtual void operator()(string const &msg) = 0;
-};
-
-struct Listener_impl;
 
 class Listener {
 public:
-  Listener(KafkaW::BrokerSettings bopt, URI uri);
+  Listener(URI uri, std::unique_ptr<KafkaW::ConsumerInterface> NewConsumer);
   Listener(Listener const &) = delete;
-  ~Listener();
-  void poll(Callback &cb);
-  void wait_for_connected(std::chrono::milliseconds timeout);
+  ~Listener() = default;
+  void poll(::Forwarder::ConfigCB &cb);
 
 private:
-  std::unique_ptr<Listener_impl> impl;
-  friend class Remote_T;
+  std::unique_ptr<KafkaW::ConsumerInterface> Consumer;
 };
 } // namespace Config
 } // namespace Forwarder

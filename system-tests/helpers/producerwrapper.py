@@ -71,7 +71,7 @@ class ProducerWrapper:
             print("Sending data {}".format(pv))
             self.producer.produce(self.topic, value=pv)
 
-    def stop_all(self):
+    def stop_all_pvs(self):
         """
         Sends a stop_all command to the forwarder to clear all configuration.
 

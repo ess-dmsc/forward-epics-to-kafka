@@ -15,26 +15,22 @@ namespace Forwarder {
 
 class MappingAddException : public std::runtime_error {
 public:
-  explicit MappingAddException(std::string what) : std::runtime_error(what) {}
+  explicit MappingAddException(std::string const &What)
+      : std::runtime_error(What) {}
 };
 
 class Converter;
 class Stream;
 class Timer;
-namespace tests {
-class Remote_T;
-}
 
 namespace Config {
 class Listener;
-}
+} // namespace Config
 
 enum class ForwardingStatus : int32_t {
   NORMAL,
   STOPPED,
 };
-
-class CURLReporter;
 
 enum class ForwardingRunState : int {
   RUN = 0,
@@ -64,8 +60,6 @@ private:
   void createPVUpdateTimerIfRequired();
   template <typename T>
   std::shared_ptr<Stream> findOrAddStream(ChannelInfo &ChannelInfo);
-  template <typename T>
-  std::shared_ptr<T> getStreamByChannelName(std::string const &ChannelName);
   MainOpt &main_opt;
   std::shared_ptr<InstanceSet> kafka_instance_set;
   std::unique_ptr<Config::Listener> config_listener;
@@ -74,14 +68,11 @@ private:
   std::mutex converters_mutex;
   std::map<std::string, std::weak_ptr<Converter>> converters;
   std::mutex streams_mutex;
+  URI createTopicURI(ConverterSettings const &ConverterInfo) const;
   std::mutex conversion_workers_mx;
   std::vector<std::unique_ptr<ConversionWorker>> conversion_workers;
   ConversionScheduler conversion_scheduler;
-  friend class ConfigCB;
-  friend class tests::Remote_T;
-  friend class ConversionScheduler;
   std::atomic<ForwardingStatus> forwarding_status{ForwardingStatus::NORMAL};
-  std::unique_ptr<CURLReporter> curl;
   std::shared_ptr<KafkaW::Producer> status_producer;
   std::unique_ptr<KafkaW::ProducerTopic> status_producer_topic;
   std::atomic<ForwardingRunState> ForwardingRunFlag{ForwardingRunState::RUN};

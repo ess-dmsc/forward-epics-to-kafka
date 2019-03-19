@@ -2,7 +2,9 @@
 #include "ChannelRequester.h"
 #include "FwdMonitorRequester.h"
 #include <atomic>
+#include <memory>
 #include <mutex>
+#include <utility>
 // EPICS 4 supports access via the channel access protocol as well,
 // and we need it because some hardware speaks EPICS base.
 #include "EpicsPVUpdate.h"
@@ -36,7 +38,7 @@ public:
 
   /// Starts the EPICS channel access provider loop and the monitor requester
   /// loop for monitoring EPICS PVs.
-  int init(std::string epics_channel_provider_type) {
+  int init(std::string const &epics_channel_provider_type) {
     factory_init = EpicsClientFactoryInit::factory_init();
     {
       RLOCK();
@@ -118,7 +120,7 @@ public:
   }
 
   /// Pushes update to the emit_queue ring buffer which is owned by a stream.
-  int emit(std::shared_ptr<FlatBufs::EpicsPVUpdate> Update) {
+  int emit(std::shared_ptr<FlatBufs::EpicsPVUpdate> const &Update) {
 #if TEST_PROVOKE_ERROR == 1
     static std::atomic<int> c1{0};
     if (c1 > 10) {
@@ -150,7 +152,7 @@ EpicsClientMonitor::EpicsClientMonitor(
     std::shared_ptr<
         moodycamel::ConcurrentQueue<std::shared_ptr<FlatBufs::EpicsPVUpdate>>>
         Ring)
-    : EmitQueue(Ring) {
+    : EmitQueue(std::move(Ring)) {
   Impl.reset(new EpicsClientMonitor_impl(this));
   LOG(Sev::Debug, "channel_name: {}", ChannelInfo.channel_name);
   Impl->channel_name = ChannelInfo.channel_name;
@@ -244,7 +246,7 @@ void ChannelRequester::channelCreated(epics::pvData::Status const &Status,
       std::string cname = Channel->getChannelName();
       LOG(Sev::Error, "  failure is in channel: {}", cname);
     }
-    EpicsClientImpl->error_channel_requester();
+    EpicsClientMonitor_impl::error_channel_requester();
   }
 }
 
@@ -256,7 +258,7 @@ void ChannelRequester::channelStateChange(
   if (!Channel) {
     LOG(Sev::Error, "no channel, even though we should have.  state: {}",
         channelStateName(ConnectionState));
-    EpicsClientImpl->error_channel_requester();
+    EpicsClientMonitor_impl::error_channel_requester();
     return;
   }
   if (ConnectionState == Channel::CONNECTED) {
@@ -275,7 +277,7 @@ void ChannelRequester::channelStateChange(
   } else {
     LOG(Sev::Error, "Unhandled channel state change: {} {}", ConnectionState,
         channelStateName(ConnectionState));
-    EpicsClientImpl->error_channel_requester();
+    EpicsClientMonitor_impl::error_channel_requester();
   }
 }
 } // namespace EpicsClient

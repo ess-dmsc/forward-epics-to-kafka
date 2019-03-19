@@ -5,14 +5,7 @@ comment:
   layout: "header, diff, tree, changes, sunburst"
   require_changes: false
   
-  coverage:
+coverage:
   status:
-    patch:
-      default:
-        target: auto
-        threshold: 5
-    project:
-      default:
-        target: auto
-        threshold: 5
-
+    patch: off
+    project: off

@@ -3,7 +3,6 @@
 #include "EpicsPVUpdate.h"
 #include "helper.h"
 #include "logger.h"
-#include <atomic>
 #include <memory>
 #include <pv/pvAccess.h>
 #include <pv/pvData.h>
@@ -11,27 +10,31 @@
 namespace Forwarder {
 namespace EpicsClient {
 
+std::atomic<uint32_t> FwdMonitorRequester::GlobalIdCounter{0};
+
 FwdMonitorRequester::FwdMonitorRequester(
-    EpicsClientInterface *EpicsClientMonitor, const std::string &ChannelName)
-    : channel_name(ChannelName), epics_client(EpicsClientMonitor) {
-  static std::atomic<uint32_t> __id{0};
-  auto id = __id++;
-  name = fmt::format("FwdMonitorRequester-{}", id);
-  LOG(Sev::Debug, "FwdMonitorRequester {}", name);
+    EpicsClientInterface *EpicsClientMonitor, const std::string &PVName)
+    : ChannelName(PVName),
+      RequesterName(fmt::format("FwdMonitorRequester-{}", GlobalIdCounter)),
+      epics_client(EpicsClientMonitor) {
+  ++GlobalIdCounter;
+  LOG(Sev::Debug, "FwdMonitorRequester {}", RequesterName);
 }
 
 FwdMonitorRequester::~FwdMonitorRequester() {
   LOG(Sev::Info, "~FwdMonitorRequester");
 }
 
-std::string FwdMonitorRequester::getRequesterName() { return name; }
+std::string FwdMonitorRequester::getRequesterName() { return RequesterName; }
 
 void FwdMonitorRequester::message(std::string const &Message,
                                   ::epics::pvData::MessageType MessageType) {
   UNUSED_ARG(MessageType);
-  LOG(Sev::Debug, "FwdMonitorRequester::message: {}:  {}", name, Message);
+  LOG(Sev::Debug, "FwdMonitorRequester::message: {}:  {}", RequesterName,
+      Message);
 }
 
+// cppcheck-suppress unusedFunction ; used inside EPICS
 void FwdMonitorRequester::monitorConnect(
     ::epics::pvData::Status const &Status,
     ::epics::pvData::Monitor::shared_pointer const &Monitor,
@@ -41,7 +44,7 @@ void FwdMonitorRequester::monitorConnect(
     // NOTE
     // Docs does not say anything about whether we are responsible for any
     // handling of the monitor if non-null?
-    LOG(Sev::Error, "monitorConnect is != success for {}", name);
+    LOG(Sev::Error, "monitorConnect is != success for {}", RequesterName);
     epics_client->errorInEpics();
   } else {
     if (Status.isOK()) {
@@ -53,6 +56,7 @@ void FwdMonitorRequester::monitorConnect(
   }
 }
 
+// cppcheck-suppress unusedFunction ; used inside EPICS
 void FwdMonitorRequester::monitorEvent(
     ::epics::pvData::MonitorPtr const &Monitor) {
   std::vector<std::shared_ptr<FlatBufs::EpicsPVUpdate>> Updates;
@@ -64,9 +68,9 @@ void FwdMonitorRequester::monitorEvent(
 
     static_assert(sizeof(uint64_t) == sizeof(std::chrono::nanoseconds::rep),
                   "Types not compatible");
-    uint64_t ts = std::chrono::duration_cast<std::chrono::nanoseconds>(
-                      std::chrono::system_clock::now().time_since_epoch())
-                      .count();
+    int64_t ts = std::chrono::duration_cast<std::chrono::nanoseconds>(
+                     std::chrono::system_clock::now().time_since_epoch())
+                     .count();
 
     // Seems like MonitorElement always returns a Structure type ?
     // The inheritance diagram shows that scalars derive from Field, not from
@@ -74,7 +78,7 @@ void FwdMonitorRequester::monitorEvent(
     // Does that mean that we never get a scalar here directly??
 
     auto Update = std::make_shared<FlatBufs::EpicsPVUpdate>();
-    Update->channel = channel_name;
+    Update->channel = ChannelName;
     Update->epics_pvstr = epics::pvData::PVStructure::shared_pointer(
         new ::epics::pvData::PVStructure(ele->pvStructurePtr->getStructure()));
     Update->epics_pvstr->copyUnchecked(*ele->pvStructurePtr);
@@ -92,7 +96,7 @@ void FwdMonitorRequester::monitorEvent(
 
 void FwdMonitorRequester::unlisten(epics::pvData::MonitorPtr const &Monitor) {
   UNUSED_ARG(Monitor);
-  LOG(Sev::Debug, "FwdMonitorRequester::unlisten  {}", name);
+  LOG(Sev::Debug, "FwdMonitorRequester::unlisten  {}", RequesterName);
 }
 } // namespace EpicsClient
 } // namespace Forwarder
