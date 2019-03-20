@@ -28,6 +28,7 @@ private:
   std::shared_ptr<Producer> KafkaProducer;
   std::unique_ptr<RdKafka::Topic> RdKafkaTopic;
   std::string Name;
+  std::unique_ptr<RdKafka::Conf> ConfigPtr;
 
   bool DoCopyMsg{false};
 };
