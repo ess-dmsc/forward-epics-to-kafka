@@ -29,8 +29,8 @@ template <typename T> struct RangeSet {
         break;
       }
     }
-    fmt::format_to(mw, "]\0");
-    return std::string(mw.data());
+    fmt::format_to(mw, "]");
+    return std::string(mw.data(), mw.size());
   }
 
   std::set<std::pair<T, T>> set;
