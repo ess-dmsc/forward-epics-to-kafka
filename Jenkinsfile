@@ -264,10 +264,10 @@ def docker_coverage(image_key) {
 def docker_cppcheck(image_key) {
     try {
         def custom_sh = images[image_key]['sh']
-        def test_output = "cppcheck.txt"
+        def test_output = "cppcheck.xml"
         def cppcheck_script = """
                         cd forward-epics-to-kafka
-                        cppcheck --enable=all --inconclusive --template="{file},{line},{severity},{id},{message}" src/ 2> ${test_output}
+                        cppcheck --xml --inline-suppr --enable=all --inconclusive src/ 2> ${test_output}
                     """
         sh "docker exec ${container_name(image_key)} ${custom_sh} -c \"${cppcheck_script}\""
         sh "docker cp ${container_name(image_key)}:/home/jenkins/forward-epics-to-kafka/${test_output} ."
@@ -295,8 +295,6 @@ def get_pipeline(image_key) {
 
                 if (image_key == clangformat_os) {
                     docker_formatting(image_key)
-                    docker_cppcheck(image_key)
-                    step([$class: 'WarningsPublisher', parserConfigurations: [[parserName: 'Cppcheck Parser', pattern: 'cppcheck.txt']]])
                 } else {
                     docker_build(image_key)
                     if (image_key == test_and_coverage_os && !env.CHANGE_ID) {
@@ -317,8 +315,11 @@ def get_pipeline(image_key) {
             } catch (e) {
                 failure_function(e, "Unknown build failure for ${image_key}")
             } finally {
-                sh "docker stop ${container_name(image_key)}"
-                sh "docker rm -f ${container_name(image_key)}"
+		if (image_key != clangformat_os) {
+		    // Keep one docker up for static analysers
+                    sh "docker stop ${container_name(image_key)}"
+                    sh "docker rm -f ${container_name(image_key)}"
+		}
             }
         }
     }
@@ -384,7 +385,7 @@ def get_system_tests_pipeline() {
                             """
 			}
                     }  // stage
-                }finally {
+                } finally {
 		    stage("System tests: Cleanup") {
                         sh """docker stop \$(docker ps -a -q) && docker rm \$(docker ps -a -q) || true
                         """
@@ -424,6 +425,13 @@ node('docker') {
     }
 
     parallel builders
+	
+    stage('CppCheck') {
+	docker_cppcheck(clangformat_os)
+        recordIssues sourceCodeEncoding: 'UTF-8', qualityGates: [[threshold: 2, type: 'TOTAL', unstable: true]], tools: [cppCheck(pattern: 'cppcheck.xml', reportEncoding: 'UTF-8')]
+	sh "docker stop ${container_name(clangformat_os)}"
+        sh "docker rm -f ${container_name(clangformat_os)}"
+    }
 
     // Delete workspace when build is done
     cleanWs()

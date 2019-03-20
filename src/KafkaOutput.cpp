@@ -27,5 +27,5 @@ int KafkaOutput::emit(std::unique_ptr<FlatBufs::FlatbufferMessage> fb) {
   return x;
 }
 
-std::string KafkaOutput::topic_name() { return Output.name(); }
+std::string KafkaOutput::topicName() const { return Output.name(); }
 } // namespace Forwarder

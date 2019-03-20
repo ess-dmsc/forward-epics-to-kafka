@@ -1,6 +1,3 @@
-# Detailed Documentation
+# Forward EPICS to Kafka
 
-- [Usage](usage.md)
-- [Installation](installation.md)
-- [Development](development.md)
-- [Performance](performance.md)
+See top-level README for more information about the project.
