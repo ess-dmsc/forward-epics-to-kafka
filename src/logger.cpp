@@ -154,7 +154,7 @@ void Logger::dwlog_inner(int level, int color, char const *file, int line,
                    DocumentString.size());
   }
 #ifdef HAVE_GRAYLOG_LOGGER
-  auto lmsg = fmt::format("{}:{} [{}]:  {}\n", f1, line, level, s1);
+  auto lmsg = fmt::format("{}:{} [{}]:  {}", f1, line, level, s1);
   Log::Msg(level, lmsg);
 #endif
 }
