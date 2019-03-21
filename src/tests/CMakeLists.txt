@@ -13,6 +13,7 @@ set(sources
     Producer_tests.cpp
     Timer_tests.cpp
     StreamTestUtils.cpp
+    RangeSetTests.cpp
     $<TARGET_OBJECTS:__objects>
     Listener_tests.cpp
     BrokerSettings_tests.cpp
