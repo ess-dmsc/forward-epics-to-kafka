@@ -124,3 +124,34 @@ TEST_F(ProducerTests, produceReturnsErrorCodeIfMessageNotProduced) {
       Producer1.produce(new FakeTopic, 0, 0, nullptr, 0, nullptr, 0, nullptr),
       RdKafka::ErrorCode::ERR__BAD_MSG);
 }
+
+TEST_F(ProducerTests, produceAlsoCallsPollOnProducer) {
+  BrokerSettings Settings{};
+  ProducerStandIn Producer1(Settings);
+  Producer1.ProducerPtr.reset(new MockProducer);
+
+  // We'll call produce this many times and require the same number of calls to
+  // poll
+  const uint32_t NumberOfProduceCalls = 3;
+
+  EXPECT_CALL(*dynamic_cast<MockProducer *>(Producer1.ProducerPtr.get()),
+              produce(_, _, _, _, _, _, _, _))
+      .Times(NumberOfProduceCalls)
+      .WillRepeatedly(Return(RdKafka::ERR_NO_ERROR));
+
+  // This is what we are testing; that poll gets called once for each time that
+  // produce is called.
+  // This is really important as if we don't call poll we do not handle
+  // successful publish events and messages never get cleared from librdkafka's
+  // producer queue, eventually the queue fills up and we stop being able to
+  // publish messages
+  EXPECT_CALL(*dynamic_cast<MockProducer *>(Producer1.ProducerPtr.get()),
+              poll(_))
+      .Times(NumberOfProduceCalls)
+      .WillRepeatedly(Return(1));
+
+  for (uint32_t CallNumber = 0; CallNumber < NumberOfProduceCalls;
+       ++CallNumber) {
+    Producer1.produce(new FakeTopic, 0, 0, nullptr, 0, nullptr, 0, nullptr);
+  }
+}
