@@ -9,8 +9,6 @@ ProducerTopic::ProducerTopic(std::shared_ptr<Producer> ProducerPtr,
     : KafkaProducer(ProducerPtr), Name(std::move(TopicName)) {
 
   std::string ErrStr;
-  ConfigPtr = std::unique_ptr<RdKafka::Conf>(
-      RdKafka::Conf::create(RdKafka::Conf::CONF_TOPIC));
   RdKafkaTopic = std::unique_ptr<RdKafka::Topic>(RdKafka::Topic::create(
       KafkaProducer->getRdKafkaPtr(), Name, ConfigPtr.get(), ErrStr));
   if (RdKafkaTopic == nullptr) {
