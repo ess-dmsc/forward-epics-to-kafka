@@ -118,19 +118,17 @@ def test_forwarder_updates_multiple_pvs(docker_compose):
     cons.close()
 
 
-def test_forwarder_updates_pv_when_config_changed_from_two_pvs_to_three(docker_compose):
+def test_forwarder_updates_pv_when_config_changed_from_one_pv_to_three(docker_compose):
     """
-    GIVEN A message configures two PVs (str and long types) to be forwarded
-    WHEN A message configures an additional PV (double type) to be forwarded
-    THEN Forwarder publishes value for all PVs
+    GIVEN A PV (double type) is already being forwarded
+    WHEN A message configures two additional PV (str and long types) to be forwarded
+    THEN Forwarder status message lists all PVs
     """
     data_topic = "TEST_forwarderData_change_config"
     status_topic = "TEST_forwarderStatus"
     pvs = [PVSTR, PVLONG]
     prod = ProducerWrapper("localhost:9092", CONFIG_TOPIC, data_topic)
     prod.add_config(pvs)
-    sleep(2)
-    prod.add_config([PVDOUBLE])
 
     sleep(5)
     cons = create_consumer()
@@ -153,6 +151,32 @@ def test_forwarder_updates_pv_when_config_changed_from_two_pvs_to_three(docker_c
         f"Expect these channels to be configured as forwarded: {expected_names_of_channels_being_forwarded}, " \
             f"but status message report these as forwarded: {names_of_channels_being_forwarded}"
 
+    cons.close()
+
+def test_forwarder_updates_pv_when_config_change_add_two_pvs(docker_compose):
+    """
+    GIVEN A PV (double type) is already being forwarded
+    WHEN A message configures two additional PV (str and long types) to be forwarded
+    THEN Forwarder publishes initial values for added PVs
+    """
+    data_topic = "TEST_forwarderData_change_config"
+    pvs = [PVSTR, PVLONG]
+    prod = ProducerWrapper("localhost:9092", CONFIG_TOPIC, data_topic)
+    prod.add_config(pvs)
+
+    sleep(2)
+    cons = create_consumer()
+    sleep(2)
+    cons.subscribe([data_topic])
+    sleep(2)
+
+    poll_for_valid_message(cons)
+    poll_for_valid_message(cons)
+
+    expected_values = {PVSTR: (Value.String, b''), PVLONG: (Value.Int, 0)}
+
+    messages = [poll_for_valid_message(cons), poll_for_valid_message(cons)]
+    check_multiple_expected_values(messages, expected_values)
     cons.close()
 
 
