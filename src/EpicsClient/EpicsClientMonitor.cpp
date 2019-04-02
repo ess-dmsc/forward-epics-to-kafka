@@ -62,7 +62,7 @@ public:
       LOG(7, "monitoringStart:  want to start but we have no channel");
       return -1;
     }
-    LOG(Sev::Debug, "monitoringStart");
+    LOG(Sev::Error, "monitoringStart");
     // Leaving it empty seems to be the full channel, including name.  That's
     // good.
     // Can also specify subfields, e.g. "value, timeStamp"  or also
