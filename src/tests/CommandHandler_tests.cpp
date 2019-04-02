@@ -59,7 +59,7 @@ TEST(CommandHandlerTest, adding_stream_twice_ignores_second) {
   ASSERT_EQ(1u, Main.streams.size());
   ASSERT_EQ("my_channel_name", Main.streams[0]->getChannelInfo().channel_name);
   // The second command should not cause the provider type to change
-  ASSERT_EQ("ca", Main.streams[0]->getChannelInfo().provider_type);
+  ASSERT_EQ("pva", Main.streams[0]->getChannelInfo().provider_type);
 }
 
 TEST(CommandHandlerTest, add_command_adds_multiple_streams_correctly) {
