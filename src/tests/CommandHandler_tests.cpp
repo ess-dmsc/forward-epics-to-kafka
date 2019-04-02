@@ -7,8 +7,7 @@
 
 class CommandHandlerTest : public ::testing::Test {
 protected:
-  void SetUp() override {
-  }
+  void SetUp() override {}
   Forwarder::MainOpt MainOpt;
   Forwarder::Forwarder Main{MainOpt};
   Forwarder::ConfigCB Config{Main};
