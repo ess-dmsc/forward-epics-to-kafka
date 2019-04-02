@@ -5,7 +5,16 @@
 #include <gtest/gtest.h>
 #include <nlohmann/json.hpp>
 
-TEST(CommandHandlerTest, add_command_adds_stream_correctly) {
+class CommandHandlerTest : public ::testing::Test {
+protected:
+  void SetUp() override {
+  }
+  Forwarder::MainOpt MainOpt;
+  Forwarder::Forwarder Main{MainOpt};
+  Forwarder::ConfigCB Config{Main};
+};
+
+TEST_F(CommandHandlerTest, add_command_adds_stream_correctly) {
   std::string RawJson = R"({
                             "cmd": "add",
                             "streams": [
@@ -16,10 +25,6 @@ TEST(CommandHandlerTest, add_command_adds_stream_correctly) {
                             ]
                            })";
 
-  Forwarder::MainOpt MainOpt;
-  Forwarder::Forwarder Main{MainOpt};
-  Forwarder::ConfigCB Config{Main};
-
   Config(RawJson);
 
   ASSERT_EQ(1u, Main.streams.size());
@@ -27,7 +32,7 @@ TEST(CommandHandlerTest, add_command_adds_stream_correctly) {
   ASSERT_EQ("ca", Main.streams[0]->getChannelInfo().provider_type);
 }
 
-TEST(CommandHandlerTest, adding_stream_twice_ignores_second) {
+TEST_F(CommandHandlerTest, adding_stream_twice_ignores_second) {
   std::string RawJson1 = R"({
                             "cmd": "add",
                             "streams": [
@@ -49,20 +54,16 @@ TEST(CommandHandlerTest, adding_stream_twice_ignores_second) {
                             ]
                            })";
 
-  Forwarder::MainOpt MainOpt;
-  Forwarder::Forwarder Main{MainOpt};
-  Forwarder::ConfigCB Config{Main};
-
   Config(RawJson1);
   Config(RawJson2);
 
   ASSERT_EQ(1u, Main.streams.size());
   ASSERT_EQ("my_channel_name", Main.streams[0]->getChannelInfo().channel_name);
   // The second command should not cause the provider type to change
-  ASSERT_EQ("pva", Main.streams[0]->getChannelInfo().provider_type);
+  ASSERT_EQ("ca", Main.streams[0]->getChannelInfo().provider_type);
 }
 
-TEST(CommandHandlerTest, add_command_adds_multiple_streams_correctly) {
+TEST_F(CommandHandlerTest, add_command_adds_multiple_streams_correctly) {
   std::string RawJson = R"({
                             "cmd": "add",
                             "streams": [
@@ -77,10 +78,6 @@ TEST(CommandHandlerTest, add_command_adds_multiple_streams_correctly) {
                             ]
                            })";
 
-  Forwarder::MainOpt MainOpt;
-  Forwarder::Forwarder Main{MainOpt};
-  Forwarder::ConfigCB Config{Main};
-
   Config(RawJson);
 
   ASSERT_EQ(2u, Main.streams.size());
@@ -91,7 +88,7 @@ TEST(CommandHandlerTest, add_command_adds_multiple_streams_correctly) {
   ASSERT_EQ("pva", Main.streams[1]->getChannelInfo().provider_type);
 }
 
-TEST(CommandHandlerTest, stop_all_command_removes_all_streams_correctly) {
+TEST_F(CommandHandlerTest, stop_all_command_removes_all_streams_correctly) {
   std::string AddJson = R"({
                             "cmd": "add",
                             "streams": [
@@ -106,10 +103,6 @@ TEST(CommandHandlerTest, stop_all_command_removes_all_streams_correctly) {
                             ]
                            })";
 
-  Forwarder::MainOpt MainOpt;
-  Forwarder::Forwarder Main{MainOpt};
-  Forwarder::ConfigCB Config{Main};
-
   Config(AddJson);
 
   std::string RemoveJson = R"({
@@ -121,7 +114,7 @@ TEST(CommandHandlerTest, stop_all_command_removes_all_streams_correctly) {
   ASSERT_EQ(0u, Main.streams.size());
 }
 
-TEST(CommandHandlerTest, stop_command_removes_stream_correctly) {
+TEST_F(CommandHandlerTest, stop_command_removes_stream_correctly) {
   std::string AddJson = R"({
                             "cmd": "add",
                             "streams": [
@@ -131,11 +124,6 @@ TEST(CommandHandlerTest, stop_command_removes_stream_correctly) {
                               }
                             ]
                            })";
-
-  Forwarder::MainOpt MainOpt;
-  Forwarder::Forwarder Main{MainOpt};
-  Forwarder::ConfigCB Config{Main};
-
   Config(AddJson);
 
   std::string RemoveJson = R"({
