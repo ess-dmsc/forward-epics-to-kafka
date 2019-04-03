@@ -118,11 +118,11 @@ def test_forwarder_updates_multiple_pvs(docker_compose):
     cons.close()
 
 
-def test_forwarder_updates_pv_when_config_changed_from_one_pv_to_three(docker_compose):
+def test_forwarder_status_shows_added_pvs(docker_compose):
     """
     GIVEN A PV (double type) is already being forwarded
     WHEN A message configures two additional PV (str and long types) to be forwarded
-    THEN Forwarder status message lists all PVs
+    THEN Forwarder status message lists new PVs
     """
     data_topic = "TEST_forwarderData_change_config"
     status_topic = "TEST_forwarderStatus"
