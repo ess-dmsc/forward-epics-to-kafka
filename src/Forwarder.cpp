@@ -386,7 +386,7 @@ void Forwarder::addMapping(StreamSettings const &StreamInfo) {
     ChannelInfo ChannelInfo{StreamInfo.EpicsProtocol, StreamInfo.Name};
     std::shared_ptr<Stream> Stream;
     if (GenerateFakePVUpdateTimer != nullptr) {
-      Stream = findOrAddStream<EpicsClient::EpicsClientRandom>(ChannelInfo);
+      Stream = addStream<EpicsClient::EpicsClientRandom>(ChannelInfo);
       auto Client = Stream->getEpicsClient();
       auto RandomClient =
           dynamic_cast<EpicsClient::EpicsClientRandom *>(Client.get());
@@ -395,7 +395,7 @@ void Forwarder::addMapping(StreamSettings const &StreamInfo) {
             [Client, RandomClient]() { RandomClient->generateFakePVUpdate(); });
       }
     } else {
-      Stream = findOrAddStream<EpicsClient::EpicsClientMonitor>(ChannelInfo);
+      Stream = addStream<EpicsClient::EpicsClientMonitor>(ChannelInfo);
     }
 
     if (PVUpdateTimer != nullptr) {
@@ -415,17 +415,19 @@ void Forwarder::addMapping(StreamSettings const &StreamInfo) {
 }
 
 template <typename T>
-std::shared_ptr<Stream> Forwarder::findOrAddStream(ChannelInfo &ChannelInfo) {
+std::shared_ptr<Stream> Forwarder::addStream(ChannelInfo &ChannelInfo) {
   std::shared_ptr<Stream> FoundStream =
       streams.getStreamByChannelName(ChannelInfo.channel_name);
   if (FoundStream != nullptr) {
-    return FoundStream;
+    LOG(Sev::Warning, "Could not add stream for {} as one already exists.",
+        ChannelInfo.channel_name);
+    throw MappingAddException("Stream already exists");
   }
   auto PVUpdateRing = std::make_shared<
       moodycamel::ConcurrentQueue<std::shared_ptr<FlatBufs::EpicsPVUpdate>>>();
-  auto client = std::make_shared<T>(ChannelInfo, PVUpdateRing);
+  auto Client = std::make_shared<T>(ChannelInfo, PVUpdateRing);
   auto EpicsClientInterfacePtr =
-      std::static_pointer_cast<EpicsClient::EpicsClientInterface>(client);
+      std::static_pointer_cast<EpicsClient::EpicsClientInterface>(Client);
   auto NewStream = std::make_shared<Stream>(
       ChannelInfo, EpicsClientInterfacePtr, PVUpdateRing);
   streams.add(NewStream);
