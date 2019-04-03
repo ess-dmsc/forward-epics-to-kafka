@@ -121,13 +121,6 @@ public:
 
   /// Pushes update to the emit_queue ring buffer which is owned by a stream.
   int emit(std::shared_ptr<FlatBufs::EpicsPVUpdate> const &Update) {
-#if TEST_PROVOKE_ERROR == 1
-    static std::atomic<int> c1{0};
-    if (c1 > 10) {
-      epics_client->error_in_epics();
-    }
-    ++c1;
-#endif
     return epics_client->emit(Update);
   }
 
