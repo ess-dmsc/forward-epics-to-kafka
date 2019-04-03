@@ -12,7 +12,7 @@ find_package(StreamingDataTypes COMPONENTS ce9a4745431e54bc45b0c927857a866fa77b8
 find_package(CURL)
 find_package(StaticData COMPONENTS "schema-config-global.json")
 find_package(GitCommitExtract)
-find_package(GraylogLogger REQUIRED)
+find_package(GraylogLogger)
 
 
 set(path_include_common
