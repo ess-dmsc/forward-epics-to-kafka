@@ -8,7 +8,7 @@ ValueTypes = {
 }
 
 
-def check_expected_values(log_data, value_type, pv_name, expected_value=None):
+def check_expected_values(log_data, value_type, pv_name, expected_value):
     """
     Checks the message name (PV) and value type (type of PV), and, optionally, the value.
 
@@ -16,15 +16,19 @@ def check_expected_values(log_data, value_type, pv_name, expected_value=None):
     :param value_type: Flatbuffers value type
     :param pv_name: Byte encoded string of the PV/channel name
     :param expected_value: The expected PV value from the flatbuffers message
-    :return: None
     """
-    assert value_type == log_data.ValueType()
+    print(f'expected pv name: {pv_name}, name from message: {log_data.SourceName()}', flush=True)
     assert bytes(pv_name, encoding='utf-8') == log_data.SourceName()
+
+    print(f'expected type: {value_type}, type from message: {log_data.ValueType()}', flush=True)
+    assert value_type == log_data.ValueType()
+
     assert log_data.Timestamp() > 0
+
     if expected_value is not None:
         union_val = ValueTypes[value_type]()
         union_val.Init(log_data.Value().Bytes, log_data.Value().Pos)
-        print('expected value: {}, value from message: {}'.format(expected_value, union_val.Value()), flush=True)
+        print(f'expected value: {expected_value}, value from message: {union_val.Value()}', flush=True)
         if isinstance(expected_value, float):
             assert isclose(expected_value, union_val.Value())
         else:

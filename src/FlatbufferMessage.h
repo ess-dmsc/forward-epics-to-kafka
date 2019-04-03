@@ -17,7 +17,6 @@ class Converter;
 /// Holds the flatbuffer until it has been sent.
 ///
 /// Basically POD.  Holds the flatbuffer until no longer needed.
-/// Also holds some internal counters for performance testing.
 /// If you want to implement your own custom memory management, this is the
 /// class to inherit from.
 class FlatbufferMessage : public KafkaW::ProducerMessage {

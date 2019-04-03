@@ -309,7 +309,7 @@ void Forwarder::report_stats(int dt) {
   }
 }
 
-URI Forwarder::createTopicURI(ConverterSettings const &ConverterInfo) {
+URI Forwarder::createTopicURI(ConverterSettings const &ConverterInfo) const {
   URI BrokerURI;
   if (!main_opt.MainSettings.Brokers.empty()) {
     BrokerURI = main_opt.MainSettings.Brokers[0];
@@ -336,7 +336,6 @@ URI Forwarder::createTopicURI(ConverterSettings const &ConverterInfo) {
 
 void Forwarder::pushConverterToStream(ConverterSettings const &ConverterInfo,
                                       std::shared_ptr<Stream> &Stream) {
-
   // Check schema exists
   auto r1 = FlatBufs::SchemaRegistry::items().find(ConverterInfo.Schema);
   if (r1 == FlatBufs::SchemaRegistry::items().end()) {

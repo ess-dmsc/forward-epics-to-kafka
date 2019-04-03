@@ -9,9 +9,8 @@ ProducerTopic::ProducerTopic(std::shared_ptr<Producer> ProducerPtr,
     : KafkaProducer(ProducerPtr), Name(std::move(TopicName)) {
 
   std::string ErrStr;
-  auto Config = RdKafka::Conf::create(RdKafka::Conf::CONF_TOPIC);
   RdKafkaTopic = std::unique_ptr<RdKafka::Topic>(RdKafka::Topic::create(
-      KafkaProducer->getRdKafkaPtr(), Name, Config, ErrStr));
+      KafkaProducer->getRdKafkaPtr(), Name, ConfigPtr.get(), ErrStr));
   if (RdKafkaTopic == nullptr) {
     Logger->error("could not create Kafka topic: {}", ErrStr);
     throw TopicCreationError();
@@ -58,12 +57,17 @@ int ProducerTopic::produce(std::unique_ptr<ProducerMessage> &Msg) {
   int MsgFlags = 0;
   auto &ProducerStats = KafkaProducer->Stats;
 
+  if (!Msg->Key.empty()) {
+    key = Msg->Key.c_str();
+    key_len = Msg->Key.size();
+  }
+
   switch (KafkaProducer->produce(
-      RdKafkaTopic.get(), RdKafka::Topic::PARTITION_UA, MsgFlags, Msg->data,
-      Msg->size, key, key_len, Msg.get())) {
+      RdKafkaTopic.get(), RdKafka::Topic::PARTITION_UA, MsgFlags, Msg->Data,
+      Msg->Size, key, key_len, Msg.get())) {
   case RdKafka::ERR_NO_ERROR:
     ++ProducerStats.produced;
-    ProducerStats.produced_bytes += static_cast<uint64_t>(Msg->size);
+    ProducerStats.produced_bytes += static_cast<uint64_t>(Msg->Size);
     ++KafkaProducer->TotalMessagesProduced;
     Msg.release(); // we clean up the message after it has been sent, see
                    // comment by MsgFlags declaration
@@ -77,7 +81,7 @@ int ProducerTopic::produce(std::unique_ptr<ProducerMessage> &Msg) {
 
   case RdKafka::ERR_MSG_SIZE_TOO_LARGE:
     ++ProducerStats.msg_too_large;
-    Logger->error("Message size too large to publish, size: {}", Msg->size);
+    Logger->error("Message size too large to publish, size: {}", Msg->Size);
     break;
 
   default:

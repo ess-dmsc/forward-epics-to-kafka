@@ -114,8 +114,8 @@ TEST(CommandHandlerTest, stop_command_removes_stream_correctly) {
 }
 
 class ExtractCommandsTest : public ::testing::TestWithParam<const char *> {
+  // cppcheck-suppress unusedFunction
   void SetUp() override { command = (*GetParam()); }
-  void TearDown() override {}
 
 protected:
   std::string command;

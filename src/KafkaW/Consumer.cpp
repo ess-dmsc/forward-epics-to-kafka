@@ -12,11 +12,11 @@
 
 namespace KafkaW {
 Consumer::Consumer(BrokerSettings &Settings)
-    : ConsumerBrokerSettings(std::move(Settings)) {
+    : ConsumerBrokerSettings(std::move(Settings)),
+      Conf(std::unique_ptr<RdKafka::Conf>(
+          RdKafka::Conf::create(RdKafka::Conf::CONF_GLOBAL))) {
   std::string ErrorString;
 
-  Conf = std::unique_ptr<RdKafka::Conf>(
-      RdKafka::Conf::create(RdKafka::Conf::CONF_GLOBAL));
   Conf->set("event_cb", &EventCallback, ErrorString);
   Conf->set("metadata.broker.list", ConsumerBrokerSettings.Address,
             ErrorString);
@@ -71,9 +71,12 @@ Consumer::getTopicPartitionNumbers(const std::string &Topic) {
   std::vector<int32_t> TopicPartitionNumbers;
   const RdKafka::TopicMetadata::PartitionMetadataVector *PartitionMetadata =
       matchedTopic->partitions();
+
   for (const auto &Partition : *PartitionMetadata) {
+    // cppcheck-suppress useStlAlgorithm ; readability
     TopicPartitionNumbers.push_back(Partition->id());
   }
+
   sort(TopicPartitionNumbers.begin(), TopicPartitionNumbers.end());
   return TopicPartitionNumbers;
 }

@@ -26,7 +26,7 @@ struct URI {
   /// If the path can be a valid Kafka topic name, then it is non-empty.
   std::string Topic;
 
-  /// The URI string //<host>:<port>/<topic>
-  std::string getURIString() { return "//" + HostPort + "/" + Topic; }
+  /// The URI string <host>:<port>/<topic>
+  std::string getURIString() const { return HostPort + "/" + Topic; }
 };
 } // namespace Forwarder

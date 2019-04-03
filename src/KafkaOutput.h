@@ -13,7 +13,7 @@ public:
   explicit KafkaOutput(KafkaW::ProducerTopic &&OutputTopic);
   /// Hands off the message to Kafka
   int emit(std::unique_ptr<FlatBufs::FlatbufferMessage> fb);
-  std::string topic_name();
+  std::string topicName() const;
   KafkaW::ProducerTopic Output;
 };
 } // namespace Forwarder

@@ -2,7 +2,6 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ../../tests)
 
 set(tgt "tests")
 set(sources
-    tests.cpp
     URI_tests.cpp
     json_tests.cpp
     ConfigParser_tests.cpp
@@ -14,6 +13,7 @@ set(sources
     Producer_tests.cpp
     Timer_tests.cpp
     StreamTestUtils.cpp
+    RangeSetTests.cpp
     $<TARGET_OBJECTS:__objects>
     Listener_tests.cpp
     BrokerSettings_tests.cpp

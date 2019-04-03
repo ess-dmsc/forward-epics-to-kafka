@@ -73,18 +73,22 @@ std::vector<StreamSettings> parseStreamsJson(const std::string &filepath) {
 }
 
 /// Add a URI valued option to the given App.
-CLI::Option *addOption(CLI::App &App, std::string const &Name,
-                       Forwarder::URI &URIArg, std::string const &Description,
-                       bool Defaulted = false) {
+CLI::Option *addUriOption(CLI::App &App, std::string const &Name,
+                          Forwarder::URI &URIArg,
+                          std::string const &Description,
+                          bool Defaulted = false) {
   CLI::callback_t Fun = [&URIArg](CLI::results_t Results) {
-    URIArg.parse(Results[0]);
+    try {
+      URIArg.parse(Results[0]);
+    } catch (std::runtime_error &E) {
+      return false;
+    }
     return true;
   };
   CLI::Option *Opt = App.add_option(Name, Fun, Description, Defaulted);
   Opt->set_custom_option("URI", 1);
   if (Defaulted) {
-    Opt->set_default_str(std::string("//") + URIArg.HostPort + "/" +
-                         URIArg.Topic);
+    Opt->set_default_str(URIArg.HostPort + "/" + URIArg.Topic);
   }
   return Opt;
 }
@@ -158,10 +162,15 @@ std::pair<int, std::unique_ptr<MainOpt>> parse_opt(int argc, char **argv) {
   addOption(App, "--config-topic", opt.MainSettings.BrokerConfig,
             "<//host[:port]/topic> Kafka host/topic to listen for commands on",
             true)
+  App.add_option("-v,--verbosity", log_level, "Syslog logging level", true)
+      ->check(CLI::Range(1, 7));
+  addUriOption(App, "--config-topic", opt.MainSettings.BrokerConfig,
+               "<host[:port]/topic> Kafka host/topic to listen for commands on",
+               true)
       ->required();
-  addOption(App, "--status-topic", opt.MainSettings.StatusReportURI,
-            "<//host[:port][/topic]> Kafka broker/topic to publish status "
-            "updates on");
+  addUriOption(App, "--status-topic", opt.MainSettings.StatusReportURI,
+               "<host[:port][/topic]> Kafka broker/topic to publish status "
+               "updates on");
   App.add_option("--pv-update-period", opt.PeriodMS,
                  "Force forwarding all PVs with this period even if values "
                  "are not updated (ms). 0=Off",

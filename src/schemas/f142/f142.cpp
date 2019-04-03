@@ -3,8 +3,8 @@
 #include "../../SchemaRegistry.h"
 #include "../../helper.h"
 #include "../../logger.h"
-#include "schemas/f142_logdata_generated.h"
 #include <atomic>
+#include <f142_logdata_generated.h>
 #include <mutex>
 #include <pv/nt.h>
 #include <pv/ntndarray.h>
@@ -367,6 +367,10 @@ public:
     LogDataBuilder.add_source_name(PVName);
     LogDataBuilder.add_value_type(Value.Type);
     LogDataBuilder.add_value(Value.Offset);
+
+    // Use the PV name as the message key so that all messages for the same PV
+    // end up in the same Kafka partition and thus have publish order maintained
+    FlatbufferMessage->Key = PVUpdate.channel;
 
     if (auto PVTimeStamp =
             PVStructure->getSubField<epics::pvData::PVStructure>("timeStamp")) {

@@ -42,12 +42,12 @@ nlohmann::json ConversionPath::status_json() const {
   auto Document = json::object();
   Document["schema"] = converter->schema_name();
   Document["broker"] = kafka_output->Output.brokerAddress();
-  Document["topic"] = kafka_output->topic_name();
+  Document["topic"] = kafka_output->topicName();
   return Document;
 }
 
 std::string ConversionPath::getKafkaTopicName() const {
-  return kafka_output->topic_name();
+  return kafka_output->topicName();
 }
 
 std::string ConversionPath::getSchemaName() const {

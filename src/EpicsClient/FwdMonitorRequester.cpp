@@ -34,6 +34,7 @@ void FwdMonitorRequester::message(std::string const &Message,
                 Message);
 }
 
+// cppcheck-suppress unusedFunction ; used inside EPICS
 void FwdMonitorRequester::monitorConnect(
     ::epics::pvData::Status const &Status,
     ::epics::pvData::Monitor::shared_pointer const &Monitor,
@@ -55,6 +56,7 @@ void FwdMonitorRequester::monitorConnect(
   }
 }
 
+// cppcheck-suppress unusedFunction ; used inside EPICS
 void FwdMonitorRequester::monitorEvent(
     ::epics::pvData::MonitorPtr const &Monitor) {
   std::vector<std::shared_ptr<FlatBufs::EpicsPVUpdate>> Updates;

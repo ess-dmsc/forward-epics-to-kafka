@@ -40,9 +40,9 @@ protected:
   std::unique_ptr<RdKafka::KafkaConsumer> KafkaConsumer;
 
 private:
+  BrokerSettings ConsumerBrokerSettings;
   std::unique_ptr<RdKafka::Metadata> Metadata;
   std::unique_ptr<RdKafka::Conf> Conf;
-  BrokerSettings ConsumerBrokerSettings;
   KafkaEventCb EventCallback;
   std::shared_ptr<spdlog::logger> Logger = spdlog::get("ForwarderLogger");
 
