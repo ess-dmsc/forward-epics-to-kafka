@@ -14,9 +14,8 @@ void setUpLogging(const spdlog::level::level_enum &LoggingLevel,
     Sinks.push_back(std::make_shared<spdlog::sinks::graylog_sink_mt>(
         LoggingLevel, TempURI.HostPort.substr(0, TempURI.HostPort.find(":")),
         TempURI.Port));
-  } else {
-    Sinks.push_back(std::make_shared<spdlog::sinks::stdout_color_sink_mt>());
   }
+  Sinks.push_back(std::make_shared<spdlog::sinks::stdout_color_sink_mt>());
   auto combined_logger = std::make_shared<spdlog::logger>(
       "ForwarderLogger", begin(Sinks), end(Sinks));
   spdlog::register_logger(combined_logger);

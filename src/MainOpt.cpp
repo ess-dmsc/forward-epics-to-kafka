@@ -12,7 +12,7 @@
 #include <CLI/CLI.hpp>
 #include <fstream>
 #include <iostream>
-#include <spdlog/common.h>
+#include <spdlog/spdlog.h>
 #include <streambuf>
 
 namespace Forwarder {
