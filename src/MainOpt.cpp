@@ -159,11 +159,9 @@ std::pair<int, std::unique_ptr<MainOpt>> parse_opt(int argc, char **argv) {
                  },
                  LogLevelInfoStr)
       ->set_default_val("Error");
-  addOption(App, "--config-topic", opt.MainSettings.BrokerConfig,
-            "<//host[:port]/topic> Kafka host/topic to listen for commands on",
-            true)
-  App.add_option("-v,--verbosity", log_level, "Syslog logging level", true)
-      ->check(CLI::Range(1, 7));
+  addUriOption(App, "--config-topic", opt.MainSettings.BrokerConfig,
+               "<host[:port]/topic> Kafka host/topic to listen for commands on",
+               true);
   addUriOption(App, "--config-topic", opt.MainSettings.BrokerConfig,
                "<host[:port]/topic> Kafka host/topic to listen for commands on",
                true)

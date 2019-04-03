@@ -28,8 +28,8 @@ ProducerTopic::ProducerTopic(ProducerTopic &&x) noexcept {
 struct Msg_ : public ProducerMessage {
   std::vector<unsigned char> v;
   void finalize() {
-    data = v.data();
-    size = v.size();
+    Data = v.data();
+    Size = v.size();
   }
 };
 
