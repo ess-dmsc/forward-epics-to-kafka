@@ -145,7 +145,7 @@ def test_forwarder_updates_pv_when_config_changed_from_one_pv_to_three(docker_co
 
     status_json = json.loads(status_msg)
     names_of_channels_being_forwarded = {stream['channel_name'] for stream in status_json['streams']}
-    expected_names_of_channels_being_forwarded = {PVDOUBLE, PVSTR, PVLONG}
+    expected_names_of_channels_being_forwarded = {PVSTR, PVLONG}
 
     assert expected_names_of_channels_being_forwarded == names_of_channels_being_forwarded, \
         f"Expect these channels to be configured as forwarded: {expected_names_of_channels_being_forwarded}, " \
