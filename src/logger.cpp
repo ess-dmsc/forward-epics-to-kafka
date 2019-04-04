@@ -1,5 +1,8 @@
 #include "logger.h"
 #include "URI.h"
+#ifdef HAVE_GRAYLOG_LOGGER
+#include <spdlog/sinks/graylog_sink.h>
+#endif
 
 SharedLogger getLogger() { return spdlog::get("ForwarderLogger"); }
 
@@ -14,7 +17,6 @@ void setUpLogging(const spdlog::level::level_enum &LoggingLevel,
   }
   if (!GraylogURI.empty()) {
 #ifdef HAVE_GRAYLOG_LOGGER
-#include <spdlog/sinks/graylog_sink.h>
     Forwarder::URI TempURI(GraylogURI);
     auto GraylogSink = std::make_shared<spdlog::sinks::graylog_sink_mt>(
         LoggingLevel, TempURI.HostPort.substr(0, TempURI.HostPort.find(":")),
