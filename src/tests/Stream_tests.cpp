@@ -59,7 +59,7 @@ std::shared_ptr<Stream> createStreamWithEntries(size_t Conversions,
 /// teardown starts.
 ///
 /// \param queue
-void clearQueue(ConcurrentQueue<std::unique_ptr<ConversionWorkPacket>> &queue) {
+void clearQueue(moodycamel::ConcurrentQueue<std::unique_ptr<ConversionWorkPacket>> &queue) {
   std::unique_ptr<ConversionWorkPacket> Data;
   while (queue.try_dequeue(Data)) {
     Data.reset();
@@ -121,7 +121,7 @@ TEST(StreamTest, add_conversion_path_twice_is_not_okay) {
 
 TEST(StreamTest, filling_queue_from_empty_stream_gives_no_data) {
   auto Stream = createStreamRandom("provider", "channel1");
-  ConcurrentQueue<std::unique_ptr<ConversionWorkPacket>> queue;
+  moodycamel::ConcurrentQueue<std::unique_ptr<ConversionWorkPacket>> queue;
   auto NumEnqueued = Stream->fillConversionQueue(queue, 10);
   ASSERT_EQ(NumEnqueued, 0u);
 }
@@ -129,7 +129,7 @@ TEST(StreamTest, filling_queue_from_empty_stream_gives_no_data) {
 TEST(StreamTest, filling_queue_from_stream_gives_data) {
   size_t NumEntries = 2;
   auto Stream = createStreamWithEntries(1, NumEntries);
-  ConcurrentQueue<std::unique_ptr<ConversionWorkPacket>> queue;
+  moodycamel::ConcurrentQueue<std::unique_ptr<ConversionWorkPacket>> queue;
   auto NumEnqueued = Stream->fillConversionQueue(queue, 10);
   ASSERT_EQ(NumEnqueued, NumEntries);
 
@@ -141,7 +141,7 @@ TEST(StreamTest, filling_queue_when_multiple_conversion_paths_gives_data) {
   size_t NumEntries = 2;
   size_t NumConversions = 2;
   auto Stream = createStreamWithEntries(NumConversions, NumEntries);
-  ConcurrentQueue<std::unique_ptr<ConversionWorkPacket>> queue;
+  moodycamel::ConcurrentQueue<std::unique_ptr<ConversionWorkPacket>> queue;
   auto NumEnqueued = Stream->fillConversionQueue(queue, 10);
   ASSERT_EQ(NumEnqueued, NumConversions * NumEntries);
 
@@ -153,7 +153,7 @@ TEST(
     StreamTest,
     filling_queue_when_max_buffer_less_than_data_in_stream_gives_correct_amount) {
   auto Stream = createStreamWithEntries(1, 10);
-  ConcurrentQueue<std::unique_ptr<ConversionWorkPacket>> queue;
+  moodycamel::ConcurrentQueue<std::unique_ptr<ConversionWorkPacket>> queue;
 
   uint32_t Max = 5;
   auto NumEnqueued = Stream->fillConversionQueue(queue, Max);
@@ -166,7 +166,7 @@ TEST(
 TEST(StreamTest,
      filling_queue_when_max_buffer_less_than_number_conversions_gives_no_data) {
   auto Stream = createStreamWithEntries(10, 10);
-  ConcurrentQueue<std::unique_ptr<ConversionWorkPacket>> queue;
+  moodycamel::ConcurrentQueue<std::unique_ptr<ConversionWorkPacket>> queue;
 
   uint32_t Max = 5;
   auto NumEnqueued = Stream->fillConversionQueue(queue, Max);
@@ -178,7 +178,7 @@ TEST(StreamTest,
 
 TEST(StreamTest, filling_queue_when_no_conversions_gives_no_data) {
   auto Stream = createStreamWithEntries(0, 5);
-  ConcurrentQueue<std::unique_ptr<ConversionWorkPacket>> queue;
+  moodycamel::ConcurrentQueue<std::unique_ptr<ConversionWorkPacket>> queue;
 
   auto NumEnqueued = Stream->fillConversionQueue(queue, 10);
   ASSERT_EQ(NumEnqueued, 0u);
