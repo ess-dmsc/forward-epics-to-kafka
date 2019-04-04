@@ -161,9 +161,6 @@ std::pair<int, std::unique_ptr<MainOpt>> parse_opt(int argc, char **argv) {
       ->set_default_val("Error");
   addUriOption(App, "--config-topic", opt.MainSettings.BrokerConfig,
                "<host[:port]/topic> Kafka host/topic to listen for commands on",
-               true);
-  addUriOption(App, "--config-topic", opt.MainSettings.BrokerConfig,
-               "<host[:port]/topic> Kafka host/topic to listen for commands on",
                true)
       ->required();
   addUriOption(App, "--status-topic", opt.MainSettings.StatusReportURI,
