@@ -59,7 +59,8 @@ std::shared_ptr<Stream> createStreamWithEntries(size_t Conversions,
 /// teardown starts.
 ///
 /// \param queue
-void clearQueue(moodycamel::ConcurrentQueue<std::unique_ptr<ConversionWorkPacket>> &queue) {
+void clearQueue(
+    moodycamel::ConcurrentQueue<std::unique_ptr<ConversionWorkPacket>> &queue) {
   std::unique_ptr<ConversionWorkPacket> Data;
   while (queue.try_dequeue(Data)) {
     Data.reset();
