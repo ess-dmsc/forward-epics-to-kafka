@@ -399,7 +399,7 @@ public:
 
   RangeSet<uint64_t> seqs;
   Statistics Stats;
-  std::shared_ptr<spdlog::logger> Logger = spdlog::get("ForwarderLogger");
+  SharedLogger Logger = getLogger();
 };
 
 class Info : public SchemaInfo {

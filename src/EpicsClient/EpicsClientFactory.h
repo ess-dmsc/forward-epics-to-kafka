@@ -16,7 +16,7 @@ struct EpicsClientFactoryInit {
   static std::unique_ptr<EpicsClientFactoryInit> factory_init();
   static std::atomic<int> Count;
   static std::mutex MutexLock;
-  std::shared_ptr<spdlog::logger> Logger = spdlog::get("ForwarderLogger");
+  SharedLogger Logger = getLogger();
 };
 }
 }

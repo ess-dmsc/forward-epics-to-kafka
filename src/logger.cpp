@@ -2,6 +2,8 @@
 #include "URI.h"
 using my_sink_mt = spdlog::sinks::graylog_sink<std::mutex>;
 
+SharedLogger getLogger() { return spdlog::get("ForwarderLogger"); }
+
 void setUpLogging(const spdlog::level::level_enum &LoggingLevel,
                   const std::string &LogFile, const std::string &GraylogURI) {
   std::vector<spdlog::sink_ptr> Sinks;

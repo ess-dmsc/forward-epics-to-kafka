@@ -51,6 +51,6 @@ private:
   Forwarder *main = nullptr;
   size_t sid = 0;
   std::mutex mx;
-  std::shared_ptr<spdlog::logger> Logger = spdlog::get("ForwarderLogger");
+  SharedLogger Logger = getLogger();
 };
 } // namespace Forwarder

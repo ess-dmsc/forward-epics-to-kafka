@@ -32,6 +32,6 @@ private:
       RdKafka::Conf::create(RdKafka::Conf::CONF_TOPIC)};
 
   bool DoCopyMsg{false};
-  std::shared_ptr<spdlog::logger> Logger = spdlog::get("ForwarderLogger");
+  SharedLogger Logger = getLogger();
 };
 }

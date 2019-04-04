@@ -50,6 +50,6 @@ public:
 private:
   std::vector<std::shared_ptr<Stream>> StreamPointers;
   std::mutex StreamsMutex;
-  std::shared_ptr<spdlog::logger> Logger = spdlog::get("ForwarderLogger");
+  SharedLogger Logger = getLogger();
 };
 } // namespace Forwarder

@@ -44,7 +44,7 @@ private:
   std::unique_ptr<RdKafka::Metadata> Metadata;
   std::unique_ptr<RdKafka::Conf> Conf;
   KafkaEventCb EventCallback;
-  std::shared_ptr<spdlog::logger> Logger = spdlog::get("ForwarderLogger");
+  SharedLogger Logger = getLogger();
 
   /// Get all partition numbers for a topic.
   ///

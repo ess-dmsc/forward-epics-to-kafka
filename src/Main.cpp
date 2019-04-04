@@ -66,11 +66,11 @@ int main(int argc, char **argv) {
     SignalHandler SignalHandlerInstance(Main);
     Main->forward_epics_to_kafka();
   } catch (std::runtime_error &e) {
-    spdlog::get("ForwarderLogger")
+    getLogger()
         ->critical("CATCH runtime error in main watchdog thread: {}", e.what());
     return 1;
   } catch (std::exception &e) {
-    spdlog::get("ForwarderLogger")
+    getLogger()
         ->critical("CATCH EXCEPTION in main watchdog thread");
     return 1;
   }

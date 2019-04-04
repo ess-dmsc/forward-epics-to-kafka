@@ -12,7 +12,7 @@ KafkaOutput::KafkaOutput(KafkaW::ProducerTopic &&OutputTopic)
 
 int KafkaOutput::emit(std::unique_ptr<FlatBufs::FlatbufferMessage> fb) {
   if (!fb) {
-    spdlog::get("ForwarderLogger")->trace("KafkaOutput::emit  empty fb");
+    getLogger()->trace("KafkaOutput::emit  empty fb");
     return -1024;
   }
   auto m1 = fb->message();

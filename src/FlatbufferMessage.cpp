@@ -14,7 +14,7 @@ FlatbufferMessage::FlatbufferMessage(uint32_t initial_size)
 
 FlatbufferMessageSlice FlatbufferMessage::message() {
   if (!builder) {
-    spdlog::get("ForwarderLogger")->trace("builder no longer available");
+    getLogger()->trace("builder no longer available");
     return {nullptr, 0};
   }
   auto ret = decltype(FlatbufferMessage::message()){builder->GetBufferPointer(),

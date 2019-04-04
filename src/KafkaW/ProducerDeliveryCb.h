@@ -30,6 +30,6 @@ public:
 
 private:
   ProducerStats &Stats;
-  std::shared_ptr<spdlog::logger> Logger = spdlog::get("ForwarderLogger");
+  SharedLogger Logger = getLogger();
 };
 }

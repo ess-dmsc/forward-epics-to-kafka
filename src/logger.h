@@ -7,6 +7,10 @@
 #include <string>
 #define UNUSED_ARG(x) (void)x;
 
+using SharedLogger = std::shared_ptr<spdlog::logger>;
+
+SharedLogger getLogger();
+
 void setUpInitializationLogging();
 
 void setUpLogging(const spdlog::level::level_enum &LoggingLevel,

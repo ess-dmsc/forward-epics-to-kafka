@@ -59,7 +59,7 @@ private:
   std::string RequesterName;
   EpicsClientInterface *epics_client = nullptr;
   static std::atomic<uint32_t> GlobalIdCounter;
-  std::shared_ptr<spdlog::logger> Logger = spdlog::get("ForwarderLogger");
+  SharedLogger Logger = getLogger();
 };
 }
 }

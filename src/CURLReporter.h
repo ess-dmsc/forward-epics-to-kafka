@@ -30,7 +30,7 @@ void send(fmt::memory_buffer &MemoryWriter, std::string const &URL) {
     curl_easy_setopt(curl, CURLOPT_POSTFIELDS, MemoryWriter.data());
     res = curl_easy_perform(curl);
     if (res != CURLE_OK) {
-      spdlog::get("ForwarderLogger")
+      getLogger()
           ->warn("curl_easy_perform() failed: {}", curl_easy_strerror(res));
     }
   }

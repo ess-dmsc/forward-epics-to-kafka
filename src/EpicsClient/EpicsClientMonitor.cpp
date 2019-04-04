@@ -131,7 +131,7 @@ public:
 
   /// Logging function.
   static void error_channel_requester() {
-    spdlog::get("ForwarderLogger")->warn("error_channel_requester()");
+    getLogger()->warn("error_channel_requester()");
   }
 
   epics::pvData::MonitorRequester::shared_pointer monitor_requester;
@@ -145,7 +145,7 @@ public:
   std::unique_ptr<EpicsClientFactoryInit> factory_init;
 
 private:
-  std::shared_ptr<spdlog::logger> Logger = spdlog::get("ForwarderLogger");
+  SharedLogger Logger = getLogger();
 };
 
 EpicsClientMonitor::EpicsClientMonitor(

@@ -26,7 +26,7 @@ public:
 
 private:
   std::unique_ptr<KafkaW::ConsumerInterface> Consumer;
-  std::shared_ptr<spdlog::logger> Logger = spdlog::get("ForwarderLogger");
+  SharedLogger Logger = getLogger();
 };
 } // namespace Config
 } // namespace Forwarder

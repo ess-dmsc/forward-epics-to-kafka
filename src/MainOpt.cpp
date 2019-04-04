@@ -61,7 +61,7 @@ bool parseLogLevel(std::vector<std::string> LogLevelString,
 std::vector<StreamSettings> parseStreamsJson(const std::string &filepath) {
   std::ifstream ifs(filepath);
   if (!ifs.is_open()) {
-    spdlog::get("ForwarderLogger")->error("Could not open JSON file");
+    getLogger()->error("Could not open JSON file");
   }
 
   std::stringstream buffer;

@@ -6,7 +6,7 @@ namespace Forwarder {
 std::shared_ptr<Converter> Converter::create(FlatBufs::SchemaRegistry const &,
                                              std::string Schema,
                                              MainOpt const &Options) {
-  auto Logger = spdlog::get("ForwarderLogger");
+  auto Logger = getLogger();
   auto ConverterPtr = std::make_shared<Converter>();
   ConverterPtr->SchemaID = Schema;
   auto SchemaInRegistry = FlatBufs::SchemaRegistry::items().find(Schema);
