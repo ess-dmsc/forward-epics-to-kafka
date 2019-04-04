@@ -418,8 +418,8 @@ std::shared_ptr<Stream> Forwarder::addStream(ChannelInfo &ChannelInfo) {
   std::shared_ptr<Stream> FoundStream =
       streams.getStreamByChannelName(ChannelInfo.channel_name);
   if (FoundStream != nullptr) {
-    LOG(Sev::Warning, "Could not add stream for {} as one already exists.",
-        ChannelInfo.channel_name);
+    Logger->warn("Could not add stream for {} as one already exists.",
+                 ChannelInfo.channel_name);
     throw MappingAddException("Stream already exists");
   }
   auto PVUpdateRing = std::make_shared<
