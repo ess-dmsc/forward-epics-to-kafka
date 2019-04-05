@@ -42,7 +42,7 @@ There are helper functions for the Kafka interface of the system tests as well a
 
 To create a new fixture, a new function should be added in `conftest.py` as well as a docker compose file in `compose/` and a startup `ini` config file. The test itself should be created in a file with the prefix `test_`, for example `test_idle_pv_updates`, so that file can be picked up by pytest. 
 
-The fixture name can be used as the first parameter to the test like so: 
+The fixture name must be used as the first parameter to the test like so: 
 `def test_forwarder_sends_idle_pv_updates(docker_compose_idle_updates):`
 
 ### Creating tests
