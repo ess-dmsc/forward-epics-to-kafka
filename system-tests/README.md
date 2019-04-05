@@ -34,7 +34,7 @@ In some tests, command messages in `JSON` form are sent to kafka to change the c
 
 Most tests poll from Kafka to check against PV values and in some cases consume everything from the status topic.
 
-Log files are placed in the `logs` folder in `system-tests` providing that the `ini` file is using `--log-file` and the docker-compose file is mounting the `logs` directory.
+Log files are placed in the `logs` folder in `system-tests` provided that the `ini` file is using `--log-file` and the docker-compose file mounts the `logs` directory.
 
 ### Developer notes
 
@@ -44,3 +44,10 @@ To create a new fixture, a new function should be added in `conftest.py` as well
 
 The fixture name can be used as the first parameter to the test like so: 
 `def test_forwarder_sends_idle_pv_updates(docker_compose_idle_updates):`
+
+### Creating tests
+
+To create a new fixture, a new function should be added in `conftest.py` as well as a docker compose file in `compose/` and a startup `ini` config file. The test itself should be created in a file with the prefix `test_`, for example `test_idle_pv_updates`, so that file can be picked up by pytest. 
+
+The fixture name must be used as the first parameter to the test like so:
+`def test_data_reaches_file(docker_compose):`
