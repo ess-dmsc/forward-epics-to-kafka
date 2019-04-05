@@ -32,22 +32,15 @@ Each fixture starts the forwarder with an `ini` config file (found in `/config-f
 
 In some tests, command messages in `JSON` form are sent to kafka to change the configuration of the forwarder during testing. 
 
-Most tests poll from kafka to check against PV values and in some cases consume everything from the status topic.
+Most tests poll from Kafka to check against PV values and in some cases consume everything from the status topic.
 
-log files are placed in the `logs` folder in `system-tests` providing that the `ini` file is using `--log-file` and the docker-compose file is mounting the `logs` directory.
+Log files are placed in the `logs` folder in `system-tests` providing that the `ini` file is using `--log-file` and the docker-compose file is mounting the `logs` directory.
 
 ### Developer notes
 
-There are helper functions for the kafka interface of the system tests as well as flatbuffers and epics helpers. These are found in the `helpers` folder. 
+There are helper functions for the Kafka interface of the system tests as well as FlatBuffers and EPICS helpers. These are found in the `helpers` folder. 
 
-to create a new fixture, a new function should be added in `conftest.py` as well as a docker compose file in `compose/` and a startup `ini` config file. The test itself should be created in a file with the prefix `test_`, for example `test_idle_pv_updates`, so that file can be picked up by pytest. 
+To create a new fixture, a new function should be added in `conftest.py` as well as a docker compose file in `compose/` and a startup `ini` config file. The test itself should be created in a file with the prefix `test_`, for example `test_idle_pv_updates`, so that file can be picked up by pytest. 
 
-the fixture name can be used as the first parameter to the test like so: 
+The fixture name can be used as the first parameter to the test like so: 
 `def test_forwarder_sends_idle_pv_updates(docker_compose_idle_updates):`
-
-#### Issues
-
-There are some issues that make the system tests not as robust as they could be that need to be solved in the future:
-- currently we use `sleep(ms)` statements to wait for configuration to be updated on the forwarder where we should use the status topic instead 
-- the docker image size is quite large and takes a while to run - to get around this we could use alpine based images. Work has already been done to reduce the images.
-- we are only testing with channel access (v3) but the softioc container can be used with PVAccess so this should be trivial to add. 
