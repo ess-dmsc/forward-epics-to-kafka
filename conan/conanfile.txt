@@ -19,7 +19,6 @@ virtualrunenv
 FlatBuffers:shared=True
 gtest:shared=True
 librdkafka:shared=True
-fmt:header_only=True
 
 [imports]
 lib, *.dylib* -> ./lib
