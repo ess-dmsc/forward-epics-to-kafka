@@ -36,6 +36,7 @@ ${path_library_epics_pvAccess}
 ${path_library_epics_NT}
 ${RDKAFKA_LIBRARIES}
 ${FETK_EXTRA_LIBRARIES}
+fmt::fmt
 )
 
 if (UNIX)
@@ -178,7 +179,7 @@ elseif(NOT GRAYLOGLOGGER_FOUND AND USE_GRAYLOG_LOGGER)
     message(WARNING "graylog_logger requested but not found")
 endif()
 
-target_link_libraries(${tgt} ${libraries_common} fmt::fmt)
+target_link_libraries(${tgt} ${libraries_common})
 
 if (have_gtest)
 add_subdirectory(tests)
