@@ -79,6 +79,7 @@ private:
   void raiseForwardingFlag(ForwardingRunState ToBeRaised);
   void pushConverterToStream(ConverterSettings const &ConverterInfo,
                              std::shared_ptr<Stream> &Stream);
+  SharedLogger Logger = getLogger();
 };
 
 extern std::atomic<uint64_t> g__total_msgs_to_kafka;
