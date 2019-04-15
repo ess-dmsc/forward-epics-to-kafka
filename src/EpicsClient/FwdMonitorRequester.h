@@ -3,6 +3,8 @@
 #include "RangeSet.h"
 #include <atomic>
 #include <pv/monitor.h>
+#include <logger.h>
+
 namespace Forwarder {
 namespace EpicsClient {
 
@@ -58,6 +60,7 @@ private:
   std::string RequesterName;
   EpicsClientInterface *epics_client = nullptr;
   static std::atomic<uint32_t> GlobalIdCounter;
+  SharedLogger Logger = getLogger();
 };
 }
 }

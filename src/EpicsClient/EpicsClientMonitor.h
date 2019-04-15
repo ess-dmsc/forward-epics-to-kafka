@@ -56,6 +56,7 @@ private:
       EmitQueue;
   std::shared_ptr<FlatBufs::EpicsPVUpdate> CachedUpdate;
   std::atomic<int> status_{0};
+  SharedLogger Logger = getLogger();
 };
 } // namespace EpicsClient
 } // namespace Forwarder
