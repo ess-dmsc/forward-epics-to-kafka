@@ -66,5 +66,6 @@ private:
   std::unique_ptr<RdKafka::Conf> Conf;
   ProducerDeliveryCb DeliveryCb{Stats};
   KafkaEventCb EventCb;
+  SharedLogger Logger = getLogger();
 };
 } // namespace KafkaW

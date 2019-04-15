@@ -60,5 +60,6 @@ private:
 
   /// Update the stored metadata.
   void updateMetadata();
+  SharedLogger Logger = getLogger();
 };
 } // namespace KafkaW
