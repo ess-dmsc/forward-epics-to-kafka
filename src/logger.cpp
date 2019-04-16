@@ -1,5 +1,7 @@
 #include "logger.h"
 #include "URI.h"
+#include <spdlog/sinks/basic_file_sink.h>
+#include <spdlog/sinks/stdout_color_sinks.h>
 #ifdef HAVE_GRAYLOG_LOGGER
 #include <spdlog/sinks/graylog_sink.h>
 #endif
@@ -30,9 +32,12 @@ void setUpLogging(const spdlog::level::level_enum &LoggingLevel,
         GraylogURI);
 #endif
   }
-  Sinks.push_back(std::make_shared<spdlog::sinks::stdout_color_sink_mt>());
-  auto combined_logger = std::make_shared<spdlog::logger>(
-      "ForwarderLogger", begin(Sinks), end(Sinks));
-  spdlog::register_logger(combined_logger);
-  spdlog::set_level(LoggingLevel);
+    auto ConsoleSink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
+    ConsoleSink->set_pattern("[%H:%M:%S.%f] [%l] [processID: %P]: %v");
+    Sinks.push_back(ConsoleSink);
+    auto combined_logger = std::make_shared<spdlog::logger>(
+            "ForwarderLogger", begin(Sinks), end(Sinks));
+    spdlog::register_logger(combined_logger);
+    combined_logger->set_level(LoggingLevel);
+    combined_logger->flush_on(spdlog::level::err);
 }
