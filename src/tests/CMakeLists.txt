@@ -20,7 +20,8 @@ set(sources
     ConfStandIn.h
     ProducerDeliveryCb_tests.cpp
     Consumer_tests.cpp
-    MockMessage.h)
+    MockMessage.h
+    UnitTests.cpp)
 add_executable(${tgt} ${sources})
 add_dependencies(${tgt} flatbuffers_generate)
 target_include_directories(${tgt} PRIVATE ${path_include_common})
