@@ -143,7 +143,7 @@ if (WIN32)
     set_target_properties(xxd_generate PROPERTIES EXCLUDE_FROM_ALL TRUE)
     set_target_properties(git_commit_current PROPERTIES EXCLUDE_FROM_ALL TRUE)
 else()
-    target_compile_options(${tgt} PRIVATE -Wall -Wextra -Werror)
+    target_compile_options(${tgt} PRIVATE -Wextra -Werror)
     add_dependencies(${tgt} flatbuffers_generate xxd_generate git_commit_current)
 endif(WIN32)
 

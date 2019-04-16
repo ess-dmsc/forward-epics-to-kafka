@@ -18,11 +18,11 @@ FwdMonitorRequester::FwdMonitorRequester(
       RequesterName(fmt::format("FwdMonitorRequester-{}", GlobalIdCounter)),
       epics_client(EpicsClientMonitor) {
   ++GlobalIdCounter;
-  LOG(Sev::Debug, "FwdMonitorRequester {}", RequesterName);
+  Logger->debug( "FwdMonitorRequester {}", RequesterName);
 }
 
 FwdMonitorRequester::~FwdMonitorRequester() {
-  LOG(Sev::Info, "~FwdMonitorRequester");
+  Logger->info( "~FwdMonitorRequester");
 }
 
 std::string FwdMonitorRequester::getRequesterName() { return RequesterName; }
@@ -30,7 +30,7 @@ std::string FwdMonitorRequester::getRequesterName() { return RequesterName; }
 void FwdMonitorRequester::message(std::string const &Message,
                                   ::epics::pvData::MessageType MessageType) {
   UNUSED_ARG(MessageType);
-  LOG(Sev::Debug, "FwdMonitorRequester::message: {}:  {}", RequesterName,
+  Logger->debug( "FwdMonitorRequester::message: {}:  {}", RequesterName,
       Message);
 }
 
@@ -44,14 +44,14 @@ void FwdMonitorRequester::monitorConnect(
     // NOTE
     // Docs does not say anything about whether we are responsible for any
     // handling of the monitor if non-null?
-    LOG(Sev::Error, "monitorConnect is != success for {}", RequesterName);
+    Logger->error( "monitorConnect is != success for {}", RequesterName);
     epics_client->errorInEpics();
   } else {
     if (Status.isOK()) {
-      LOG(Sev::Debug, "success and OK");
+      Logger->debug( "success and OK");
       Monitor->start();
     } else {
-      LOG(Sev::Debug, "success with warning");
+      Logger->debug( "success with warning");
     }
   }
 }
@@ -89,14 +89,14 @@ void FwdMonitorRequester::monitorEvent(
   for (auto &up : Updates) {
     auto x = epics_client->emit(up);
     if (x != 0) {
-      LOG(Sev::Notice, "Cannot push update {}", up->channel);
+      Logger->info("Cannot push update {}", up->channel);
     }
   }
 }
 
 void FwdMonitorRequester::unlisten(epics::pvData::MonitorPtr const &Monitor) {
   UNUSED_ARG(Monitor);
-  LOG(Sev::Debug, "FwdMonitorRequester::unlisten  {}", RequesterName);
+  Logger->debug( "FwdMonitorRequester::unlisten  {}", RequesterName);
 }
 } // namespace EpicsClient
 } // namespace Forwarder

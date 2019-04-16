@@ -16,6 +16,7 @@ struct MainOpt {
   ConfigSettings MainSettings;
   std::string brokers_as_comma_list() const;
   std::string KafkaGELFAddress = "";
+  spdlog::level::level_enum LogLevel;
   std::string GraylogLoggerAddress = "";
   std::string InfluxURI = "";
   std::string LogFilename;

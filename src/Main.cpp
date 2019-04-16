@@ -54,12 +54,6 @@ int main(int argc, char **argv) {
   auto op = Forwarder::parse_opt(argc, argv);
   auto &opt = *op.second;
 
-  if (!opt.LogFilename.empty()) {
-    use_log_file(opt.LogFilename);
-  }
-
-  opt.init_logger();
-
   if (op.first != 0) {
     return 1;
   }
@@ -70,11 +64,11 @@ int main(int argc, char **argv) {
     SignalHandler SignalHandlerInstance(Main);
     Main->forward_epics_to_kafka();
   } catch (std::runtime_error &e) {
-    LOG(Sev::Emergency, "CATCH runtime error in main watchdog thread: {}",
+    getLogger()->critical( "CATCH runtime error in main watchdog thread: {}",
         e.what());
     return 1;
   } catch (std::exception &e) {
-    LOG(Sev::Emergency, "CATCH EXCEPTION in main watchdog thread");
+    getLogger()->critical( "CATCH EXCEPTION in main watchdog thread");
     return 1;
   }
   return 0;

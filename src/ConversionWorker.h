@@ -6,6 +6,7 @@
 #include <concurrentqueue/concurrentqueue.h>
 #include <mutex>
 #include <thread>
+#include "logger.h"
 
 namespace Forwarder {
 
@@ -50,5 +51,6 @@ private:
   Forwarder *main = nullptr;
   size_t sid = 0;
   std::mutex mx;
+  SharedLogger Logger = getLogger();
 };
 } // namespace Forwarder
