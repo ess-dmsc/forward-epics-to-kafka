@@ -17,18 +17,18 @@ std::unique_ptr<EpicsClientFactoryInit> EpicsClientFactoryInit::factory_init() {
 }
 
 EpicsClientFactoryInit::EpicsClientFactoryInit() {
-  Logger->trace( "EpicsClientFactoryInit");
+  Logger->trace("EpicsClientFactoryInit");
   std::lock_guard<std::mutex> lock(MutexLock);
   auto c = Count++;
   if (c == 0) {
-    Logger->info( "START  Epics factories");
+    Logger->info("START  Epics factories");
     ::epics::pvAccess::ClientFactory::start();
     ::epics::pvAccess::ca::CAClientFactory::start();
   }
 }
 
 EpicsClientFactoryInit::~EpicsClientFactoryInit() {
-  Logger->trace( "~EpicsClientFactoryInit");
+  Logger->trace("~EpicsClientFactoryInit");
   std::lock_guard<std::mutex> lock(MutexLock);
   auto c = --Count;
   if (c < 0) {
@@ -39,7 +39,7 @@ EpicsClientFactoryInit::~EpicsClientFactoryInit() {
     c = 0;
   }
   if (c == 0) {
-    Logger->debug( "STOP   Epics factories");
+    Logger->debug("STOP   Epics factories");
     ::epics::pvAccess::ClientFactory::stop();
     ::epics::pvAccess::ca::CAClientFactory::stop();
   }

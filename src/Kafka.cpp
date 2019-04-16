@@ -16,7 +16,7 @@ std::shared_ptr<InstanceSet>
 InstanceSet::Set(KafkaW::BrokerSettings BrokerSettings) {
   std::lock_guard<std::mutex> lock(ProducerMutex);
   getLogger()->warn("Kafka InstanceSet with rdkafka version: {}",
-               RdKafka::version());
+                    RdKafka::version());
   if (!kset) {
     BrokerSettings.PollTimeoutMS = 0;
     kset.reset(new InstanceSet(BrokerSettings));

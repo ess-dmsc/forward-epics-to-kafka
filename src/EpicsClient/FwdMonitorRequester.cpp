@@ -18,11 +18,11 @@ FwdMonitorRequester::FwdMonitorRequester(
       RequesterName(fmt::format("FwdMonitorRequester-{}", GlobalIdCounter)),
       epics_client(EpicsClientMonitor) {
   ++GlobalIdCounter;
-  Logger->debug( "FwdMonitorRequester {}", RequesterName);
+  Logger->debug("FwdMonitorRequester {}", RequesterName);
 }
 
 FwdMonitorRequester::~FwdMonitorRequester() {
-  Logger->info( "~FwdMonitorRequester");
+  Logger->info("~FwdMonitorRequester");
 }
 
 std::string FwdMonitorRequester::getRequesterName() { return RequesterName; }
@@ -30,8 +30,8 @@ std::string FwdMonitorRequester::getRequesterName() { return RequesterName; }
 void FwdMonitorRequester::message(std::string const &Message,
                                   ::epics::pvData::MessageType MessageType) {
   UNUSED_ARG(MessageType);
-  Logger->debug( "FwdMonitorRequester::message: {}:  {}", RequesterName,
-      Message);
+  Logger->debug("FwdMonitorRequester::message: {}:  {}", RequesterName,
+                Message);
 }
 
 // cppcheck-suppress unusedFunction ; used inside EPICS
@@ -44,14 +44,14 @@ void FwdMonitorRequester::monitorConnect(
     // NOTE
     // Docs does not say anything about whether we are responsible for any
     // handling of the monitor if non-null?
-    Logger->error( "monitorConnect is != success for {}", RequesterName);
+    Logger->error("monitorConnect is != success for {}", RequesterName);
     epics_client->errorInEpics();
   } else {
     if (Status.isOK()) {
-      Logger->debug( "success and OK");
+      Logger->debug("success and OK");
       Monitor->start();
     } else {
-      Logger->debug( "success with warning");
+      Logger->debug("success with warning");
     }
   }
 }
@@ -96,7 +96,7 @@ void FwdMonitorRequester::monitorEvent(
 
 void FwdMonitorRequester::unlisten(epics::pvData::MonitorPtr const &Monitor) {
   UNUSED_ARG(Monitor);
-  Logger->debug( "FwdMonitorRequester::unlisten  {}", RequesterName);
+  Logger->debug("FwdMonitorRequester::unlisten  {}", RequesterName);
 }
 } // namespace EpicsClient
 } // namespace Forwarder

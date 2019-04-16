@@ -148,7 +148,8 @@ std::pair<int, std::unique_ptr<MainOpt>> parse_opt(int argc, char **argv) {
                  "Kafka GELF logging //broker[:port]/topic");
   App.add_option("--graylog-logger-address", MainOptions.GraylogLoggerAddress,
                  "Address for Graylog logging");
-  App.add_option("--influx-url", MainOptions.InfluxURI, "Address for Influx logging");
+  App.add_option("--influx-url", MainOptions.InfluxURI,
+                 "Address for Influx logging");
   std::string LogLevelInfoStr =
       R"*(Set log message level. Set to 0 - 5 or one of
   `Trace`, `Debug`, `Info`, `Warning`, `Error`
@@ -177,14 +178,17 @@ std::pair<int, std::unique_ptr<MainOpt>> parse_opt(int argc, char **argv) {
                  "instead of forwarding real "
                  "PV updates from EPICS",
                  true);
-  App.add_option("--conversion-threads", MainOptions.MainSettings.ConversionThreads,
+  App.add_option("--conversion-threads",
+                 MainOptions.MainSettings.ConversionThreads,
                  "Conversion threads", true);
   App.add_option("--conversion-worker-queue-size",
                  MainOptions.MainSettings.ConversionWorkerQueueSize,
                  "Conversion worker queue size", true);
-  App.add_option("--main-poll-interval", MainOptions.MainSettings.MainPollInterval,
+  App.add_option("--main-poll-interval",
+                 MainOptions.MainSettings.MainPollInterval,
                  "Main Poll interval", true);
-  addKafkaOption(App, "-S,--kafka-config", MainOptions.MainSettings.KafkaConfiguration,
+  addKafkaOption(App, "-S,--kafka-config",
+                 MainOptions.MainSettings.KafkaConfiguration,
                  "LibRDKafka options");
   App.set_config("-c,--config-file", "", "Read configuration from an ini file",
                  false);
@@ -199,7 +203,8 @@ std::pair<int, std::unique_ptr<MainOpt>> parse_opt(int argc, char **argv) {
                 e.what());
     ret.first = 1;
   }
-  setUpLogging(MainOptions.LogLevel, MainOptions.LogFilename, MainOptions.GraylogLoggerAddress);
+  setUpLogging(MainOptions.LogLevel, MainOptions.LogFilename,
+               MainOptions.GraylogLoggerAddress);
   SharedLogger Logger = getLogger();
 
   if (ret.first == 1) {
@@ -208,7 +213,8 @@ std::pair<int, std::unique_ptr<MainOpt>> parse_opt(int argc, char **argv) {
   }
   if (!MainOptions.StreamsFile.empty()) {
     try {
-      MainOptions.MainSettings.StreamsInfo = parseStreamsJson(MainOptions.StreamsFile);
+      MainOptions.MainSettings.StreamsInfo =
+          parseStreamsJson(MainOptions.StreamsFile);
     } catch (std::exception const &e) {
       Logger->warn("Can not parse configuration file: {}", e.what());
       ret.first = 1;

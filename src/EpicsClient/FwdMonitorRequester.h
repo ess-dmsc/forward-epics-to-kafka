@@ -2,8 +2,8 @@
 #include "EpicsClientInterface.h"
 #include "RangeSet.h"
 #include <atomic>
-#include <pv/monitor.h>
 #include <logger.h>
+#include <pv/monitor.h>
 
 namespace Forwarder {
 namespace EpicsClient {
