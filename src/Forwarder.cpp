@@ -97,7 +97,7 @@ Forwarder::Forwarder(MainOpt &opt)
 }
 
 Forwarder::~Forwarder() {
-  Logger->debug("~Main");
+  Logger->trace("~Main");
   streams.clearStreams();
   conversion_workers_clear();
   converters_clear();
@@ -121,7 +121,7 @@ void Forwarder::createFakePVUpdateTimerIfRequired() {
 }
 
 int Forwarder::conversion_workers_clear() {
-  Logger->debug("Main::conversion_workers_clear()  begin");
+  Logger->trace("Main::conversion_workers_clear()  begin");
   std::lock_guard<std::mutex> lock(conversion_workers_mx);
   if (!conversion_workers.empty()) {
     for (auto &x : conversion_workers) {
@@ -129,7 +129,7 @@ int Forwarder::conversion_workers_clear() {
     }
     conversion_workers.clear();
   }
-  Logger->debug("Main::conversion_workers_clear()  end");
+  Logger->trace("Main::conversion_workers_clear()  end");
   return 0;
 }
 

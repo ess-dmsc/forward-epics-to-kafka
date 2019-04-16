@@ -15,7 +15,7 @@ ProducerTopic::ProducerTopic(std::shared_ptr<Producer> ProducerPtr,
     Logger->error( "could not create Kafka topic: {}", ErrStr);
     throw TopicCreationError();
   }
-  Logger->debug( "ctor topic: {}", RdKafkaTopic->name());
+  Logger->trace( "ctor topic: {}", RdKafkaTopic->name());
 }
 
 ProducerTopic::ProducerTopic(ProducerTopic &&x) noexcept {

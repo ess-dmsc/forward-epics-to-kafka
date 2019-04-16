@@ -33,7 +33,7 @@ public:
   explicit EpicsClientMonitor_impl(EpicsClientInterface *epics_client)
       : epics_client(epics_client) {}
   ~EpicsClientMonitor_impl() {
-    Logger->debug("EpicsClientMonitor_implor_impl");
+    Logger->trace("EpicsClientMonitor_implor_impl");
   }
 
   /// Starts the EPICS channel access provider loop and the monitor requester
@@ -62,7 +62,7 @@ public:
       Logger->debug("monitoringStart:  want to start but we have no channel");
       return -1;
     }
-    Logger->debug("monitoringStart");
+    Logger->trace("monitoringStart");
     // Leaving it empty seems to be the full channel, including name.  That's
     // good.
     // Can also specify subfields, e.g. "value, timeStamp"  or also
@@ -87,7 +87,7 @@ public:
   /// Stops the EPICS monitor loop in monitor_requester and resets the pointer.
   int monitoringStop() {
     RLOCK();
-    Logger->debug("monitoringStop");
+    Logger->trace("monitoringStop");
     if (monitor) {
       monitor->stop();
       monitor->destroy();
@@ -160,7 +160,7 @@ EpicsClientMonitor::EpicsClientMonitor(
 }
 
 EpicsClientMonitor::~EpicsClientMonitor() {
-  Logger->debug("EpicsClientMonitorMonitor");
+  Logger->trace("EpicsClientMonitorMonitor");
 }
 
 int EpicsClientMonitor::stop() { return Impl->stop(); }
@@ -258,10 +258,10 @@ void ChannelRequester::channelStateChange(
   }
   if (ConnectionState == Channel::CONNECTED) {
     Logger->debug("Epics channel connected");
-    // if (log_level >= 9) {
+    if (log_level >= 9) {
     Logger->debug("ChannelRequester::channelStateChange  channelinfo: {}",
                   channelInfo(Channel));
-    //   }
+    }
     EpicsClientImpl->monitoringStart();
   } else if (ConnectionState == Channel::DISCONNECTED) {
     Logger->debug("Epics channel disconnect");

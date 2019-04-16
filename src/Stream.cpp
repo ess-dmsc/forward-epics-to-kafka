@@ -17,7 +17,7 @@ ConversionPath::ConversionPath(std::shared_ptr<Converter> conv,
     : converter(std::move(conv)), kafka_output(std::move(ko)) {}
 
 ConversionPath::~ConversionPath() {
-  Logger->debug( "~ConversionPath");
+  Logger->trace( "~ConversionPath");
   while (true) {
     auto x = transit.load();
     if (x == 0)
@@ -63,9 +63,9 @@ Stream::Stream(
       OutputQueue(std::move(Queue)) {}
 
 Stream::~Stream() {
-  Logger->debug( "~Stream");
+  Logger->trace( "~Stream");
   stop();
-  Logger->debug( "~Stop DONE");
+  Logger->trace( "~Stop DONE");
   Logger->info( "SeqDataEmitted: {}", SeqDataEmitted.to_string());
 }
 

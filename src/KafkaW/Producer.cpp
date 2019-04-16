@@ -7,7 +7,7 @@ namespace KafkaW {
 static std::atomic<int> ProducerInstanceCount;
 
 Producer::~Producer() {
-  Logger->debug("~Producer");
+  Logger->trace("~Producer");
   if (ProducerPtr != nullptr) {
     int TimeoutMS = 100;
     int NumberOfIterations = 80;
