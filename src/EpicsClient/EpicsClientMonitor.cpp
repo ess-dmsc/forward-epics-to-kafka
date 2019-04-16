@@ -257,11 +257,9 @@ void ChannelRequester::channelStateChange(
     return;
   }
   if (ConnectionState == Channel::CONNECTED) {
-    Logger->debug("Epics channel connected");
-    if (log_level >= 9) {
+    Logger->trace("Epics channel connected");
     Logger->debug("ChannelRequester::channelStateChange  channelinfo: {}",
                   channelInfo(Channel));
-    }
     EpicsClientImpl->monitoringStart();
   } else if (ConnectionState == Channel::DISCONNECTED) {
     Logger->debug("Epics channel disconnect");
