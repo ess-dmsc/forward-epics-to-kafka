@@ -124,7 +124,7 @@ public:
 #if TEST_PROVOKE_ERROR == 1
     static std::atomic<int> c1{0};
     if (c1 > 10) {
-      epics_client->erroror_in_epics();
+      epics_client->error_in_epics();
     }
     ++c1;
 #endif
