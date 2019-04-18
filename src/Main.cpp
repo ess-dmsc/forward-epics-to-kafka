@@ -66,10 +66,13 @@ int main(int argc, char **argv) {
   } catch (std::runtime_error &e) {
     getLogger()->critical("CATCH runtime error in main watchdog thread: {}",
                           e.what());
+    getLogger()->flush();
     return 1;
   } catch (std::exception &e) {
     getLogger()->critical("CATCH EXCEPTION in main watchdog thread");
+    getLogger()->flush();
     return 1;
   }
+  getLogger()->flush();
   return 0;
 }
