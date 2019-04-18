@@ -226,23 +226,15 @@ void ChannelRequester::channelCreated(epics::pvData::Status const &Status,
   // Seems that channel creation is actually a synchronous operation
   // and that this requester callback is called from the same stack
   // from which the channel creation was initiated.
-  Logger->debug("ChannelRequester::channelCreated:  (int)status.isOK(): {}",
-                (int)Status.isOK());
-  if (!Status.isOK() or !Status.isSuccess()) {
-    // quick fix until decided on logging system..
-    std::ostringstream s1;
-    s1 << Status;
-    Logger->warn("WARNING ChannelRequester::channelCreated:  {}", s1.str());
+  std::string ChannelName = "Unknown";
+  if (Channel != nullptr) {
+    ChannelName = Channel->getChannelName();
   }
-  if (!Status.isSuccess()) {
-    std::ostringstream s1;
-    s1 << Status;
-    Logger->error("ChannelRequester::channelCreated:  failure: {}", s1.str());
-    if (Channel) {
-      std::string cname = Channel->getChannelName();
-      Logger->error("  failure is in channel: {}", cname);
-    }
-    Logger->warn("error_channel_requester()");
+
+  if (Status.isSuccess()) {
+    Logger->debug("ChannelRequester::channelCreated: {}", ChannelName);
+  } else {
+    Logger->error("ChannelRequester::channelCreated: failure: {}", ChannelName);
   }
 }
 
