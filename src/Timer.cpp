@@ -54,7 +54,7 @@ void Timer::timerLoop() {
 
 void Timer::waitForPreviousIterationToComplete() {
   if (!IterationComplete) {
-    LOG(Sev::Error,
+    Logger->error(
         "Timer could not execute callbacks within specified iteration "
         "period");
     std::unique_lock<std::mutex> Lock(IterationCompleteMutex);

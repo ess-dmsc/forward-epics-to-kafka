@@ -26,6 +26,7 @@ public:
 
 private:
   std::unique_ptr<KafkaW::ConsumerInterface> Consumer;
+  SharedLogger Logger = getLogger();
 };
 } // namespace Config
 } // namespace Forwarder

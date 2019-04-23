@@ -11,9 +11,6 @@ namespace Forwarder {
 class Stream;
 
 class Streams {
-private:
-  std::vector<std::shared_ptr<Stream>> StreamPointers;
-  std::mutex StreamsMutex;
 
 public:
   /// Gets the number of streams.
@@ -50,5 +47,10 @@ public:
   std::shared_ptr<Stream> back();
   std::shared_ptr<Stream> operator[](size_t s) { return StreamPointers.at(s); };
   const std::vector<std::shared_ptr<Stream>> &getStreams() const;
+
+private:
+  std::vector<std::shared_ptr<Stream>> StreamPointers;
+  std::mutex StreamsMutex;
+  SharedLogger Logger = getLogger();
 };
 } // namespace Forwarder

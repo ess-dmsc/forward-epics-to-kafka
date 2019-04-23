@@ -102,5 +102,7 @@ private:
   std::atomic_bool IterationComplete;
   std::condition_variable IterationCompleteCV;
   std::mutex IterationCompleteMutex;
+
+  SharedLogger Logger = getLogger();
 };
 } // namespace Forwarder

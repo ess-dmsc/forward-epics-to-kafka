@@ -15,5 +15,6 @@ public:
   int emit(std::unique_ptr<FlatBufs::FlatbufferMessage> fb);
   std::string topicName() const;
   KafkaW::ProducerTopic Output;
+  SharedLogger Logger = getLogger();
 };
 } // namespace Forwarder

@@ -10,15 +10,14 @@ namespace Forwarder {
 ConfigCB::ConfigCB(Forwarder &main) : main(main) {}
 
 void ConfigCB::operator()(std::string const &msg) {
-  LOG(Sev::Debug, "Command received: {}", msg);
+  Logger->debug("Command received: {}", msg);
   try {
     handleCommand(msg);
   } catch (nlohmann::json::parse_error const &e) {
-    LOG(Sev::Error,
-        "Could not parse command. Command was {}. Exception was: {}", msg,
-        e.what());
+    Logger->error("Could not parse command. Command was {}. Exception was: {}",
+                  msg, e.what());
   } catch (...) {
-    LOG(Sev::Error, "Could not handle command: {}", msg);
+    Logger->error("Could not handle command: {}", msg);
   }
 }
 
@@ -44,7 +43,7 @@ void ConfigCB::handleCommandExit() { main.stopForwarding(); }
 
 void ConfigCB::handleCommand(std::string const &Msg) {
   using nlohmann::json;
-  LOG(Sev::Error, "Msg is {}", Msg);
+  Logger->error("Msg is {}", Msg);
   auto Document = json::parse(Msg);
 
   std::string Command = findCommand(Document);
@@ -58,7 +57,7 @@ void ConfigCB::handleCommand(std::string const &Msg) {
   } else if (Command == "exit") {
     handleCommandExit();
   } else {
-    LOG(Sev::Info, "Cannot understand command: {}", Command);
+    Logger->info("Cannot understand command: {}", Command);
   }
 }
 

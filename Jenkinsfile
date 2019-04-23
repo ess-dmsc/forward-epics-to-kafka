@@ -21,11 +21,11 @@ properties([[
 
 images = [
         'centos7': [
-                'name': 'essdmscdm/centos7-build-node:4.0.0',
+                'name': 'screamingudder/centos7-build-node:4.3.0',
                 'sh'  : '/usr/bin/scl enable devtoolset-6 -- /bin/bash -e'
         ],
         'centos7-release': [
-                'name': 'essdmscdm/centos7-build-node:4.0.0',
+                'name': 'screamingudder/centos7-build-node:4.3.0',
                 'sh'  : '/usr/bin/scl enable devtoolset-6 -- /bin/bash -e'
         ],
         'debian9'    : [
@@ -368,8 +368,8 @@ def get_win10_pipeline() {
 
 	 stage("win10: Build") {
            bat """cd _build
-	     cmake .. -G \"Visual Studio 15 2017 Win64\" -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTS=FALSE
-	     cmake --build .
+	     cmake .. -G \"Visual Studio 15 2017 Win64\" -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTS=FALSE -DCONAN=MANUAL
+	     cmake --build . --config Release
 	     """
         }  // stage
       }  // dir
@@ -444,7 +444,7 @@ node('docker && eee') {
 	
     stage('CppCheck') {
 	docker_cppcheck(clangformat_os)
-        recordIssues sourceCodeEncoding: 'UTF-8', qualityGates: [[threshold: 2, type: 'TOTAL', unstable: true]], tools: [cppCheck(pattern: 'cppcheck.xml', reportEncoding: 'UTF-8')]
+        recordIssues sourceCodeEncoding: 'UTF-8', qualityGates: [[threshold: 1, type: 'TOTAL', unstable: true]], tools: [cppCheck(pattern: 'cppcheck.xml', reportEncoding: 'UTF-8')]
 	sh "docker stop ${container_name(clangformat_os)}"
         sh "docker rm -f ${container_name(clangformat_os)}"
     }

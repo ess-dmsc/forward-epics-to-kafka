@@ -1,6 +1,7 @@
 #pragma once
 #include "Config.h"
 #include "Forwarder.h"
+#include "logger.h"
 #include "nlohmann/json.hpp"
 #include <string>
 namespace Forwarder {
@@ -32,6 +33,7 @@ private:
   void handleCommandStopChannel(nlohmann::json const &Document);
   void handleCommandStopAll();
   void handleCommandExit();
+  SharedLogger Logger = getLogger();
 };
 
 } // namespace Forwarder
