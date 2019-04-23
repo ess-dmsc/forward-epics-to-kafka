@@ -20,7 +20,6 @@ public:
   ~ProducerTopic() = default;
   int produce(unsigned char *MsgData, size_t MsgSize);
   int produce(std::unique_ptr<KafkaW::ProducerMessage> &Msg);
-  void enableCopy();
   std::string name() const;
   std::string brokerAddress() const;
 

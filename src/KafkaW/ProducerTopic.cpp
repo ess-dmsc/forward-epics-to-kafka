@@ -93,8 +93,6 @@ int ProducerTopic::produce(std::unique_ptr<ProducerMessage> &Msg) {
   return 1;
 }
 
-void ProducerTopic::enableCopy() { DoCopyMsg = true; }
-
 std::string ProducerTopic::name() const { return Name; }
 
 std::string ProducerTopic::brokerAddress() const {
