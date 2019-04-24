@@ -16,9 +16,9 @@ set(sources
     RangeSetTests.cpp
     $<TARGET_OBJECTS:__objects>
         ListenerTests.cpp
-    BrokerSettings_tests.cpp
+        BrokerSettingsTests.cpp
     ConfStandIn.h
-    ProducerDeliveryCb_tests.cpp
+        ProducerDeliveryCbTests.cpp
         ConsumerTests.cpp
     MockMessage.h
     UnitTests.cpp)
