@@ -5,7 +5,7 @@ set(sources
         URITests.cpp
         JsonTests.cpp
         ConfigParserTests.cpp
-    Streams_tests.cpp
+        StreamsTests.cpp
         StreamTests.cpp
         CommandHandlerTests.cpp
         EpicsClientMonitorTests.cpp
