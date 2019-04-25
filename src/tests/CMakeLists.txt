@@ -2,24 +2,24 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ../../tests)
 
 set(tgt "tests")
 set(sources
-    URI_tests.cpp
-    json_tests.cpp
-    ConfigParser_tests.cpp
-    Streams_tests.cpp
-    Stream_tests.cpp
-    CommandHandler_tests.cpp
-    EpicsClientMonitor_tests.cpp
-    EpicsClientRandom_tests.cpp
-    Producer_tests.cpp
-    Timer_tests.cpp
+    URITests.cpp
+    JsonTests.cpp
+    ConfigParserTests.cpp
+    StreamsTests.cpp
+    StreamTests.cpp
+    CommandHandlerTests.cpp
+    EpicsClientMonitorTests.cpp
+    EpicsClientRandomTests.cpp
+    ProducerTests.cpp
+    TimerTests.cpp
     StreamTestUtils.cpp
     RangeSetTests.cpp
     $<TARGET_OBJECTS:__objects>
-    Listener_tests.cpp
-    BrokerSettings_tests.cpp
+    ListenerTests.cpp
+    BrokerSettingsTests.cpp
     ConfStandIn.h
-    ProducerDeliveryCb_tests.cpp
-    Consumer_tests.cpp
+    ProducerDeliveryCbTests.cpp
+    ConsumerTests.cpp
     MockMessage.h
     UnitTests.cpp)
 add_executable(${tgt} ${sources})
