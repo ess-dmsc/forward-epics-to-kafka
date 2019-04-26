@@ -2,9 +2,9 @@ from helpers.producerwrapper import ProducerWrapper
 from helpers.f142_logdata.Value import Value
 from time import sleep
 from helpers.kafka_helpers import create_consumer, poll_for_valid_message, get_all_available_messages
-from helpers.flatbuffer_helpers import check_expected_values, check_multiple_expected_values
-from helpers.epics_helpers import change_pv_value
-from helpers.PVs import PVDOUBLE, PVSTR, PVLONG, PVENUM
+from helpers.flatbuffer_helpers import check_expected_values, check_expected_array_values, check_multiple_expected_values
+from helpers.epics_helpers import change_pv_value, change_array_pv_value
+from helpers.PVs import PVDOUBLE, PVSTR, PVLONG, PVENUM, PVFLOATARRAY
 from confluent_kafka import TopicPartition
 import json
 
@@ -30,6 +30,7 @@ def teardown_function(function):
 
     for key, value in defaults.items():
         change_pv_value(key, value)
+    change_array_pv_value(PVFLOATARRAY, "3 1.1 2.2 3.3")
     sleep(3)
 
 
@@ -62,6 +63,39 @@ def test_forwarder_sends_pv_updates_single_pv_enum(docker_compose_no_command):
 
     second_msg = poll_for_valid_message(cons)
     check_expected_values(second_msg, Value.Int, PVENUM, 1)
+    cons.close()
+
+
+def test_forwarder_sends_pv_updates_single_floatarray(docker_compose_no_command):
+    """
+    GIVEN PV of enum type is configured to be forwarded
+    WHEN PV value is updated
+    THEN Forwarder publishes the update to Kafka
+    """
+
+    data_topic = "TEST_forwarderData_floatarray_pv_update"
+    pvs = [PVFLOATARRAY]
+
+    prod = ProducerWrapper("localhost:9092", CONFIG_TOPIC, data_topic)
+    prod.add_config(pvs)
+    # Wait for config to be pushed
+    sleep(5)
+
+    cons = create_consumer()
+
+    # Update value
+    change_array_pv_value(PVFLOATARRAY, "3 4.4 5.5 6.6")
+    # Wait for PV to be updated
+    sleep(5)
+    cons.subscribe([data_topic])
+
+    first_msg = poll_for_valid_message(cons)
+    print()
+    expectedarray = [4.4, 5.5, 6.6]
+    check_expected_array_values(first_msg, Value.ArrayFloat, PVFLOATARRAY, [1.5, 2.2, 3.3])
+
+    # second_msg = poll_for_valid_message(cons)
+    # check_expected_array_values(second_msg, Value.ArrayFloat, PVFLOATARRAY, [1.5, 2.2, 3.3])
     cons.close()
 
 
