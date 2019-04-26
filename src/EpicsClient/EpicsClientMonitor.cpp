@@ -166,6 +166,7 @@ EpicsClientMonitor::~EpicsClientMonitor() {
 int EpicsClientMonitor::stop() { return Impl->stop(); }
 
 int EpicsClientMonitor::emit(std::shared_ptr<FlatBufs::EpicsPVUpdate> Update) {
+  std::lock_guard<std::mutex> lock(CachedUpdateMutex);
   CachedUpdate = Update;
   return emitWithoutCaching(Update);
 }
@@ -173,6 +174,7 @@ int EpicsClientMonitor::emit(std::shared_ptr<FlatBufs::EpicsPVUpdate> Update) {
 void EpicsClientMonitor::errorInEpics() { status_ = -1; }
 
 void EpicsClientMonitor::emitCachedValue() {
+  std::lock_guard<std::mutex> lock(CachedUpdateMutex);
   if (CachedUpdate != nullptr) {
     emitWithoutCaching(CachedUpdate);
   }

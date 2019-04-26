@@ -55,6 +55,7 @@ private:
       moodycamel::ConcurrentQueue<std::shared_ptr<FlatBufs::EpicsPVUpdate>>>
       EmitQueue;
   std::shared_ptr<FlatBufs::EpicsPVUpdate> CachedUpdate;
+  std::mutex CachedUpdateMutex;
   std::atomic<int> status_{0};
   SharedLogger Logger = getLogger();
 };
