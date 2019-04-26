@@ -1,14 +1,15 @@
-from helpers.f142_logdata import Int, Double, String, Long, Value
+from helpers.f142_logdata import Int, Double, String, Long, Value, ArrayFloat
 from cmath import isclose
 
 ValueTypes = {
     Value.Value.Int: Int.Int,
     Value.Value.Double: Double.Double,
     Value.Value.String: String.String,
+    Value.Value.ArrayFloat: ArrayFloat.ArrayFloat,
 }
 
 
-def check_expected_values(log_data, value_type, pv_name, expected_value):
+def check_expected_values(log_data, value_type, pv_name, expected_value=None):
     """
     Checks the message name (PV) and value type (type of PV), and, optionally, the value.
 
@@ -16,13 +17,10 @@ def check_expected_values(log_data, value_type, pv_name, expected_value):
     :param value_type: Flatbuffers value type
     :param pv_name: Byte encoded string of the PV/channel name
     :param expected_value: The expected PV value from the flatbuffers message
+    :return: None
     """
-    print(f'expected pv name: {pv_name}, name from message: {log_data.SourceName()}', flush=True)
-    assert bytes(pv_name, encoding='utf-8') == log_data.SourceName()
-
-    print(f'expected type: {value_type}, type from message: {log_data.ValueType()}', flush=True)
     assert value_type == log_data.ValueType()
-
+    assert bytes(pv_name, encoding='utf-8') == log_data.SourceName()
     assert log_data.Timestamp() > 0
 
     if expected_value is not None:
@@ -59,3 +57,49 @@ def check_multiple_expected_values(message_list, expected_values):
             isclose(expected_values[name][1], union_val.Value())
         else:
             assert expected_values[name][1] == union_val.Value()
+
+
+def check_expected_array_values(log_data, value_type, pv_name, expected_value=None):
+    """
+    Checks the message name (PV) and value type (type of PV), and, optionally, the value.
+
+    :param log_data: Log data object from the received stream buffer
+    :param value_type: Flatbuffers value type
+    :param pv_name: Byte encoded string of the PV/channel name
+    :param expected_value: The expected PV value from the flatbuffers message
+    :return: None
+    """
+
+    print("message data: ", log_data.ValueType, " ", log_data.Timestamp, " ", log_data.ValueType,"\n", flush=True)
+
+    assert value_type == log_data.ValueType()
+    assert bytes(pv_name, encoding='utf-8') == log_data.SourceName()
+    assert log_data.Timestamp() > 0
+    print("expected value type: ", type(expected_value))
+
+    if expected_value is not None:
+        print("value type:", value_type)
+        union_val = ValueTypes[value_type]()
+        print("union val 1 type: ", type(union_val))
+        union_val.Init(log_data.Value().Bytes, log_data.Value().Pos)
+        # arraysmatching = True
+        # if isinstance(union_val, ArrayFloat.ArrayFloat):
+        #     print("tutaj")
+        #     for i in range(union_val.ValueLength()):
+        #         print(i, " ", union_val.Value(i), " ", expected_value[i], "\n")
+        #         if not isclose(union_val.Value(i), expected_value[i]):
+        #             print("hehe", i)
+        #             arraysmatching = False
+        # else:
+        #     print("tam")
+        #     for i in range(union_val.ValueLength()):
+        #         print(i, " ", union_val.Value(i), " ", expected_value[i], "\n")
+        #         if expected_value[i] != union_val.Value(i):
+        #             arraysmatching = False
+        # assert arraysmatching
+        for i in range(union_val.ValueLength()):
+            print(i, " ", union_val.Value(i), " ", expected_value[i], "\n")
+            print("hehe", i)
+            assert not isclose(union_val.Value(i), expected_value[i])
+
+
