@@ -70,8 +70,6 @@ def check_expected_array_values(log_data, value_type, pv_name, expected_value=No
     :return: None
     """
 
-    print("message data: ", log_data.ValueType, " ", log_data.Timestamp, " ", log_data.ValueType,"\n", flush=True)
-
     assert value_type == log_data.ValueType()
     assert bytes(pv_name, encoding='utf-8') == log_data.SourceName()
     assert log_data.Timestamp() > 0
