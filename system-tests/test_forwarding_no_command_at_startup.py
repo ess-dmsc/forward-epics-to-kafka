@@ -83,8 +83,6 @@ def test_forwarder_sends_pv_updates_single_floatarray(docker_compose_no_command)
 
     cons = create_consumer()
 
-    # Update value
-    change_array_pv_value(PVFLOATARRAY, "3 4.4 5.5 6.6")
     # Wait for PV to be updated
     sleep(5)
     cons.subscribe([data_topic])

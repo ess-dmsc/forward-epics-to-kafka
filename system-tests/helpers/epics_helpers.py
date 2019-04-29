@@ -44,6 +44,5 @@ def change_array_pv_value(pvname, value):
     exit_code, output = container.exec_run("caput -a {} {}".format(pvname, value), privileged=True)
     print("caput exit code: ", exit_code, "\n")
     print("Updating PV value using caput: ")
-    print(output.decode("utf-8"), "\nend\n", flush=True)
-
+    print(output.decode("utf-8"), flush=True)
     assert exit_code == 0
