@@ -82,24 +82,16 @@ def check_expected_array_values(log_data, value_type, pv_name, expected_value=No
         union_val = ValueTypes[value_type]()
         print("union val 1 type: ", type(union_val))
         union_val.Init(log_data.Value().Bytes, log_data.Value().Pos)
-        # arraysmatching = True
-        # if isinstance(union_val, ArrayFloat.ArrayFloat):
-        #     print("tutaj")
-        #     for i in range(union_val.ValueLength()):
-        #         print(i, " ", union_val.Value(i), " ", expected_value[i], "\n")
-        #         if not isclose(union_val.Value(i), expected_value[i]):
-        #             print("hehe", i)
-        #             arraysmatching = False
-        # else:
-        #     print("tam")
-        #     for i in range(union_val.ValueLength()):
-        #         print(i, " ", union_val.Value(i), " ", expected_value[i], "\n")
-        #         if expected_value[i] != union_val.Value(i):
-        #             arraysmatching = False
-        # assert arraysmatching
+    if isinstance(union_val, ArrayFloat.ArrayFloat):
         for i in range(union_val.ValueLength()):
             print(i, " ", union_val.Value(i), " ", expected_value[i], "\n")
-            print("hehe", i)
-            assert not isclose(union_val.Value(i), expected_value[i])
+            assert isclose(union_val.Value(i), expected_value[i], rel_tol=1e-07)
+    else:
+        arraysmatching = True
+        for i in range(union_val.ValueLength()):
+            print(i, " ", union_val.Value(i), " ", expected_value[i], "\n")
+            if expected_value[i] != union_val.Value(i):
+                arraysmatching = False
+        assert arraysmatching
 
 
