@@ -4,9 +4,11 @@ namespace Forwarder {
 
 void Timer::executeCallbacks() {
   if (Running) {
-    std::lock_guard<std::mutex> CallbackLock(CallbacksMutex);
-    for (const CallbackFunction &Callback : Callbacks) {
-      Callback();
+    {
+      std::lock_guard<std::mutex> CallbackLock(CallbacksMutex);
+      for (const CallbackFunction &Callback : Callbacks) {
+        Callback();
+      }
     }
     AsioTimer.expires_at(AsioTimer.expires_at() + Period);
     AsioTimer.async_wait([this](const std::error_code & /*error*/) {
