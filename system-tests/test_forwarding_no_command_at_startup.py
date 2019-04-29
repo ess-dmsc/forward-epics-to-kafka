@@ -90,12 +90,8 @@ def test_forwarder_sends_pv_updates_single_floatarray(docker_compose_no_command)
     cons.subscribe([data_topic])
 
     first_msg = poll_for_valid_message(cons)
-    print()
-    expectedarray = [4.4, 5.5, 6.6]
-    check_expected_array_values(first_msg, Value.ArrayFloat, PVFLOATARRAY, [1.5, 2.2, 3.3])
-
-    # second_msg = poll_for_valid_message(cons)
-    # check_expected_array_values(second_msg, Value.ArrayFloat, PVFLOATARRAY, [1.5, 2.2, 3.3])
+    expectedarray = [1.1, 2.2, 3.3]
+    check_expected_array_values(first_msg, Value.ArrayFloat, PVFLOATARRAY, expectedarray)
     cons.close()
 
 
