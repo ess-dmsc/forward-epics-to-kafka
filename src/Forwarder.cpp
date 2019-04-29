@@ -1,9 +1,12 @@
 #include "Forwarder.h"
+// clang-format off
+// include Timer first to solve issue with multiple winsock include
+#include "Timer.h"
+// clang-format off
 #include "CommandHandler.h"
 #include "Converter.h"
 #include "KafkaOutput.h"
 #include "Stream.h"
-#include "Timer.h"
 #include "helper.h"
 #include "logger.h"
 #include <EpicsClient/EpicsClientInterface.h>
