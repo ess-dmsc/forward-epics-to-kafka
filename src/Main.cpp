@@ -1,7 +1,8 @@
-// clang-format off
-// include asio first to solve issue with multiple winsock include
-#include <asio.hpp>
-// clang-format on
+// solve issue with multiple winsock include
+#ifdef _MSC_VER
+#define WIN32_LEAN_AND_MEAN
+#endif
+
 #include "ConfigParser.h"
 #include "Forwarder.h"
 #include "MainOpt.h"
