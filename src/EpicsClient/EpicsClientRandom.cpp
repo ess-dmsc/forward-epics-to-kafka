@@ -6,9 +6,8 @@
 namespace Forwarder {
 namespace EpicsClient {
 
-int EpicsClientRandom::emit(std::shared_ptr<FlatBufs::EpicsPVUpdate> up) {
-  EmitQueue->enqueue(up);
-  return 1;
+void EpicsClientRandom::emit(std::shared_ptr<FlatBufs::EpicsPVUpdate> Update) {
+  EmitQueue->enqueue(Update);
 }
 
 void EpicsClientRandom::generateFakePVUpdate() {
