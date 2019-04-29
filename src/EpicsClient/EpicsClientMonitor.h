@@ -34,9 +34,9 @@ public:
   /// Pushes the PV update onto the emit_queue ring buffer.
   ///
   /// \param Update An epics PV update holding the pv structure.
-  int emit(std::shared_ptr<FlatBufs::EpicsPVUpdate> Update) override;
+  void emit(std::shared_ptr<FlatBufs::EpicsPVUpdate> Update) override;
 
-  int emitWithoutCaching(std::shared_ptr<FlatBufs::EpicsPVUpdate> Update);
+  void emitWithoutCaching(std::shared_ptr<FlatBufs::EpicsPVUpdate> Update);
 
   /// Calls stop on the client implementation.
   int stop() override;
