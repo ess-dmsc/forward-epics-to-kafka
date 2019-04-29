@@ -17,9 +17,6 @@ def change_pv_value(pvname, value):
             break
     if not container:
         raise Exception("IOC Container not found")
-
-    print("lololololololo", pvname, value, flush=True)
-
     exit_code, output = container.exec_run("caput {} {}".format(pvname, value), privileged=True)
     print("caput exit code: ", exit_code, "\n")
     print("Updating PV value using caput: ")
@@ -44,9 +41,6 @@ def change_array_pv_value(pvname, value):
             break
     if not container:
         raise Exception("IOC Container not found")
-
-    print("lololololololo", pvname, value, flush=True)
-
     exit_code, output = container.exec_run("caput -a {} {}".format(pvname, value), privileged=True)
     print("caput exit code: ", exit_code, "\n")
     print("Updating PV value using caput: ")
