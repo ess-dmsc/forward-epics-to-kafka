@@ -87,10 +87,7 @@ void FwdMonitorRequester::monitorEvent(
     Updates.push_back(Update);
   }
   for (auto &up : Updates) {
-    auto x = epics_client->emit(up);
-    if (x != 0) {
-      Logger->info("Cannot push update {}", up->channel);
-    }
+    epics_client->emit(up);
   }
 }
 

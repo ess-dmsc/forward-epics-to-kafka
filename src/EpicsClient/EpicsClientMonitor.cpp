@@ -120,16 +120,10 @@ public:
   }
 
   /// Pushes update to the emit_queue ring buffer which is owned by a stream.
-  int emit(std::shared_ptr<FlatBufs::EpicsPVUpdate> const &Update) {
-#if TEST_PROVOKE_ERROR == 1
-    static std::atomic<int> c1{0};
-    if (c1 > 10) {
-      epics_client->error_in_epics();
-    }
-    ++c1;
-#endif
-    return epics_client->emit(Update);
+  void emit(std::shared_ptr<FlatBufs::EpicsPVUpdate> const &Update) {
+    epics_client->emit(Update);
   }
+
   epics::pvData::MonitorRequester::shared_pointer monitor_requester;
   epics::pvAccess::ChannelProvider::shared_pointer provider;
   epics::pvAccess::ChannelRequester::shared_pointer channel_requester;
@@ -165,27 +159,24 @@ EpicsClientMonitor::~EpicsClientMonitor() {
 
 int EpicsClientMonitor::stop() { return Impl->stop(); }
 
-int EpicsClientMonitor::emit(std::shared_ptr<FlatBufs::EpicsPVUpdate> Update) {
+void EpicsClientMonitor::emit(std::shared_ptr<FlatBufs::EpicsPVUpdate> Update) {
+  std::lock_guard<std::mutex> lock(CachedUpdateMutex);
   CachedUpdate = Update;
-  return emitWithoutCaching(Update);
+  emitWithoutCaching(Update);
 }
 
 void EpicsClientMonitor::errorInEpics() { status_ = -1; }
 
 void EpicsClientMonitor::emitCachedValue() {
+  std::lock_guard<std::mutex> lock(CachedUpdateMutex);
   if (CachedUpdate != nullptr) {
     emitWithoutCaching(CachedUpdate);
   }
 }
-int EpicsClientMonitor::emitWithoutCaching(
+void EpicsClientMonitor::emitWithoutCaching(
     std::shared_ptr<FlatBufs::EpicsPVUpdate> Update) {
-  if (!Update) {
-    Logger->info("empty update?");
-    // should never happen, ignore
-    return 1;
-  }
+  assert(Update != nullptr);
   EmitQueue->enqueue(Update);
-  return 0;
 }
 
 #define STRINGIFY2(x) #x
