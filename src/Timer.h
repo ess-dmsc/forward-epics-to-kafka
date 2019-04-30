@@ -12,6 +12,8 @@ namespace Forwarder {
 
 using CallbackFunction = std::function<void()>;
 
+/// Multiple callbacks can be registered with the Timer, which will repeatedly
+/// execute them at a set interval
 class Timer {
 public:
   explicit Timer(std::chrono::milliseconds Interval)
@@ -30,7 +32,7 @@ public:
   /// call
   ///
   /// \param Callback the Callback function to add to the Callbacks vector.
-  void addCallback(CallbackFunction Callback);
+  void addCallback(CallbackFunction const &Callback);
 
 private:
   void run() { IO.run(); }

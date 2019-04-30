@@ -30,7 +30,7 @@ void Timer::waitForStop() {
   TimerThread.join();
 }
 
-void Timer::addCallback(CallbackFunction Callback) {
+void Timer::addCallback(CallbackFunction const &Callback) {
   std::lock_guard<std::mutex> lock(CallbacksMutex);
   Callbacks.push_back(Callback);
 }
