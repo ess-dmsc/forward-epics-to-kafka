@@ -1,7 +1,7 @@
 // solve issue with multiple winsock include
 #ifdef _MSC_VER
-#include <winsock2.h>
 #include <windows.h>
+#include <winsock2.h>
 #endif
 
 #include "ConfigParser.h"
