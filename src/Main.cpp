@@ -1,9 +1,3 @@
-// solve issue with multiple winsock include
-#ifdef _MSC_VER
-#include <windows.h>
-#include <winsock2.h>
-#endif
-
 #include "ConfigParser.h"
 #include "Forwarder.h"
 #include "MainOpt.h"

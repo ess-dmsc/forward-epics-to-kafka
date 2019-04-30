@@ -1,3 +1,9 @@
+// solve issue with multiple winsock include
+#ifdef _MSC_VER
+#include <WinSock2.h>
+#include <windows.h>
+#endif
+
 #include "Forwarder.h"
 #include "CommandHandler.h"
 #include "Converter.h"
