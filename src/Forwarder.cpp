@@ -4,9 +4,9 @@
 #include <windows.h>
 #endif
 
-#include "Forwarder.h"
 #include "CommandHandler.h"
 #include "Converter.h"
+#include "Forwarder.h"
 #include "KafkaOutput.h"
 #include "Stream.h"
 #include "Timer.h"
