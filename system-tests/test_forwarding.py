@@ -24,8 +24,9 @@ def test_config_file_channel_created_correctly(docker_compose):
     # Wait for PV to be updated
     sleep(5)
     # Check the initial value is forwarded
-    first_msg, _ = poll_for_valid_message(cons)
+    first_msg, msg_key = poll_for_valid_message(cons)
     check_expected_values(first_msg, Value.Double, PVDOUBLE, 0.0)
+    assert(msg_key == b'SIMPLE:DOUBLE'), 'Message key expected to be the same as the PV name'
 
     # Check the new value is forwarded
     second_msg, _ = poll_for_valid_message(cons)
