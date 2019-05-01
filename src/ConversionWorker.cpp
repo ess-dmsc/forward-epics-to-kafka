@@ -38,8 +38,7 @@ int ConversionWorker::run() {
     }
     while (true) {
       std::unique_ptr<ConversionWorkPacket> Packet;
-      bool Found = queue.try_dequeue(Packet);
-      if (!Found) {
+      if (!queue.try_dequeue(Packet)) {
         break;
       }
       Packet->Path->emit(std::move(Packet->Update));
