@@ -17,14 +17,14 @@ protected:
 };
 
 TEST_F(TimerTest,
-       test_can_start_and_stop_a_timer_with_no_registered_callbacksA) {
+       test_can_start_and_stop_a_timer_with_no_registered_callbacks) {
   std::chrono::milliseconds Interval(1);
   Timer TestTimer(Interval);
   TestTimer.start();
   TestTimer.waitForStop();
 }
 
-TEST_F(TimerTest, test_can_register_a_callbackA) {
+TEST_F(TimerTest, test_can_register_a_callback) {
   std::chrono::milliseconds Interval(1);
   Timer TestTimer(Interval);
   TestTimer.addCallback([&]() { testCallbackA(); });
