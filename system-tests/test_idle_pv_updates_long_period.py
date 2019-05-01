@@ -11,7 +11,7 @@ def test_forwarder_does_not_send_pv_update_more_than_once_when_periodic_update_i
     data_topic = "TEST_forwarderData_long_idle_updates"
     consumer.subscribe([data_topic])
     sleep(3)
-    msg = poll_for_valid_message(consumer)
+    msg, _ = poll_for_valid_message(consumer)
     check_expected_values(msg, Value.Value.Double, PVDOUBLE, 0)
 
     with raises(MsgErrorException):
