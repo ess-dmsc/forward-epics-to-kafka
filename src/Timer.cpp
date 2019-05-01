@@ -6,12 +6,12 @@ void Timer::executeCallbacks() {
   if (Running) {
     {
       std::lock_guard<std::mutex> CallbackLock(CallbacksMutex);
-      for (const CallbackFunction &Callback : Callbacks) {
+      for (CallbackFunction const &Callback : Callbacks) {
         Callback();
       }
     }
     AsioTimer.expires_at(AsioTimer.expires_at() + Period);
-    AsioTimer.async_wait([this](const std::error_code & /*error*/) {
+    AsioTimer.async_wait([this](std::error_code const & /*error*/) {
       this->executeCallbacks();
     });
   }
@@ -20,7 +20,7 @@ void Timer::executeCallbacks() {
 void Timer::start() {
   Running = true;
   AsioTimer.async_wait(
-      [this](const std::error_code & /*error*/) { this->executeCallbacks(); });
+      [this](std::error_code const & /*error*/) { this->executeCallbacks(); });
   TimerThread = std::thread(&Timer::run, this);
 }
 
