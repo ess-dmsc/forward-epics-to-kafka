@@ -7,7 +7,6 @@ find_package(GitCommitExtract)
 find_package(Threads)
 
 set(libraries_common
-        CONAN_PKG::epics
         CONAN_PKG::librdkafka
         CONAN_PKG::spdlog-graylog
         CONAN_PKG::jsonformoderncpp
@@ -17,6 +16,20 @@ set(libraries_common
         CONAN_PKG::fmt
         Threads::Threads
 )
+
+# Allow a system installed EPICS library to be used instead of conan package (for ISIS-STFC)
+find_package(EPICSV4)
+set(USE_EXTERNAL_EPICS FALSE CACHE BOOL "Look for system installed EPICS instead of using Conan package")
+if (USE_EXTERNAL_EPICS)
+    list(APPEND libraries_common
+            ${path_library_epics_ca}
+            ${path_library_epics_pvData}
+            ${path_library_epics_pvAccess}
+            ${path_library_epics_NT})
+else()
+    list(APPEND libraries_common
+            CONAN_PKG::epics)
+endif(USE_EXTERNAL_EPICS)
 
 set(compile_defs_common "")
 
