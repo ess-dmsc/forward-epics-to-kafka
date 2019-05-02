@@ -3,7 +3,7 @@
 #include "Producer.h"
 #include "ProducerMessage.h"
 #include "ProducerStats.h"
-#include "logger.h"
+#include "../logger.h"
 #include <librdkafka/rdkafkacpp.h>
 #include <utility>
 

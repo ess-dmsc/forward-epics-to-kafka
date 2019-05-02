@@ -2,62 +2,37 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ..)
 
 message(STATUS "CMAKE_BUILD_TYPE: ${CMAKE_BUILD_TYPE}")
 
-find_package(EPICSV4)
-find_package(RdKafka REQUIRED)
-find_package(FlatBuffers REQUIRED)
-find_package(CLI11 REQUIRED)
-find_package(JSONForModernCPP REQUIRED)
-find_package(ConcurrentQueue REQUIRED)
-find_package(StreamingDataTypes COMPONENTS ce9a4745431e54bc45b0c927857a866fa77b84ec)
 find_package(CURL)
-find_package(fmt REQUIRED)
-find_package(GraylogLogger)
 find_package(StaticData COMPONENTS "schema-config-global.json")
 find_package(GitCommitExtract)
+find_package(Threads)
 
-set(path_include_common
-${CONCURRENTQUEUE_INCLUDE_DIR}
-${JSONFORMODERNCPP_INCLUDE_DIR}
-${CLI11_INCLUDE_DIR}
-${RDKAFKA_INCLUDE_DIR}
-${FLATBUFFERS_INCLUDE_DIR}
-${PROJECT_SOURCE_DIR}/src
-${PROJECT_BINARY_DIR}/src
-)
+#set(path_include_common
+#${PROJECT_SOURCE_DIR}/src
+#${PROJECT_BINARY_DIR}/src
+#)
 
-set(path_include_common_suppressed_warnings
-        ${EPICSV4_INCLUDE_DIRS}
-        )
+#set(path_include_common_suppressed_warnings
+#        ${EPICSV4_INCLUDE_DIRS}
+#        )
 
 set(libraries_common
-${path_library_epics_ca}
-${path_library_epics_pvData}
-${path_library_epics_pvAccess}
-${path_library_epics_NT}
-${RDKAFKA_LIBRARIES}
-${FETK_EXTRA_LIBRARIES}
-fmt::fmt
+        CONAN_PKG::epics
+        CONAN_PKG::librdkafka
+        CONAN_PKG::spdlog-graylog
+        CONAN_PKG::jsonformoderncpp
+        CONAN_PKG::concurrentqueue
+        CONAN_PKG::streaming-data-types
+        CONAN_PKG::cli11
+        Threads::Threads
 )
-
-if (UNIX)
-  list(APPEND libraries_common pthread)
-endif()
 
 set(compile_defs_common "")
 
 if (CURL_FOUND)
 	list(APPEND compile_defs_common "HAVE_CURL=1")
     list(APPEND libraries_common ${CURL_LIBRARIES})
-    list(APPEND path_include_common ${CURL_INCLUDE_DIRS})
-endif()
-
-if (${GRAYLOGLOGGER_FOUND} AND ${USE_GRAYLOG_LOGGER})
-    message(STATUS "Using graylog_logger")
-    list(APPEND compile_defs_common "HAVE_GRAYLOG_LOGGER=1")
-    list(APPEND path_include_common ${GRAYLOGLOGGER_INCLUDE_DIR})
-    list(APPEND libraries_common ${GRAYLOGLOGGER_LIBRARY})
-elseif (NOT GRAYLOGLOGGER_FOUND AND USE_GRAYLOG_LOGGER)
-    message(WARNING "graylog_logger requested but not found")
+    #list(APPEND path_include_common ${CURL_INCLUDE_DIRS})
 endif()
 
 set(INCLUDES
@@ -139,49 +114,38 @@ set(SOURCES
     Timer.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/git_commit_current.cpp)
 
-set(tgt __objects)
-add_library(${tgt} OBJECT ${SOURCES} ${INCLUDES})
-target_include_directories(${tgt} PRIVATE ${path_include_common})
-target_include_directories(${tgt} SYSTEM PRIVATE ${path_include_common_suppressed_warnings})
+#set(tgt __objects)
+#add_library(${tgt} OBJECT ${SOURCES} ${INCLUDES})
+#target_include_directories(${tgt} PRIVATE ${path_include_common})
+#target_include_directories(${tgt} SYSTEM PRIVATE ${path_include_common_suppressed_warnings})
 
 
-if (WIN32)
-    target_compile_options(${tgt} PRIVATE /W4)
-    # Skip xxd_generate and git_commit_current
-    add_dependencies(${tgt} flatbuffers_generate)
-    set_target_properties(xxd_generate PROPERTIES EXCLUDE_FROM_ALL TRUE)
-    set_target_properties(git_commit_current PROPERTIES EXCLUDE_FROM_ALL TRUE)
-else()
-    target_compile_options(${tgt} PRIVATE -Wall -Wextra -Werror)
-    add_dependencies(${tgt} flatbuffers_generate xxd_generate git_commit_current)
-endif(WIN32)
+#if (WIN32)
+#    target_compile_options(${tgt} PRIVATE /W4)
+#    set_target_properties(git_commit_current PROPERTIES EXCLUDE_FROM_ALL TRUE)
+#else()
+#    target_compile_options(${tgt} PRIVATE -Wall -Wextra -Werror)
+#endif(WIN32)
 
-target_compile_definitions(${tgt} PRIVATE ${compile_defs_common})
+#target_compile_definitions(${tgt} PRIVATE ${compile_defs_common})
 
-set(tgt forward-epics-to-kafka)
-add_executable(${tgt}
+add_executable(forward-epics-to-kafka
         Main.cpp
-$<TARGET_OBJECTS:__objects>
+        ${SOURCES} ${INCLUDES}
 )
 
-if (WIN32)
-    # Skip git_commit_current
-    add_dependencies(${tgt} flatbuffers_generate)
-else()
-    add_dependencies(${tgt} flatbuffers_generate git_commit_current)
-endif(WIN32)
-
-target_compile_definitions(${tgt} PRIVATE ${compile_defs_common})
-target_include_directories(${tgt} PRIVATE ${path_include_common})
-target_include_directories(${tgt} SYSTEM PRIVATE ${path_include_common_suppressed_warnings})
+target_compile_definitions(forward-epics-to-kafka PRIVATE ${compile_defs_common})
+#target_include_directories(${tgt} PRIVATE ${path_include_common})
+#target_include_directories(${tgt} SYSTEM PRIVATE ${path_include_common_suppressed_warnings})
 
 if (WIN32)
-    target_link_libraries(${tgt} Ws2_32.lib dbghelp.lib)
+    target_link_libraries(forward-epics-to-kafka Ws2_32.lib dbghelp.lib)
 endif(WIN32)
 
 
-target_link_libraries(${tgt} ${libraries_common})
+target_link_libraries(forward-epics-to-kafka ${libraries_common})
 
-if (have_gtest)
-add_subdirectory(tests)
+set(BUILD_TESTS TRUE CACHE BOOL "Build unit tests, requires googletest")
+if (BUILD_TESTS)
+    #add_subdirectory(tests)
 endif()

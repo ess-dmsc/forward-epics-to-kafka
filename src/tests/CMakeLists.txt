@@ -1,6 +1,5 @@
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ../../tests)
 
-set(tgt "tests")
 set(sources
     URITests.cpp
     JsonTests.cpp
@@ -22,8 +21,7 @@ set(sources
     ConsumerTests.cpp
     MockMessage.h
     UnitTests.cpp)
-add_executable(${tgt} ${sources})
-add_dependencies(${tgt} flatbuffers_generate)
-target_include_directories(${tgt} PRIVATE ${path_include_common})
-target_link_libraries(${tgt} ${libraries_common})
-add_gtest_to_target(${tgt})
+add_executable(tests ${sources})
+target_include_directories(tests PRIVATE ${path_include_common})
+target_link_libraries(tests ${libraries_common}
+        CONAN_PKG::gtest)

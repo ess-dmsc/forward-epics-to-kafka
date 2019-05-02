@@ -1,8 +1,8 @@
 #pragma once
 #include "EpicsClientInterface.h"
-#include "RangeSet.h"
+#include "../RangeSet.h"
 #include <atomic>
-#include <logger.h>
+#include "../logger.h"
 #include <pv/monitor.h>
 
 namespace Forwarder {

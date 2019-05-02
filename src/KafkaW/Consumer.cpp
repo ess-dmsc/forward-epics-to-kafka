@@ -1,6 +1,6 @@
 #include "Consumer.h"
 #include "MetadataException.h"
-#include "logger.h"
+#include "../logger.h"
 #include <algorithm>
 #include <iostream>
 #ifdef _MSC_VER

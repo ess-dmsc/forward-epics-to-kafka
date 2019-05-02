@@ -1,5 +1,5 @@
 #pragma once
-#include "EpicsPVUpdate.h"
+#include "../EpicsPVUpdate.h"
 #include <memory>
 
 namespace Forwarder {

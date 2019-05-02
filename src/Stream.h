@@ -6,7 +6,7 @@
 #include "RangeSet.h"
 #include "SchemaRegistry.h"
 #include "URI.h"
-#include <EpicsClient/EpicsClientInterface.h>
+#include "EpicsClient/EpicsClientInterface.h"
 #include <array>
 #include <atomic>
 #include <concurrentqueue/concurrentqueue.h>

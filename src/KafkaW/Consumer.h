@@ -3,7 +3,7 @@
 #include "BrokerSettings.h"
 #include "ConsumerMessage.h"
 #include "KafkaEventCb.h"
-#include "helper.h"
+#include "../helper.h"
 #include <vector>
 
 namespace KafkaW {
