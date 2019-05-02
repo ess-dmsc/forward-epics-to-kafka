@@ -355,13 +355,12 @@ def get_win10_pipeline() {
 	stage("win10: Setup") {
           bat """if exist _build rd /q /s _build
 	    mkdir _build
-	    xcopy /y conan\\conanfile_win32.txt conan\\conanfile.txt
 	    """
 	} // stage
         stage("win10: Install") {
           bat """cd _build
 	    conan.exe \
-            install ..\\conan\\conanfile.txt  \
+            install ..\\conan\\conanfile_win32.txt  \
             --settings build_type=Release \
             --build=outdated"""
         }  // stage

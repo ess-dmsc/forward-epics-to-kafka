@@ -17,6 +17,11 @@ set(libraries_common
         Threads::Threads
 )
 
+if (WIN32)
+    list(APPEND libraries_common
+            CONAN_PKG::spdlog)
+endif(WIN32)
+
 # Allow a system installed EPICS library to be used instead of conan package (for ISIS-STFC)
 find_package(EPICSV4)
 set(USE_EXTERNAL_EPICS FALSE CACHE BOOL "Look for system installed EPICS instead of using Conan package")
@@ -120,7 +125,7 @@ set(SOURCES
 add_library(forwarder-library ${SOURCES} ${INCLUDES})
 target_compile_definitions(forwarder-library PRIVATE ${compile_defs_common})
 target_link_libraries(forwarder-library ${libraries_common})
-        if (WIN32)
+if (WIN32)
     target_link_libraries(forwarder-library Ws2_32.lib dbghelp.lib)
 endif(WIN32)
 
