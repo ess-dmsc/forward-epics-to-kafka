@@ -13,12 +13,16 @@ else()
     endif()
 endif(WIN32)
 
+
+# Test Coverage - with gcc only and enable with -DCOV
 if(CMAKE_COMPILER_IS_GNUCXX AND COV)
     include(CodeCoverage)
     setup_target_for_coverage(coverage tests coverage})
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CMAKE_CXX_FLAGS_COVERAGE}")
 endif()
 
+
+# Conan - bring in dependencies with conan
 SET(CONAN_PROFILE "default" CACHE STRING "Name of conan profile to use, uses default by default")
 SET(CONAN "AUTO" CACHE STRING "conan options AUTO (conan must be in path), MANUAL (expects conanbuildinfo.cmake in build directory) or DISABLE")
 
@@ -51,10 +55,14 @@ elseif(NOT ${CONAN} MATCHES "DISABLE")
     MESSAGE(FATAL_ERROR "Unrecognised option for CONAN, use AUTO, MANUAL or DISABLE")
 endif()
 
+
+# Add our src directory
 add_subdirectory(src)
 
+
+# Doxygen documentation
 option(RUN_DOXYGEN "Run doxygen" FALSE)
 if (RUN_DOXYGEN)
-configure_file(Doxygen.conf dg.conf)
-add_custom_target(docs COMMAND doxygen dg.conf DEPENDS forward-epics-to-kafka)
+    configure_file(Doxygen.conf dg.conf)
+    add_custom_target(docs COMMAND doxygen dg.conf DEPENDS forward-epics-to-kafka)
 endif()
