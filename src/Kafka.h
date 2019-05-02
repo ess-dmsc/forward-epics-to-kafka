@@ -41,7 +41,7 @@ public:
 
   /// Get the stats for the producers.
   ///
-  /// \return The producer states.
+  /// \return The producer stats.
   std::vector<KafkaW::ProducerStats> getStatsForAllProducers();
 
 private:
