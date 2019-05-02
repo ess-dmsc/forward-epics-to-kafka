@@ -69,7 +69,8 @@ int main(int argc, char **argv) {
     getLogger()->flush();
     return 1;
   } catch (std::exception &e) {
-    getLogger()->critical("CATCH EXCEPTION in main watchdog thread");
+    getLogger()->critical("CATCH EXCEPTION in main watchdog thread: {}",
+                          e.what());
     getLogger()->flush();
     return 1;
   }
