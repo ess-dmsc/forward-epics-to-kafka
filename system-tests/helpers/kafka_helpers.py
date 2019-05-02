@@ -30,7 +30,7 @@ def poll_for_valid_message(consumer, expected_file_identifier=b"f142"):
 
     :param consumer: The consumer object
     :param expected_file_identifier: The schema id we expect to find in the message
-    :return: The LogData flatbuffer from the message payload
+    :return: Tuple of the message payload and the key
     """
     msg = consumer.poll(timeout=1.0)
     assert msg is not None
@@ -42,9 +42,9 @@ def poll_for_valid_message(consumer, expected_file_identifier=b"f142"):
         assert (expected_file_identifier == message_file_id), \
             f"Expected message to have schema id of {expected_file_identifier}, but it has {message_file_id}"
     if expected_file_identifier == b"f142":
-        return LogData.LogData.GetRootAsLogData(msg.value(), 0)
+        return LogData.LogData.GetRootAsLogData(msg.value(), 0), msg.key()
     else:
-        return msg.value()
+        return msg.value(), msg.key()
 
 
 def create_consumer(offset_reset="earliest"):
