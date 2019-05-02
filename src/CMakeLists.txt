@@ -3,7 +3,6 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ..)
 message(STATUS "CMAKE_BUILD_TYPE: ${CMAKE_BUILD_TYPE}")
 
 find_package(CURL)
-find_package(StaticData COMPONENTS "schema-config-global.json")
 find_package(GitCommitExtract)
 find_package(Threads)
 
