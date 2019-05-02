@@ -13,6 +13,7 @@ set(libraries_common
         CONAN_PKG::streaming-data-types
         CONAN_PKG::cli11
         CONAN_PKG::fmt
+        CONAN_PKG::FlatBuffers
         Threads::Threads
 )
 
