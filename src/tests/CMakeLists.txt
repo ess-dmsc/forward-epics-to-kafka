@@ -13,7 +13,6 @@ set(sources
     TimerTests.cpp
     StreamTestUtils.cpp
     RangeSetTests.cpp
-    $<TARGET_OBJECTS:__objects>
     ListenerTests.cpp
     BrokerSettingsTests.cpp
     ConfStandIn.h
@@ -23,5 +22,6 @@ set(sources
     UnitTests.cpp)
 add_executable(tests ${sources})
 target_include_directories(tests PRIVATE ${path_include_common})
-target_link_libraries(tests ${libraries_common}
+target_link_libraries(tests
+        forwarder-library
         CONAN_PKG::gtest)

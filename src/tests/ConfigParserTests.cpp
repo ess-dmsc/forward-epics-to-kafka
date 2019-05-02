@@ -3,8 +3,8 @@
 #include "../Converter.h"
 #include "../MainOpt.h"
 #include "../helper.h"
-#include "ConfigParser.h"
-#include "Forwarder.h"
+#include "../ConfigParser.h"
+#include "../Forwarder.h"
 #include <gtest/gtest.h>
 #include <iostream>
 #include <sstream>

@@ -7,15 +7,6 @@ find_package(StaticData COMPONENTS "schema-config-global.json")
 find_package(GitCommitExtract)
 find_package(Threads)
 
-#set(path_include_common
-#${PROJECT_SOURCE_DIR}/src
-#${PROJECT_BINARY_DIR}/src
-#)
-
-#set(path_include_common_suppressed_warnings
-#        ${EPICSV4_INCLUDE_DIRS}
-#        )
-
 set(libraries_common
         CONAN_PKG::epics
         CONAN_PKG::librdkafka
@@ -32,7 +23,6 @@ set(compile_defs_common "")
 if (CURL_FOUND)
 	list(APPEND compile_defs_common "HAVE_CURL=1")
     list(APPEND libraries_common ${CURL_LIBRARIES})
-    #list(APPEND path_include_common ${CURL_INCLUDE_DIRS})
 endif()
 
 set(INCLUDES
@@ -114,38 +104,18 @@ set(SOURCES
     Timer.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/git_commit_current.cpp)
 
-#set(tgt __objects)
-#add_library(${tgt} OBJECT ${SOURCES} ${INCLUDES})
-#target_include_directories(${tgt} PRIVATE ${path_include_common})
-#target_include_directories(${tgt} SYSTEM PRIVATE ${path_include_common_suppressed_warnings})
-
-
-#if (WIN32)
-#    target_compile_options(${tgt} PRIVATE /W4)
-#    set_target_properties(git_commit_current PROPERTIES EXCLUDE_FROM_ALL TRUE)
-#else()
-#    target_compile_options(${tgt} PRIVATE -Wall -Wextra -Werror)
-#endif(WIN32)
-
-#target_compile_definitions(${tgt} PRIVATE ${compile_defs_common})
-
-add_executable(forward-epics-to-kafka
-        Main.cpp
-        ${SOURCES} ${INCLUDES}
-)
-
-target_compile_definitions(forward-epics-to-kafka PRIVATE ${compile_defs_common})
-#target_include_directories(${tgt} PRIVATE ${path_include_common})
-#target_include_directories(${tgt} SYSTEM PRIVATE ${path_include_common_suppressed_warnings})
-
-if (WIN32)
-    target_link_libraries(forward-epics-to-kafka Ws2_32.lib dbghelp.lib)
+add_library(forwarder-library ${SOURCES} ${INCLUDES})
+target_compile_definitions(forwarder-library PRIVATE ${compile_defs_common})
+target_link_libraries(forwarder-library ${libraries_common})
+        if (WIN32)
+    target_link_libraries(forwarder-library Ws2_32.lib dbghelp.lib)
 endif(WIN32)
 
-
-target_link_libraries(forward-epics-to-kafka ${libraries_common})
+add_executable(forward-epics-to-kafka Main.cpp)
+target_compile_definitions(forward-epics-to-kafka PRIVATE ${compile_defs_common})
+target_link_libraries(forward-epics-to-kafka forwarder-library)
 
 set(BUILD_TESTS TRUE CACHE BOOL "Build unit tests, requires googletest")
 if (BUILD_TESTS)
-    #add_subdirectory(tests)
+    add_subdirectory(tests)
 endif()

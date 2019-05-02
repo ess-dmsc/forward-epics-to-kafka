@@ -1,8 +1,8 @@
 #include "../Config.h"
 #include "../KafkaW/Consumer.h"
-#include <CommandHandler.h>
+#include "../CommandHandler.h"
 #include <gtest/gtest.h>
-#include <helper.h>
+#include "../helper.h"
 
 namespace KafkaW {
 class ConsumerFake : public ConsumerInterface {

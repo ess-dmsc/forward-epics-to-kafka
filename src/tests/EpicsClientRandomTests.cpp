@@ -1,6 +1,6 @@
 #include "../EpicsClient/EpicsClientRandom.h"
-#include "EpicsPVUpdate.h"
-#include "Streams.h"
+#include "../EpicsPVUpdate.h"
+#include "../Streams.h"
 #include <gtest/gtest.h>
 #include <memory>
 
