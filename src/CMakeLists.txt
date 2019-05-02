@@ -8,7 +8,6 @@ find_package(Threads)
 
 set(libraries_common
         CONAN_PKG::librdkafka
-        CONAN_PKG::spdlog-graylog
         CONAN_PKG::jsonformoderncpp
         CONAN_PKG::concurrentqueue
         CONAN_PKG::streaming-data-types
@@ -20,6 +19,9 @@ set(libraries_common
 if (WIN32)
     list(APPEND libraries_common
             CONAN_PKG::spdlog)
+else()
+    list(APPEND libraries_common
+            CONAN_PKG::spdlog-graylog)
 endif(WIN32)
 
 # Allow a system installed EPICS library to be used instead of conan package (for ISIS-STFC)
