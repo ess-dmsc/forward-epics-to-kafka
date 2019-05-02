@@ -20,6 +20,8 @@ gtest:shared=True
 librdkafka:shared=True
 
 [imports]
+bin, *.dll -> ./bin
+lib, *.dll -> ./bin
 lib, *.dylib* -> ./lib
 lib, *.so* -> ./lib
 lib64, *.so* -> ./lib
