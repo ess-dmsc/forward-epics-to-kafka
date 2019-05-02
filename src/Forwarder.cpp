@@ -326,7 +326,7 @@ URI Forwarder::createTopicURI(ConverterSettings const &ConverterInfo) const {
   }
   try {
     TopicURI.parse(ConverterInfo.Topic);
-  } catch (std::runtime_error &e) {
+  } catch (std::runtime_error &) {
     throw MappingAddException(
         fmt::format("Invalid topic {} in converter, not added to stream. May "
                     "require broker and/or host slashes.",
@@ -409,7 +409,7 @@ void Forwarder::addMapping(StreamSettings const &StreamInfo) {
     for (auto &Converter : StreamInfo.Converters) {
       pushConverterToStream(Converter, Stream);
     }
-  } catch (std::runtime_error &e) {
+  } catch (std::runtime_error &) {
     std::throw_with_nested(MappingAddException("Cannot add stream"));
   }
 }

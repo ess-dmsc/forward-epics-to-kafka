@@ -4,10 +4,7 @@ message(STATUS "CMAKE_BUILD_TYPE: ${CMAKE_BUILD_TYPE}")
 
 find_package(CURL)
 find_package(Threads)
-
-if (NOT WIN32)
-    find_package(GitCommitExtract)
-endif(NOT WIN32)
+find_package(GitCommitExtract)
 
 set(libraries_common
         CONAN_PKG::librdkafka
@@ -133,6 +130,11 @@ target_compile_definitions(forwarder-library PRIVATE ${compile_defs_common})
 target_link_libraries(forwarder-library ${libraries_common})
 if (WIN32)
     target_link_libraries(forwarder-library Ws2_32.lib dbghelp.lib)
+    target_compile_options(forwarder-library PRIVATE /wd4996)
+    set_target_properties(git_commit_current PROPERTIES EXCLUDE_FROM_ALL TRUE)
+else()
+    target_compile_options(forwarder-library PRIVATE -Wall -Wextra -Werror)
+    add_dependencies(forwarder-library git_commit_current)
 endif(WIN32)
 
 add_executable(forward-epics-to-kafka Main.cpp)
