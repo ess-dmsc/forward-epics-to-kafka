@@ -42,14 +42,14 @@ static bool isStopDueToSignal(ForwardingRunState Flag) {
 }
 
 /// Main program entry class.
-Forwarder::Forwarder(MainOpt &opt)
-    : main_opt(opt), kafka_instance_set(make_unique<InstanceSet>(opt.GlobalBrokerSettings)),
+Forwarder::Forwarder(MainOpt &Opt)
+    : main_opt(Opt), kafka_instance_set(make_unique<InstanceSet>(Opt.GlobalBrokerSettings)),
       conversion_scheduler(this) {
 
-  for (size_t i = 0; i < opt.MainSettings.ConversionThreads; ++i) {
+  for (size_t i = 0; i < Opt.MainSettings.ConversionThreads; ++i) {
     conversion_workers.emplace_back(make_unique<ConversionWorker>(
         &conversion_scheduler,
-        static_cast<uint32_t>(opt.MainSettings.ConversionWorkerQueueSize)));
+        static_cast<uint32_t>(Opt.MainSettings.ConversionWorkerQueueSize)));
   }
 
   bool use_config = true;

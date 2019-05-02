@@ -40,7 +40,7 @@ enum class ForwardingRunState : int {
 
 class Forwarder {
 public:
-  explicit Forwarder(MainOpt &opt);
+  explicit Forwarder(MainOpt &Opt);
   ~Forwarder();
   void forward_epics_to_kafka();
   void addMapping(StreamSettings const &StreamInfo);
