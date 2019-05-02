@@ -1,6 +1,12 @@
-#include "Forwarder.h"
+// solve issue with multiple winsock include
+#ifdef _MSC_VER
+#include <WinSock2.h>
+#include <windows.h>
+#endif
+
 #include "CommandHandler.h"
 #include "Converter.h"
+#include "Forwarder.h"
 #include "KafkaOutput.h"
 #include "Stream.h"
 #include "Timer.h"
@@ -107,16 +113,14 @@ Forwarder::~Forwarder() {
 void Forwarder::createPVUpdateTimerIfRequired() {
   if (main_opt.PeriodMS > 0) {
     auto Interval = std::chrono::milliseconds(main_opt.PeriodMS);
-    std::shared_ptr<Sleeper> IntervalSleeper = std::make_shared<RealSleeper>();
-    PVUpdateTimer = ::make_unique<Timer>(Interval, IntervalSleeper);
+    PVUpdateTimer = ::make_unique<Timer>(Interval);
   }
 }
 
 void Forwarder::createFakePVUpdateTimerIfRequired() {
   if (main_opt.FakePVPeriodMS > 0) {
     auto Interval = std::chrono::milliseconds(main_opt.FakePVPeriodMS);
-    std::shared_ptr<Sleeper> IntervalSleeper = std::make_shared<RealSleeper>();
-    GenerateFakePVUpdateTimer = ::make_unique<Timer>(Interval, IntervalSleeper);
+    GenerateFakePVUpdateTimer = ::make_unique<Timer>(Interval);
   }
 }
 
@@ -214,12 +218,10 @@ void Forwarder::forward_epics_to_kafka() {
   streams.clearStreams();
 
   if (PVUpdateTimer != nullptr) {
-    PVUpdateTimer->triggerStop();
     PVUpdateTimer->waitForStop();
   }
 
   if (GenerateFakePVUpdateTimer != nullptr) {
-    GenerateFakePVUpdateTimer->triggerStop();
     GenerateFakePVUpdateTimer->waitForStop();
   }
 
