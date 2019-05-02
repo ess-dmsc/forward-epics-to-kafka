@@ -22,7 +22,8 @@ class InstanceSet {
 public:
   /// Constructor.
   ///
-  /// \param BrokerSettings The "global" Kafka settings for the data forwarding producers.
+  /// \param BrokerSettings The "global" Kafka settings for the data forwarding
+  /// producers.
   explicit InstanceSet(KafkaW::BrokerSettings BrokerSettings);
 
   /// Create a producer topic.
@@ -31,7 +32,7 @@ public:
   ///
   /// \param Uri The broker URI.
   /// \return The associated producer topic.
-  KafkaW::ProducerTopic createProducerTopic(URI const & Uri);
+  KafkaW::ProducerTopic createProducerTopic(URI const &Uri);
 
   /// Poll all the producers.
   void poll();
@@ -46,7 +47,8 @@ public:
 
 private:
   /// Contains the general Kafka settings, e.g. timeouts, message sizes etc.
-  /// Does not contain the Broker addresses, these are held in the individual producers.
+  /// Does not contain the Broker addresses, these are held in the individual
+  /// producers.
   KafkaW::BrokerSettings BrokerSettings;
   std::map<std::string, std::shared_ptr<KafkaW::Producer>> ProducersByHost;
   std::mutex ProducersMutex;

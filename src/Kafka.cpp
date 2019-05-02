@@ -7,7 +7,8 @@ namespace Forwarder {
 InstanceSet::InstanceSet(KafkaW::BrokerSettings BrokerSettings)
     : BrokerSettings(std::move(BrokerSettings)) {}
 
-KafkaW::ProducerTopic InstanceSet::createProducerTopic(Forwarder::URI const &Uri) {
+KafkaW::ProducerTopic
+InstanceSet::createProducerTopic(Forwarder::URI const &Uri) {
   Logger->debug("InstanceSet::producer_topic for: {}, {}", Uri.HostPort,
                 Uri.Topic);
   auto it = ProducersByHost.find(Uri.HostPort);

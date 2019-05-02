@@ -49,7 +49,8 @@ static bool isStopDueToSignal(ForwardingRunState Flag) {
 
 /// Main program entry class.
 Forwarder::Forwarder(MainOpt &Opt)
-    : main_opt(Opt), kafka_instance_set(make_unique<InstanceSet>(Opt.GlobalBrokerSettings)),
+    : main_opt(Opt),
+      kafka_instance_set(make_unique<InstanceSet>(Opt.GlobalBrokerSettings)),
       conversion_scheduler(this) {
 
   for (size_t i = 0; i < Opt.MainSettings.ConversionThreads; ++i) {
