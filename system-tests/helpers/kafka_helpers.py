@@ -30,7 +30,7 @@ def poll_for_valid_message(consumer, expected_file_identifier=b"f142"):
 
     :param consumer: The consumer object
     :param expected_file_identifier: The schema id we expect to find in the message
-    :return: The LogData flatbuffer from the message payload, the message key
+    :return: Tuple of the message payload and the key
     """
     msg = consumer.poll(timeout=1.0)
     assert msg is not None
