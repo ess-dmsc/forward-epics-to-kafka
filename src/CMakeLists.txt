@@ -15,6 +15,7 @@ set(libraries_common
         CONAN_PKG::concurrentqueue
         CONAN_PKG::streaming-data-types
         CONAN_PKG::cli11
+        CONAN_PKG::fmt
         Threads::Threads
 )
 
