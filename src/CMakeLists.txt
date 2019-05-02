@@ -3,8 +3,11 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ..)
 message(STATUS "CMAKE_BUILD_TYPE: ${CMAKE_BUILD_TYPE}")
 
 find_package(CURL)
-find_package(GitCommitExtract)
 find_package(Threads)
+
+if (NOT WIN32)
+    find_package(GitCommitExtract)
+endif(NOT WIN32)
 
 set(libraries_common
         CONAN_PKG::librdkafka

@@ -3,15 +3,14 @@ project(forward-epics-to-kafka)
 
 set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH};${PROJECT_SOURCE_DIR}/cmake")
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
-
-if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS "4.9.3")
-else ()
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fdiagnostics-color=auto")
-endif()
-
 if (WIN32)
     add_definitions(-DNOGDI -DNOMINMAX)
+else()
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+    if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS "4.9.3")
+    else ()
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fdiagnostics-color=auto")
+    endif()
 endif(WIN32)
 
 if(CMAKE_COMPILER_IS_GNUCXX AND COV)
@@ -29,9 +28,14 @@ else()
   set(OUTPUT_DIRS "NO_OUTPUT_DIRS")
 endif()
 
+if(WIN32)
+    set(conanfile conan/conanfile_win32.txt)
+else()
+    set(conanfile conan/conanfile.txt)
+endif(WIN32)
 if(${CONAN} MATCHES "AUTO")
     include(${CMAKE_MODULE_PATH}/conan.cmake)
-    conan_cmake_run(CONANFILE conan/conanfile.txt
+    conan_cmake_run(CONANFILE ${conanfile}
             PROFILE ${CONAN_PROFILE}
             BASIC_SETUP ${OUTPUT_DIRS} KEEP_RPATHS CMAKE_TARGETS
             BUILD_TYPE "None"
