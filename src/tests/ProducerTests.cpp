@@ -69,12 +69,12 @@ class FakeTopic : public RdKafka::Topic {
 public:
   FakeTopic() = default;
   ~FakeTopic() override = default;
-  const std::string name() const override{};
+  const std::string name() const override { return "fake"; };
   // cppcheck-suppress unusedFunction
   bool partition_available(int32_t partition) const override { return true; };
   // cppcheck-suppress unusedFunction
-  RdKafka::ErrorCode offset_store(int32_t partition, int64_t offset) override{};
-  struct rd_kafka_topic_s *c_ptr() override{};
+  RdKafka::ErrorCode offset_store(int32_t partition, int64_t offset) override { return RdKafka::ERR_NO_ERROR; };
+  struct rd_kafka_topic_s *c_ptr() override { return nullptr; };
 };
 
 TEST_F(ProducerTests, creatingForwarderIncrementsForwarderCounter) {
