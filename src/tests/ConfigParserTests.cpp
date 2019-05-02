@@ -16,7 +16,6 @@ TEST(ConfigParserTest, using_broker_list_creates_multiple_brokers_) {
   Forwarder::ConfigParser::setBrokers(Brokers, MainOpt.MainSettings);
   ASSERT_EQ("localhost1:9092", MainOpt.MainSettings.Brokers.at(0).HostPort);
   ASSERT_EQ("localhost2:9092", MainOpt.MainSettings.Brokers.at(1).HostPort);
-  ASSERT_EQ("localhost1:9092,localhost2:9092", MainOpt.brokers_as_comma_list());
 }
 
 TEST(ConfigParserTest,
@@ -28,7 +27,6 @@ TEST(ConfigParserTest,
   ASSERT_EQ(9092, MainOpt.MainSettings.Brokers.at(0).Port);
   ASSERT_EQ("TEST_forwarderConfig", MainOpt.MainSettings.Brokers.at(0).Topic);
   ASSERT_EQ(1, MainOpt.MainSettings.Brokers.size());
-  ASSERT_EQ("localhost:9092", MainOpt.brokers_as_comma_list());
 }
 
 TEST(ConfigParserTest, trying_to_parse_invalid_json_throws) {

@@ -16,19 +16,6 @@
 
 namespace Forwarder {
 
-std::string MainOpt::brokers_as_comma_list() const {
-  std::string CommaList;
-  bool MultipleBrokers = false;
-  for (auto &Broker : MainSettings.Brokers) {
-    if (MultipleBrokers) {
-      CommaList += ",";
-    }
-    CommaList += Broker.HostPort;
-    MultipleBrokers = true;
-  }
-  return CommaList;
-}
-
 std::vector<StreamSettings> parseStreamsJson(const std::string &filepath) {
   std::ifstream ifs(filepath);
   if (!ifs.is_open()) {
