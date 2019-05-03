@@ -47,6 +47,16 @@ int ProducerTopic::produce(unsigned char *MsgData, size_t MsgSize) {
   return produce(Msg);
 }
 
+int ProducerTopic::produceAndSetKey(unsigned char *MsgData, size_t MsgSize,
+                                    std::string Key) {
+  auto MsgPtr = new Msg_;
+  std::copy(MsgData, MsgData + MsgSize, std::back_inserter(MsgPtr->v));
+  MsgPtr->finalize();
+  std::unique_ptr<ProducerMessage> Msg(MsgPtr);
+  Msg->Key = Key;
+  return produce(Msg);
+}
+
 int ProducerTopic::produce(std::unique_ptr<ProducerMessage> &Msg) {
   void const *key = nullptr;
   size_t key_len = 0;

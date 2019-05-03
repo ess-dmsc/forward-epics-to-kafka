@@ -1,8 +1,11 @@
 ﻿from helpers.producerwrapper import ProducerWrapper
 from helpers.f142_logdata.Value import Value
+from helpers.ep00 import EventType
 from time import sleep
-from helpers.kafka_helpers import create_consumer, poll_for_valid_message, get_all_available_messages
-from helpers.flatbuffer_helpers import check_expected_values, check_multiple_expected_values
+from helpers.kafka_helpers import create_consumer, poll_for_valid_message, get_all_available_messages, \
+    poll_for_connection_status_message
+from helpers.flatbuffer_helpers import check_expected_values, check_multiple_expected_values, \
+    check_expected_connection_status_values
 from helpers.epics_helpers import change_pv_value
 from helpers.PVs import PVDOUBLE, PVSTR, PVLONG, PVENUM
 from confluent_kafka import TopicPartition
@@ -55,6 +58,36 @@ def test_config_file_channel_created_correctly(docker_compose):
     # Check the new value is forwarded
     second_msg = poll_for_valid_message(cons)
     check_expected_values(second_msg, Value.Double, PVDOUBLE, 10.0)
+    cons.close()
+
+
+def test_connection_status_messages(docker_compose):
+    """
+      GIVEN PV is configured to be forwarded
+      WHEN Connection status changes
+      THEN Forwarder publishes ep00 message with connection status
+
+      NOTE: Enums are converted to Ints in the forwarder.
+      """
+    data_topic = "TEST_forwarderData_connection_status"
+    pvs = [PVENUM]
+
+    prod = ProducerWrapper("localhost:9092", CONFIG_TOPIC, data_topic)
+    prod.add_config(pvs)
+    # Wait for config to be pushed
+    sleep(5)
+
+    cons = create_consumer()
+
+    # Update value
+    change_pv_value(PVENUM, "START")
+    # Wait for PV to be updated
+    sleep(5)
+    cons.subscribe([data_topic])
+
+    first_msg = poll_for_connection_status_message(cons)
+    check_expected_connection_status_values(first_msg, EventType.EventType.CONNECTED)
+
     cons.close()
 
 
@@ -184,7 +217,7 @@ def test_updates_from_the_same_pv_reach_the_same_partition(docker_compose):
     sleep(5)
 
     # There should be 3 messages in total for each PV
-    # (the initial value and these two updates)
+    # (the initial value and these two updates(not counting connection status messages))
     change_pv_value(PVSTR, "1")
     sleep(0.5)
     change_pv_value(PVSTR, "2")
@@ -203,8 +236,9 @@ def test_updates_from_the_same_pv_reach_the_same_partition(docker_compose):
         if len(messages) != 0:
             pv_name = messages[0].key()
             assert pv_name is not None
-            count_of_messages_with_pv_name = sum(1 for message in messages if message.key() == pv_name)
-            # then we expect exactly 3 with the same key as the first message
+            count_of_messages_with_pv_name = sum(1 for message in messages if message.key() == pv_name
+                                                 and message.value()[4:8] != b'ep00')
+            # then we expect exactly 4 with the same key as the first message
             assert count_of_messages_with_pv_name == 3
             return True
         return False

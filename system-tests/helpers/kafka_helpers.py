@@ -1,6 +1,7 @@
 from confluent_kafka import Consumer
 import uuid
 from helpers.f142_logdata import LogData
+from helpers.ep00 import EpicsConnectionInfo
 
 
 class MsgErrorException(Exception):
@@ -47,6 +48,26 @@ def poll_for_valid_message(consumer, expected_file_identifier=b"f142"):
                 f"Expected message to have schema id of {expected_file_identifier}, but it has {message_file_id}"
             if message_file_id == b"f142":
                 return LogData.LogData.GetRootAsLogData(msg.value(), 0)
+
+
+def poll_for_connection_status_message(consumer):
+    """
+    Polls the subscribed topics by the consumer and checks the buffer is not empty or malformed.
+    Skips connection status messages.
+
+    :param consumer: The consumer object
+    :return: The LogData flatbuffer from the message payload
+    """
+    while True:
+        msg = consumer.poll(timeout=1.0)
+        assert msg is not None
+        if msg.error():
+            raise MsgErrorException("Consumer error when polling: {}".format(msg.error()))
+        message_file_id = msg.value()[4:8]
+        print("--------------------", message_file_id)
+        if message_file_id == b"ep00":
+            print("--------------------", message_file_id)
+            return EpicsConnectionInfo.EpicsConnectionInfo.GetRootAsEpicsConnectionInfo(msg.value(), 0)
 
 
 def create_consumer(offset_reset="earliest"):

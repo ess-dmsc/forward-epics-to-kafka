@@ -35,6 +35,19 @@ def check_expected_values(log_data, value_type, pv_name, expected_value):
             assert expected_value == union_val.Value()
 
 
+def check_expected_connection_status_values(status_data, expected_value):
+    """
+    Checks the message name (PV) and value type (type of PV), and, optionally, the value.
+
+    :param status_data: Status data object from the received stream buffer
+    :param expected_value: The expected PV value from the flatbuffers message
+    """
+    assert status_data.Timestamp() > 0
+    if expected_value is not None:
+        print(f'expected value: {expected_value}, value from message: {status_data.Type()}', flush=True)
+        assert expected_value == status_data.Type()
+
+
 def check_multiple_expected_values(message_list, expected_values):
     """
     Checks for expected PV values in multiple messages.

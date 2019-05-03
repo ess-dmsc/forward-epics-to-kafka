@@ -108,8 +108,8 @@ void EpicsClientMonitor::handleConnectionStateChange(
       InfoBuffer.add_type(ep00::EventType::DESTROYED);
     }
     ep00::FinishEpicsConnectionInfoBuffer(Builder, InfoBuffer.Finish());
-    ConnectionStatusProducer->produce(Builder.GetBufferPointer(),
-                                      Builder.GetSize());
+    ConnectionStatusProducer->produceAndSetKey(Builder.GetBufferPointer(),
+                                      Builder.GetSize(), Impl->channel_name);
   }
 }
 
