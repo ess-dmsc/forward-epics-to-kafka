@@ -64,9 +64,7 @@ def poll_for_connection_status_message(consumer):
         if msg.error():
             raise MsgErrorException("Consumer error when polling: {}".format(msg.error()))
         message_file_id = msg.value()[4:8]
-        print("--------------------", message_file_id)
         if message_file_id == b"ep00":
-            print("--------------------", message_file_id)
             return EpicsConnectionInfo.EpicsConnectionInfo.GetRootAsEpicsConnectionInfo(msg.value(), 0)
 
 
