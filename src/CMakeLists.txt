@@ -14,6 +14,7 @@ set(libraries_common
         CONAN_PKG::cli11
         CONAN_PKG::fmt
         CONAN_PKG::FlatBuffers
+        CONAN_PKG::asio
         Threads::Threads
 )
 
