@@ -25,3 +25,8 @@ target_include_directories(tests PRIVATE ${path_include_common})
 target_link_libraries(tests
         forwarder-library
         CONAN_PKG::gtest)
+if (WIN32)
+    target_compile_options(tests PRIVATE /wd4996)
+else()
+    target_compile_options(tests PRIVATE -Wall -Wextra -Werror)
+endif(WIN32)
