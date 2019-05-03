@@ -18,50 +18,37 @@ protected:
 
 TEST_F(TimerTest,
        test_can_start_and_stop_a_timer_with_no_registered_callbacks) {
-  std::shared_ptr<Sleeper> TestSleeper = std::make_shared<FakeSleeper>();
   std::chrono::milliseconds Interval(1);
-  Timer TestTimer(Interval, TestSleeper);
+  Timer TestTimer(Interval);
   TestTimer.start();
-  auto TestFakeSleeper = std::dynamic_pointer_cast<FakeSleeper>(TestSleeper);
-  TestTimer.triggerStop();
-  TestFakeSleeper
-      ->triggerEndOfSleep(); // Fakes 1 Interval passing to ensure stop is seen
   TestTimer.waitForStop();
 }
 
 TEST_F(TimerTest, test_can_register_a_callback) {
-  std::shared_ptr<Sleeper> TestSleeper = std::make_shared<FakeSleeper>();
   std::chrono::milliseconds Interval(1);
-  Timer TestTimer(Interval, TestSleeper);
+  Timer TestTimer(Interval);
   TestTimer.addCallback([&]() { testCallbackA(); });
 }
 
-TEST_F(TimerTest, test_registered_callback_is_executed) {
-  std::shared_ptr<Sleeper> TestSleeper = std::make_shared<FakeSleeper>();
-  std::chrono::milliseconds Interval(1);
-  Timer TestTimer(Interval, TestSleeper);
+TEST_F(TimerTest, test_registered_callback_is_executed_at_least_once) {
+  std::chrono::milliseconds Interval(5);
+  Timer TestTimer(Interval);
   TestTimer.addCallback([&]() { testCallbackA(); });
   TestTimer.start();
-  auto TestFakeSleeper = std::dynamic_pointer_cast<FakeSleeper>(TestSleeper);
-  TestTimer.triggerStop();
-  TestFakeSleeper->triggerEndOfSleep(); // Fakes 1 Interval passing
+  std::this_thread::sleep_for(std::chrono::milliseconds(15));
   TestTimer.waitForStop();
-  uint32_t ExpectedTimesCalled = 1;
-  ASSERT_EQ(ExpectedTimesCalled, CallbackACalled);
+  ASSERT_GT(CallbackACalled, 0);
 }
 
-TEST_F(TimerTest, test_multiple_registered_callbacks_are_executed) {
-  std::shared_ptr<Sleeper> TestSleeper = std::make_shared<FakeSleeper>();
-  std::chrono::milliseconds Interval(1);
-  Timer TestTimer(Interval, TestSleeper);
+TEST_F(TimerTest,
+       test_multiple_registered_callbacks_are_executed_at_least_once) {
+  std::chrono::milliseconds Interval(5);
+  Timer TestTimer(Interval);
   TestTimer.addCallback([&]() { testCallbackA(); });
   TestTimer.addCallback([&]() { testCallbackB(); });
   TestTimer.start();
-  auto TestFakeSleeper = std::dynamic_pointer_cast<FakeSleeper>(TestSleeper);
-  TestTimer.triggerStop();
-  TestFakeSleeper->triggerEndOfSleep(); // Fakes 1 Interval passing
+  std::this_thread::sleep_for(std::chrono::milliseconds(15));
   TestTimer.waitForStop();
-  uint32_t ExpectedTimesCalled = 1;
-  ASSERT_EQ(ExpectedTimesCalled, CallbackACalled);
-  ASSERT_EQ(ExpectedTimesCalled, CallbackBCalled);
+  ASSERT_GT(CallbackACalled, 0);
+  ASSERT_GT(CallbackBCalled, 0);
 }

@@ -29,10 +29,10 @@ def test_long_run(docker_compose_lr):
                 # Wait for the forwarder to push the update
                 sleep(3)
                 try:
-                    msg = poll_for_valid_message(cons)
+                    msg, _ = poll_for_valid_message(cons)
                 except MsgErrorException:
                     sleep(3)
-                    msg = poll_for_valid_message(cons)
+                    msg, _ = poll_for_valid_message(cons)
                 try:
                     check_expected_values(msg, Value.Double, PVDOUBLE, float(i))
                 except AssertionError:
