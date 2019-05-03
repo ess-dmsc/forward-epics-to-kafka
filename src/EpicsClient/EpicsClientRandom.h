@@ -1,7 +1,7 @@
 #pragma once
 
-#include "EpicsClientInterface.h"
 #include "../Stream.h"
+#include "EpicsClientInterface.h"
 #include <concurrentqueue/concurrentqueue.h>
 #include <random>
 

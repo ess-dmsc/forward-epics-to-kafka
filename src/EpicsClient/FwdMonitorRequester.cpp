@@ -1,8 +1,8 @@
 #include "FwdMonitorRequester.h"
-#include "EpicsClientMonitor.h"
 #include "../EpicsPVUpdate.h"
 #include "../helper.h"
 #include "../logger.h"
+#include "EpicsClientMonitor.h"
 #include <memory>
 #include <pv/pvAccess.h>
 #include <pv/pvData.h>

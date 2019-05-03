@@ -1,8 +1,8 @@
 #pragma once
 
+#include "../logger.h"
 #include "Producer.h"
 #include "ProducerMessage.h"
-#include "../logger.h"
 #include <memory>
 #include <string>
 

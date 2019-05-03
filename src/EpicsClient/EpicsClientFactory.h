@@ -1,6 +1,6 @@
 #pragma once
-#include <atomic>
 #include "../logger.h"
+#include <atomic>
 #include <memory>
 #include <mutex>
 

@@ -1,7 +1,7 @@
 #pragma once
 
-#include <fmt/format.h>
 #include "logger.h"
+#include <fmt/format.h>
 #include <string>
 #if HAVE_CURL
 #include <curl/curl.h>

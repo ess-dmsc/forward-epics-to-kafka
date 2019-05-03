@@ -73,8 +73,12 @@ public:
   // cppcheck-suppress unusedFunction
   bool partition_available(int32_t partition) const override { return true; };
   // cppcheck-suppress unusedFunction
-  RdKafka::ErrorCode offset_store(int32_t partition, int64_t offset) override { return RdKafka::ERR_NO_ERROR; };
-  struct rd_kafka_topic_s *c_ptr() override { return nullptr; };
+  RdKafka::ErrorCode offset_store(int32_t partition, int64_t offset) override {
+    return RdKafka::ERR_NO_ERROR;
+  };
+  struct rd_kafka_topic_s *c_ptr() override {
+    return nullptr;
+  };
 };
 
 TEST_F(ProducerTests, creatingForwarderIncrementsForwarderCounter) {
