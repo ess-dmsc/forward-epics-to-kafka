@@ -28,5 +28,5 @@ target_link_libraries(tests
 if (WIN32)
     target_compile_options(tests PRIVATE /wd4996)
 else()
-    target_compile_options(tests PRIVATE -Wall -Wextra -Werror)
+    target_compile_options(tests PRIVATE -Wall -Wextra)
 endif(WIN32)
