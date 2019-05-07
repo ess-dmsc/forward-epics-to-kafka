@@ -18,14 +18,6 @@ set(libraries_common
         Threads::Threads
 )
 
-if (WIN32)
-    list(APPEND libraries_common
-            CONAN_PKG::spdlog)
-else()
-    list(APPEND libraries_common
-            CONAN_PKG::spdlog-graylog)
-endif(WIN32)
-
 # Allow a system installed EPICS library to be used instead of conan package (for ISIS-STFC)
 find_package(EPICSV4)
 set(USE_EXTERNAL_EPICS FALSE CACHE BOOL "Look for system installed EPICS instead of using Conan package")
@@ -45,7 +37,18 @@ set(compile_defs_common "")
 if (CURL_FOUND)
 	list(APPEND compile_defs_common "HAVE_CURL=1")
     list(APPEND libraries_common ${CURL_LIBRARIES})
-endif()
+endif(CURL_FOUND)
+
+set(USE_GRAYLOG_LOGGER TRUE CACHE BOOL "Compile with support for logging to Graylog")
+if (CONAN_SPDLOG-GRAYLOG_ROOT AND ${USE_GRAYLOG_LOGGER})
+    message(STATUS "Using graylog_logger")
+    list(APPEND compile_defs_common "HAVE_GRAYLOG_LOGGER=1")
+    list(APPEND libraries_common
+            CONAN_PKG::spdlog-graylog)
+else()
+    list(APPEND libraries_common
+            CONAN_PKG::spdlog)
+endif(CONAN_SPDLOG-GRAYLOG_ROOT AND ${USE_GRAYLOG_LOGGER})
 
 set(INCLUDES
     EpicsClient/EpicsClientMonitor.h
