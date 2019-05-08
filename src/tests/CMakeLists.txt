@@ -21,7 +21,6 @@ set(sources
     MockMessage.h
     UnitTests.cpp)
 add_executable(tests ${sources})
-target_include_directories(tests PRIVATE ${path_include_common})
 target_link_libraries(tests
         forwarder-library
         CONAN_PKG::gtest)

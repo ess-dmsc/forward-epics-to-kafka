@@ -132,6 +132,7 @@ set(SOURCES
 add_library(forwarder-library ${SOURCES} ${INCLUDES})
 target_compile_definitions(forwarder-library PRIVATE ${compile_defs_common})
 target_link_libraries(forwarder-library ${libraries_common})
+target_include_directories(forwarder-library SYSTEM PRIVATE ${EPICSV4_INCLUDE_DIRS})
 if (WIN32)
     target_link_libraries(forwarder-library Ws2_32.lib dbghelp.lib)
     target_compile_options(forwarder-library PRIVATE /wd4996)
