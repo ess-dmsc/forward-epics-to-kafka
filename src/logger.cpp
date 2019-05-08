@@ -1,6 +1,6 @@
 #include "logger.h"
 #include "URI.h"
-#include <spdlog/sinks/basic_file_sink.h>
+#include <spdlog/sinks/daily_file_sink.h>
 #include <spdlog/sinks/stdout_color_sinks.h>
 #ifdef HAVE_GRAYLOG_LOGGER
 #include <spdlog/sinks/graylog_sink.h>
@@ -13,7 +13,7 @@ void setUpLogging(const spdlog::level::level_enum &LoggingLevel,
   std::vector<spdlog::sink_ptr> Sinks;
   if (!LogFile.empty()) {
     auto FileSink =
-        std::make_shared<spdlog::sinks::basic_file_sink_mt>(LogFile);
+        std::make_shared<spdlog::sinks::daily_file_sink_mt>(LogFile, 0, 0);
     FileSink->set_pattern("[%Y-%m-%d %H:%M:%S.%f] [%l] [processID: %P]: %v");
     Sinks.push_back(FileSink);
   }
@@ -21,7 +21,7 @@ void setUpLogging(const spdlog::level::level_enum &LoggingLevel,
 #ifdef HAVE_GRAYLOG_LOGGER
     Forwarder::URI TempURI(GraylogURI);
     auto GraylogSink = std::make_shared<spdlog::sinks::graylog_sink_mt>(
-        LoggingLevel, TempURI.HostPort.substr(0, TempURI.HostPort.find(":")),
+        LoggingLevel, TempURI.HostPort.substr(0, TempURI.HostPort.find(':')),
         TempURI.Port);
     GraylogSink->set_pattern("[%l] [processID: %P]: %v");
     Sinks.push_back(GraylogSink);
