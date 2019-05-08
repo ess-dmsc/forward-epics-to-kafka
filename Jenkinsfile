@@ -354,7 +354,9 @@ def get_win10_pipeline() {
                     }  // stage
 
                     stage("win10: Setup") {
-                          bat """if exist _build rd /q /s _build
+                        // "conan remove" is temporary, until all repos have migrated to official flatbuffers package
+                        bat """conan remove -f FlatBuffers/*
+                        if exist _build rd /q /s _build
                         mkdir _build
                         """
                     } // stage
