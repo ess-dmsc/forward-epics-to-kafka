@@ -110,8 +110,6 @@ def docker_cmake(image_key) {
 
         def configure_script = """
                     cd build
-                    conan install --generator virtualrunenv cmake_installer/3.10.0@conan/stable
-                    source activate_run.sh
                     ${configure_epics}
                     cmake ../${project} ${coverage_on}
                 """
@@ -127,8 +125,6 @@ def docker_cmake_release(image_key) {
         def custom_sh = images[image_key]['sh']
         def configure_script = """
                         cd build
-                        conan install --generator virtualrunenv cmake_installer/3.10.0@conan/stable
-                        source activate_run.sh
                         cmake ../${project} \
                             -DCMAKE_BUILD_TYPE=Release \
                             -DCMAKE_SKIP_RPATH=FALSE \
