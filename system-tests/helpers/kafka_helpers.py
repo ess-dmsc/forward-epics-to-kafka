@@ -2,6 +2,7 @@ from confluent_kafka import Consumer
 import uuid
 from helpers.f142_logdata import LogData
 from helpers.ep00 import EpicsConnectionInfo
+from pytictoc import TicToc
 
 
 class MsgErrorException(Exception):
@@ -25,16 +26,19 @@ def get_all_available_messages(consumer):
     return messages
 
 
-def poll_for_valid_message(consumer, expected_file_identifier=b"f142"):
+def poll_for_valid_message(consumer, expected_file_identifier=b"f142", timeout=15.0):
     """
     Polls the subscribed topics by the consumer and checks the buffer is not empty or malformed.
     Skips connection status messages.
 
     :param consumer: The consumer object
     :param expected_file_identifier: The schema id we expect to find in the message
+    :param timeout: give up if we haven't found a message with expected_file_identifier after this length of time
     :return: Tuple of the message payload and the key
     """
-    while True:
+    timer = TicToc()
+    timer.tic()
+    while timer.tocvalue() < timeout:
         msg = consumer.poll(timeout=1.0)
         assert msg is not None
         if msg.error():
@@ -50,15 +54,18 @@ def poll_for_valid_message(consumer, expected_file_identifier=b"f142"):
                 return LogData.LogData.GetRootAsLogData(msg.value(), 0), msg.key()
 
 
-def poll_for_connection_status_message(consumer):
+def poll_for_connection_status_message(consumer, timeout=15.0):
     """
     Polls the subscribed topics by the consumer and checks the buffer is not empty or malformed.
     Skips connection status messages.
 
     :param consumer: The consumer object
+    :param timeout: give up if we haven't found a connection status message after this length of time
     :return: The LogData flatbuffer from the message payload
     """
-    while True:
+    timer = TicToc()
+    timer.tic()
+    while timer.tocvalue() < timeout:
         msg = consumer.poll(timeout=1.0)
         assert msg is not None
         if msg.error():
