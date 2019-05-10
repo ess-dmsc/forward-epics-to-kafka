@@ -1,5 +1,6 @@
 #pragma once
 #include "EpicsClientInterface.h"
+#include "logger.h"
 #include <pv/pvAccess.h>
 #include <pv/pvData.h>
 #include <string>
@@ -36,6 +37,7 @@ public:
 
 private:
   EpicsClientInterface *EpicsClient = nullptr;
+  SharedLogger Logger = getLogger();
 };
 }
 } // namespace Forwarder

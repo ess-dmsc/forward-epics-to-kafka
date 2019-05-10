@@ -4,9 +4,7 @@
 class FakeEpicsClient : public Forwarder::EpicsClient::EpicsClientInterface {
 public:
   FakeEpicsClient() = default;
-  int emit(std::shared_ptr<FlatBufs::EpicsPVUpdate> /* Update */) override {
-    return 0;
-  }
+  void emit(std::shared_ptr<FlatBufs::EpicsPVUpdate> /* Update */) override {}
   int stop() override {
     IsStopped = true;
     return 0;

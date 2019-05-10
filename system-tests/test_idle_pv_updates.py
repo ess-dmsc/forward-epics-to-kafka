@@ -11,6 +11,6 @@ def test_forwarder_sends_idle_pv_updates(docker_compose_idle_updates):
     consumer.subscribe([data_topic])
     sleep(10)
     for i in range(3):
-        msg = poll_for_valid_message(consumer)
+        msg, _ = poll_for_valid_message(consumer)
         check_expected_values(msg, Value.Value.Double, PVDOUBLE, 0)
     consumer.close()

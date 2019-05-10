@@ -12,11 +12,11 @@
 
 namespace KafkaW {
 Consumer::Consumer(BrokerSettings &Settings)
-    : ConsumerBrokerSettings(std::move(Settings)) {
+    : ConsumerBrokerSettings(std::move(Settings)),
+      Conf(std::unique_ptr<RdKafka::Conf>(
+          RdKafka::Conf::create(RdKafka::Conf::CONF_GLOBAL))) {
   std::string ErrorString;
 
-  Conf = std::unique_ptr<RdKafka::Conf>(
-      RdKafka::Conf::create(RdKafka::Conf::CONF_GLOBAL));
   Conf->set("event_cb", &EventCallback, ErrorString);
   Conf->set("metadata.broker.list", ConsumerBrokerSettings.Address,
             ErrorString);
@@ -28,7 +28,7 @@ Consumer::Consumer(BrokerSettings &Settings)
   KafkaConsumer = std::unique_ptr<RdKafka::KafkaConsumer>(
       RdKafka::KafkaConsumer::create(Conf.get(), ErrorString));
   if (!KafkaConsumer) {
-    LOG(Sev::Error, "can not create kafka consumer: {}", ErrorString);
+    Logger->error("can not create kafka consumer: {}", ErrorString);
     throw std::runtime_error("can not create Kafka consumer");
   }
 }
@@ -44,9 +44,9 @@ void Consumer::updateMetadata() {
 }
 
 Consumer::~Consumer() {
-  LOG(Sev::Debug, "~Consumer()");
+  Logger->trace("~Consumer()");
   if (KafkaConsumer != nullptr) {
-    LOG(Sev::Debug, "Close the consumer");
+    Logger->trace("Close the consumer");
     KafkaConsumer->close();
   }
 }
@@ -71,15 +71,18 @@ Consumer::getTopicPartitionNumbers(const std::string &Topic) {
   std::vector<int32_t> TopicPartitionNumbers;
   const RdKafka::TopicMetadata::PartitionMetadataVector *PartitionMetadata =
       matchedTopic->partitions();
+
   for (const auto &Partition : *PartitionMetadata) {
+    // cppcheck-suppress useStlAlgorithm ; readability
     TopicPartitionNumbers.push_back(Partition->id());
   }
+
   sort(TopicPartitionNumbers.begin(), TopicPartitionNumbers.end());
   return TopicPartitionNumbers;
 }
 
 void Consumer::addTopic(const std::string &Topic) {
-  LOG(Sev::Info, "Consumer::add_topic  {}", Topic);
+  Logger->info("Consumer::add_topic  {}", Topic);
   std::vector<RdKafka::TopicPartition *> TopicPartitionsWithOffsets;
   auto PartitionIDs = getTopicPartitionNumbers(Topic);
   for (int PartitionID : PartitionIDs) {
@@ -95,7 +98,7 @@ void Consumer::addTopic(const std::string &Topic) {
                 TopicPartitionsWithOffsets.cend(),
                 [](RdKafka::TopicPartition *Partition) { delete Partition; });
   if (Err != RdKafka::ERR_NO_ERROR) {
-    LOG(Sev::Error, "Could not subscribe to {}", Topic);
+    Logger->error("Could not subscribe to {}", Topic);
     throw std::runtime_error(fmt::format("Could not subscribe to {}", Topic));
   }
 }

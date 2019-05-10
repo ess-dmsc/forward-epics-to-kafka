@@ -21,11 +21,11 @@ properties([[
 
 images = [
         'centos7': [
-                'name': 'screamingudder/centos7-build-node:4.4.0',
+                'name': 'screamingudder/centos7-build-node:4.3.0',
                 'sh'  : '/usr/bin/scl enable devtoolset-6 -- /bin/bash -e'
         ],
         'centos7-release': [
-                'name': 'screamingudder/centos7-build-node:4.4.0',
+                'name': 'screamingudder/centos7-build-node:4.3.0',
                 'sh'  : '/usr/bin/scl enable devtoolset-6 -- /bin/bash -e'
         ],
         'debian9'    : [
@@ -110,8 +110,6 @@ def docker_cmake(image_key) {
 
         def configure_script = """
                     cd build
-                    conan install --generator virtualrunenv cmake_installer/3.10.0@conan/stable
-                    source activate_run.sh
                     ${configure_epics}
                     cmake ../${project} ${coverage_on}
                 """
@@ -127,8 +125,6 @@ def docker_cmake_release(image_key) {
         def custom_sh = images[image_key]['sh']
         def configure_script = """
                         cd build
-                        conan install --generator virtualrunenv cmake_installer/3.10.0@conan/stable
-                        source activate_run.sh
                         cmake ../${project} \
                             -DCMAKE_BUILD_TYPE=Release \
                             -DCMAKE_SKIP_RPATH=FALSE \
@@ -284,10 +280,10 @@ def docker_coverage(image_key) {
 def docker_cppcheck(image_key) {
     try {
         def custom_sh = images[image_key]['sh']
-        def test_output = "cppcheck.txt"
+        def test_output = "cppcheck.xml"
         def cppcheck_script = """
                         cd forward-epics-to-kafka
-                        cppcheck --enable=all --inconclusive --template="{file},{line},{severity},{id},{message}" src/ 2> ${test_output}
+                        cppcheck --xml --inline-suppr --enable=all --inconclusive src/ 2> ${test_output}
                     """
         sh "docker exec ${container_name(image_key)} ${custom_sh} -c \"${cppcheck_script}\""
         sh "docker cp ${container_name(image_key)}:/home/jenkins/forward-epics-to-kafka/${test_output} ."
@@ -315,8 +311,6 @@ def get_pipeline(image_key) {
 
                 if (image_key == clangformat_os) {
                     docker_formatting(image_key)
-                    docker_cppcheck(image_key)
-                    step([$class: 'WarningsPublisher', parserConfigurations: [[parserName: 'Cppcheck Parser', pattern: 'cppcheck.txt']]])
                 } else {
                     docker_build(image_key)
                     if (image_key == test_and_coverage_os && !env.CHANGE_ID) {
@@ -337,8 +331,11 @@ def get_pipeline(image_key) {
             } catch (e) {
                 failure_function(e, "Unknown build failure for ${image_key}")
             } finally {
-                sh "docker stop ${container_name(image_key)}"
-                sh "docker rm -f ${container_name(image_key)}"
+		if (image_key != clangformat_os) {
+		    // Keep one docker up for static analysers
+                    sh "docker stop ${container_name(image_key)}"
+                    sh "docker rm -f ${container_name(image_key)}"
+		}
             }
         }
     }
@@ -356,7 +353,9 @@ def get_win10_pipeline() {
         }  // stage
 
 	stage("win10: Setup") {
-          bat """if exist _build rd /q /s _build
+	      // "conan remove" is temporary, until all repos have migrated to official flatbuffers package
+          bat """conan remove -f FlatBuffers/*
+          if exist _build rd /q /s _build
 	    mkdir _build
 	    xcopy /y conan\\conanfile_win32.txt conan\\conanfile.txt
 	    """
@@ -371,14 +370,9 @@ def get_win10_pipeline() {
 
 	 stage("win10: Build") {
            bat """cd _build
-      dir
-      conan.exe install --generator virtualrunenv cmake_installer/3.10.0@conan/stable
-      dir
-      activate_run.bat
-	    cmake --version
-	    cmake .. -G \"Visual Studio 15 2017 Win64\" -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTS=FALSE
-	    cmake --build .
-	    """
+	     cmake .. -G \"Visual Studio 15 2017 Win64\" -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTS=FALSE -DCONAN=MANUAL
+	     cmake --build . --config Release
+	     """
         }  // stage
       }  // dir
       }
@@ -409,7 +403,7 @@ def get_system_tests_pipeline() {
                             """
 			}
                     }  // stage
-                }finally {
+                } finally {
 		    stage("System tests: Cleanup") {
                         sh """docker stop \$(docker ps -a -q) && docker rm \$(docker ps -a -q) || true
                         """
@@ -449,6 +443,13 @@ node('docker && eee') {
     }
 
     parallel builders
+	
+    stage('CppCheck') {
+	docker_cppcheck(clangformat_os)
+        recordIssues sourceCodeEncoding: 'UTF-8', qualityGates: [[threshold: 1, type: 'TOTAL', unstable: true]], tools: [cppCheck(pattern: 'cppcheck.xml', reportEncoding: 'UTF-8')]
+	sh "docker stop ${container_name(clangformat_os)}"
+        sh "docker rm -f ${container_name(clangformat_os)}"
+    }
 
     // Delete workspace when build is done
     cleanWs()

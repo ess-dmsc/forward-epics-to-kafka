@@ -34,9 +34,9 @@ public:
   /// Pushes the PV update onto the emit_queue ring buffer.
   ///
   /// \param Update An epics PV update holding the pv structure.
-  int emit(std::shared_ptr<FlatBufs::EpicsPVUpdate> Update) override;
+  void emit(std::shared_ptr<FlatBufs::EpicsPVUpdate> Update) override;
 
-  int emitWithoutCaching(std::shared_ptr<FlatBufs::EpicsPVUpdate> Update);
+  void emitWithoutCaching(std::shared_ptr<FlatBufs::EpicsPVUpdate> Update);
 
   /// Calls stop on the client implementation.
   int stop() override;
@@ -52,12 +52,12 @@ public:
   std::string getConnectionState() override;
 
   void handleChannelRequesterError(std::string const &) override;
-  void
-  handleConnectionStateChange(ChannelConnectionState ConnectionState) override;
+  void handleConnectionStateChange(
+      ChannelConnectionState NewConnectionState) override;
 
   std::unique_ptr<KafkaW::ProducerTopic> ConnectionStatusProducer;
 
-  void setServiceID(std::string ServiceID) override;
+  void setServiceID(std::string NewServiceID) override;
 
 private:
   std::unique_ptr<EpicsClientMonitorImpl> Impl;
@@ -65,10 +65,12 @@ private:
       moodycamel::ConcurrentQueue<std::shared_ptr<FlatBufs::EpicsPVUpdate>>>
       EmitQueue;
   std::shared_ptr<FlatBufs::EpicsPVUpdate> CachedUpdate;
+  std::mutex CachedUpdateMutex;
   std::atomic<int> status_{0};
   ChannelConnectionState ConnectionState =
       ChannelConnectionState::NEVER_CONNECTED;
   std::string ServiceID;
+  SharedLogger Logger = getLogger();
 };
 } // namespace EpicsClient
 } // namespace Forwarder

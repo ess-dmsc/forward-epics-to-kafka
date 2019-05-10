@@ -2,6 +2,7 @@
 
 #include "FlatbufferMessageSlice.h"
 #include "KafkaW/ProducerMessage.h"
+#include "logger.h"
 #include <flatbuffers/flatbuffers.h>
 #include <memory>
 #include <utility>
@@ -40,5 +41,8 @@ public:
 
   std::unique_ptr<flatbuffers::FlatBufferBuilder> builder;
   FlatbufferMessage(FlatbufferMessage const &) = delete;
+
+private:
+  SharedLogger Logger = getLogger();
 };
 } // namespace FlatBufs

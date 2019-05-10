@@ -20,7 +20,8 @@ namespace Forwarder {
 
 class InstanceSet {
 public:
-  static std::shared_ptr<InstanceSet> Set(KafkaW::BrokerSettings Settings);
+  static std::shared_ptr<InstanceSet>
+  Set(KafkaW::BrokerSettings BrokerSettings);
   static void clear();
   KafkaW::ProducerTopic SetUpProducerTopic(URI uri);
   int poll();
@@ -29,10 +30,11 @@ public:
   InstanceSet(InstanceSet const &&) = delete;
 
 private:
-  explicit InstanceSet(KafkaW::BrokerSettings opt);
+  explicit InstanceSet(KafkaW::BrokerSettings BrokerSettings);
   std::unique_lock<std::mutex> getProducersByHostMutexLock();
   KafkaW::BrokerSettings BrokerSettings;
   std::mutex ProducersByHostMutex;
   std::map<std::string, std::shared_ptr<KafkaW::Producer>> ProducersByHost;
+  SharedLogger Logger = getLogger();
 };
 } // namespace Forwarder

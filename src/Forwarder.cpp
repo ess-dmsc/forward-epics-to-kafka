@@ -1,6 +1,12 @@
-#include "Forwarder.h"
+// solve issue with multiple winsock include
+#ifdef _MSC_VER
+#include <WinSock2.h>
+#include <windows.h>
+#endif
+
 #include "CommandHandler.h"
 #include "Converter.h"
+#include "Forwarder.h"
 #include "KafkaOutput.h"
 #include "Stream.h"
 #include "Timer.h"
@@ -61,11 +67,11 @@ Forwarder::Forwarder(MainOpt &opt)
 
   bool use_config = true;
   if (main_opt.MainSettings.BrokerConfig.Topic.empty()) {
-    LOG(Sev::Error, "Name for configuration topic is empty");
+    Logger->error("Name for configuration topic is empty");
     use_config = false;
   }
   if (main_opt.MainSettings.BrokerConfig.HostPort.empty()) {
-    LOG(Sev::Error, "Host for configuration topic broker is empty");
+    Logger->error("Host for configuration topic broker is empty");
     use_config = false;
   }
   if (use_config) {
@@ -83,7 +89,7 @@ Forwarder::Forwarder(MainOpt &opt)
     try {
       addMapping(Stream);
     } catch (std::exception &e) {
-      LOG(Sev::Warning, "Could not add mapping: {}  {}", Stream.Name, e.what());
+      Logger->warn("Could not add mapping: {}  {}", Stream.Name, e.what());
     }
   }
 
@@ -97,7 +103,7 @@ Forwarder::Forwarder(MainOpt &opt)
 }
 
 Forwarder::~Forwarder() {
-  LOG(Sev::Debug, "~Main");
+  Logger->trace("~Main");
   streams.clearStreams();
   conversion_workers_clear();
   converters_clear();
@@ -107,21 +113,19 @@ Forwarder::~Forwarder() {
 void Forwarder::createPVUpdateTimerIfRequired() {
   if (main_opt.PeriodMS > 0) {
     auto Interval = std::chrono::milliseconds(main_opt.PeriodMS);
-    std::shared_ptr<Sleeper> IntervalSleeper = std::make_shared<RealSleeper>();
-    PVUpdateTimer = ::make_unique<Timer>(Interval, IntervalSleeper);
+    PVUpdateTimer = ::make_unique<Timer>(Interval);
   }
 }
 
 void Forwarder::createFakePVUpdateTimerIfRequired() {
   if (main_opt.FakePVPeriodMS > 0) {
     auto Interval = std::chrono::milliseconds(main_opt.FakePVPeriodMS);
-    std::shared_ptr<Sleeper> IntervalSleeper = std::make_shared<RealSleeper>();
-    GenerateFakePVUpdateTimer = ::make_unique<Timer>(Interval, IntervalSleeper);
+    GenerateFakePVUpdateTimer = ::make_unique<Timer>(Interval);
   }
 }
 
 int Forwarder::conversion_workers_clear() {
-  LOG(Sev::Debug, "Main::conversion_workers_clear()  begin");
+  Logger->trace("Main::conversion_workers_clear()  begin");
   std::lock_guard<std::mutex> lock(conversion_workers_mx);
   if (!conversion_workers.empty()) {
     for (auto &x : conversion_workers) {
@@ -129,7 +133,7 @@ int Forwarder::conversion_workers_clear() {
     }
     conversion_workers.clear();
   }
-  LOG(Sev::Debug, "Main::conversion_workers_clear()  end");
+  Logger->trace("Main::conversion_workers_clear()  end");
   return 0;
 }
 
@@ -201,29 +205,27 @@ void Forwarder::forward_epics_to_kafka() {
       report_stats(dt.count());
     }
     if (dt >= Dt) {
-      LOG(Sev::Error, "slow main loop: {}", dt.count());
+      Logger->error("slow main loop: {}", dt.count());
     } else {
       std::this_thread::sleep_for(Dt - dt);
     }
   }
   if (isStopDueToSignal(ForwardingRunFlag.load())) {
-    LOG(Sev::Info, "Forwarder stopping due to signal.");
+    Logger->info("Forwarder stopping due to signal.");
   }
-  LOG(Sev::Info, "Main::forward_epics_to_kafka shutting down");
+  Logger->info("Main::forward_epics_to_kafka shutting down");
   conversion_workers_clear();
   streams.clearStreams();
 
   if (PVUpdateTimer != nullptr) {
-    PVUpdateTimer->triggerStop();
     PVUpdateTimer->waitForStop();
   }
 
   if (GenerateFakePVUpdateTimer != nullptr) {
-    GenerateFakePVUpdateTimer->triggerStop();
     GenerateFakePVUpdateTimer->waitForStop();
   }
 
-  LOG(Sev::Info, "ForwardingStatus::STOPPED");
+  Logger->info("ForwardingStatus::STOPPED");
   forwarding_status.store(ForwardingStatus::STOPPED);
 }
 
@@ -244,10 +246,10 @@ void Forwarder::report_status() {
   if (StatusStringSize > 1000) {
     auto StatusStringShort =
         StatusString.substr(0, 1000) +
-        fmt::format(" ... {} chars total", StatusStringSize);
-    LOG(Sev::Debug, "status: {}", StatusStringShort);
+        fmt::format(" ... {} chars total ...", StatusStringSize);
+    Logger->debug("status: {}", StatusStringShort);
   } else {
-    LOG(Sev::Debug, "status: {}", StatusString);
+    Logger->debug("status: {}", StatusString);
   }
   status_producer_topic->produce((unsigned char *)StatusString.c_str(),
                                  StatusString.size());
@@ -263,8 +265,8 @@ void Forwarder::report_stats(int dt) {
   b1 %= 1024;
   auto b3 = b2 / 1024;
   b2 %= 1024;
-  LOG(Sev::Info, "dt: {:4}  m: {:4}.{:03}  b: {:3}.{:03}.{:03}", dt, m2, m1, b3,
-      b2, b1);
+  Logger->info("dt: {:4}  m: {:4}.{:03}  b: {:3}.{:03}.{:03}", dt, m2, m1, b3,
+               b2, b1);
   if (CURLReporter::HaveCURL && !main_opt.InfluxURI.empty()) {
     std::vector<char> Hostname = getHostname();
     int i1 = 0;
@@ -286,7 +288,7 @@ void Forwarder::report_stats(int dt) {
     }
     {
       auto lock = get_lock_converters();
-      LOG(Sev::Info, "N converters: {}", converters.size());
+      Logger->info("N converters: {}", converters.size());
       i1 = 0;
       for (auto &c : converters) {
         auto stats = c.second.lock()->stats();
@@ -310,7 +312,7 @@ void Forwarder::report_stats(int dt) {
   }
 }
 
-URI Forwarder::createTopicURI(ConverterSettings const &ConverterInfo) {
+URI Forwarder::createTopicURI(ConverterSettings const &ConverterInfo) const {
   URI BrokerURI;
   if (!main_opt.MainSettings.Brokers.empty()) {
     BrokerURI = main_opt.MainSettings.Brokers[0];
@@ -337,7 +339,6 @@ URI Forwarder::createTopicURI(ConverterSettings const &ConverterInfo) {
 
 void Forwarder::pushConverterToStream(ConverterSettings const &ConverterInfo,
                                       std::shared_ptr<Stream> &Stream) {
-
   // Check schema exists
   auto r1 = FlatBufs::SchemaRegistry::items().find(ConverterInfo.Schema);
   if (r1 == FlatBufs::SchemaRegistry::items().end()) {
@@ -387,12 +388,7 @@ void Forwarder::addMapping(StreamSettings const &StreamInfo) {
     ChannelInfo ChannelInfo{StreamInfo.EpicsProtocol, StreamInfo.Name};
     std::shared_ptr<Stream> Stream;
     if (GenerateFakePVUpdateTimer != nullptr) {
-      auto UpdateQueue = std::make_shared<moodycamel::ConcurrentQueue<
-          std::shared_ptr<FlatBufs::EpicsPVUpdate>>>();
-      auto EpicsClient = std::make_shared<EpicsClient::EpicsClientRandom>(
-          ChannelInfo, UpdateQueue);
-      Stream = findOrAddStream<EpicsClient::EpicsClientRandom>(
-          ChannelInfo, EpicsClient, UpdateQueue);
+      Stream = addStream<EpicsClient::EpicsClientRandom>(ChannelInfo);
       auto Client = Stream->getEpicsClient();
       auto RandomClient =
           dynamic_cast<EpicsClient::EpicsClientRandom *>(Client.get());
@@ -401,20 +397,7 @@ void Forwarder::addMapping(StreamSettings const &StreamInfo) {
             [Client, RandomClient]() { RandomClient->generateFakePVUpdate(); });
       }
     } else {
-      auto UpdateQueue = std::make_shared<moodycamel::ConcurrentQueue<
-          std::shared_ptr<FlatBufs::EpicsPVUpdate>>>();
-      auto EpicsClient = std::make_shared<EpicsClient::EpicsClientMonitor>(
-          ChannelInfo, UpdateQueue);
-      if (StreamInfo.Converters.size() > 0) {
-        auto const &Converter = StreamInfo.Converters.at(0);
-        auto ConnectionStatusProducer =
-            KafkaInstanceSet->SetUpProducerTopic(URI(Converter.Topic));
-        EpicsClient->ConnectionStatusProducer =
-            make_unique<KafkaW::ProducerTopic>(
-                std::move(ConnectionStatusProducer));
-      }
-      Stream = findOrAddStream<EpicsClient::EpicsClientMonitor>(
-          ChannelInfo, EpicsClient, UpdateQueue);
+      Stream = addStream<EpicsClient::EpicsClientMonitor>(ChannelInfo);
     }
 
     if (PVUpdateTimer != nullptr) {
@@ -435,20 +418,21 @@ void Forwarder::addMapping(StreamSettings const &StreamInfo) {
 }
 
 template <typename T>
-std::shared_ptr<Stream> Forwarder::findOrAddStream(
-    ChannelInfo &ChannelInfo, std::shared_ptr<T> EpicsClient,
-    std::shared_ptr<
-        moodycamel::ConcurrentQueue<std::shared_ptr<FlatBufs::EpicsPVUpdate>>>
-        UpdateQueue) {
+std::shared_ptr<Stream> Forwarder::addStream(ChannelInfo &ChannelInfo) {
   std::shared_ptr<Stream> FoundStream =
       streams.getStreamByChannelName(ChannelInfo.channel_name);
   if (FoundStream != nullptr) {
-    return FoundStream;
+    Logger->warn("Could not add stream for {} as one already exists.",
+                 ChannelInfo.channel_name);
+    throw MappingAddException("Stream already exists");
   }
+  auto PVUpdateRing = std::make_shared<
+      moodycamel::ConcurrentQueue<std::shared_ptr<FlatBufs::EpicsPVUpdate>>>();
+  auto Client = std::make_shared<T>(ChannelInfo, PVUpdateRing);
   auto EpicsClientInterfacePtr =
-      std::static_pointer_cast<EpicsClient::EpicsClientInterface>(EpicsClient);
+      std::static_pointer_cast<EpicsClient::EpicsClientInterface>(Client);
   auto NewStream = std::make_shared<Stream>(
-      ChannelInfo, EpicsClientInterfacePtr, UpdateQueue);
+      ChannelInfo, EpicsClientInterfacePtr, PVUpdateRing);
   streams.add(NewStream);
   return NewStream;
 }

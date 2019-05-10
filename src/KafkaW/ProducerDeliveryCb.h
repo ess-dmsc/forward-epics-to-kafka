@@ -15,9 +15,9 @@ public:
 
   void dr_cb(RdKafka::Message &Message) override {
     if (Message.err()) {
-      LOG(Sev::Error, "ERROR on delivery, topic {}, {} [{}] {}",
-          Message.topic_name(), Message.err(), Message.errstr(),
-          RdKafka::err2str(Message.err()));
+      Logger->error("ERROR on delivery, topic {}, {} [{}] {}",
+                    Message.topic_name(), Message.err(), Message.errstr(),
+                    RdKafka::err2str(Message.err()));
       ++Stats.produce_cb_fail;
     } else {
       ++Stats.produce_cb;
@@ -30,5 +30,6 @@ public:
 
 private:
   ProducerStats &Stats;
+  SharedLogger Logger = getLogger();
 };
 }

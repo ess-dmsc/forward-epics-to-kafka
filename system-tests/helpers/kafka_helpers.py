@@ -2,6 +2,7 @@ from confluent_kafka import Consumer
 import uuid
 from helpers.f142_logdata import LogData
 from helpers.ep00 import EpicsConnectionInfo
+from pytictoc import TicToc
 
 
 class MsgErrorException(Exception):
@@ -25,40 +26,46 @@ def get_all_available_messages(consumer):
     return messages
 
 
-def poll_for_valid_message(consumer, expected_file_identifier=b"f142"):
+def poll_for_valid_message(consumer, expected_file_identifier=b"f142", timeout=15.0):
     """
     Polls the subscribed topics by the consumer and checks the buffer is not empty or malformed.
     Skips connection status messages.
 
     :param consumer: The consumer object
     :param expected_file_identifier: The schema id we expect to find in the message
-    :return: The LogData flatbuffer from the message payload
+    :param timeout: give up if we haven't found a message with expected_file_identifier after this length of time
+    :return: Tuple of the message payload and the key
     """
-    while True:
+    timer = TicToc()
+    timer.tic()
+    while timer.tocvalue() < timeout:
         msg = consumer.poll(timeout=1.0)
         assert msg is not None
         if msg.error():
             raise MsgErrorException("Consumer error when polling: {}".format(msg.error()))
 
         if expected_file_identifier is None:
-            return msg.value()
+            return msg.value(), msg.key()
         elif expected_file_identifier is not None:
             message_file_id = msg.value()[4:8]
             assert (expected_file_identifier == message_file_id or message_file_id == b'ep00'), \
                 f"Expected message to have schema id of {expected_file_identifier}, but it has {message_file_id}"
             if message_file_id == b"f142":
-                return LogData.LogData.GetRootAsLogData(msg.value(), 0)
+                return LogData.LogData.GetRootAsLogData(msg.value(), 0), msg.key()
 
 
-def poll_for_connection_status_message(consumer):
+def poll_for_connection_status_message(consumer, timeout=15.0):
     """
     Polls the subscribed topics by the consumer and checks the buffer is not empty or malformed.
     Skips connection status messages.
 
     :param consumer: The consumer object
+    :param timeout: give up if we haven't found a connection status message after this length of time
     :return: The LogData flatbuffer from the message payload
     """
-    while True:
+    timer = TicToc()
+    timer.tic()
+    while timer.tocvalue() < timeout:
         msg = consumer.poll(timeout=1.0)
         assert msg is not None
         if msg.error():
