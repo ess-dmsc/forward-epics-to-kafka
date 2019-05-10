@@ -159,6 +159,21 @@ def docker_compose(request):
 
 
 @pytest.fixture(scope="module")
+def docker_compose_no_command(request):
+    """
+    :type request: _pytest.python.FixtureRequest
+    """
+    print("Started preparing test environment...", flush=True)
+
+    # Options must be given as long form
+    options = common_options
+    options["--project-name"] = "forwarderNoCommand"
+    options["--file"] = ["compose/docker-compose-no-command.yml"]
+
+    build_and_run(options, request)
+
+
+@pytest.fixture(scope="module")
 def docker_compose_fake_epics(request):
     """
     :type request: _pytest.python.FixtureRequest

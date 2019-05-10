@@ -46,8 +46,8 @@ std::string ChannelRequester::getRequesterName() { return "ChannelRequester"; }
 
 void ChannelRequester::message(std::string const &Message,
                                epics::pvData::MessageType MessageType) {
-  LOG(Sev::Warning, "Message for: {}  msg: {}  msgtype: {}", getRequesterName(),
-      Message, getMessageTypeName(MessageType));
+  Logger->warn("Message for: {}  msg: {}  msgtype: {}", getRequesterName(),
+               Message, getMessageTypeName(MessageType));
 }
 
 void ChannelRequester::channelCreated(epics::pvData::Status const &Status,
@@ -55,8 +55,8 @@ void ChannelRequester::channelCreated(epics::pvData::Status const &Status,
   // Seems that channel creation is actually a synchronous operation
   // and that this requester callback is called from the same stack
   // from which the channel creation was initiated.
-  LOG(Sev::Debug, "ChannelRequester::channelCreated:  (int)status.isOK(): {}",
-      (int)Status.isOK());
+  Logger->trace("ChannelRequester::channelCreated:  (int)status.isOK(): {}",
+                (int)Status.isOK());
   if (!Status.isOK() || !Status.isSuccess()) {
     std::string ChannelName;
     if (Channel) {
@@ -68,7 +68,7 @@ void ChannelRequester::channelCreated(epics::pvData::Status const &Status,
                                "isSuccess: {}  ChannelName: {}  Message: {}",
                                Status.isOK(), Status.isSuccess(), ChannelName,
                                StringStream.str());
-    LOG(Sev::Warning, "{}", Message);
+    Logger->warn(Message);
     EpicsClient->handleChannelRequesterError(Message);
   }
 }
@@ -93,11 +93,12 @@ createChannelConnectionState(Channel::ConnectionState EpicsConnectionState) {
 void ChannelRequester::channelStateChange(
     Channel::shared_pointer const &Channel,
     Channel::ConnectionState EpicsConnectionState) {
-  LOG(Sev::Debug, "channel state change: {}  for: {}",
-      connectionStateName(EpicsConnectionState), getChannelInfoString(Channel));
+  Logger->trace("channel state change: {}  for: {}",
+                connectionStateName(EpicsConnectionState),
+                getChannelInfoString(Channel));
   if (!Channel) {
-    LOG(Sev::Error, "no channel, even though we should have.  state: {}",
-        connectionStateName(EpicsConnectionState));
+    Logger->error("no channel, even though we should have.  state: {}",
+                  connectionStateName(EpicsConnectionState));
     EpicsClient->handleChannelRequesterError("No channel given");
     return;
   }

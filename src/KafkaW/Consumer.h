@@ -40,9 +40,9 @@ protected:
   std::unique_ptr<RdKafka::KafkaConsumer> KafkaConsumer;
 
 private:
+  BrokerSettings ConsumerBrokerSettings;
   std::unique_ptr<RdKafka::Metadata> Metadata;
   std::unique_ptr<RdKafka::Conf> Conf;
-  BrokerSettings ConsumerBrokerSettings;
   KafkaEventCb EventCallback;
 
   /// Get all partition numbers for a topic.
@@ -60,5 +60,6 @@ private:
 
   /// Update the stored metadata.
   void updateMetadata();
+  SharedLogger Logger = getLogger();
 };
 } // namespace KafkaW

@@ -17,12 +17,12 @@ ConversionPath::ConversionPath(std::shared_ptr<Converter> conv,
     : converter(std::move(conv)), kafka_output(std::move(ko)) {}
 
 ConversionPath::~ConversionPath() {
-  LOG(Sev::Debug, "~ConversionPath");
+  Logger->trace("~ConversionPath");
   while (true) {
     auto x = transit.load();
     if (x == 0)
       break;
-    LOG(Sev::Debug, "~ConversionPath  still has transit {}", transit);
+    Logger->debug("~ConversionPath  still has transit {}", transit);
     std::this_thread::sleep_for(std::chrono::milliseconds(1000));
   }
 }
@@ -30,7 +30,7 @@ ConversionPath::~ConversionPath() {
 int ConversionPath::emit(std::shared_ptr<FlatBufs::EpicsPVUpdate> up) {
   auto fb = converter->convert(*up);
   if (fb == nullptr) {
-    LOG(Sev::Info, "empty converted flat buffer");
+    Logger->info("empty converted flat buffer");
     return 1;
   }
   kafka_output->emit(std::move(fb));
@@ -42,12 +42,12 @@ nlohmann::json ConversionPath::status_json() const {
   auto Document = json::object();
   Document["schema"] = converter->schema_name();
   Document["broker"] = kafka_output->Output.brokerAddress();
-  Document["topic"] = kafka_output->topic_name();
+  Document["topic"] = kafka_output->topicName();
   return Document;
 }
 
 std::string ConversionPath::getKafkaTopicName() const {
-  return kafka_output->topic_name();
+  return kafka_output->topicName();
 }
 
 std::string ConversionPath::getSchemaName() const {
@@ -63,10 +63,10 @@ Stream::Stream(
       OutputQueue(std::move(Queue)) {}
 
 Stream::~Stream() {
-  LOG(Sev::Debug, "~Stream");
+  Logger->trace("~Stream");
   stop();
-  LOG(Sev::Debug, "~Stop DONE");
-  LOG(Sev::Info, "SeqDataEmitted: {}", SeqDataEmitted.to_string());
+  Logger->trace("~Stop DONE");
+  Logger->info("SeqDataEmitted: {}", SeqDataEmitted.to_string());
 }
 
 int Stream::addConverter(std::unique_ptr<ConversionPath> Path) {
@@ -82,10 +82,10 @@ int Stream::addConverter(std::unique_ptr<ConversionPath> Path) {
     ConversionPaths.push_back(std::move(Path));
     return 0;
   }
-  LOG(Sev::Notice, "Stream with channel name: {}  KafkaTopicName: {}  "
-                   "SchemaName: {} already exists.",
-      ChannelInfo_.channel_name, Path->getKafkaTopicName(),
-      Path->getSchemaName());
+  Logger->info("Stream with channel name: {}  KafkaTopicName: {}  "
+               "SchemaName: {} already exists.",
+               ChannelInfo_.channel_name, Path->getKafkaTopicName(),
+               Path->getSchemaName());
   return 1;
 }
 
@@ -106,12 +106,12 @@ uint32_t Stream::fillConversionQueue(
     std::shared_ptr<FlatBufs::EpicsPVUpdate> EpicsUpdate;
     auto found = OutputQueue->try_dequeue(EpicsUpdate);
     if (!found) {
-      LOG(Sev::Info, "Conversion worker buffer is empty");
+      Logger->info("Conversion worker buffer is empty");
       break;
     }
     NumDequeued += 1;
     if (!EpicsUpdate) {
-      LOG(Sev::Info, "Empty EPICS PV update");
+      Logger->info("Empty EPICS PV update");
       continue;
     }
     size_t ConversionPathID = 0;
@@ -122,7 +122,7 @@ uint32_t Stream::fillConversionQueue(
       ConversionPacket->Update = EpicsUpdate;
       bool QueuedSuccessful = Queue.enqueue(std::move(ConversionPacket));
       if (!QueuedSuccessful) {
-        LOG(Sev::Info, "Conversion work queue is full");
+        Logger->info("Conversion work queue is full");
         break;
       }
       ConversionPathID += 1;

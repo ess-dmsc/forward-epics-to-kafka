@@ -60,11 +60,7 @@ private:
   void createFakePVUpdateTimerIfRequired();
   void createPVUpdateTimerIfRequired();
   template <typename T>
-  std::shared_ptr<Stream> findOrAddStream(
-      ChannelInfo &ChannelInfo, std::shared_ptr<T> EpicsClient,
-      std::shared_ptr<
-          moodycamel::ConcurrentQueue<std::shared_ptr<FlatBufs::EpicsPVUpdate>>>
-          UpdateQueue);
+  std::shared_ptr<Stream> addStream(ChannelInfo &ChannelInfo);
   MainOpt &main_opt;
   std::shared_ptr<InstanceSet> KafkaInstanceSet;
   std::unique_ptr<Config::Listener> config_listener;
@@ -73,7 +69,7 @@ private:
   std::mutex converters_mutex;
   std::map<std::string, std::weak_ptr<Converter>> converters;
   std::mutex streams_mutex;
-  URI createTopicURI(ConverterSettings const &ConverterInfo);
+  URI createTopicURI(ConverterSettings const &ConverterInfo) const;
   std::mutex conversion_workers_mx;
   std::vector<std::unique_ptr<ConversionWorker>> conversion_workers;
   ConversionScheduler conversion_scheduler;
@@ -84,6 +80,7 @@ private:
   void raiseForwardingFlag(ForwardingRunState ToBeRaised);
   void pushConverterToStream(ConverterSettings const &ConverterInfo,
                              std::shared_ptr<Stream> &Stream);
+  SharedLogger Logger = getLogger();
 };
 
 extern std::atomic<uint64_t> g__total_msgs_to_kafka;

@@ -2,9 +2,9 @@
 #include "ChannelRequester.h"
 #include "EpicsClientMonitorImpl.h"
 #include "EpicsPVUpdate.h"
-#include "flatbuffers/flatbuffers.h"
 #include "logger.h"
 #include <atomic>
+#include <flatbuffers/flatbuffers.h>
 #include <memory>
 #include <mutex>
 #include <utility>
@@ -32,10 +32,10 @@ EpicsClientMonitor::EpicsClientMonitor(
     ChannelInfo &ChannelInfo,
     std::shared_ptr<
         moodycamel::ConcurrentQueue<std::shared_ptr<FlatBufs::EpicsPVUpdate>>>
-        EmitQueue)
-    : EmitQueue(std::move(EmitQueue)) {
+        Ring)
+    : EmitQueue(std::move(Ring)) {
   Impl.reset(new EpicsClientMonitorImpl(this));
-  LOG(Sev::Debug, "channel_name: {}", ChannelInfo.channel_name);
+  Logger->debug("channel_name: {}", ChannelInfo.channel_name);
   Impl->channel_name = ChannelInfo.channel_name;
   if (Impl->init(ChannelInfo.provider_type) != 0) {
     Impl.reset();
@@ -44,32 +44,29 @@ EpicsClientMonitor::EpicsClientMonitor(
 }
 
 EpicsClientMonitor::~EpicsClientMonitor() {
-  LOG(Sev::Debug, "EpicsClientMonitorMonitor");
+  Logger->trace("EpicsClientMonitorMonitor");
 }
 
 int EpicsClientMonitor::stop() { return Impl->stop(); }
 
-int EpicsClientMonitor::emit(std::shared_ptr<FlatBufs::EpicsPVUpdate> Update) {
+void EpicsClientMonitor::emit(std::shared_ptr<FlatBufs::EpicsPVUpdate> Update) {
+  std::lock_guard<std::mutex> lock(CachedUpdateMutex);
   CachedUpdate = Update;
-  return emitWithoutCaching(Update);
+  emitWithoutCaching(Update);
 }
 
 void EpicsClientMonitor::errorInEpics() { status_ = -1; }
 
 void EpicsClientMonitor::emitCachedValue() {
+  std::lock_guard<std::mutex> lock(CachedUpdateMutex);
   if (CachedUpdate != nullptr) {
     emitWithoutCaching(CachedUpdate);
   }
 }
-int EpicsClientMonitor::emitWithoutCaching(
+void EpicsClientMonitor::emitWithoutCaching(
     std::shared_ptr<FlatBufs::EpicsPVUpdate> Update) {
-  if (!Update) {
-    LOG(Sev::Info, "empty update?");
-    // should never happen, ignore
-    return 1;
-  }
+  assert(Update != nullptr);
   EmitQueue->enqueue(Update);
-  return 0;
 }
 
 std::string EpicsClientMonitor::getConnectionState() {
@@ -77,11 +74,11 @@ std::string EpicsClientMonitor::getConnectionState() {
 }
 
 void EpicsClientMonitor::handleConnectionStateChange(
-    ChannelConnectionState ConnectionState) {
-  LOG(Sev::Info, "EpicsClientMonitor::handleConnectionStateChange  {}",
-      toString(ConnectionState));
-  this->ConnectionState = ConnectionState;
-  if (ConnectionState == ChannelConnectionState::CONNECTED) {
+    ChannelConnectionState NewConnectionState) {
+  Logger->info("EpicsClientMonitor::handleConnectionStateChange  {}",
+               toString(NewConnectionState));
+  this->ConnectionState = NewConnectionState;
+  if (NewConnectionState == ChannelConnectionState::CONNECTED) {
     Impl->monitoringStart();
   } else {
     Impl->monitoringStop();
@@ -89,7 +86,7 @@ void EpicsClientMonitor::handleConnectionStateChange(
   if (ConnectionStatusProducer != nullptr) {
     flatbuffers::FlatBufferBuilder Builder;
     auto PVName = Builder.CreateString(Impl->channel_name);
-    auto ServiceID = Builder.CreateString(this->ServiceID);
+    auto ServiceIDStr = Builder.CreateString(this->ServiceID);
     auto Timestamp = static_cast<uint64_t>(
         std::chrono::duration_cast<std::chrono::nanoseconds>(
             std::chrono::system_clock::now().time_since_epoch())
@@ -97,30 +94,29 @@ void EpicsClientMonitor::handleConnectionStateChange(
     auto InfoBuffer = ep00::EpicsConnectionInfoBuilder(Builder);
     InfoBuffer.add_timestamp(Timestamp);
     InfoBuffer.add_source_name(PVName);
-    InfoBuffer.add_service_id(ServiceID);
-    if (ConnectionState == ChannelConnectionState::NEVER_CONNECTED) {
+    InfoBuffer.add_service_id(ServiceIDStr);
+    if (NewConnectionState == ChannelConnectionState::NEVER_CONNECTED) {
       InfoBuffer.add_type(ep00::EventType::NEVER_CONNECTED);
-    } else if (ConnectionState == ChannelConnectionState::CONNECTED) {
+    } else if (NewConnectionState == ChannelConnectionState::CONNECTED) {
       InfoBuffer.add_type(ep00::EventType::CONNECTED);
-    } else if (ConnectionState == ChannelConnectionState::DISCONNECTED) {
+    } else if (NewConnectionState == ChannelConnectionState::DISCONNECTED) {
       InfoBuffer.add_type(ep00::EventType::DISCONNECTED);
-    } else if (ConnectionState == ChannelConnectionState::DESTROYED) {
+    } else if (NewConnectionState == ChannelConnectionState::DESTROYED) {
       InfoBuffer.add_type(ep00::EventType::DESTROYED);
     }
     ep00::FinishEpicsConnectionInfoBuffer(Builder, InfoBuffer.Finish());
-    ConnectionStatusProducer->produceAndSetKey(Builder.GetBufferPointer(),
-                                      Builder.GetSize(), Impl->channel_name);
+    ConnectionStatusProducer->produceAndSetKey(
+        Builder.GetBufferPointer(), Builder.GetSize(), Impl->channel_name);
   }
 }
 
 void EpicsClientMonitor::handleChannelRequesterError(
     std::string const &Message) {
-  LOG(Sev::Warning, "EpicsClientMonitor received: {}", Message);
+  Logger->warn("EpicsClientMonitor received: {}", Message);
 }
 
-void EpicsClientMonitor::setServiceID(std::string ServiceID) {
-  this->ServiceID = ServiceID;
+void EpicsClientMonitor::setServiceID(std::string NewServiceID) {
+  this->ServiceID = NewServiceID;
 }
-
 } // namespace EpicsClient
 } // namespace Forwarder

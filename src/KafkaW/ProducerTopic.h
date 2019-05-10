@@ -21,7 +21,6 @@ public:
   int produce(unsigned char *MsgData, size_t MsgSize);
   int produceAndSetKey(unsigned char *MsgData, size_t MsgSize, std::string Key);
   int produce(std::unique_ptr<KafkaW::ProducerMessage> &Msg);
-  void enableCopy();
   std::string name() const;
   std::string brokerAddress() const;
 
@@ -29,7 +28,9 @@ private:
   std::shared_ptr<Producer> KafkaProducer;
   std::unique_ptr<RdKafka::Topic> RdKafkaTopic;
   std::string Name;
-
+  std::unique_ptr<RdKafka::Conf> ConfigPtr{
+      RdKafka::Conf::create(RdKafka::Conf::CONF_TOPIC)};
   bool DoCopyMsg{false};
+  SharedLogger Logger = getLogger();
 };
 }

@@ -1,6 +1,7 @@
 #pragma once
 #include "ChannelRequester.h"
 #include "FwdMonitorRequester.h"
+#include "logger.h"
 #include <pv/pvAccess.h>
 #include <pv/pvData.h>
 
@@ -15,7 +16,7 @@ class EpicsClientMonitorImpl {
 public:
   explicit EpicsClientMonitorImpl(EpicsClientInterface *EpicsClient)
       : EpicsClient(EpicsClient) {}
-  ~EpicsClientMonitorImpl() { LOG(Sev::Debug, "EpicsClientMonitorImpl"); }
+  ~EpicsClientMonitorImpl() { Logger->trace("EpicsClientMonitor_implor_impl"); }
 
   /// Starts the EPICS channel access provider loop and the monitor requester
   /// loop for monitoring EPICS PVs.
@@ -26,7 +27,7 @@ public:
       provider = ::epics::pvAccess::getChannelProviderRegistry()->getProvider(
           epics_channel_provider_type);
       if (!provider) {
-        LOG(Sev::Error, "Can not initialize provider");
+        Logger->error("Can not initialize provider");
         return 1;
       }
       channel_requester.reset(new ChannelRequester(EpicsClient));
@@ -40,10 +41,10 @@ public:
   int monitoringStart() {
     RLOCK();
     if (!channel) {
-      LOG(7, "monitoringStart:  want to start but we have no channel");
+      Logger->debug("monitoringStart:  want to start but we have no channel");
       return -1;
     }
-    LOG(Sev::Debug, "monitoringStart");
+    Logger->trace("monitoringStart");
     // Leaving it empty seems to be the full channel, including name.  That's
     // good.
     // Can also specify subfields, e.g. "value, timeStamp"  or also
@@ -58,7 +59,7 @@ public:
     monitor_requester.reset(new FwdMonitorRequester(EpicsClient, channel_name));
     monitor = channel->createMonitor(monitor_requester, pvreq);
     if (!monitor) {
-      LOG(Sev::Warning, "could not create EPICS monitor instance");
+      Logger->warn("could not create EPICS monitor instance");
       return -2;
     }
     return 0;
@@ -67,13 +68,20 @@ public:
   /// Stops the EPICS monitor loop in monitor_requester and resets the pointer.
   int monitoringStop() {
     RLOCK();
-    LOG(Sev::Debug, "monitoringStop");
+    Logger->trace("monitoringStop");
     if (monitor) {
       monitor->stop();
       monitor->destroy();
     }
     monitor_requester.reset();
     monitor.reset();
+    return 0;
+  }
+
+  /// Logs that the channel has been destroyed and stops monitoring.
+  int channelDestroyed() {
+    Logger->warn("channelDestroyed()");
+    monitoringStop();
     return 0;
   }
 
@@ -93,20 +101,8 @@ public:
   }
 
   /// Pushes update to the emit_queue ring buffer which is owned by a stream.
-  int emit(std::shared_ptr<FlatBufs::EpicsPVUpdate> const &Update) {
-#if TEST_PROVOKE_ERROR == 1
-    static std::atomic<int> c1{0};
-    if (c1 > 10) {
-      EpicsClient->error_in_epics();
-    }
-    ++c1;
-#endif
-    return EpicsClient->emit(Update);
-  }
-
-  /// Logging function.
-  static void error_channel_requester() {
-    LOG(Sev::Warning, "error_channel_requester()");
+  void emit(std::shared_ptr<FlatBufs::EpicsPVUpdate> const &Update) {
+    EpicsClient->emit(Update);
   }
 
   epics::pvData::MonitorRequester::shared_pointer monitor_requester;
@@ -118,6 +114,9 @@ public:
   std::string channel_name;
   EpicsClientInterface *EpicsClient = nullptr;
   std::unique_ptr<EpicsClientFactoryInit> factory_init;
+
+private:
+  SharedLogger Logger = getLogger();
 };
 
 } // namespace EpicsClient

@@ -14,7 +14,7 @@ protected:
 };
 
 struct ProducerMessageStandIn : ProducerMessage {
-  ProducerMessageStandIn(std::function<void()> DestructorFunction)
+  explicit ProducerMessageStandIn(std::function<void()> DestructorFunction)
       : Fun(DestructorFunction) {}
   ~ProducerMessageStandIn() override { Fun(); }
   std::function<void()> Fun;
