@@ -29,6 +29,8 @@ public:
                       FlatbufferID.data(), FlatbufferID.size());
       throw std::runtime_error(ErrorString);
     }
+    auto Logger = getLogger();
+    Logger->trace("Registered schema {}", FlatbufferID);
     SchemaMap[FlatbufferID] = std::move(SchemaInfoPtr);
   }
 
