@@ -255,7 +255,6 @@ void Forwarder::report_status() {
 }
 
 void Forwarder::report_stats(int dt) {
-  fmt::memory_buffer StatsBuffer;
   auto m1 = g__total_msgs_to_kafka.load();
   auto m2 = m1 / 1000;
   m1 = m1 % 1000;
@@ -270,6 +269,7 @@ void Forwarder::report_stats(int dt) {
     std::vector<char> Hostname = getHostname();
 
     int i1 = 0;
+    fmt::memory_buffer StatsBuffer;
     for (auto &s : kafka_instance_set->getStatsForAllProducers()) {
       fmt::format_to(StatsBuffer, "forward-epics-to-kafka,hostname={},set={}",
                      Hostname.data(), i1);
