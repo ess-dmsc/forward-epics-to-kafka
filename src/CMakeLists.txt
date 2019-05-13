@@ -18,29 +18,32 @@ set(libraries_common
         Threads::Threads
 )
 
+set(path_include_common "")
+
 # Allow a system installed EPICS library to be used instead of conan package (for ISIS-STFC)
-find_package(EPICSV4)
 set(USE_EXTERNAL_EPICS FALSE CACHE BOOL "Look for system installed EPICS instead of using Conan package")
 if (USE_EXTERNAL_EPICS)
+    find_package(EPICSV4)
     list(APPEND libraries_common
             ${path_library_epics_ca}
             ${path_library_epics_pvData}
             ${path_library_epics_pvAccess}
             ${path_library_epics_NT})
+    list(APPEND path_include_common ${EPICSV4_INCLUDE_DIRS})
 else()
-    list(APPEND libraries_common
-            CONAN_PKG::epics)
+    list(APPEND libraries_common CONAN_PKG::epics)
 endif(USE_EXTERNAL_EPICS)
 
 set(compile_defs_common "")
 
 if (CURL_FOUND)
-	list(APPEND compile_defs_common "HAVE_CURL=1")
+    list(APPEND compile_defs_common "HAVE_CURL=1")
     list(APPEND libraries_common ${CURL_LIBRARIES})
+    list(APPEND path_include_common ${CURL_INCLUDE_DIRS})
 endif(CURL_FOUND)
 
 set(USE_GRAYLOG_LOGGER TRUE CACHE BOOL "Compile with support for logging to Graylog")
-if (CONAN_SPDLOG-GRAYLOG_ROOT AND ${USE_GRAYLOG_LOGGER})
+if (CONAN_SPDLOG-GRAYLOG_ROOT AND USE_GRAYLOG_LOGGER)
     message(STATUS "Using graylog_logger")
     list(APPEND compile_defs_common "HAVE_GRAYLOG_LOGGER=1")
     list(APPEND libraries_common
@@ -48,7 +51,7 @@ if (CONAN_SPDLOG-GRAYLOG_ROOT AND ${USE_GRAYLOG_LOGGER})
 else()
     list(APPEND libraries_common
             CONAN_PKG::spdlog)
-endif(CONAN_SPDLOG-GRAYLOG_ROOT AND ${USE_GRAYLOG_LOGGER})
+endif(CONAN_SPDLOG-GRAYLOG_ROOT AND USE_GRAYLOG_LOGGER)
 
 set(INCLUDES
     EpicsClient/EpicsClientMonitor.h
@@ -132,7 +135,8 @@ set(SOURCES
 add_library(forwarder-library ${SOURCES} ${INCLUDES})
 target_compile_definitions(forwarder-library PRIVATE ${compile_defs_common})
 target_link_libraries(forwarder-library ${libraries_common})
-target_include_directories(forwarder-library SYSTEM PUBLIC ${EPICSV4_INCLUDE_DIRS})
+target_include_directories(forwarder-library SYSTEM PUBLIC ${path_include_common})
+
 if (WIN32)
     target_link_libraries(forwarder-library Ws2_32.lib dbghelp.lib)
     target_compile_options(forwarder-library PRIVATE /wd4996)
