@@ -407,9 +407,15 @@ void Forwarder::addMapping(StreamSettings const &StreamInfo) {
       PVUpdateTimer->addCallback(
           [Client, PeriodicClient]() { PeriodicClient->emitCachedValue(); });
     }
-
+    if (StreamInfo.Converters.size() > 0) {
+      auto ConnectionStatusProducer = KafkaInstanceSet->SetUpProducerTopic(
+          URI(StreamInfo.Converters[0].Topic));
+      Stream->getEpicsClient()->setProducer(make_unique<KafkaW::ProducerTopic>(
+          std::move(ConnectionStatusProducer)));
+    }
     Stream->getEpicsClient()->setServiceID(main_opt.MainSettings.ServiceID);
     for (auto &Converter : StreamInfo.Converters) {
+
       pushConverterToStream(Converter, Stream);
     }
   } catch (std::runtime_error &e) {

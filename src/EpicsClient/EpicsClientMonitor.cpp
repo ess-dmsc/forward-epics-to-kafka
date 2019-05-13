@@ -118,5 +118,9 @@ void EpicsClientMonitor::handleChannelRequesterError(
 void EpicsClientMonitor::setServiceID(std::string NewServiceID) {
   this->ServiceID = NewServiceID;
 }
+
+void EpicsClientMonitor::setProducer(std::unique_ptr<KafkaW::ProducerTopic> Producer) {
+    this->ConnectionStatusProducer = std::move(Producer);
+}
 } // namespace EpicsClient
 } // namespace Forwarder
