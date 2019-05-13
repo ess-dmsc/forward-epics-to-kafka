@@ -39,6 +39,14 @@ std::vector<char> getHostname() {
 #endif
 
 #include "CURLReporter.h"
+#include "schemas/f142/f142.cpp"
+
+namespace {
+void registerSchemas() {
+  FlatBufs::SchemaRegistry::Registrar<FlatBufs::SchemaInfo> g_registrar_info(
+      "f142", FlatBufs::SchemaInfo::ptr(new FlatBufs::f142::Info));
+}
+}
 
 namespace Forwarder {
 
@@ -58,6 +66,8 @@ static KafkaW::BrokerSettings make_broker_opt(MainOpt const &opt) {
 Forwarder::Forwarder(MainOpt &opt)
     : main_opt(opt), kafka_instance_set(InstanceSet::Set(make_broker_opt(opt))),
       conversion_scheduler(this) {
+
+  registerSchemas();
 
   for (size_t i = 0; i < opt.MainSettings.ConversionThreads; ++i) {
     conversion_workers.emplace_back(make_unique<ConversionWorker>(

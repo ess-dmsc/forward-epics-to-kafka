@@ -413,7 +413,5 @@ std::unique_ptr<FlatBufferCreator> Info::createConverter() {
   return make_unique<Converter>();
 }
 
-FlatBufs::SchemaRegistry::Registrar<Info> g_registrar_info("f142",
-                                                           Info::ptr(new Info));
 } // namespace f142
 } // namespace FlatBufs
