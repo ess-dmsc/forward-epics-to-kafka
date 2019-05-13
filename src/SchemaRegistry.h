@@ -22,14 +22,13 @@ public:
 
   static void registerSchema(std::string const &FlatbufferID,
                              SchemaInfo::ptr &&SchemaInfoPtr) {
+    auto Logger = getLogger();
     auto &SchemaMap = items();
     if (SchemaMap.find(FlatbufferID) != SchemaMap.end()) {
-      auto ErrorString =
-          fmt::format("ERROR schema handler for [{:.{}}] exists already",
-                      FlatbufferID.data(), FlatbufferID.size());
-      throw std::runtime_error(ErrorString);
+      Logger->warn(
+          "schema handler for [{:.{}}] exists already\",\n"
+          "                      FlatbufferID.data(), FlatbufferID.size()");
     }
-    auto Logger = getLogger();
     Logger->trace("Registered schema {}", FlatbufferID);
     SchemaMap[FlatbufferID] = std::move(SchemaInfoPtr);
   }
