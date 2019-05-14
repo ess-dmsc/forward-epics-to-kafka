@@ -53,7 +53,7 @@ else()
             CONAN_PKG::spdlog)
 endif(CONAN_SPDLOG-GRAYLOG_ROOT AND USE_GRAYLOG_LOGGER)
 
-set(INCLUDES
+set(forwarder-library_INC
     EpicsClient/EpicsClientMonitor.h
     EpicsClient/EpicsClientRandom.h
     EpicsClient/EpicsClientFactory.h
@@ -102,7 +102,7 @@ set(INCLUDES
     Timer.h
     URI.h)
 
-set(SOURCES
+set(forwarder-library_SRC
     MainOpt.cpp
     Forwarder.cpp
     ConfigParser.cpp
@@ -132,7 +132,7 @@ set(SOURCES
     Timer.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/git_commit_current.cpp)
 
-add_library(forwarder-library ${SOURCES} ${INCLUDES})
+add_library(forwarder-library ${forwarder-library_SRC} ${forwarder-library_INC})
 target_compile_definitions(forwarder-library PRIVATE ${compile_defs_common})
 target_link_libraries(forwarder-library ${libraries_common})
 target_include_directories(forwarder-library SYSTEM PUBLIC ${path_include_common})

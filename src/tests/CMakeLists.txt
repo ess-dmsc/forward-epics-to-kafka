@@ -1,6 +1,6 @@
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ../../tests)
 
-set(sources
+set(tests_SRC
     URITests.cpp
     JsonTests.cpp
     ConfigParserTests.cpp
@@ -20,10 +20,12 @@ set(sources
     ConsumerTests.cpp
     MockMessage.h
     UnitTests.cpp)
-add_executable(tests ${sources})
+
+add_executable(tests ${tests_SRC})
 target_link_libraries(tests
         forwarder-library
         CONAN_PKG::gtest)
+
 if (WIN32)
     target_compile_options(tests PRIVATE /wd4996)
 else()
