@@ -41,7 +41,7 @@ enum class ForwardingRunState : int {
 
 class Forwarder {
 public:
-  explicit Forwarder(MainOpt &opt);
+  explicit Forwarder(MainOpt &Opt);
   ~Forwarder();
   void forward_epics_to_kafka();
   void addMapping(StreamSettings const &StreamInfo);
@@ -62,7 +62,7 @@ private:
   template <typename T>
   std::shared_ptr<Stream> addStream(ChannelInfo &ChannelInfo);
   MainOpt &main_opt;
-  std::shared_ptr<InstanceSet> KafkaInstanceSet;
+  std::unique_ptr<InstanceSet> KafkaInstanceSet;
   std::unique_ptr<Config::Listener> config_listener;
   std::unique_ptr<Timer> PVUpdateTimer;
   std::unique_ptr<Timer> GenerateFakePVUpdateTimer;

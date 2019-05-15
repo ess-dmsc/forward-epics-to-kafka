@@ -55,24 +55,18 @@ static bool isStopDueToSignal(ForwardingRunState Flag) {
          static_cast<int>(ForwardingRunState::STOP_DUE_TO_SIGNAL);
 }
 
-// Little helper
-static KafkaW::BrokerSettings make_broker_opt(MainOpt const &opt) {
-  KafkaW::BrokerSettings ret = opt.broker_opt;
-  ret.Address = opt.brokers_as_comma_list();
-  return ret;
-}
-
 /// Main program entry class.
-Forwarder::Forwarder(MainOpt &opt)
-    : main_opt(opt), KafkaInstanceSet(InstanceSet::Set(make_broker_opt(opt))),
+Forwarder::Forwarder(MainOpt &Opt)
+    : main_opt(Opt),
+      KafkaInstanceSet(make_unique<InstanceSet>(Opt.GlobalBrokerSettings)),
       conversion_scheduler(this) {
 
   registerSchemas();
 
-  for (size_t i = 0; i < opt.MainSettings.ConversionThreads; ++i) {
+  for (size_t i = 0; i < Opt.MainSettings.ConversionThreads; ++i) {
     conversion_workers.emplace_back(make_unique<ConversionWorker>(
         &conversion_scheduler,
-        static_cast<uint32_t>(opt.MainSettings.ConversionWorkerQueueSize)));
+        static_cast<uint32_t>(Opt.MainSettings.ConversionWorkerQueueSize)));
   }
 
   bool use_config = true;
@@ -85,10 +79,10 @@ Forwarder::Forwarder(MainOpt &opt)
     use_config = false;
   }
   if (use_config) {
-    KafkaW::BrokerSettings bopt;
-    bopt.Address = main_opt.MainSettings.BrokerConfig.HostPort;
-    bopt.PollTimeoutMS = 0;
-    auto NewConsumer = make_unique<KafkaW::Consumer>(bopt);
+    KafkaW::BrokerSettings ConsumerSettings;
+    ConsumerSettings.Address = main_opt.MainSettings.BrokerConfig.HostPort;
+    ConsumerSettings.PollTimeoutMS = 0;
+    auto NewConsumer = make_unique<KafkaW::Consumer>(ConsumerSettings);
     config_listener.reset(new Config::Listener{
         main_opt.MainSettings.BrokerConfig, std::move(NewConsumer)});
   }
@@ -117,7 +111,6 @@ Forwarder::~Forwarder() {
   streams.clearStreams();
   conversion_workers_clear();
   converters_clear();
-  InstanceSet::clear();
 }
 
 void Forwarder::createPVUpdateTimerIfRequired() {
@@ -211,7 +204,7 @@ void Forwarder::forward_epics_to_kafka() {
       t_status_last = t2;
     }
     if (do_stats) {
-      KafkaInstanceSet->log_stats();
+      KafkaInstanceSet->logStats();
       report_stats(dt.count());
     }
     if (dt >= Dt) {
@@ -385,7 +378,7 @@ void Forwarder::pushConverterToStream(ConverterSettings const &ConverterInfo,
   }
 
   // Create a conversion path then add it
-  auto Topic = KafkaInstanceSet->SetUpProducerTopic(std::move(TopicURI));
+  auto Topic = KafkaInstanceSet->createProducerTopic(std::move(TopicURI));
   auto cp = ::make_unique<ConversionPath>(
       std::move(ConverterShared), ::make_unique<KafkaOutput>(std::move(Topic)));
 
@@ -418,7 +411,7 @@ void Forwarder::addMapping(StreamSettings const &StreamInfo) {
           [Client, PeriodicClient]() { PeriodicClient->emitCachedValue(); });
     }
     if (StreamInfo.Converters.size() > 0) {
-      auto ConnectionStatusProducer = KafkaInstanceSet->SetUpProducerTopic(
+      auto ConnectionStatusProducer = KafkaInstanceSet->createProducerTopic(
           URI(StreamInfo.Converters[0].Topic));
       Stream->getEpicsClient()->setProducer(make_unique<KafkaW::ProducerTopic>(
           std::move(ConnectionStatusProducer)));
