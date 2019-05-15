@@ -1,5 +1,5 @@
-#include "../KafkaW/BrokerSettings.h"
 #include "ConfStandIn.h"
+#include <KafkaW/BrokerSettings.h>
 #include <gtest/gtest.h>
 #include <librdkafka/rdkafkacpp.h>
 

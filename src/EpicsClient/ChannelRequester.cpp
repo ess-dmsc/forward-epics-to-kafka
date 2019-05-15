@@ -1,5 +1,5 @@
 #include "ChannelRequester.h"
-#include "logger.h"
+#include "../logger.h"
 #include <pv/pvAccess.h>
 
 namespace Forwarder {

@@ -1,7 +1,7 @@
 #pragma once
+#include "../logger.h"
 #include "ChannelRequester.h"
 #include "FwdMonitorRequester.h"
-#include "logger.h"
 #include <pv/pvAccess.h>
 #include <pv/pvData.h>
 

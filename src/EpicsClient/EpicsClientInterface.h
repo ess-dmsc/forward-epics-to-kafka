@@ -1,7 +1,7 @@
 #pragma once
-#include "EpicsPVUpdate.h"
+#include "../EpicsPVUpdate.h"
+#include "../KafkaW/ProducerTopic.h"
 #include <memory>
-#include <KafkaW/ProducerTopic.h>
 
 namespace Forwarder {
 namespace EpicsClient {

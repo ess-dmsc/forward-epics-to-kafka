@@ -1,7 +1,7 @@
 #pragma once
+#include "../Stream.h"
 #include "EpicsClientFactory.h"
 #include "EpicsClientInterface.h"
-#include "Stream.h"
 #include <array>
 #include <atomic>
 #include <string>

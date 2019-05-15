@@ -1,19 +1,15 @@
 #include "EpicsClientMonitor.h"
+#include "../EpicsPVUpdate.h"
+#include "../RangeSet.h"
+#include "../logger.h"
 #include "ChannelRequester.h"
 #include "EpicsClientMonitorImpl.h"
-#include "EpicsPVUpdate.h"
-#include "logger.h"
 #include <atomic>
 #include <flatbuffers/flatbuffers.h>
 #include <memory>
 #include <mutex>
-#include <utility>
-// EPICS 4 supports access via the channel access protocol as well,
-// and we need it because some hardware speaks EPICS base.
-#include "EpicsPVUpdate.h"
-#include "RangeSet.h"
-#include "logger.h"
 #include <pv/pvAccess.h>
+#include <utility>
 #ifdef _MSC_VER
 #include <iso646.h>
 #endif
@@ -119,8 +115,9 @@ void EpicsClientMonitor::setServiceID(std::string NewServiceID) {
   this->ServiceID = NewServiceID;
 }
 
-void EpicsClientMonitor::setProducer(std::unique_ptr<KafkaW::ProducerTopic> Producer) {
-    this->ConnectionStatusProducer = std::move(Producer);
+void EpicsClientMonitor::setProducer(
+    std::unique_ptr<KafkaW::ProducerTopic> Producer) {
+  this->ConnectionStatusProducer = std::move(Producer);
 }
 } // namespace EpicsClient
 } // namespace Forwarder

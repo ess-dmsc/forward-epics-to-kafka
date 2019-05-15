@@ -1,6 +1,6 @@
 #pragma once
+#include "../logger.h"
 #include "EpicsClientInterface.h"
-#include "logger.h"
 #include <pv/pvAccess.h>
 #include <pv/pvData.h>
 #include <string>

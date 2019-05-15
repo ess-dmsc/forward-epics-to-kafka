@@ -1,6 +1,6 @@
 #include "BrokerSettings.h"
+#include "../logger.h"
 #include "KafkaEventCb.h"
-#include "logger.h"
 #include <librdkafka/rdkafkacpp.h>
 
 namespace KafkaW {

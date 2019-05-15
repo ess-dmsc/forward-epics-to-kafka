@@ -26,7 +26,7 @@ def test_config_file_channel_created_correctly(docker_compose):
     # Check the initial value is forwarded
     first_msg, msg_key = poll_for_valid_message(cons)
     check_expected_values(first_msg, Value.Double, PVDOUBLE, 0.0)
-    assert(msg_key == b'SIMPLE:DOUBLE'), 'Message key expected to be the same as the PV name'
+    assert(msg_key == PVDOUBLE.encode('utf-8')), 'Message key expected to be the same as the PV name'
     # We set the message key to be the PV name so that all messages from the same PV are sent to
     # the same partition by Kafka. This ensures that the order of these messages is maintained to the consumer.
 

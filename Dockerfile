@@ -30,7 +30,7 @@ RUN export DEBIAN_FRONTEND=noninteractive \
 COPY ./ ../forwarder_src/
 
 RUN cd forwarder \
-    && cmake -DCONAN="MANUAL" --target="forward-epics-to-kafka" -DGOOGLETEST_DISABLE="ON" ../forwarder_src \
+    && cmake -DCONAN="MANUAL" --target="forward-epics-to-kafka" -DBUILD_TESTS="OFF" ../forwarder_src \
     && make -j4 forward-epics-to-kafka VERBOSE=1 \
     && apt-get remove --purge -y build-essential git python-pip cmake \
     && mv ../forwarder_src/docker_launch.sh /docker_launch.sh \
