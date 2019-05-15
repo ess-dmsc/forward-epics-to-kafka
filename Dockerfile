@@ -6,7 +6,7 @@ ARG https_proxy
 
 ARG local_conan_server
 
-ADD "https://raw.githubusercontent.com/ess-dmsc/docker-ubuntu18.04-build-node/master/files/registry.json" "/root/.conan/registry.json"
+ADD "https://raw.githubusercontent.com/ess-dmsc/docker-ubuntu18.04-build-node/master/files/remotes.json" "/root/.conan/remotes.json"
 ADD "https://raw.githubusercontent.com/ess-dmsc/docker-ubuntu18.04-build-node/master/files/default_profile" "/root/.conan/profiles/default"
 
 COPY conan/ ../forwarder_src/conan/
@@ -30,7 +30,7 @@ RUN export DEBIAN_FRONTEND=noninteractive \
 COPY ./ ../forwarder_src/
 
 RUN cd forwarder \
-    && cmake -DCONAN="MANUAL" --target="forward-epics-to-kafka" -DGOOGLETEST_DISABLE="ON" ../forwarder_src \
+    && cmake -DCONAN="MANUAL" --target="forward-epics-to-kafka" -DBUILD_TESTS="OFF" ../forwarder_src \
     && make -j4 forward-epics-to-kafka VERBOSE=1 \
     && apt-get remove --purge -y build-essential git python-pip cmake \
     && mv ../forwarder_src/docker_launch.sh /docker_launch.sh \

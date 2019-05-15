@@ -1,5 +1,5 @@
 #pragma once
-#include "../Stream.h"
+#include <Stream.h>
 
 class FakeEpicsClient : public Forwarder::EpicsClient::EpicsClientInterface {
 public:

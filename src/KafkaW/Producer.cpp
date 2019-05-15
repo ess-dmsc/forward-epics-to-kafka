@@ -1,5 +1,5 @@
 #include "Producer.h"
-#include "logger.h"
+#include "../logger.h"
 #include <vector>
 
 namespace KafkaW {
@@ -35,7 +35,7 @@ Producer::Producer(BrokerSettings Settings)
 
   try {
     ProducerBrokerSettings.apply(Conf.get());
-  } catch (std::runtime_error &e) {
+  } catch (std::runtime_error &) {
     throw std::runtime_error(
         "Cannot create kafka handle due to configuration error");
   }
@@ -56,7 +56,7 @@ Producer::Producer(BrokerSettings Settings)
 
 void Producer::poll() {
   auto EventsHandled = ProducerPtr->poll(ProducerBrokerSettings.PollTimeoutMS);
-  Logger->debug(
+  Logger->trace(
       "IID: {}  broker: {}  rd_kafka_poll()  served: {}  outq_len: {}",
       ProducerID, ProducerBrokerSettings.Address, EventsHandled,
       outputQueueLength());

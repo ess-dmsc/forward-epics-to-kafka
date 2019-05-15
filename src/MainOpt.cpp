@@ -43,7 +43,7 @@ bool parseLogLevel(std::vector<std::string> LogLevelString,
   try {
     LogLevelResult = LevelMap.at(LogLevelString.at(0));
     return true;
-  } catch (std::out_of_range &e) {
+  } catch (std::out_of_range &) {
     // Do nothing
   }
   try {
@@ -52,7 +52,7 @@ bool parseLogLevel(std::vector<std::string> LogLevelString,
       return false;
     }
     LogLevelResult = spdlog::level::level_enum(TempLogMessageLevel);
-  } catch (std::invalid_argument &e) {
+  } catch (std::invalid_argument &) {
     return false;
   }
 
@@ -67,7 +67,7 @@ CLI::Option *addUriOption(CLI::App &App, std::string const &Name,
   CLI::callback_t Fun = [&URIArg](CLI::results_t Results) {
     try {
       URIArg.parse(Results[0]);
-    } catch (std::runtime_error &E) {
+    } catch (std::runtime_error &) {
       return false;
     }
     return true;
@@ -182,8 +182,7 @@ std::pair<int, std::unique_ptr<MainOpt>> parse_opt(int argc, char **argv) {
 
   try {
     App.parse(argc, argv);
-
-  } catch (CLI::CallForHelp const &e) {
+  } catch (CLI::CallForHelp const &) {
     ret.first = 1;
   } catch (CLI::ParseError const &e) {
     spdlog::log(spdlog::level::err, "Can not parse command line options: {}",

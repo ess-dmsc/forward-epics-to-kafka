@@ -43,7 +43,6 @@ void ConfigCB::handleCommandExit() { main.stopForwarding(); }
 
 void ConfigCB::handleCommand(std::string const &Msg) {
   using nlohmann::json;
-  Logger->error("Msg is {}", Msg);
   auto Document = json::parse(Msg);
 
   std::string Command = findCommand(Document);
