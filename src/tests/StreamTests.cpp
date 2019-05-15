@@ -1,11 +1,11 @@
+#include "StreamTestUtils.h"
 #include <Converter.h>
 #include <EpicsClient/EpicsClientRandom.h>
 #include <Forwarder.h>
 #include <Stream.h>
 #include <Streams.h>
-#include <helper.h>
-#include "StreamTestUtils.h"
 #include <gmock/gmock.h>
+#include <helper.h>
 
 using namespace testing;
 using namespace Forwarder;
