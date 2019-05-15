@@ -1,10 +1,8 @@
 [requires]
-cmake_installer/3.10.0@conan/stable
 fmt/5.3.0@bincrafters/stable
-gtest/3121b20-dm3@ess-dmsc/stable
-flatbuffers/1.10.0@google/stable
-librdkafka/0.11.4@ess-dmsc/stable
-spdlog-graylog/1.2.1-dm8@ess-dmsc/testing
+gtest/1.8.1@bincrafters/stable
+librdkafka/0.11.4-dm2@ess-dmsc/stable
+spdlog-graylog/1.2.1-dm12@ess-dmsc/stable
 epics/3.16.1-4.6.0-dm6@ess-dmsc/stable
 streaming-data-types/c45d2ec@ess-dmsc/stable
 cli11/1.5.3@bincrafters/stable
@@ -22,6 +20,8 @@ gtest:shared=True
 librdkafka:shared=True
 
 [imports]
+bin, *.dll -> ./bin
+lib, *.dll -> ./bin
 lib, *.dylib* -> ./lib
 lib, *.so* -> ./lib
 lib64, *.so* -> ./lib

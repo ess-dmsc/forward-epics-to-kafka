@@ -1,5 +1,0 @@
-find_path(CONCURRENTQUEUE_INCLUDE_DIR NAMES concurrentqueue/concurrentqueue.h)
-include(FindPackageHandleStandardArgs)
-find_package_handle_standard_args(CONCURRENTQUEUE DEFAULT_MSG
-    CONCURRENTQUEUE_INCLUDE_DIR
-)

@@ -1,6 +1,6 @@
-#include "../Config.h"
-#include "../KafkaW/Consumer.h"
 #include <CommandHandler.h>
+#include <Config.h>
+#include <KafkaW/Consumer.h>
 #include <gtest/gtest.h>
 #include <helper.h>
 
@@ -9,8 +9,8 @@ class ConsumerFake : public ConsumerInterface {
 public:
   std::unique_ptr<ConsumerMessage> poll() override {
     std::string Data = "1,2,3";
-    auto Message =
-        make_unique<KafkaW::ConsumerMessage>(Data, KafkaW::PollStatus::Message);
+    auto Message = ::make_unique<KafkaW::ConsumerMessage>(
+        Data, KafkaW::PollStatus::Message);
     return Message;
   };
   void addTopic(const std::string &Topic) override { UNUSED_ARG(Topic); };
@@ -19,7 +19,7 @@ public:
 
 TEST(ListenerTest, successfully_create_listener_and_poll) {
   KafkaW::BrokerSettings bopt;
-  auto FakeConsumer = make_unique<KafkaW::ConsumerFake>();
+  auto FakeConsumer = ::make_unique<KafkaW::ConsumerFake>();
 
   Forwarder::URI uri;
   Forwarder::Config::Listener listener(uri, std::move(FakeConsumer));

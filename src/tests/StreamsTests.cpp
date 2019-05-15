@@ -1,8 +1,8 @@
-#include "../Stream.h"
-#include "../Streams.h"
-#include "../helper.h"
 #include "StreamTestUtils.h"
+#include <Stream.h>
+#include <Streams.h>
 #include <gmock/gmock.h>
+#include <helper.h>
 
 using namespace testing;
 using namespace Forwarder;

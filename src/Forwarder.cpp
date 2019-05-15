@@ -6,15 +6,15 @@
 
 #include "CommandHandler.h"
 #include "Converter.h"
+#include "EpicsClient/EpicsClientInterface.h"
+#include "EpicsClient/EpicsClientMonitor.h"
+#include "EpicsClient/EpicsClientRandom.h"
 #include "Forwarder.h"
 #include "KafkaOutput.h"
 #include "Stream.h"
 #include "Timer.h"
 #include "helper.h"
 #include "logger.h"
-#include <EpicsClient/EpicsClientInterface.h>
-#include <EpicsClient/EpicsClientMonitor.h>
-#include <EpicsClient/EpicsClientRandom.h>
 #include <algorithm>
 #include <nlohmann/json.hpp>
 #include <sys/types.h>
@@ -39,6 +39,14 @@ std::vector<char> getHostname() {
 #endif
 
 #include "CURLReporter.h"
+#include "schemas/f142/f142.cpp"
+
+namespace {
+void registerSchemas() {
+  FlatBufs::SchemaRegistry::Registrar<FlatBufs::SchemaInfo> g_registrar_info(
+      "f142", FlatBufs::SchemaInfo::ptr(new FlatBufs::f142::Info));
+}
+}
 
 namespace Forwarder {
 
@@ -58,6 +66,8 @@ static KafkaW::BrokerSettings make_broker_opt(MainOpt const &opt) {
 Forwarder::Forwarder(MainOpt &opt)
     : main_opt(opt), kafka_instance_set(InstanceSet::Set(make_broker_opt(opt))),
       conversion_scheduler(this) {
+
+  registerSchemas();
 
   for (size_t i = 0; i < opt.MainSettings.ConversionThreads; ++i) {
     conversion_workers.emplace_back(make_unique<ConversionWorker>(
@@ -255,7 +265,6 @@ void Forwarder::report_status() {
 }
 
 void Forwarder::report_stats(int dt) {
-  fmt::memory_buffer StatsBuffer;
   auto m1 = g__total_msgs_to_kafka.load();
   auto m2 = m1 / 1000;
   m1 = m1 % 1000;
@@ -270,6 +279,7 @@ void Forwarder::report_stats(int dt) {
     std::vector<char> Hostname = getHostname();
 
     int i1 = 0;
+    fmt::memory_buffer StatsBuffer;
     for (auto &s : kafka_instance_set->getStatsForAllProducers()) {
       fmt::format_to(StatsBuffer, "forward-epics-to-kafka,hostname={},set={}",
                      Hostname.data(), i1);
@@ -328,7 +338,7 @@ URI Forwarder::createTopicURI(ConverterSettings const &ConverterInfo) const {
   }
   try {
     TopicURI.parse(ConverterInfo.Topic);
-  } catch (std::runtime_error &e) {
+  } catch (std::runtime_error &) {
     throw MappingAddException(
         fmt::format("Invalid topic {} in converter, not added to stream. May "
                     "require broker and/or host slashes.",
@@ -411,7 +421,7 @@ void Forwarder::addMapping(StreamSettings const &StreamInfo) {
     for (auto &Converter : StreamInfo.Converters) {
       pushConverterToStream(Converter, Stream);
     }
-  } catch (std::runtime_error &e) {
+  } catch (std::runtime_error &) {
     std::throw_with_nested(MappingAddException("Cannot add stream"));
   }
 }
