@@ -1,4 +1,4 @@
-#include "../URI.h"
+#include <URI.h>
 #include <gtest/gtest.h>
 
 using namespace Forwarder;

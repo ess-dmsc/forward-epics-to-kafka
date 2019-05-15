@@ -1,6 +1,6 @@
 #include "StreamTestUtils.h"
-#include "../EpicsClient/EpicsClientRandom.h"
-#include "../helper.h"
+#include <EpicsClient/EpicsClientRandom.h>
+#include <helper.h>
 
 using namespace Forwarder;
 
