@@ -1,5 +1,5 @@
-#include "../EpicsClient/EpicsClientMonitor.h"
-#include "../helper.h"
+#include <EpicsClient/EpicsClientMonitor.h>
+#include <helper.h>
 #include <gtest/gtest.h>
 
 using namespace Forwarder;

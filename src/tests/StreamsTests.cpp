@@ -1,6 +1,6 @@
-#include "../Stream.h"
-#include "../Streams.h"
-#include "../helper.h"
+#include <Stream.h>
+#include <Streams.h>
+#include <helper.h>
 #include "StreamTestUtils.h"
 #include <gmock/gmock.h>
 

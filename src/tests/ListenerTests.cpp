@@ -1,7 +1,7 @@
-#include "../CommandHandler.h"
-#include "../Config.h"
-#include "../KafkaW/Consumer.h"
-#include "../helper.h"
+#include <CommandHandler.h>
+#include <Config.h>
+#include <KafkaW/Consumer.h>
+#include <helper.h>
 #include <gtest/gtest.h>
 
 namespace KafkaW {

@@ -1,4 +1,4 @@
-#include "../KafkaW/Consumer.h"
+#include <KafkaW/Consumer.h>
 #include "MockMessage.h"
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>

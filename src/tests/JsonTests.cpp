@@ -1,5 +1,5 @@
-#include "../json.h"
-#include "../logger.h"
+#include <json.h>
+#include <logger.h>
 #include <gtest/gtest.h>
 
 TEST(JsonTest, JSON_integer_maximum_values) {
