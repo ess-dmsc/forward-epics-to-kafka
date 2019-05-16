@@ -1,3 +1,4 @@
+#include "helper.h"
 #include <KafkaW/Producer.h>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -116,11 +117,10 @@ TEST_F(ProducerTests, produceReturnsNoErrorCodeIfMessageProduced) {
               produce(_, _, _, _, _, _, _, _))
       .Times(Exactly(1))
       .WillOnce(Return(RdKafka::ERR_NO_ERROR));
-  auto FakeTopicPtr = new FakeTopic();
-  ASSERT_EQ(
-      Producer1.produce(FakeTopicPtr, 0, 0, nullptr, 0, nullptr, 0, nullptr),
-      RdKafka::ErrorCode::ERR_NO_ERROR);
-  delete FakeTopicPtr;
+  auto FakeTopicPtr = ::make_unique<FakeTopic>();
+  ASSERT_EQ(Producer1.produce(FakeTopicPtr.get(), 0, 0, nullptr, 0, nullptr, 0,
+                              nullptr),
+            RdKafka::ErrorCode::ERR_NO_ERROR);
 }
 
 TEST_F(ProducerTests, produceReturnsErrorCodeIfMessageNotProduced) {
@@ -131,11 +131,10 @@ TEST_F(ProducerTests, produceReturnsErrorCodeIfMessageNotProduced) {
               produce(_, _, _, _, _, _, _, _))
       .Times(Exactly(1))
       .WillOnce(Return(RdKafka::ERR__BAD_MSG));
-  auto FakeTopicPtr = new FakeTopic();
-  ASSERT_EQ(
-      Producer1.produce(FakeTopicPtr, 0, 0, nullptr, 0, nullptr, 0, nullptr),
-      RdKafka::ErrorCode::ERR__BAD_MSG);
-  delete FakeTopicPtr;
+  auto FakeTopicPtr = ::make_unique<FakeTopic>();
+  ASSERT_EQ(Producer1.produce(FakeTopicPtr.get(), 0, 0, nullptr, 0, nullptr, 0,
+                              nullptr),
+            RdKafka::ErrorCode::ERR__BAD_MSG);
 }
 
 TEST_F(ProducerTests, produceAlsoCallsPollOnProducer) {
@@ -165,8 +164,8 @@ TEST_F(ProducerTests, produceAlsoCallsPollOnProducer) {
 
   for (uint32_t CallNumber = 0; CallNumber < NumberOfProduceCalls;
        ++CallNumber) {
-    auto FakeTopicPtr = new FakeTopic();
-    Producer1.produce(FakeTopicPtr, 0, 0, nullptr, 0, nullptr, 0, nullptr);
-    delete FakeTopicPtr;
+    auto FakeTopicPtr = ::make_unique<FakeTopic>();
+    Producer1.produce(FakeTopicPtr.get(), 0, 0, nullptr, 0, nullptr, 0,
+                      nullptr);
   }
 }
