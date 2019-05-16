@@ -117,9 +117,8 @@ TEST_F(ProducerTests, produceReturnsNoErrorCodeIfMessageProduced) {
       .Times(Exactly(1))
       .WillOnce(Return(RdKafka::ERR_NO_ERROR));
   auto Fake = new FakeTopic();
-  ASSERT_EQ(
-      Producer1.produce(Fake, 0, 0, nullptr, 0, nullptr, 0, nullptr),
-      RdKafka::ErrorCode::ERR_NO_ERROR);
+  ASSERT_EQ(Producer1.produce(Fake, 0, 0, nullptr, 0, nullptr, 0, nullptr),
+            RdKafka::ErrorCode::ERR_NO_ERROR);
   delete Fake;
 }
 
@@ -132,9 +131,8 @@ TEST_F(ProducerTests, produceReturnsErrorCodeIfMessageNotProduced) {
       .Times(Exactly(1))
       .WillOnce(Return(RdKafka::ERR__BAD_MSG));
   auto Fake = new FakeTopic();
-  ASSERT_EQ(
-      Producer1.produce(Fake, 0, 0, nullptr, 0, nullptr, 0, nullptr),
-      RdKafka::ErrorCode::ERR__BAD_MSG);
+  ASSERT_EQ(Producer1.produce(Fake, 0, 0, nullptr, 0, nullptr, 0, nullptr),
+            RdKafka::ErrorCode::ERR__BAD_MSG);
   delete Fake;
 }
 
