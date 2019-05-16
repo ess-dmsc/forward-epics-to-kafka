@@ -116,9 +116,11 @@ TEST_F(ProducerTests, produceReturnsNoErrorCodeIfMessageProduced) {
               produce(_, _, _, _, _, _, _, _))
       .Times(Exactly(1))
       .WillOnce(Return(RdKafka::ERR_NO_ERROR));
+  auto Fake = new FakeTopic();
   ASSERT_EQ(
-      Producer1.produce(new FakeTopic, 0, 0, nullptr, 0, nullptr, 0, nullptr),
+      Producer1.produce(Fake, 0, 0, nullptr, 0, nullptr, 0, nullptr),
       RdKafka::ErrorCode::ERR_NO_ERROR);
+  delete Fake;
 }
 
 TEST_F(ProducerTests, produceReturnsErrorCodeIfMessageNotProduced) {
@@ -129,9 +131,11 @@ TEST_F(ProducerTests, produceReturnsErrorCodeIfMessageNotProduced) {
               produce(_, _, _, _, _, _, _, _))
       .Times(Exactly(1))
       .WillOnce(Return(RdKafka::ERR__BAD_MSG));
+  auto Fake = new FakeTopic();
   ASSERT_EQ(
-      Producer1.produce(new FakeTopic, 0, 0, nullptr, 0, nullptr, 0, nullptr),
+      Producer1.produce(Fake, 0, 0, nullptr, 0, nullptr, 0, nullptr),
       RdKafka::ErrorCode::ERR__BAD_MSG);
+  delete Fake;
 }
 
 TEST_F(ProducerTests, produceAlsoCallsPollOnProducer) {
@@ -161,6 +165,8 @@ TEST_F(ProducerTests, produceAlsoCallsPollOnProducer) {
 
   for (uint32_t CallNumber = 0; CallNumber < NumberOfProduceCalls;
        ++CallNumber) {
-    Producer1.produce(new FakeTopic, 0, 0, nullptr, 0, nullptr, 0, nullptr);
+    auto Fake = new FakeTopic();
+    Producer1.produce(Fake, 0, 0, nullptr, 0, nullptr, 0, nullptr);
+    delete Fake;
   }
 }
