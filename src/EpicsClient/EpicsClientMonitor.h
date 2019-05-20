@@ -59,6 +59,8 @@ public:
 
   void setServiceID(std::string NewServiceID) override;
 
+  void setProducer(std::unique_ptr<KafkaW::ProducerTopic> Producer) override;
+
 private:
   std::unique_ptr<EpicsClientMonitorImpl> Impl;
   std::shared_ptr<

@@ -1,6 +1,7 @@
 #pragma once
 #include "EpicsPVUpdate.h"
 #include <memory>
+#include <KafkaW/ProducerTopic.h>
 
 namespace Forwarder {
 namespace EpicsClient {
@@ -28,6 +29,7 @@ public:
   virtual void handleConnectionStateChange(
       ChannelConnectionState /* ConnectionState */){};
   virtual void setServiceID(std::string /* ServiceID */){};
+  virtual void setProducer(std::unique_ptr<KafkaW::ProducerTopic>){};
 };
 }
 }
