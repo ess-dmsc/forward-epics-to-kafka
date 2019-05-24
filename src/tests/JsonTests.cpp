@@ -1,6 +1,6 @@
-#include "../json.h"
-#include "../logger.h"
 #include <gtest/gtest.h>
+#include <json.h>
+#include <logger.h>
 
 TEST(JsonTest, JSON_integer_maximum_values) {
   using nlohmann::json;

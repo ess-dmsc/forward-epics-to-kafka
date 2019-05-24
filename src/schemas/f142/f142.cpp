@@ -351,7 +351,7 @@ class Converter : public FlatBufferCreator {
 public:
   Converter() = default;
 
-  ~Converter() override { LOG(Sev::Error, "~Converter"); }
+  ~Converter() override { Logger->error("~Converter"); }
 
   std::unique_ptr<FlatBufs::FlatbufferMessage>
   create(EpicsPVUpdate const &PVUpdate) override {
@@ -399,6 +399,9 @@ public:
 
   RangeSet<uint64_t> seqs;
   Statistics Stats;
+
+private:
+  SharedLogger Logger = getLogger();
 };
 
 class Info : public SchemaInfo {
@@ -410,7 +413,5 @@ std::unique_ptr<FlatBufferCreator> Info::createConverter() {
   return make_unique<Converter>();
 }
 
-FlatBufs::SchemaRegistry::Registrar<Info> g_registrar_info("f142",
-                                                           Info::ptr(new Info));
 } // namespace f142
 } // namespace FlatBufs

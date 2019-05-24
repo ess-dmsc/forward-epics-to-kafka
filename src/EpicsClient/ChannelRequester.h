@@ -37,6 +37,7 @@ public:
 
 private:
   EpicsClientMonitor_impl *EpicsClientImpl = nullptr;
+  SharedLogger Logger = getLogger();
 };
 }
 } // namespace Forwarder

@@ -1,7 +1,7 @@
 #pragma once
 
+#include "../Stream.h"
 #include "EpicsClientInterface.h"
-#include <Stream.h>
 #include <concurrentqueue/concurrentqueue.h>
 #include <random>
 
@@ -20,7 +20,7 @@ public:
       : ChannelInformation(channelInfo), EmitQueue(std::move(RingBuffer)),
         UniformDistribution(0, 100){};
   ~EpicsClientRandom() override = default;
-  int emit(std::shared_ptr<FlatBufs::EpicsPVUpdate> up) override;
+  void emit(std::shared_ptr<FlatBufs::EpicsPVUpdate> Update) override;
   int stop() override { return 0; };
   void errorInEpics() override { status_ = -1; };
   int status() override { return status_; };

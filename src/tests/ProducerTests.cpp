@@ -1,4 +1,5 @@
-#include "../KafkaW/Producer.h"
+#include "helper.h"
+#include <KafkaW/Producer.h>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include <librdkafka/rdkafkacpp.h>
@@ -69,12 +70,21 @@ class FakeTopic : public RdKafka::Topic {
 public:
   FakeTopic() = default;
   ~FakeTopic() override = default;
-  const std::string name() const override{};
+  const std::string name() const override { return "fake"; };
   // cppcheck-suppress unusedFunction
-  bool partition_available(int32_t partition) const override { return true; };
+  bool partition_available(int32_t partition) const override {
+    UNUSED_ARG(partition)
+    return true;
+  };
   // cppcheck-suppress unusedFunction
-  RdKafka::ErrorCode offset_store(int32_t partition, int64_t offset) override{};
-  struct rd_kafka_topic_s *c_ptr() override{};
+  RdKafka::ErrorCode offset_store(int32_t partition, int64_t offset) override {
+    UNUSED_ARG(partition)
+    UNUSED_ARG(offset)
+    return RdKafka::ERR_NO_ERROR;
+  };
+  struct rd_kafka_topic_s *c_ptr() override {
+    return nullptr;
+  };
 };
 
 TEST_F(ProducerTests, creatingForwarderIncrementsForwarderCounter) {
@@ -107,9 +117,10 @@ TEST_F(ProducerTests, produceReturnsNoErrorCodeIfMessageProduced) {
               produce(_, _, _, _, _, _, _, _))
       .Times(Exactly(1))
       .WillOnce(Return(RdKafka::ERR_NO_ERROR));
-  ASSERT_EQ(
-      Producer1.produce(new FakeTopic, 0, 0, nullptr, 0, nullptr, 0, nullptr),
-      RdKafka::ErrorCode::ERR_NO_ERROR);
+  auto FakeTopicPtr = ::make_unique<FakeTopic>();
+  ASSERT_EQ(Producer1.produce(FakeTopicPtr.get(), 0, 0, nullptr, 0, nullptr, 0,
+                              nullptr),
+            RdKafka::ErrorCode::ERR_NO_ERROR);
 }
 
 TEST_F(ProducerTests, produceReturnsErrorCodeIfMessageNotProduced) {
@@ -120,9 +131,10 @@ TEST_F(ProducerTests, produceReturnsErrorCodeIfMessageNotProduced) {
               produce(_, _, _, _, _, _, _, _))
       .Times(Exactly(1))
       .WillOnce(Return(RdKafka::ERR__BAD_MSG));
-  ASSERT_EQ(
-      Producer1.produce(new FakeTopic, 0, 0, nullptr, 0, nullptr, 0, nullptr),
-      RdKafka::ErrorCode::ERR__BAD_MSG);
+  auto FakeTopicPtr = ::make_unique<FakeTopic>();
+  ASSERT_EQ(Producer1.produce(FakeTopicPtr.get(), 0, 0, nullptr, 0, nullptr, 0,
+                              nullptr),
+            RdKafka::ErrorCode::ERR__BAD_MSG);
 }
 
 TEST_F(ProducerTests, produceAlsoCallsPollOnProducer) {
@@ -152,6 +164,8 @@ TEST_F(ProducerTests, produceAlsoCallsPollOnProducer) {
 
   for (uint32_t CallNumber = 0; CallNumber < NumberOfProduceCalls;
        ++CallNumber) {
-    Producer1.produce(new FakeTopic, 0, 0, nullptr, 0, nullptr, 0, nullptr);
+    auto FakeTopicPtr = ::make_unique<FakeTopic>();
+    Producer1.produce(FakeTopicPtr.get(), 0, 0, nullptr, 0, nullptr, 0,
+                      nullptr);
   }
 }

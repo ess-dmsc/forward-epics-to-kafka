@@ -1,5 +1,5 @@
-#include "../KafkaW/Producer.h"
 #include "MockMessage.h"
+#include <KafkaW/Producer.h>
 #include <gtest/gtest.h>
 #include <librdkafka/rdkafkacpp.h>
 

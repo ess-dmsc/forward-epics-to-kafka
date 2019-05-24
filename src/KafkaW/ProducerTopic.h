@@ -1,8 +1,8 @@
 #pragma once
 
+#include "../logger.h"
 #include "Producer.h"
 #include "ProducerMessage.h"
-#include "logger.h"
 #include <memory>
 #include <string>
 
@@ -20,7 +20,6 @@ public:
   ~ProducerTopic() = default;
   int produce(unsigned char *MsgData, size_t MsgSize);
   int produce(std::unique_ptr<KafkaW::ProducerMessage> &Msg);
-  void enableCopy();
   std::string name() const;
   std::string brokerAddress() const;
 
@@ -31,5 +30,6 @@ private:
   std::unique_ptr<RdKafka::Conf> ConfigPtr{
       RdKafka::Conf::create(RdKafka::Conf::CONF_TOPIC)};
   bool DoCopyMsg{false};
+  SharedLogger Logger = getLogger();
 };
 }

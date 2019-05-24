@@ -2,6 +2,7 @@
 #include "EpicsPVUpdate.h"
 #include "RangeSet.h"
 #include "Stream.h"
+#include "logger.h"
 #include <atomic>
 #include <concurrentqueue/concurrentqueue.h>
 #include <mutex>
@@ -50,5 +51,6 @@ private:
   Forwarder *main = nullptr;
   size_t sid = 0;
   std::mutex mx;
+  SharedLogger Logger = getLogger();
 };
 } // namespace Forwarder

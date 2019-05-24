@@ -1,7 +1,7 @@
 #pragma once
+#include "../Stream.h"
 #include "EpicsClientFactory.h"
 #include "EpicsClientInterface.h"
-#include "Stream.h"
 #include <array>
 #include <atomic>
 #include <string>
@@ -34,9 +34,9 @@ public:
   /// Pushes the PV update onto the emit_queue ring buffer.
   ///
   /// \param Update An epics PV update holding the pv structure.
-  int emit(std::shared_ptr<FlatBufs::EpicsPVUpdate> Update) override;
+  void emit(std::shared_ptr<FlatBufs::EpicsPVUpdate> Update) override;
 
-  int emitWithoutCaching(std::shared_ptr<FlatBufs::EpicsPVUpdate> Update);
+  void emitWithoutCaching(std::shared_ptr<FlatBufs::EpicsPVUpdate> Update);
 
   /// Calls stop on the client implementation.
   int stop() override;
@@ -55,7 +55,9 @@ private:
       moodycamel::ConcurrentQueue<std::shared_ptr<FlatBufs::EpicsPVUpdate>>>
       EmitQueue;
   std::shared_ptr<FlatBufs::EpicsPVUpdate> CachedUpdate;
+  std::mutex CachedUpdateMutex;
   std::atomic<int> status_{0};
+  SharedLogger Logger = getLogger();
 };
 } // namespace EpicsClient
 } // namespace Forwarder

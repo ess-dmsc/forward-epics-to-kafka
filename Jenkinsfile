@@ -17,11 +17,11 @@ properties([[
 
 images = [
         'centos7': [
-                'name': 'essdmscdm/centos7-build-node:4.1.0',
+                'name': 'screamingudder/centos7-build-node:4.3.0',
                 'sh'  : '/usr/bin/scl enable devtoolset-6 -- /bin/bash -e'
         ],
         'centos7-release': [
-                'name': 'essdmscdm/centos7-build-node:4.1.0',
+                'name': 'screamingudder/centos7-build-node:4.3.0',
                 'sh'  : '/usr/bin/scl enable devtoolset-6 -- /bin/bash -e'
         ],
         'debian9'    : [
@@ -326,40 +326,43 @@ def get_pipeline(image_key) {
 }
 
 def get_win10_pipeline() {
-  return {
-    node('windows10') {
-      // Use custom location to avoid Win32 path length issues
-      ws('c:\\jenkins\\') {
-      cleanWs()
-      dir("${project}") {
-        stage("win10: Checkout") {
-          checkout scm
-        }  // stage
+    return {
+        node('windows10') {
+        
+        // Use custom location to avoid Win32 path length issues
+            ws('c:\\jenkins\\') {
+                cleanWs()
+                dir("${project}") {
+                    stage("win10: Checkout") {
+                      checkout scm
+                    }  // stage
 
-	stage("win10: Setup") {
-          bat """if exist _build rd /q /s _build
-	    mkdir _build
-	    xcopy /y conan\\conanfile_win32.txt conan\\conanfile.txt
-	    """
-	} // stage
-        stage("win10: Install") {
-          bat """cd _build
-	    conan.exe \
-            install ..\\conan\\conanfile.txt  \
-            --settings build_type=Release \
-            --build=outdated"""
-        }  // stage
+                    stage("win10: Setup") {
+                        // "conan remove" is temporary, until all repos have migrated to official flatbuffers package
+                        bat """conan remove -f FlatBuffers/*
+                        if exist _build rd /q /s _build
+                        mkdir _build
+                        """
+                    } // stage
+                    
+                    stage("win10: Install") {
+                      bat """cd _build
+                    conan.exe \
+                        install ..\\conan\\conanfile_win32.txt  \
+                        --settings build_type=Release \
+                        --build=outdated"""
+                    }  // stage
 
-	 stage("win10: Build") {
-           bat """cd _build
-	     cmake .. -G \"Visual Studio 15 2017 Win64\" -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTS=FALSE
-	     cmake --build .
-	     """
-        }  // stage
-      }  // dir
-      }
-    }  // node
-  }  // return
+                    stage("win10: Build") {
+                           bat """cd _build
+                        cmake .. -G \"Visual Studio 15 2017 Win64\" -DCMAKE_BUILD_TYPE=Release -DCONAN=MANUAL
+                        cmake --build . --config Release
+                        """
+                    }  // stage
+                }  // dir
+            }  // ws
+        }  // node
+    }  // return
 }  // def
 
 def get_system_tests_pipeline() {
@@ -428,7 +431,7 @@ node('docker') {
 	
     stage('CppCheck') {
 	docker_cppcheck(clangformat_os)
-        recordIssues sourceCodeEncoding: 'UTF-8', qualityGates: [[threshold: 2, type: 'TOTAL', unstable: true]], tools: [cppCheck(pattern: 'cppcheck.xml', reportEncoding: 'UTF-8')]
+        recordIssues sourceCodeEncoding: 'UTF-8', qualityGates: [[threshold: 1, type: 'TOTAL', unstable: true]], tools: [cppCheck(pattern: 'cppcheck.xml', reportEncoding: 'UTF-8')]
 	sh "docker stop ${container_name(clangformat_os)}"
         sh "docker rm -f ${container_name(clangformat_os)}"
     }

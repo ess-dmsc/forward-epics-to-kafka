@@ -1,14 +1,13 @@
 #include "EpicsClientRandom.h"
-#include "pv/pvData.h"
-#include <helper.h>
+#include "../helper.h"
 #include <memory>
+#include <pv/pvData.h>
 
 namespace Forwarder {
 namespace EpicsClient {
 
-int EpicsClientRandom::emit(std::shared_ptr<FlatBufs::EpicsPVUpdate> up) {
-  EmitQueue->enqueue(up);
-  return 1;
+void EpicsClientRandom::emit(std::shared_ptr<FlatBufs::EpicsPVUpdate> Update) {
+  EmitQueue->enqueue(Update);
 }
 
 void EpicsClientRandom::generateFakePVUpdate() {

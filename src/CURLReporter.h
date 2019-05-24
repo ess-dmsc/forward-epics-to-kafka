@@ -1,7 +1,7 @@
 #pragma once
 
+#include "logger.h"
 #include <fmt/format.h>
-#include <logger.h>
 #include <string>
 #if HAVE_CURL
 #include <curl/curl.h>
@@ -30,8 +30,8 @@ void send(fmt::memory_buffer &MemoryWriter, std::string const &URL) {
     curl_easy_setopt(curl, CURLOPT_POSTFIELDS, MemoryWriter.data());
     res = curl_easy_perform(curl);
     if (res != CURLE_OK) {
-      LOG(Sev::Notice, "curl_easy_perform() failed: {}",
-          curl_easy_strerror(res));
+      getLogger()->info("curl_easy_perform() failed: {}",
+                        curl_easy_strerror(res));
     }
   }
   curl_easy_cleanup(curl);

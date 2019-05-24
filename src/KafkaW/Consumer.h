@@ -1,9 +1,9 @@
 #pragma once
 
+#include "../helper.h"
 #include "BrokerSettings.h"
 #include "ConsumerMessage.h"
 #include "KafkaEventCb.h"
-#include "helper.h"
 #include <vector>
 
 namespace KafkaW {
@@ -60,5 +60,6 @@ private:
 
   /// Update the stored metadata.
   void updateMetadata();
+  SharedLogger Logger = getLogger();
 };
 } // namespace KafkaW

@@ -1,14 +1,20 @@
-#include "Forwarder.h"
+// solve issue with multiple winsock include
+#ifdef _MSC_VER
+#include <WinSock2.h>
+#include <windows.h>
+#endif
+
 #include "CommandHandler.h"
 #include "Converter.h"
+#include "EpicsClient/EpicsClientInterface.h"
+#include "EpicsClient/EpicsClientMonitor.h"
+#include "EpicsClient/EpicsClientRandom.h"
+#include "Forwarder.h"
 #include "KafkaOutput.h"
 #include "Stream.h"
 #include "Timer.h"
 #include "helper.h"
 #include "logger.h"
-#include <EpicsClient/EpicsClientInterface.h>
-#include <EpicsClient/EpicsClientMonitor.h>
-#include <EpicsClient/EpicsClientRandom.h>
 #include <algorithm>
 #include <nlohmann/json.hpp>
 #include <sys/types.h>
@@ -33,6 +39,14 @@ std::vector<char> getHostname() {
 #endif
 
 #include "CURLReporter.h"
+#include "schemas/f142/f142.cpp"
+
+namespace {
+void registerSchemas() {
+  FlatBufs::SchemaRegistry::Registrar<FlatBufs::SchemaInfo> g_registrar_info(
+      "f142", FlatBufs::SchemaInfo::ptr(new FlatBufs::f142::Info));
+}
+}
 
 namespace Forwarder {
 
@@ -41,38 +55,34 @@ static bool isStopDueToSignal(ForwardingRunState Flag) {
          static_cast<int>(ForwardingRunState::STOP_DUE_TO_SIGNAL);
 }
 
-// Little helper
-static KafkaW::BrokerSettings make_broker_opt(MainOpt const &opt) {
-  KafkaW::BrokerSettings ret = opt.broker_opt;
-  ret.Address = opt.brokers_as_comma_list();
-  return ret;
-}
-
 /// Main program entry class.
-Forwarder::Forwarder(MainOpt &opt)
-    : main_opt(opt), kafka_instance_set(InstanceSet::Set(make_broker_opt(opt))),
+Forwarder::Forwarder(MainOpt &Opt)
+    : main_opt(Opt),
+      kafka_instance_set(make_unique<InstanceSet>(Opt.GlobalBrokerSettings)),
       conversion_scheduler(this) {
 
-  for (size_t i = 0; i < opt.MainSettings.ConversionThreads; ++i) {
+  registerSchemas();
+
+  for (size_t i = 0; i < Opt.MainSettings.ConversionThreads; ++i) {
     conversion_workers.emplace_back(make_unique<ConversionWorker>(
         &conversion_scheduler,
-        static_cast<uint32_t>(opt.MainSettings.ConversionWorkerQueueSize)));
+        static_cast<uint32_t>(Opt.MainSettings.ConversionWorkerQueueSize)));
   }
 
   bool use_config = true;
   if (main_opt.MainSettings.BrokerConfig.Topic.empty()) {
-    LOG(Sev::Error, "Name for configuration topic is empty");
+    Logger->error("Name for configuration topic is empty");
     use_config = false;
   }
   if (main_opt.MainSettings.BrokerConfig.HostPort.empty()) {
-    LOG(Sev::Error, "Host for configuration topic broker is empty");
+    Logger->error("Host for configuration topic broker is empty");
     use_config = false;
   }
   if (use_config) {
-    KafkaW::BrokerSettings bopt;
-    bopt.Address = main_opt.MainSettings.BrokerConfig.HostPort;
-    bopt.PollTimeoutMS = 0;
-    auto NewConsumer = make_unique<KafkaW::Consumer>(bopt);
+    KafkaW::BrokerSettings ConsumerSettings;
+    ConsumerSettings.Address = main_opt.MainSettings.BrokerConfig.HostPort;
+    ConsumerSettings.PollTimeoutMS = 0;
+    auto NewConsumer = make_unique<KafkaW::Consumer>(ConsumerSettings);
     config_listener.reset(new Config::Listener{
         main_opt.MainSettings.BrokerConfig, std::move(NewConsumer)});
   }
@@ -83,7 +93,7 @@ Forwarder::Forwarder(MainOpt &opt)
     try {
       addMapping(Stream);
     } catch (std::exception &e) {
-      LOG(Sev::Warning, "Could not add mapping: {}  {}", Stream.Name, e.what());
+      Logger->warn("Could not add mapping: {}  {}", Stream.Name, e.what());
     }
   }
 
@@ -97,31 +107,28 @@ Forwarder::Forwarder(MainOpt &opt)
 }
 
 Forwarder::~Forwarder() {
-  LOG(Sev::Debug, "~Main");
+  Logger->trace("~Main");
   streams.clearStreams();
   conversion_workers_clear();
   converters_clear();
-  InstanceSet::clear();
 }
 
 void Forwarder::createPVUpdateTimerIfRequired() {
   if (main_opt.PeriodMS > 0) {
     auto Interval = std::chrono::milliseconds(main_opt.PeriodMS);
-    std::shared_ptr<Sleeper> IntervalSleeper = std::make_shared<RealSleeper>();
-    PVUpdateTimer = ::make_unique<Timer>(Interval, IntervalSleeper);
+    PVUpdateTimer = ::make_unique<Timer>(Interval);
   }
 }
 
 void Forwarder::createFakePVUpdateTimerIfRequired() {
   if (main_opt.FakePVPeriodMS > 0) {
     auto Interval = std::chrono::milliseconds(main_opt.FakePVPeriodMS);
-    std::shared_ptr<Sleeper> IntervalSleeper = std::make_shared<RealSleeper>();
-    GenerateFakePVUpdateTimer = ::make_unique<Timer>(Interval, IntervalSleeper);
+    GenerateFakePVUpdateTimer = ::make_unique<Timer>(Interval);
   }
 }
 
 int Forwarder::conversion_workers_clear() {
-  LOG(Sev::Debug, "Main::conversion_workers_clear()  begin");
+  Logger->trace("Main::conversion_workers_clear()  begin");
   std::lock_guard<std::mutex> lock(conversion_workers_mx);
   if (!conversion_workers.empty()) {
     for (auto &x : conversion_workers) {
@@ -129,7 +136,7 @@ int Forwarder::conversion_workers_clear() {
     }
     conversion_workers.clear();
   }
-  LOG(Sev::Debug, "Main::conversion_workers_clear()  end");
+  Logger->trace("Main::conversion_workers_clear()  end");
   return 0;
 }
 
@@ -197,33 +204,31 @@ void Forwarder::forward_epics_to_kafka() {
       t_status_last = t2;
     }
     if (do_stats) {
-      kafka_instance_set->log_stats();
+      kafka_instance_set->logStats();
       report_stats(dt.count());
     }
     if (dt >= Dt) {
-      LOG(Sev::Error, "slow main loop: {}", dt.count());
+      Logger->error("slow main loop: {}", dt.count());
     } else {
       std::this_thread::sleep_for(Dt - dt);
     }
   }
   if (isStopDueToSignal(ForwardingRunFlag.load())) {
-    LOG(Sev::Info, "Forwarder stopping due to signal.");
+    Logger->info("Forwarder stopping due to signal.");
   }
-  LOG(Sev::Info, "Main::forward_epics_to_kafka shutting down");
+  Logger->info("Main::forward_epics_to_kafka shutting down");
   conversion_workers_clear();
   streams.clearStreams();
 
   if (PVUpdateTimer != nullptr) {
-    PVUpdateTimer->triggerStop();
     PVUpdateTimer->waitForStop();
   }
 
   if (GenerateFakePVUpdateTimer != nullptr) {
-    GenerateFakePVUpdateTimer->triggerStop();
     GenerateFakePVUpdateTimer->waitForStop();
   }
 
-  LOG(Sev::Info, "ForwardingStatus::STOPPED");
+  Logger->info("ForwardingStatus::STOPPED");
   forwarding_status.store(ForwardingStatus::STOPPED);
 }
 
@@ -244,16 +249,15 @@ void Forwarder::report_status() {
     auto StatusStringShort =
         StatusString.substr(0, 1000) +
         fmt::format(" ... {} chars total ...", StatusStringSize);
-    LOG(Sev::Debug, "status: {}", StatusStringShort);
+    Logger->debug("status: {}", StatusStringShort);
   } else {
-    LOG(Sev::Debug, "status: {}", StatusString);
+    Logger->debug("status: {}", StatusString);
   }
   status_producer_topic->produce((unsigned char *)StatusString.c_str(),
                                  StatusString.size());
 }
 
 void Forwarder::report_stats(int dt) {
-  fmt::memory_buffer StatsBuffer;
   auto m1 = g__total_msgs_to_kafka.load();
   auto m2 = m1 / 1000;
   m1 = m1 % 1000;
@@ -262,12 +266,13 @@ void Forwarder::report_stats(int dt) {
   b1 %= 1024;
   auto b3 = b2 / 1024;
   b2 %= 1024;
-  LOG(Sev::Info, "dt: {:4}  m: {:4}.{:03}  b: {:3}.{:03}.{:03}", dt, m2, m1, b3,
-      b2, b1);
+  Logger->info("dt: {:4}  m: {:4}.{:03}  b: {:3}.{:03}.{:03}", dt, m2, m1, b3,
+               b2, b1);
   if (CURLReporter::HaveCURL && !main_opt.InfluxURI.empty()) {
     std::vector<char> Hostname = getHostname();
 
     int i1 = 0;
+    fmt::memory_buffer StatsBuffer;
     for (auto &s : kafka_instance_set->getStatsForAllProducers()) {
       fmt::format_to(StatsBuffer, "forward-epics-to-kafka,hostname={},set={}",
                      Hostname.data(), i1);
@@ -286,7 +291,7 @@ void Forwarder::report_stats(int dt) {
     }
     {
       auto lock = get_lock_converters();
-      LOG(Sev::Info, "N converters: {}", converters.size());
+      Logger->info("N converters: {}", converters.size());
       i1 = 0;
       for (auto &c : converters) {
         auto stats = c.second.lock()->stats();
@@ -326,7 +331,7 @@ URI Forwarder::createTopicURI(ConverterSettings const &ConverterInfo) const {
   }
   try {
     TopicURI.parse(ConverterInfo.Topic);
-  } catch (std::runtime_error &e) {
+  } catch (std::runtime_error &) {
     throw MappingAddException(
         fmt::format("Invalid topic {} in converter, not added to stream. May "
                     "require broker and/or host slashes.",
@@ -373,7 +378,7 @@ void Forwarder::pushConverterToStream(ConverterSettings const &ConverterInfo,
   }
 
   // Create a conversion path then add it
-  auto Topic = kafka_instance_set->SetUpProducerTopic(std::move(TopicURI));
+  auto Topic = kafka_instance_set->createProducerTopic(std::move(TopicURI));
   auto cp = ::make_unique<ConversionPath>(
       std::move(ConverterShared), ::make_unique<KafkaOutput>(std::move(Topic)));
 
@@ -386,7 +391,7 @@ void Forwarder::addMapping(StreamSettings const &StreamInfo) {
     ChannelInfo ChannelInfo{StreamInfo.EpicsProtocol, StreamInfo.Name};
     std::shared_ptr<Stream> Stream;
     if (GenerateFakePVUpdateTimer != nullptr) {
-      Stream = findOrAddStream<EpicsClient::EpicsClientRandom>(ChannelInfo);
+      Stream = addStream<EpicsClient::EpicsClientRandom>(ChannelInfo);
       auto Client = Stream->getEpicsClient();
       auto RandomClient =
           dynamic_cast<EpicsClient::EpicsClientRandom *>(Client.get());
@@ -395,7 +400,7 @@ void Forwarder::addMapping(StreamSettings const &StreamInfo) {
             [Client, RandomClient]() { RandomClient->generateFakePVUpdate(); });
       }
     } else {
-      Stream = findOrAddStream<EpicsClient::EpicsClientMonitor>(ChannelInfo);
+      Stream = addStream<EpicsClient::EpicsClientMonitor>(ChannelInfo);
     }
 
     if (PVUpdateTimer != nullptr) {
@@ -409,23 +414,25 @@ void Forwarder::addMapping(StreamSettings const &StreamInfo) {
     for (auto &Converter : StreamInfo.Converters) {
       pushConverterToStream(Converter, Stream);
     }
-  } catch (std::runtime_error &e) {
+  } catch (std::runtime_error &) {
     std::throw_with_nested(MappingAddException("Cannot add stream"));
   }
 }
 
 template <typename T>
-std::shared_ptr<Stream> Forwarder::findOrAddStream(ChannelInfo &ChannelInfo) {
+std::shared_ptr<Stream> Forwarder::addStream(ChannelInfo &ChannelInfo) {
   std::shared_ptr<Stream> FoundStream =
       streams.getStreamByChannelName(ChannelInfo.channel_name);
   if (FoundStream != nullptr) {
-    return FoundStream;
+    Logger->warn("Could not add stream for {} as one already exists.",
+                 ChannelInfo.channel_name);
+    throw MappingAddException("Stream already exists");
   }
   auto PVUpdateRing = std::make_shared<
       moodycamel::ConcurrentQueue<std::shared_ptr<FlatBufs::EpicsPVUpdate>>>();
-  auto client = std::make_shared<T>(ChannelInfo, PVUpdateRing);
+  auto Client = std::make_shared<T>(ChannelInfo, PVUpdateRing);
   auto EpicsClientInterfacePtr =
-      std::static_pointer_cast<EpicsClient::EpicsClientInterface>(client);
+      std::static_pointer_cast<EpicsClient::EpicsClientInterface>(Client);
   auto NewStream = std::make_shared<Stream>(
       ChannelInfo, EpicsClientInterfacePtr, PVUpdateRing);
   streams.add(NewStream);

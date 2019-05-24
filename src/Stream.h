@@ -1,12 +1,12 @@
 #pragma once
 
 #include "ConversionWorker.h"
+#include "EpicsClient/EpicsClientInterface.h"
 #include "Kafka.h"
 #include "KafkaOutput.h"
 #include "RangeSet.h"
 #include "SchemaRegistry.h"
 #include "URI.h"
-#include <EpicsClient/EpicsClientInterface.h>
 #include <array>
 #include <atomic>
 #include <concurrentqueue/concurrentqueue.h>
@@ -40,6 +40,7 @@ public:
 private:
   std::shared_ptr<Converter> converter;
   std::unique_ptr<KafkaOutput> kafka_output;
+  SharedLogger Logger = getLogger();
 };
 
 /// Represents a stream from an EPICS PV through a Converter into a KafkaOutput.
@@ -78,5 +79,6 @@ private:
   /// We want to be able to add conversion paths after forwarding is running.
   /// Therefore, we need mutually exclusive access to 'conversion_paths'.
   std::mutex ConversionPathsMutex;
+  SharedLogger Logger = getLogger();
 };
 } // namespace Forwarder

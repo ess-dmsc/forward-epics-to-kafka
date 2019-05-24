@@ -20,20 +20,38 @@ namespace Forwarder {
 
 class InstanceSet {
 public:
-  static std::shared_ptr<InstanceSet>
-  Set(KafkaW::BrokerSettings BrokerSettings);
-  static void clear();
-  KafkaW::ProducerTopic SetUpProducerTopic(URI uri);
-  int poll();
-  void log_stats();
+  /// Constructor.
+  ///
+  /// \param BrokerSettings The "global" Kafka settings for the data forwarding
+  /// producers.
+  explicit InstanceSet(KafkaW::BrokerSettings BrokerSettings);
+
+  /// Create a producer topic.
+  ///
+  /// Note: will return the existing producer topic if it already exists.
+  ///
+  /// \param Uri The broker URI.
+  /// \return The associated producer topic.
+  KafkaW::ProducerTopic createProducerTopic(URI const &Uri);
+
+  /// Poll all the producers.
+  void poll();
+
+  /// Log the stats for all the producers.
+  void logStats();
+
+  /// Get the stats for the producers.
+  ///
+  /// \return The producer stats.
   std::vector<KafkaW::ProducerStats> getStatsForAllProducers();
-  InstanceSet(InstanceSet const &&) = delete;
 
 private:
-  explicit InstanceSet(KafkaW::BrokerSettings BrokerSettings);
-  std::unique_lock<std::mutex> getProducersByHostMutexLock();
+  /// Contains the general Kafka settings, e.g. timeouts, message sizes etc.
+  /// Does not contain the Broker addresses, these are held in the individual
+  /// producers.
   KafkaW::BrokerSettings BrokerSettings;
-  std::mutex ProducersByHostMutex;
   std::map<std::string, std::shared_ptr<KafkaW::Producer>> ProducersByHost;
+  std::mutex ProducersMutex;
+  SharedLogger Logger = getLogger();
 };
 } // namespace Forwarder
