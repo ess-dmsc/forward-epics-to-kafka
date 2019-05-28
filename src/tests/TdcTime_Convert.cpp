@@ -16,9 +16,7 @@ namespace pv = epics::pvData;
 
 class ConvertTDCTest : public ::testing::Test {
 public:
-  virtual void SetUp() {
-    TestConverter = TdcTime::Converter();
-  };
+  virtual void SetUp() { TestConverter = TdcTime::Converter(); };
 
   virtual void TearDown(){
 

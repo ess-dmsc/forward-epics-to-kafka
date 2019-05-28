@@ -10,8 +10,8 @@
 #include <pv/ntndarrayAttribute.h>
 #include <pv/ntutils.h>
 #include <pv/pvEnumerated.h>
-#include <tdct_timestamps_generated.h>
 #include <string>
+#include <tdct_timestamps_generated.h>
 
 namespace TdcTime {
 
@@ -58,7 +58,8 @@ Converter::create(FlatBufs::EpicsPVUpdate const &PvData) {
       }
       return generateFlatbufferFromData(PvData.channel, NewTimestamps);
     } catch (std::runtime_error &E) {
-      getLogger()->critical("Unable to convert pv-array into timestamps: {}", E.what());
+      getLogger()->critical("Unable to convert pv-array into timestamps: {}",
+                            E.what());
       return {};
     }
   }
@@ -85,7 +86,7 @@ generateFlatbufferFromData(std::string const &Name,
 
 void Converter::config(std::map<std::string, std::string> const &) {}
 
-  std::unique_ptr<FlatBufs::FlatBufferCreator> Info::createConverter() {
-    return make_unique<TdcTime::Converter>();
-  }
+std::unique_ptr<FlatBufs::FlatBufferCreator> Info::createConverter() {
+  return make_unique<TdcTime::Converter>();
+}
 } // namespace TdcTime
