@@ -1,5 +1,7 @@
 message(STATUS "CMAKE_BUILD_TYPE: ${CMAKE_BUILD_TYPE}")
 
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ../bin)
+
 find_package(CURL)
 find_package(Threads)
 find_package(GitCommitExtract)
