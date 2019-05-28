@@ -46,8 +46,8 @@ namespace {
 void registerSchemas() {
   FlatBufs::SchemaRegistry::Registrar<FlatBufs::SchemaInfo> Reg1(
       "f142", FlatBufs::SchemaInfo::ptr(new FlatBufs::f142::Info));
-  FlatBufs::SchemaRegistry::Registrar<FlatBufs::SchemaInfo> Reg2("TdcTime",
-                                                                 TdcTime::Info::ptr(new TdcTime::Info));
+  FlatBufs::SchemaRegistry::Registrar<FlatBufs::SchemaInfo> Reg2(
+      "TdcTime", TdcTime::Info::ptr(new TdcTime::Info));
 }
 }
 
