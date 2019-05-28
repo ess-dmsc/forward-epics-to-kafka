@@ -28,7 +28,7 @@ public:
       ChannelInfo &ChannelInfo,
       std::shared_ptr<
           moodycamel::ConcurrentQueue<std::shared_ptr<FlatBufs::EpicsPVUpdate>>>
-          EmitQueue);
+          Ring);
   ~EpicsClientMonitor() override;
 
   /// Pushes the PV update onto the emit_queue ring buffer.
@@ -57,7 +57,7 @@ public:
 
   std::unique_ptr<KafkaW::ProducerTopic> ConnectionStatusProducer;
 
-  void setServiceID(std::string NewServiceID) override;
+  void setServiceID(const std::string &NewServiceID) override;
 
   void setProducer(std::unique_ptr<KafkaW::ProducerTopic> Producer) override;
 

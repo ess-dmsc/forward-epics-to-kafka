@@ -19,7 +19,7 @@ public:
   ProducerTopic(std::shared_ptr<Producer> ProducerPtr, std::string TopicName);
   ~ProducerTopic() = default;
   int produce(unsigned char *MsgData, size_t MsgSize);
-  int produceAndSetKey(unsigned char *MsgData, size_t MsgSize, std::string Key);
+  int produceAndSetKey(unsigned char *MsgData, size_t MsgSize, const std::string &Key);
   int produce(std::unique_ptr<KafkaW::ProducerMessage> &Msg);
   std::string name() const;
   std::string brokerAddress() const;

@@ -47,7 +47,7 @@ int ProducerTopic::produce(unsigned char *MsgData, size_t MsgSize) {
 }
 
 int ProducerTopic::produceAndSetKey(unsigned char *MsgData, size_t MsgSize,
-                                    std::string Key) {
+                                    const std::string &Key) {
   auto MsgPtr = new Msg_;
   std::copy(MsgData, MsgData + MsgSize, std::back_inserter(MsgPtr->v));
   MsgPtr->finalize();

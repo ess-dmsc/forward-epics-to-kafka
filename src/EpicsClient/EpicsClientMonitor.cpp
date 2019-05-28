@@ -111,7 +111,7 @@ void EpicsClientMonitor::handleChannelRequesterError(
   Logger->warn("EpicsClientMonitor received: {}", Message);
 }
 
-void EpicsClientMonitor::setServiceID(std::string NewServiceID) {
+void EpicsClientMonitor::setServiceID(const std::string &NewServiceID) {
   this->ServiceID = NewServiceID;
 }
 
