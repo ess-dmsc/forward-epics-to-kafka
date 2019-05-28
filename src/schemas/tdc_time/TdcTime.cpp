@@ -19,7 +19,7 @@ namespace pvNT = epics::nt;
 namespace pv = epics::pvData;
 
 template <typename pvScalarArrType>
-std::vector<std::uint64_t> CalcTimestamps(pv::PVFieldPtr scalarArray) {
+std::vector<std::uint64_t> CalcTimestamps(pv::PVFieldPtr const &scalarArray) {
   auto pvValues = dynamic_cast<pvScalarArrType *>(scalarArray.get());
   size_t NrOfElements = pvValues->getLength();
   if (NrOfElements % 2 != 0) {
@@ -68,7 +68,7 @@ Converter::create(FlatBufs::EpicsPVUpdate const &PvData) {
 
 std::unique_ptr<FlatBufs::FlatbufferMessage>
 generateFlatbufferFromData(std::string const &Name,
-                           std::vector<std::uint64_t> Timestamps) {
+                           std::vector<std::uint64_t> const &Timestamps) {
   static std::uint64_t SequenceNumber{0};
   auto ReturnMessage = make_unique<FlatBufs::FlatbufferMessage>();
   auto Builder = ReturnMessage->builder.get();
