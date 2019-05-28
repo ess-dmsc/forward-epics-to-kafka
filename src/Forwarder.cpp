@@ -40,11 +40,14 @@ std::vector<char> getHostname() {
 
 #include "CURLReporter.h"
 #include "schemas/f142/f142.cpp"
+#include "schemas/tdc_time/TdcTime.h"
 
 namespace {
 void registerSchemas() {
-  FlatBufs::SchemaRegistry::Registrar<FlatBufs::SchemaInfo> g_registrar_info(
+  FlatBufs::SchemaRegistry::Registrar<FlatBufs::SchemaInfo> Reg1(
       "f142", FlatBufs::SchemaInfo::ptr(new FlatBufs::f142::Info));
+  FlatBufs::SchemaRegistry::Registrar<FlatBufs::SchemaInfo> Reg2("TdcTime",
+                                                                 TdcTime::Info::ptr(new TdcTime::Info));
 }
 }
 
