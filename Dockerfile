@@ -6,7 +6,6 @@ ARG https_proxy
 
 ARG local_conan_server
 
-RUN conan config install http://github.com/ess-dmsc/conan-configuration.git
 ADD "https://raw.githubusercontent.com/ess-dmsc/docker-ubuntu18.04-build-node/master/files/default_profile" "/root/.conan/profiles/default"
 
 COPY conan/ ../forwarder_src/conan/
@@ -25,6 +24,8 @@ RUN export DEBIAN_FRONTEND=noninteractive \
     && if [ ! -z "$local_conan_server" ]; then conan remote add --insert 0 ess-dmsc-local "$local_conan_server"; fi \
     && cd forwarder \
     && conan install --build=outdated ../forwarder_src/conan/conanfile.txt
+
+RUN conan config install http://github.com/ess-dmsc/conan-configuration.git
 
 # Second copy for everything so that the cached image can be used if only the source files change.
 COPY ./ ../forwarder_src/
