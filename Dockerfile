@@ -6,7 +6,7 @@ ARG https_proxy
 
 ARG local_conan_server
 
-ADD "https://raw.githubusercontent.com/ess-dmsc/docker-ubuntu18.04-build-node/master/files/remotes.json" "/root/.conan/remotes.json"
+RUN conan config install http://github.com/ess-dmsc/conan-configuration.git
 ADD "https://raw.githubusercontent.com/ess-dmsc/docker-ubuntu18.04-build-node/master/files/default_profile" "/root/.conan/profiles/default"
 
 COPY conan/ ../forwarder_src/conan/
