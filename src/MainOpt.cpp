@@ -73,9 +73,9 @@ CLI::Option *addUriOption(CLI::App &App, std::string const &Name,
     return true;
   };
   CLI::Option *Opt = App.add_option(Name, Fun, Description, Defaulted);
-  Opt->set_custom_option("URI", 1);
+  Opt->type_name("URI")->type_size(1);
   if (Defaulted) {
-    Opt->set_default_str(URIArg.HostPort + "/" + URIArg.Topic);
+    Opt->default_str(URIArg.HostPort + "/" + URIArg.Topic);
   }
   return Opt;
 }
@@ -85,7 +85,7 @@ CLI::Option *SetKeyValueOptions(CLI::App &App, const std::string &Name,
                                 const CLI::callback_t &Fun) {
   CLI::Option *Opt = App.add_option(Name, Fun, Description, Defaulted);
   const auto RequireEvenNumberOfPairs = -2;
-  Opt->set_custom_option("KEY VALUE", RequireEvenNumberOfPairs);
+  Opt->type_name("KEY VALUE")->type_size(RequireEvenNumberOfPairs);
   return Opt;
 }
 
@@ -147,7 +147,7 @@ std::pair<int, std::unique_ptr<MainOpt>> parse_opt(int argc, char **argv) {
            return parseLogLevel(Input, MainOptions.LogLevel);
          },
          LogLevelInfoStr)
-      ->set_default_val("Error");
+      ->default_val("Error");
   addUriOption(App, "--config-topic", MainOptions.MainSettings.BrokerConfig,
                "<host[:port]/topic> Kafka host/topic to listen for commands on",
                true)

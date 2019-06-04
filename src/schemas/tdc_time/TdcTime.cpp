@@ -1,16 +1,8 @@
 #include "TdcTime.h"
 #include "../../EpicsPVUpdate.h"
-#include "../../RangeSet.h"
+#include "../../helper.h"
 #include "../../logger.h"
-#include <algorithm>
-#include <atomic>
-#include <mutex>
 #include <pv/nt.h>
-#include <pv/ntndarray.h>
-#include <pv/ntndarrayAttribute.h>
-#include <pv/ntutils.h>
-#include <pv/pvEnumerated.h>
-#include <string>
 #include <tdct_timestamps_generated.h>
 
 namespace TdcTime {
@@ -23,7 +15,8 @@ std::vector<std::uint64_t> CalcTimestamps(pv::PVFieldPtr const &scalarArray) {
   auto pvValues = dynamic_cast<pvScalarArrType *>(scalarArray.get());
   size_t NrOfElements = pvValues->getLength();
   if (NrOfElements % 2 != 0) {
-    throw std::runtime_error("Size of pvAccess array is not a power of two.");
+    throw std::runtime_error(
+        "Size of pvAccess array is not a multiple of two.");
   }
   const auto pvArrPtr = pvValues->view().data();
   std::vector<std::uint64_t> RetVector;

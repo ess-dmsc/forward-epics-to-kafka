@@ -11,7 +11,7 @@ set(libraries_common
         CONAN_PKG::jsonformoderncpp
         CONAN_PKG::concurrentqueue
         CONAN_PKG::streaming-data-types
-        CONAN_PKG::cli11
+        CONAN_PKG::CLI11
         CONAN_PKG::fmt
         CONAN_PKG::flatbuffers
         CONAN_PKG::asio

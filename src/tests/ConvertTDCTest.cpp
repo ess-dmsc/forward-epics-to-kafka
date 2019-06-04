@@ -101,6 +101,15 @@ TEST_F(ConvertTDCTest, OneElementFailure) {
   EXPECT_EQ(Result, nullptr);
 }
 
+TEST_F(ConvertTDCTest, ThreeElementFailure) {
+  auto TestData = CreateTestNTScalarArray<pv::PVIntArray>(3);
+  FlatBufs::EpicsPVUpdate Update;
+  Update.epics_pvstr = TestData;
+  Update.channel = "somestring";
+  auto Result = TestConverter.create(Update);
+  EXPECT_EQ(Result, nullptr);
+}
+
 TEST_F(ConvertTDCTest, ZeroElements) {
   auto TestData = CreateTestNTScalarArray<pv::PVIntArray>(0);
   FlatBufs::EpicsPVUpdate Update;

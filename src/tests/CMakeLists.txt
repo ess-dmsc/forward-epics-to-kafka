@@ -19,7 +19,7 @@ set(tests_SRC
     ProducerDeliveryCbTests.cpp
     ConsumerTests.cpp
     MockMessage.h
-    TdcTime_Convert.cpp
+    ConvertTDCTest.cpp
     UnitTests.cpp)
 
 add_executable(tests ${tests_SRC})
