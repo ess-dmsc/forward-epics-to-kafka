@@ -25,16 +25,6 @@ public:
   config(std::map<std::string, std::string> const &KafkaConfiguration) override;
 };
 
-/// \brief Create a tdct flatbuffer from a vector of timestamps.
-///
-/// \param Name Source name of the data.
-/// \param Timestamps The chopper TDC timestamps to be serialized into a
-/// flatbuffer.
-/// \return A tdct flatbuffer.
-std::unique_ptr<FlatBufs::FlatbufferMessage>
-generateFlatbufferFromData(std::string const &Name,
-                           std::vector<std::uint64_t> const &Timestamps);
-
 /// \brief Factory class.
 class Info : public FlatBufs::SchemaInfo {
 public:

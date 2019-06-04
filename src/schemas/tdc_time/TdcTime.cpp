@@ -7,6 +7,30 @@
 
 namespace TdcTime {
 
+/// \brief Create a tdct flatbuffer from a vector of timestamps.
+///
+/// \param Name Source name of the data.
+/// \param Timestamps The chopper TDC timestamps to be serialized into a
+/// flatbuffer.
+/// \return A tdct flatbuffer.
+std::unique_ptr<FlatBufs::FlatbufferMessage>
+generateFlatbufferFromData(std::string const &Name,
+                           std::vector<std::uint64_t> const &Timestamps) {
+  static std::uint64_t SequenceNumber{0};
+  auto ReturnMessage = make_unique<FlatBufs::FlatbufferMessage>();
+  auto Builder = ReturnMessage->builder.get();
+  std::vector<std::uint16_t> ZeroValues(Timestamps.size());
+  std::fill(ZeroValues.begin(), ZeroValues.end(), 0);
+  auto TimestampVector = Builder->CreateVector(Timestamps);
+  auto FBNameString = Builder->CreateString(Name);
+  auto TdcData = timestampBuilder(*Builder);
+  TdcData.add_name(FBNameString);
+  TdcData.add_timestamps(TimestampVector);
+  TdcData.add_sequence_counter(SequenceNumber++);
+  FinishtimestampBuffer(*Builder, TdcData.Finish());
+  return ReturnMessage;
+}
+
 namespace pvNT = epics::nt;
 namespace pv = epics::pvData;
 
@@ -57,24 +81,6 @@ Converter::create(FlatBufs::EpicsPVUpdate const &PvData) {
     }
   }
   return {};
-}
-
-std::unique_ptr<FlatBufs::FlatbufferMessage>
-generateFlatbufferFromData(std::string const &Name,
-                           std::vector<std::uint64_t> const &Timestamps) {
-  static std::uint64_t SequenceNumber{0};
-  auto ReturnMessage = make_unique<FlatBufs::FlatbufferMessage>();
-  auto Builder = ReturnMessage->builder.get();
-  std::vector<std::uint16_t> ZeroValues(Timestamps.size());
-  std::fill(ZeroValues.begin(), ZeroValues.end(), 0);
-  auto TimestampVector = Builder->CreateVector(Timestamps);
-  auto FBNameString = Builder->CreateString(Name);
-  auto TdcData = timestampBuilder(*Builder);
-  TdcData.add_name(FBNameString);
-  TdcData.add_timestamps(TimestampVector);
-  TdcData.add_sequence_counter(SequenceNumber++);
-  FinishtimestampBuffer(*Builder, TdcData.Finish());
-  return ReturnMessage;
 }
 
 void Converter::config(std::map<std::string, std::string> const &) {}
