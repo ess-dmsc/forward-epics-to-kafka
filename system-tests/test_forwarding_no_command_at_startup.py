@@ -55,8 +55,8 @@ def test_forwarder_sends_pv_updates_single_pv_enum(docker_compose_no_command):
     # Update value
     change_pv_value(PVENUM, "START")
     # Wait for PV to be updated
-    sleep(5)
     cons.subscribe([data_topic])
+    sleep(5)
 
     first_msg, _ = poll_for_valid_message(cons)
     check_expected_values(first_msg, Value.Int, PVENUM, 0)
@@ -84,8 +84,8 @@ def test_forwarder_sends_pv_updates_single_floatarray(docker_compose_no_command)
     cons = create_consumer()
 
     # Wait for PV to be updated
-    sleep(5)
     cons.subscribe([data_topic])
+    sleep(5)
 
     first_msg, _ = poll_for_valid_message(cons)
     expectedarray = [1.1, 2.2, 3.3]

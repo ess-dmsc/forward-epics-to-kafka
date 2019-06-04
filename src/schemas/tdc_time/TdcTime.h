@@ -12,9 +12,11 @@ class Converter : public FlatBufs::FlatBufferCreator {
 public:
   /// \brief Ingests NTScalarArray data and ouputs tdct flatbuffers. Takes n
   /// elements and returns n/2 UNIX epoch timestamps (in ns).
-  /// \param PvData Requries that data is in the form of a NtScalarArray containing uint32
+  /// \param PvData Requries that data is in the form of a NtScalarArray
+  /// containing uint32
   /// elements and a size that is a multiple of two.
-  /// \return Pointer (std::unique_ptr) to a flatbuffer if PvData contained a scalar array with
+  /// \return Pointer (std::unique_ptr) to a flatbuffer if PvData contained a
+  /// scalar array with
   /// a multiple of two elements (and greater than zero). Returns nullptr
   /// otherwise.
   std::unique_ptr<FlatBufs::FlatbufferMessage>

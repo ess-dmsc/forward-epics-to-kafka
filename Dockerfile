@@ -6,7 +6,6 @@ ARG https_proxy
 
 ARG local_conan_server
 
-ADD "https://raw.githubusercontent.com/ess-dmsc/docker-ubuntu18.04-build-node/master/files/remotes.json" "/root/.conan/remotes.json"
 ADD "https://raw.githubusercontent.com/ess-dmsc/docker-ubuntu18.04-build-node/master/files/default_profile" "/root/.conan/profiles/default"
 
 COPY conan/ ../forwarder_src/conan/
@@ -22,6 +21,7 @@ RUN export DEBIAN_FRONTEND=noninteractive \
     && pip install conan \
     && rm -rf /root/.cache/pip/* \
     && mkdir forwarder \
+    && conan config install http://github.com/ess-dmsc/conan-configuration.git \
     && if [ ! -z "$local_conan_server" ]; then conan remote add --insert 0 ess-dmsc-local "$local_conan_server"; fi \
     && cd forwarder \
     && conan install --build=outdated ../forwarder_src/conan/conanfile.txt
