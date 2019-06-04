@@ -1,3 +1,4 @@
+from confluent_kafka import TopicPartition
 from helpers.producerwrapper import ProducerWrapper
 from helpers.f142_logdata.Value import Value
 from time import sleep
@@ -185,7 +186,7 @@ def test_forwarder_updates_pv_when_config_change_add_two_pvs(docker_compose_no_c
     cons.close()
 
 
-def test_connection_status_messages(docker_docker_compose_no_commandcompose):
+def test_connection_status_messages(docker_compose_no_command):
     """
       GIVEN PV is configured to be forwarded
       WHEN Connection status changes
@@ -210,6 +211,6 @@ def test_connection_status_messages(docker_docker_compose_no_commandcompose):
     cons.subscribe([data_topic])
 
     first_msg = poll_for_connection_status_message(cons)
-    check_expected_connection_status_values(first_msg, EventType.EventType.CONNECTED)
+    check_expected_connection_status_values(first_msg, EventType.CONNECTED)
 
     cons.close()
