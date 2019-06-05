@@ -62,14 +62,14 @@ builders = pipeline_builder.createBuilders { container ->
                 coverage_on = ""
             }
             
-            def configure_epics = ""
-            if (container.key == eee_os) {
-                // Only use the host machine's EPICS environment on eee_os
-                configure_epics = ". ${epics_profile_file}"
-            } else {
-                // A problem is caused by "&& \" if left empty
-                configure_epics = "true"
-            }
+            //def configure_epics = ""
+            //if (container.key == eee_os) {
+            //    // Only use the host machine's EPICS environment on eee_os
+            //    configure_epics = ". ${epics_profile_file}"
+            //} else {
+            //    // A problem is caused by "&& \" if left empty
+            //    configure_epics = "true"
+            //}
 
             container.sh """
                 cd build
@@ -118,7 +118,7 @@ builders = pipeline_builder.createBuilders { container ->
             container.sh """
                 cd build
                 . ./activate_run.sh
-                ./${test_dir}/tests
+                ./tests/tests
                 pkill caRepeater || true
             """
         }  // if/else
