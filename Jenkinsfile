@@ -113,7 +113,7 @@ builders = pipeline_builder.createBuilders { container ->
                 sh "cp ${pipeline_builder.project}/codecov.yml codecov.yml"
                 sh "curl -s https://codecov.io/bash | bash -s - -f build/coverage.info -t ${TOKEN} -C ${scm_vars.GIT_COMMIT}"
             }  // withCredentials
-        } else {
+        } else if (container.key != release_os) {
             // Run tests.
             container.sh """
                 cd build
