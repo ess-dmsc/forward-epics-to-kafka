@@ -62,7 +62,7 @@ builders = pipeline_builder.createBuilders { container ->
                 coverage_on = ""
             }
             
-            //def configure_epics = ""
+            def configure_epics = ""
             //if (container.key == eee_os) {
             //    // Only use the host machine's EPICS environment on eee_os
             //    configure_epics = ". ${epics_profile_file}"
