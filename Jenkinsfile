@@ -126,7 +126,7 @@ builders = pipeline_builder.createBuilders { container ->
 
     if (container.key == release_os) {
         pipeline_builder.stage("${container.key}: archive") {
-            def archive_output = "${project}-${image_key}.tar.gz"
+            def archive_output = "${project}-${container.key}.tar.gz"
             container.sh """
                 cd build
                 rm -rf forward-epics-to-kafka; mkdir forward-epics-to-kafka
