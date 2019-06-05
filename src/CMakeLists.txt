@@ -11,7 +11,7 @@ set(libraries_common
         CONAN_PKG::jsonformoderncpp
         CONAN_PKG::concurrentqueue
         CONAN_PKG::streaming-data-types
-        CONAN_PKG::cli11
+        CONAN_PKG::CLI11
         CONAN_PKG::fmt
         CONAN_PKG::flatbuffers
         CONAN_PKG::asio
@@ -100,7 +100,8 @@ set(forwarder-library_INC
     Stream.h
     Streams.h
     Timer.h
-    URI.h)
+    URI.h
+    schemas/tdc_time/TdcTime.h)
 
 set(forwarder-library_SRC
     MainOpt.cpp
@@ -130,7 +131,8 @@ set(forwarder-library_SRC
     Streams.cpp
     schemas/f142/f142.cpp
     Timer.cpp
-    ${CMAKE_CURRENT_BINARY_DIR}/git_commit_current.cpp)
+    ${CMAKE_CURRENT_BINARY_DIR}/git_commit_current.cpp
+    schemas/tdc_time/TdcTime.cpp)
 
 add_library(forwarder-library ${forwarder-library_SRC} ${forwarder-library_INC})
 target_compile_definitions(forwarder-library PRIVATE ${compile_defs_common})
