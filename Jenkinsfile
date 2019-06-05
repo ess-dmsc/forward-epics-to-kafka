@@ -1,4 +1,9 @@
+@Library('ecdc-pipeline')
+import ecdcpipeline.ContainerBuildNode
+import ecdcpipeline.PipelineBuilder
+
 project = "forward-epics-to-kafka"
+
 clangformat_os = "debian9"
 test_and_coverage_os = "centos7"
 release_os = "centos7-release"
@@ -19,326 +24,181 @@ properties([[
     ]
 ]]);
 
-images = [
-        'centos7': [
-                'name': 'screamingudder/centos7-build-node:4.3.0',
-                'sh'  : '/usr/bin/scl enable devtoolset-6 -- /bin/bash -e'
-        ],
-        'centos7-release': [
-                'name': 'screamingudder/centos7-build-node:4.3.0',
-                'sh'  : '/usr/bin/scl enable devtoolset-6 -- /bin/bash -e'
-        ],
-        'debian9'    : [
-                'name': 'essdmscdm/debian9-build-node:2.6.0',
-                'sh'  : 'bash -e'
-        ],
-        'ubuntu1804'  : [
-                'name': 'essdmscdm/ubuntu18.04-build-node:1.4.0',
-                'sh'  : 'bash -e'
-        ]
+container_build_nodes = [
+  'centos7': ContainerBuildNode.getDefaultContainerBuildNode('centos7'),
+  'centos7-release': ContainerBuildNode.getDefaultContainerBuildNode('centos7'),
+  'debian9': ContainerBuildNode.getDefaultContainerBuildNode('debian9'),
+  'ubuntu1804': ContainerBuildNode.getDefaultContainerBuildNode('ubuntu1804')
 ]
 
-base_container_name = "${project}-${env.BRANCH_NAME}-${env.BUILD_NUMBER}"
 
-def Object container_name(image_key) {
-    return "${base_container_name}-${image_key}"
-}
+pipeline_builder = new PipelineBuilder(this, container_build_nodes)
+pipeline_builder.activateEmailFailureNotifications()
+
+builders = pipeline_builder.createBuilders { container ->
+
+    pipeline_builder.stage("${container.key}: checkout") {
+        dir(pipeline_builder.project) {
+            scm_vars = checkout scm
+        }
+        // Copy source code to container
+        container.copyTo(pipeline_builder.project, pipeline_builder.project)
+    }  // stage
+
+    pipeline_builder.stage("${container.key}: get dependencies") {
+        container.sh """
+            mkdir build
+            cd build
+            conan remote add --insert 0 ess-dmsc-local ${local_conan_server}
+        """
+    }  // stage
+    
+    pipeline_builder.stage("${container.key}: configure") {
+        if (container.key != release_os) {
+            def coverage_on
+            if (container.key == test_and_coverage_os) {
+                coverage_on = "-DCOV=1"
+            } else {
+                coverage_on = ""
+            }
+            
+            def configure_epics = ""
+            if (container.key == eee_os) {
+                // Only use the host machine's EPICS environment on eee_os
+                configure_epics = ". ${epics_profile_file}"
+            } else {
+                // A problem is caused by "&& \" if left empty
+                configure_epics = "true"
+            }
+
+            container.sh """
+                cd build
+                ${configure_epics}
+                cmake -DCMAKE_BUILD_TYPE=Debug ../${pipeline_builder.project} ${coverage_on}
+            """
+        } else {
+            container.sh """
+                cd build
+                cmake -DCMAKE_SKIP_BUILD_RPATH=ON -DCMAKE_BUILD_TYPE=Release ../${pipeline_builder.project}
+            """
+        }  // if/else
+    }  // stage
+    
+    pipeline_builder.stage("${container.key}: build") {
+        container.sh """
+            cd build
+            . ./activate_run.sh
+            make VERBOSE=1
+        """
+    }  // stage
+
+    pipeline_builder.stage("${container.key}: test") {
+        if (container.key == test_and_coverage_os) {
+            // Run tests with coverage.
+            def test_output = "TestResults.xml"
+            container.sh """
+                cd build
+                . ./activate_run.sh
+                ./tests/tests -- --gtest_output=xml:${test_output}
+                make coverage
+                lcov --directory . --capture --output-file coverage.info
+                lcov --remove coverage.info '*_generated.h' '*/src/date/*' '*/.conan/data/*' '*/usr/*' --output-file coverage.info
+                pkill caRepeater || true
+            """
+
+            container.copyFrom('build', '.')
+            junit "build/${test_output}"
+
+            withCredentials([string(credentialsId: 'forward-epics-to-kafka-codecov-token', variable: 'TOKEN')]) {
+                sh "cp ${pipeline_builder.project}/codecov.yml codecov.yml"
+                sh "curl -s https://codecov.io/bash | bash -s - -f build/coverage.info -t ${TOKEN} -C ${scm_vars.GIT_COMMIT}"
+            }  // withCredentials
+        } else {
+            // Run tests.
+            container.sh """
+                cd build
+                . ./activate_run.sh
+                ./${test_dir}/tests
+                pkill caRepeater || true
+            """
+        }  // if/else
+    }  // stage
+
+    if (container.key == release_os) {
+        pipeline_builder.stage("${container.key}: archive") {
+            container.sh """
+                cd build
+                rm -rf forward-epics-to-kafka; mkdir forward-epics-to-kafka
+                mkdir -p forward-epics-to-kafka/bin
+                cp ./bin/forward-epics-to-kafka forward-epics-to-kafka/bin/
+                cp -r ./lib forward-epics-to-kafka/
+                cp -r ./licenses forward-epics-to-kafka/
+                tar czf ${archive_output} forward-epics-to-kafka
+                # Create file with build information
+                touch BUILD_INFO
+                echo 'Repository: ${project}/${env.BRANCH_NAME}' >> BUILD_INFO
+                echo 'Commit: ${scm_vars.GIT_COMMIT}' >> BUILD_INFO
+                echo 'Jenkins build: ${BUILD_NUMBER}' >> BUILD_INFO
+            """
+            container.copyFrom("build/${archive_output}", '.')
+            container.copyFrom("build/BUILD_INFO", '.')
+            archiveArtifacts "${archive_output},BUILD_INFO"
+        }  // stage
+    }  // if
+
+    if (container.key == clangformat_os) {
+        pipeline_builder.stage("${container.key}: Formatting") {
+            if (!env.CHANGE_ID) {
+            // Ignore non-PRs
+            return
+            }
+            try {
+                container.sh """
+                clang-format -version
+                cd ${pipeline_builder.project}
+                find . \\\\( -name '*.cpp' -or -name '*.cxx' -or -name '*.h' -or -name '*.hpp' \\\\) \\
+                -exec clang-format -i {} +
+                git config user.email 'dm-jenkins-integration@esss.se'
+                git config user.name 'cow-bot'
+                git status -s
+                git add -u
+                git commit -m 'GO FORMAT YOURSELF'
+                """
+                withCredentials([
+                usernamePassword(
+                credentialsId: 'cow-bot-username',
+                usernameVariable: 'USERNAME',
+                passwordVariable: 'PASSWORD'
+                )
+                ]) {
+                container.sh """
+                    cd ${pipeline_builder.project}
+                    git push https://${USERNAME}:${PASSWORD}@github.com/ess-dmsc/forward-epics-to-kafka.git HEAD:${CHANGE_BRANCH}
+                """
+                } // withCredentials
+            } catch (e) {
+            // Okay to fail as there could be no badly formatted files to commit
+            } finally {
+                // Clean up
+            }
+        }
+        
+        pipeline_builder.stage("${container.key}: Cppcheck") {
+        def test_output = "cppcheck.xml"
+            container.sh """
+            cd ${pipeline_builder.project}
+            cppcheck --xml --inline-suppr --enable=all --inconclusive src/ 2> ${test_output}
+            """
+            container.copyFrom("${pipeline_builder.project}/${test_output}", '.')
+            recordIssues sourceCodeEncoding: 'UTF-8', qualityGates: [[threshold: 1, type: 'TOTAL', unstable: true]], tools: [cppCheck(pattern: 'cppcheck.xml', reportEncoding: 'UTF-8')]
+        } // stage
+    }  // if
+}  // create builders
 
 def failure_function(exception_obj, failureMessage) {
     def toEmails = [[$class: 'DevelopersRecipientProvider']]
     emailext body: '${DEFAULT_CONTENT}\n\"' + failureMessage + '\"\n\nCheck console output at $BUILD_URL to view the results.', recipientProviders: toEmails, subject: '${DEFAULT_SUBJECT}'
     throw exception_obj
-}
-
-def Object create_container(image_key) {
-    def image = docker.image(images[image_key]['name'])
-    def container = image.run("\
-        --name ${container_name(image_key)} \
-        --tty \
-        --cpus=2 \
-        --memory=4GB \
-        --network=host \
-        --env http_proxy=${env.http_proxy} \
-        --env https_proxy=${env.https_proxy} \
-        --env local_conan_server=${env.local_conan_server} \
-        --mount=type=bind,src=${epics_dir},dst=${epics_dir},readonly \
-        --mount=type=bind,src=${epics_profile_file},dst=${epics_profile_file},readonly \
-        ")
-}
-
-def docker_copy_code(image_key) {
-    def custom_sh = images[image_key]['sh']
-    sh "docker cp ${project} ${container_name(image_key)}:/home/jenkins/${project}"
-    sh """docker exec --user root ${container_name(image_key)} ${custom_sh} -c \"
-                        chown -R jenkins.jenkins /home/jenkins/${project}
-                        \""""
-}
-
-def docker_dependencies(image_key) {
-    try {
-        def custom_sh = images[image_key]['sh']
-        def conan_remote = "ess-dmsc-local"
-        def dependencies_script = """
-                        mkdir build
-                        cd build
-                        conan remote add \
-                            --insert 0 \
-                            ${conan_remote} ${local_conan_server}
-                    """
-        sh "docker exec ${container_name(image_key)} ${custom_sh} -c \"${dependencies_script}\""
-    } catch (e) {
-        failure_function(e, "Get dependencies for (${container_name(image_key)}) failed")
-    }
-}
-
-def docker_cmake(image_key) {
-    try {
-        def custom_sh = images[image_key]['sh']
-        def coverage_on = ""
-        if (image_key == test_and_coverage_os) {
-            coverage_on = "-DCOV=1"
-        }
-
-        def configure_epics = ""
-        if (image_key == eee_os) {
-            // Only use the host machine's EPICS environment on eee_os
-            configure_epics = ". ${epics_profile_file}"
-        } else {
-            // A problem is caused by "&& \" if left empty
-            configure_epics = "true"
-        }
-
-        def configure_script = """
-                    cd build
-                    ${configure_epics}
-                    cmake ../${project} ${coverage_on}
-                """
-
-        sh "docker exec ${container_name(image_key)} ${custom_sh} -c \"${configure_script}\""
-    } catch (e) {
-        failure_function(e, "CMake step for (${container_name(image_key)}) failed")
-    }
-}
-
-def docker_cmake_release(image_key) {
-    try {
-        def custom_sh = images[image_key]['sh']
-        def configure_script = """
-                        cd build
-                        cmake ../${project} \
-                            -DCMAKE_BUILD_TYPE=Release \
-                            -DCMAKE_SKIP_RPATH=FALSE \
-                            -DCMAKE_INSTALL_RPATH='\\\\\\\$ORIGIN/../lib' \
-                            -DCMAKE_BUILD_WITH_INSTALL_RPATH=TRUE \
-                            -DREQUIRE_GTEST=ON
-                    """
-        sh "docker exec ${container_name(image_key)} ${custom_sh} -c \"${configure_script}\""
-    } catch (e) {
-        failure_function(e, "CMake step for (${container_name(image_key)}) failed")
-    }
-}
-
-def docker_build(image_key) {
-    try {
-        def custom_sh = images[image_key]['sh']
-        def build_script = """
-                      cd build
-                      . ./activate_run.sh
-                      make VERBOSE=1
-                  """
-        sh "docker exec ${container_name(image_key)} ${custom_sh} -c \"${build_script}\""
-    } catch (e) {
-        failure_function(e, "Build step for (${container_name(image_key)}) failed")
-    }
-}
-
-def docker_test(image_key, test_dir) {
-    try {
-        def custom_sh = images[image_key]['sh']
-        // The last line prevents the script from hanging
-        def test_script = """
-                        cd build
-                        . ./activate_run.sh
-                        ./${test_dir}/tests
-                        pkill caRepeater || true
-                    """
-        sh "docker exec ${container_name(image_key)} ${custom_sh} -c \"${test_script}\""
-    } catch (e) {
-        failure_function(e, "Test step for (${container_name(image_key)}) failed")
-    }
-}
-
-def docker_formatting(image_key) {
-    if (!env.CHANGE_ID) {
-        // Ignore non-PRs
-        return
-    }
-
-    try {
-        def custom_sh = images[image_key]['sh']
-        def script = """
-                     clang-format -version
-                     cd ${project}
-                     find . \\\\( -name '*.cpp' -or -name '*.cxx' -or -name '*.h' -or -name '*.hpp' \\\\) \\
-                       -exec clang-format -i {} +
-                     """
-        sh """
-           docker exec ${container_name(image_key)} ${custom_sh} -c \"${script}\"
-           docker cp -a ${container_name(image_key)}:/home/jenkins/${project} ${project}-test
-           cd ${project}-test
-           git config user.email 'dm-jenkins-integration@esss.se'
-           git config user.name 'cow-bot'
-           git status -s
-           git add -u
-           git commit -m \"GO FORMAT YOURSELF\"
-           """
-        withCredentials([
-                  usernamePassword(
-                    credentialsId: 'cow-bot-username',
-                    usernameVariable: 'USERNAME',
-                    passwordVariable: 'PASSWORD'
-                  )
-                ]) {
-                  sh """
-                     cd ${project}-test
-                     git push https://${USERNAME}:${PASSWORD}@github.com/ess-dmsc/forward-epics-to-kafka.git HEAD:${CHANGE_BRANCH}
-                     """
-        } // withCredentials
-    } catch (e) {
-        // Okay to fail as there could be no badly formatted files to commit
-    } finally {
-        // Clean up
-        try {
-            sh "rm -rf ${project}-test"
-        } catch (e) {
-            // Can ignore exception
-        }
-    }
-}
-
-def docker_archive(image_key) {
-    try {
-        def custom_sh = images[image_key]['sh']
-        def archive_output = "${project}-${image_key}.tar.gz"
-        def archive_script = """
-                    cd build
-                    rm -rf forward-epics-to-kafka; mkdir forward-epics-to-kafka
-                    mkdir -p forward-epics-to-kafka/bin
-                    cp ./bin/forward-epics-to-kafka forward-epics-to-kafka/bin/
-                    cp -r ./lib forward-epics-to-kafka/
-                    cp -r ./licenses forward-epics-to-kafka/
-                    tar czf ${archive_output} forward-epics-to-kafka
-
-                    # Create file with build information
-                    touch BUILD_INFO
-                    echo 'Repository: ${project}/${env.BRANCH_NAME}' >> BUILD_INFO
-                    echo 'Commit: ${scm_vars.GIT_COMMIT}' >> BUILD_INFO
-                    echo 'Jenkins build: ${BUILD_NUMBER}' >> BUILD_INFO
-                """
-        sh "docker exec ${container_name(image_key)} ${custom_sh} -c \"${archive_script}\""
-        sh "docker cp ${container_name(image_key)}:/home/jenkins/build/${archive_output} ./"
-        sh "docker cp ${container_name(image_key)}:/home/jenkins/build/BUILD_INFO ./"
-        archiveArtifacts "${archive_output},BUILD_INFO"
-    } catch (e) {
-        failure_function(e, "Test step for (${container_name(image_key)}) failed")
-    }
-}
-
-def docker_coverage(image_key) {
-    try {
-        def custom_sh = images[image_key]['sh']
-        def test_output = "TestResults.xml"
-        // The last line prevents the script from hanging
-        def coverage_script = """
-                        cd build
-                        . ./activate_run.sh
-                        ./tests/tests -- --gtest_output=xml:${test_output}
-                        make coverage
-                        lcov --directory . --capture --output-file coverage.info
-                        lcov --remove coverage.info '*_generated.h' '*/src/date/*' '*/.conan/data/*' '*/usr/*' --output-file coverage.info
-                        pkill caRepeater || true
-                    """
-        sh "docker exec ${container_name(image_key)} ${custom_sh} -c \"${coverage_script}\""
-        sh "docker cp ${container_name(image_key)}:/home/jenkins/build ./"
-        junit "build/${test_output}"
-
-        withCredentials([string(credentialsId: 'forward-epics-to-kafka-codecov-token', variable: 'TOKEN')]) {
-            def codecov_upload_script = """
-                cd ${project}
-                export WORKSPACE='.'
-                export JENKINS_URL=${JENKINS_URL}
-                python3.6 -m pip install --user codecov
-                python3.6 -m codecov -t ${TOKEN} --commit ${scm_vars.GIT_COMMIT} -f ../build/coverage.info
-                """
-            sh "docker exec ${container_name(image_key)} ${custom_sh} -c \"${codecov_upload_script}\""
-        }
-    } catch (e) {
-        failure_function(e, "Coverage step for (${container_name(image_key)}) failed")
-    }
-}
-
-def docker_cppcheck(image_key) {
-    try {
-        def custom_sh = images[image_key]['sh']
-        def test_output = "cppcheck.xml"
-        def cppcheck_script = """
-                        cd forward-epics-to-kafka
-                        cppcheck --xml --inline-suppr --enable=all --inconclusive src/ 2> ${test_output}
-                    """
-        sh "docker exec ${container_name(image_key)} ${custom_sh} -c \"${cppcheck_script}\""
-        sh "docker cp ${container_name(image_key)}:/home/jenkins/forward-epics-to-kafka/${test_output} ."
-    } catch (e) {
-        failure_function(e, "Cppcheck step for (${container_name(image_key)}) failed")
-    }
-}
-
-def get_pipeline(image_key) {
-    return {
-        stage("${image_key}") {
-
-            try {
-                create_container(image_key)
-
-                docker_copy_code(image_key)
-                docker_dependencies(image_key)
-
-                if (image_key != release_os) {
-                    docker_cmake(image_key)
-                }
-                else {
-                    docker_cmake_release(image_key)
-                }
-
-                if (image_key == clangformat_os) {
-                    docker_formatting(image_key)
-                } else {
-                    docker_build(image_key)
-                    if (image_key == test_and_coverage_os && !env.CHANGE_ID) {
-                        docker_coverage(image_key)
-                    }
-                    else if (image_key == release_os) {
-                        docker_test(image_key, "bin")
-                    }
-                    else {
-                        docker_test(image_key, "tests")
-                    }
-                }
-
-                if (image_key == release_os) {
-                    docker_archive(image_key)
-                }
-
-            } catch (e) {
-                failure_function(e, "Unknown build failure for ${image_key}")
-            } finally {
-		if (image_key != clangformat_os) {
-		    // Keep one docker up for static analysers
-                    sh "docker stop ${container_name(image_key)}"
-                    sh "docker rm -f ${container_name(image_key)}"
-		}
-            }
-        }
-    }
 }
 
 def get_win10_pipeline() {
@@ -432,11 +292,6 @@ node('docker && eee') {
         }
     }
 
-    def builders = [:]
-    for (x in images.keySet()) {
-      def image_key = x
-      builders[image_key] = get_pipeline(image_key)
-    }
     builders['windows10'] = get_win10_pipeline()
 
     if ( env.CHANGE_ID ) {
@@ -445,13 +300,6 @@ node('docker && eee') {
 
     parallel builders
 	
-    stage('CppCheck') {
-	docker_cppcheck(clangformat_os)
-        recordIssues sourceCodeEncoding: 'UTF-8', qualityGates: [[threshold: 1, type: 'TOTAL', unstable: true]], tools: [cppCheck(pattern: 'cppcheck.xml', reportEncoding: 'UTF-8')]
-	sh "docker stop ${container_name(clangformat_os)}"
-        sh "docker rm -f ${container_name(clangformat_os)}"
-    }
-
     // Delete workspace when build is done
     cleanWs()
 }
