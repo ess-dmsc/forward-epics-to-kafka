@@ -75,32 +75,16 @@ void ChannelRequester::channelStateChange(
     Channel::shared_pointer const &Channel,
     Channel::ConnectionState EpicsConnectionState) {
   Logger->trace("channel state change: {}  for: {}",
-                toString(EpicsConnectionState), getChannelInfoString(Channel));
+                toString(createChannelConnectionState(EpicsConnectionState)),
+                getChannelInfoString(Channel));
   if (!Channel) {
     Logger->error("no channel, even though we should have.  state: {}",
-                  toString(EpicsConnectionState));
+                  toString(createChannelConnectionState(EpicsConnectionState)));
     EpicsClient->handleChannelRequesterError("No channel given");
     return;
   }
   EpicsClient->handleConnectionStateChange(
       createChannelConnectionState(EpicsConnectionState));
-}
-
-std::string
-ChannelRequester::toString(const Channel::ConnectionState &ConnectionState) {
-  using State = epics::pvAccess::Channel::ConnectionState;
-  switch (ConnectionState) {
-  case State::NEVER_CONNECTED:
-    return "NEVER_CONNECTED";
-  case State::CONNECTED:
-    return "CONNECTED";
-  case State::DISCONNECTED:
-    return "DISCONNECTED";
-  case State::DESTROYED:
-    return "DESTROYED";
-  default:
-    return "UNKNOWN";
-  }
 }
 
 } // namespace EpicsClient

@@ -34,8 +34,6 @@ public:
       epics::pvAccess::Channel::ConnectionState EpicsConnectionState) override;
 
 private:
-  std::string
-  toString(const epics::pvAccess::Channel::ConnectionState &ConnectionState);
   EpicsClientInterface *EpicsClient = nullptr;
   SharedLogger Logger = getLogger();
 };
