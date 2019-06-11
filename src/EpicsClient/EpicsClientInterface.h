@@ -28,7 +28,7 @@ public:
   virtual void handleChannelRequesterError(std::string const &){};
   virtual void handleConnectionStateChange(
       ChannelConnectionState /* ConnectionState */){};
-  virtual void setServiceID(const std::string &/* ServiceID */){};
+  virtual void setServiceID(const std::string & /* ServiceID */){};
   virtual void setProducer(std::unique_ptr<KafkaW::ProducerTopic>){};
 };
 }
