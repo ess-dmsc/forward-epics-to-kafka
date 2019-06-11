@@ -4,25 +4,6 @@
 
 namespace Forwarder {
 namespace EpicsClient {
-
-#define STRINGIFY2(x) #x
-#define STRINGIFY(x) STRINGIFY2(x)
-
-char const *connectionStateName(epics::pvAccess::Channel::ConnectionState x) {
-#define DWTN1(N) DWTN2(N, STRINGIFY(N))
-#define DWTN2(N, S)                                                            \
-  if (x == epics::pvAccess::Channel::ConnectionState::N) {                     \
-    return S;                                                                  \
-  }
-  DWTN1(NEVER_CONNECTED);
-  DWTN1(CONNECTED);
-  DWTN1(DISCONNECTED);
-  DWTN1(DESTROYED);
-#undef DWTN1
-#undef DWTN2
-  return "[unknown]";
-}
-
 static std::string
 getChannelInfoString(epics::pvAccess::Channel::shared_pointer const &Channel) {
   std::ostringstream ss;
@@ -94,16 +75,32 @@ void ChannelRequester::channelStateChange(
     Channel::shared_pointer const &Channel,
     Channel::ConnectionState EpicsConnectionState) {
   Logger->trace("channel state change: {}  for: {}",
-                connectionStateName(EpicsConnectionState),
-                getChannelInfoString(Channel));
+                toString(EpicsConnectionState), getChannelInfoString(Channel));
   if (!Channel) {
     Logger->error("no channel, even though we should have.  state: {}",
-                  connectionStateName(EpicsConnectionState));
+                  toString(EpicsConnectionState));
     EpicsClient->handleChannelRequesterError("No channel given");
     return;
   }
   EpicsClient->handleConnectionStateChange(
       createChannelConnectionState(EpicsConnectionState));
+}
+
+std::string
+ChannelRequester::toString(const Channel::ConnectionState &ConnectionState) {
+  using State = epics::pvAccess::Channel::ConnectionState;
+  switch (ConnectionState) {
+  case State::NEVER_CONNECTED:
+    return "NEVER_CONNECTED";
+  case State::CONNECTED:
+    return "CONNECTED";
+  case State::DISCONNECTED:
+    return "DISCONNECTED";
+  case State::DESTROYED:
+    return "DESTROYED";
+  default:
+    return "UNKNOWN";
+  }
 }
 
 } // namespace EpicsClient

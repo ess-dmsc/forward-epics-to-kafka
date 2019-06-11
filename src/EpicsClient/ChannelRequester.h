@@ -8,8 +8,6 @@
 namespace Forwarder {
 namespace EpicsClient {
 
-char const *connectionStateName(epics::pvAccess::Channel::ConnectionState x);
-
 /// Provides channel state information for PVs.
 class ChannelRequester : public epics::pvAccess::ChannelRequester {
 public:
@@ -36,6 +34,8 @@ public:
       epics::pvAccess::Channel::ConnectionState EpicsConnectionState) override;
 
 private:
+  std::string
+  toString(const epics::pvAccess::Channel::ConnectionState &ConnectionState);
   EpicsClientInterface *EpicsClient = nullptr;
   SharedLogger Logger = getLogger();
 };
