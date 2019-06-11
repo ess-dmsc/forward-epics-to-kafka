@@ -31,6 +31,7 @@ struct ConfigSettings {
   size_t ConversionThreads{1};
   size_t ConversionWorkerQueueSize{1024};
   int32_t MainPollInterval{500};
+  std::string ServiceID;
   URI StatusReportURI;
   std::map<std::string, std::string> KafkaConfiguration;
   std::vector<StreamSettings> StreamsInfo;

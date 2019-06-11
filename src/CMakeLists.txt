@@ -1,6 +1,6 @@
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ..)
-
 message(STATUS "CMAKE_BUILD_TYPE: ${CMAKE_BUILD_TYPE}")
+
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ../bin)
 
 find_package(CURL)
 find_package(Threads)
@@ -112,6 +112,8 @@ set(forwarder-library_SRC
     EpicsClient/EpicsClientRandom.cpp
     EpicsClient/FwdMonitorRequester.cpp
     EpicsClient/EpicsClientFactory.cpp
+    EpicsClient/ChannelRequester.cpp
+    EpicsClient/EpicsClientInterface.cpp
     logger.cpp
     Kafka.cpp
     KafkaW/BrokerSettings.cpp

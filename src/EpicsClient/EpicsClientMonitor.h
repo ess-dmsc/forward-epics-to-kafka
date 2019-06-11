@@ -16,7 +16,7 @@ namespace EpicsClient {
 using std::array;
 using std::vector;
 
-class EpicsClientMonitor_impl;
+class EpicsClientMonitorImpl;
 
 /// Epics client implementation which monitors for PV updates.
 class EpicsClientMonitor : public EpicsClientInterface {
@@ -49,14 +49,29 @@ public:
 
   void emitCachedValue();
 
+  std::string getConnectionState() override;
+
+  void handleChannelRequesterError(std::string const &) override;
+  void handleConnectionStateChange(
+      ChannelConnectionState NewConnectionState) override;
+
+  std::unique_ptr<KafkaW::ProducerTopic> ConnectionStatusProducer;
+
+  void setServiceID(const std::string &NewServiceID) override;
+
+  void setProducer(std::unique_ptr<KafkaW::ProducerTopic> Producer) override;
+
 private:
-  std::unique_ptr<EpicsClientMonitor_impl> Impl;
+  std::unique_ptr<EpicsClientMonitorImpl> Impl;
   std::shared_ptr<
       moodycamel::ConcurrentQueue<std::shared_ptr<FlatBufs::EpicsPVUpdate>>>
       EmitQueue;
   std::shared_ptr<FlatBufs::EpicsPVUpdate> CachedUpdate;
   std::mutex CachedUpdateMutex;
   std::atomic<int> status_{0};
+  ChannelConnectionState ConnectionState =
+      ChannelConnectionState::NEVER_CONNECTED;
+  std::string ServiceID;
   SharedLogger Logger = getLogger();
 };
 } // namespace EpicsClient

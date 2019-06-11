@@ -4,6 +4,7 @@ project(forward-epics-to-kafka)
 set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH};${PROJECT_SOURCE_DIR}/cmake")
 
 set (CMAKE_CXX_STANDARD 11)
+
 if (WIN32)
     add_definitions(-DNOGDI -DNOMINMAX)
 else()
@@ -37,6 +38,7 @@ if(WIN32)
 else()
     set(CONAN_FILE conan/conanfile.txt)
 endif(WIN32)
+
 if(${CONAN} MATCHES "AUTO")
     include(${CMAKE_MODULE_PATH}/conan.cmake)
     conan_cmake_run(CONANFILE ${CONAN_FILE}

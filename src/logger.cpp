@@ -17,6 +17,7 @@ void setUpLogging(const spdlog::level::level_enum &LoggingLevel,
     FileSink->set_pattern("[%Y-%m-%d %H:%M:%S.%f] [%l] [processID: %P]: %v");
     Sinks.push_back(FileSink);
   }
+
   if (!GraylogURI.empty()) {
 #ifdef HAVE_GRAYLOG_LOGGER
     Forwarder::URI TempURI(GraylogURI);
@@ -32,6 +33,7 @@ void setUpLogging(const spdlog::level::level_enum &LoggingLevel,
         GraylogURI);
 #endif
   }
+
   auto ConsoleSink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
   ConsoleSink->set_pattern("[%H:%M:%S.%f] [%l] [processID: %P]: %v");
   Sinks.push_back(ConsoleSink);

@@ -8,6 +8,7 @@
 #include <atomic>
 #include <list>
 #include <map>
+#include <memory>
 #include <mutex>
 #include <stdexcept>
 
@@ -61,7 +62,7 @@ private:
   template <typename T>
   std::shared_ptr<Stream> addStream(ChannelInfo &ChannelInfo);
   MainOpt &main_opt;
-  std::unique_ptr<InstanceSet> kafka_instance_set;
+  std::unique_ptr<InstanceSet> KafkaInstanceSet;
   std::unique_ptr<Config::Listener> config_listener;
   std::unique_ptr<Timer> PVUpdateTimer;
   std::unique_ptr<Timer> GenerateFakePVUpdateTimer;

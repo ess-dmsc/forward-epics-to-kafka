@@ -17,8 +17,8 @@ class Stream;
 
 struct ConversionWorkPacket {
   ~ConversionWorkPacket();
-  std::shared_ptr<FlatBufs::EpicsPVUpdate> up;
-  ConversionPath *cp = nullptr;
+  std::shared_ptr<FlatBufs::EpicsPVUpdate> Update;
+  ConversionPath *Path = nullptr;
   Stream *stream = nullptr;
 };
 

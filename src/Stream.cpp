@@ -118,8 +118,8 @@ uint32_t Stream::fillConversionQueue(
     for (auto &ConversionPath : ConversionPaths) {
       auto ConversionPacket = ::make_unique<ConversionWorkPacket>();
       cwp_last[ConversionPathID] = ConversionPacket.get();
-      ConversionPacket->cp = ConversionPath.get();
-      ConversionPacket->up = EpicsUpdate;
+      ConversionPacket->Path = ConversionPath.get();
+      ConversionPacket->Update = EpicsUpdate;
       bool QueuedSuccessful = Queue.enqueue(std::move(ConversionPacket));
       if (!QueuedSuccessful) {
         Logger->info("Conversion work queue is full");
@@ -156,7 +156,8 @@ nlohmann::json Stream::getStatusJson() {
   auto Document = json::object();
   auto const &ChannelInfo = getChannelInfo();
   Document["channel_name"] = ChannelInfo.channel_name;
-  Document["getQueueSize"] = getQueueSize();
+  Document["epics_connection_status"] = Client->getConnectionState();
+  Document["queue_size"] = getQueueSize();
   {
     std::lock_guard<std::mutex> lock(SeqDataEmitted.Mutex);
     auto const &Set = SeqDataEmitted.set;

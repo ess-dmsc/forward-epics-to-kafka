@@ -8,7 +8,7 @@ namespace Forwarder {
 
 ConversionWorkPacket::~ConversionWorkPacket() {
   if (stream) {
-    cp->transit--;
+    Path->transit--;
   }
 }
 
@@ -28,8 +28,8 @@ int ConversionWorker::stop() {
 int ConversionWorker::run() {
   using CLK = std::chrono::steady_clock;
   using MS = std::chrono::milliseconds;
-  auto Dt = MS(100);
-  auto t1 = CLK::now();
+  auto MinTimeDifference = MS(100);
+  auto TimeBegin = CLK::now();
   while (do_run) {
     auto qs = queue.size_approx();
     if (qs == 0) {
@@ -37,19 +37,18 @@ int ConversionWorker::run() {
       scheduler->fill(queue, qf, id);
     }
     while (true) {
-      std::unique_ptr<ConversionWorkPacket> p;
-      bool found = queue.try_dequeue(p);
-      if (!found)
+      std::unique_ptr<ConversionWorkPacket> Packet;
+      if (!queue.try_dequeue(Packet)) {
         break;
-      auto cwp = std::move(p);
-      cwp->cp->emit(std::move(cwp->up));
+      }
+      Packet->Path->emit(std::move(Packet->Update));
     }
-    auto t2 = CLK::now();
-    auto dt = std::chrono::duration_cast<MS>(t2 - t1);
-    if (dt < Dt) {
-      std::this_thread::sleep_for(Dt - dt);
+    auto TimeEnd = CLK::now();
+    auto TimeDifference = std::chrono::duration_cast<MS>(TimeEnd - TimeBegin);
+    if (TimeDifference < MinTimeDifference) {
+      std::this_thread::sleep_for(MinTimeDifference - TimeDifference);
     }
-    t1 = t2;
+    TimeBegin = TimeEnd;
   }
   return 0;
 }

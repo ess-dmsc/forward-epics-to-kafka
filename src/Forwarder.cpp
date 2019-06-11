@@ -61,7 +61,7 @@ static bool isStopDueToSignal(ForwardingRunState Flag) {
 /// Main program entry class.
 Forwarder::Forwarder(MainOpt &Opt)
     : main_opt(Opt),
-      kafka_instance_set(make_unique<InstanceSet>(Opt.GlobalBrokerSettings)),
+      KafkaInstanceSet(make_unique<InstanceSet>(Opt.GlobalBrokerSettings)),
       conversion_scheduler(this) {
 
   registerSchemas();
@@ -168,7 +168,7 @@ void Forwarder::forward_epics_to_kafka() {
   using MS = std::chrono::milliseconds;
   auto Dt = MS(main_opt.MainSettings.MainPollInterval);
   auto t_lf_last = CLK::now();
-  auto t_status_last = CLK::now();
+  auto t_status_last = CLK::now() - MS(4000);
   ConfigCB config_cb(*this);
   {
     std::lock_guard<std::mutex> lock(conversion_workers_mx);
@@ -196,7 +196,7 @@ void Forwarder::forward_epics_to_kafka() {
       t_lf_last = t1;
       do_stats = true;
     }
-    kafka_instance_set->poll();
+    KafkaInstanceSet->poll();
 
     auto t2 = CLK::now();
     auto dt = std::chrono::duration_cast<MS>(t2 - t1);
@@ -207,7 +207,7 @@ void Forwarder::forward_epics_to_kafka() {
       t_status_last = t2;
     }
     if (do_stats) {
-      kafka_instance_set->logStats();
+      KafkaInstanceSet->logStats();
       report_stats(dt.count());
     }
     if (dt >= Dt) {
@@ -238,6 +238,7 @@ void Forwarder::forward_epics_to_kafka() {
 void Forwarder::report_status() {
   using nlohmann::json;
   auto Status = json::object();
+  Status["service_id"] = main_opt.MainSettings.ServiceID;
   auto Streams = json::array();
   auto StreamVector = streams.getStreams();
   std::transform(StreamVector.cbegin(), StreamVector.cend(),
@@ -273,10 +274,9 @@ void Forwarder::report_stats(int dt) {
                b2, b1);
   if (CURLReporter::HaveCURL && !main_opt.InfluxURI.empty()) {
     std::vector<char> Hostname = getHostname();
-
     int i1 = 0;
     fmt::memory_buffer StatsBuffer;
-    for (auto &s : kafka_instance_set->getStatsForAllProducers()) {
+    for (auto &s : KafkaInstanceSet->getStatsForAllProducers()) {
       fmt::format_to(StatsBuffer, "forward-epics-to-kafka,hostname={},set={}",
                      Hostname.data(), i1);
       fmt::format_to(StatsBuffer, " produced={}", s.produced);
@@ -381,7 +381,7 @@ void Forwarder::pushConverterToStream(ConverterSettings const &ConverterInfo,
   }
 
   // Create a conversion path then add it
-  auto Topic = kafka_instance_set->createProducerTopic(std::move(TopicURI));
+  auto Topic = KafkaInstanceSet->createProducerTopic(std::move(TopicURI));
   auto cp = ::make_unique<ConversionPath>(
       std::move(ConverterShared), ::make_unique<KafkaOutput>(std::move(Topic)));
 
@@ -413,8 +413,15 @@ void Forwarder::addMapping(StreamSettings const &StreamInfo) {
       PVUpdateTimer->addCallback(
           [Client, PeriodicClient]() { PeriodicClient->emitCachedValue(); });
     }
-
+    if (StreamInfo.Converters.size() > 0) {
+      auto ConnectionStatusProducer = KafkaInstanceSet->createProducerTopic(
+          URI(StreamInfo.Converters[0].Topic));
+      Stream->getEpicsClient()->setProducer(make_unique<KafkaW::ProducerTopic>(
+          std::move(ConnectionStatusProducer)));
+    }
+    Stream->getEpicsClient()->setServiceID(main_opt.MainSettings.ServiceID);
     for (auto &Converter : StreamInfo.Converters) {
+
       pushConverterToStream(Converter, Stream);
     }
   } catch (std::runtime_error &) {

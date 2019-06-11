@@ -6,8 +6,6 @@
 
 namespace FlatBufs {
 
-class ConversionPath;
-
 /// Represents and Epics update with the new PV value
 struct EpicsPVUpdate {
   EpicsPVUpdate() = default;

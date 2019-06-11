@@ -1,3 +1,6 @@
+#pragma once
+#include "../logger.h"
+#include "EpicsClientInterface.h"
 #include <pv/pvAccess.h>
 #include <pv/pvData.h>
 #include <string>
@@ -5,15 +8,10 @@
 namespace Forwarder {
 namespace EpicsClient {
 
-char const *channelStateName(epics::pvAccess::Channel::ConnectionState x);
-
-class EpicsClientMonitor_impl;
-
 /// Provides channel state information for PVs.
 class ChannelRequester : public epics::pvAccess::ChannelRequester {
 public:
-  explicit ChannelRequester(EpicsClientMonitor_impl *EpicsClientImpl)
-      : EpicsClientImpl(EpicsClientImpl){};
+  explicit ChannelRequester(EpicsClientInterface *EpicsClient);
 
   std::string getRequesterName() override;
 
@@ -33,10 +31,10 @@ public:
   /// Checks the channel state and sets the epics client channel status.
   void channelStateChange(
       epics::pvAccess::Channel::shared_pointer const &Channel,
-      epics::pvAccess::Channel::ConnectionState ConnectionState) override;
+      epics::pvAccess::Channel::ConnectionState EpicsConnectionState) override;
 
 private:
-  EpicsClientMonitor_impl *EpicsClientImpl = nullptr;
+  EpicsClientInterface *EpicsClient = nullptr;
   SharedLogger Logger = getLogger();
 };
 }
