@@ -347,6 +347,31 @@ Value_t makeValue(flatbuffers::FlatBufferBuilder &Builder,
   return {Value::NONE, 0};
 }
 
+std::unique_ptr<AlarmStatus>
+getAlarmInfo(epics::pvData::PVStructurePtr const &PVStructureField) {
+  auto AlarmField = PVStructureField->getSubField("alarm");
+  auto MessageField = ((epics::pvData::PVStructure *)(AlarmField.get()))
+                          ->getSubField("message");
+  auto MessageString = static_cast<epics::pvData::PVScalarValue<std::string> *>(
+                           MessageField.get())
+                           ->get();
+
+  // Message field is HIHI_ALARM, LOW_ALARM, etc. We have to drop _ALARM in
+  // every case apart from NO_ALARM
+  if (MessageString.compare("NO_ALARM") != 0)
+    MessageString = MessageString.substr(0, MessageString.length() - 6);
+
+  auto values = EnumNamesAlarmStatus();
+  int i = 0;
+  while (values[i] != nullptr) {
+    if (MessageString.compare(values[i]) == 0) {
+      break;
+    }
+    i++;
+  }
+  return make_unique<AlarmStatus>(EnumValuesAlarmStatus()[i]);
+}
+
 class Converter : public FlatBufferCreator {
 public:
   Converter() = default;
@@ -367,6 +392,8 @@ public:
     LogDataBuilder.add_source_name(PVName);
     LogDataBuilder.add_value_type(Value.Type);
     LogDataBuilder.add_value(Value.Offset);
+    auto alarmInfo = getAlarmInfo(PVStructure);
+    LogDataBuilder.add_status(*alarmInfo.get());
 
     // Use the PV name as the message key so that all messages for the same PV
     // end up in the same Kafka partition and thus have publish order maintained
