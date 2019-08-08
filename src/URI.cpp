@@ -7,7 +7,6 @@
 //
 // Screaming Udder!                              https://esss.se
 
-
 #include "URI.h"
 #include "logger.h"
 #include <iostream>
