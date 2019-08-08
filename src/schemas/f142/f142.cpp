@@ -355,21 +355,20 @@ getAlarmInfo(epics::pvData::PVStructurePtr const &PVStructureField) {
   auto MessageString = static_cast<epics::pvData::PVScalarValue<std::string> *>(
                            MessageField.get())
                            ->get();
-
   // Message field is HIHI_ALARM, LOW_ALARM, etc. We have to drop _ALARM in
   // every case apart from NO_ALARM
   if (MessageString.compare("NO_ALARM") != 0)
     MessageString = MessageString.substr(0, MessageString.length() - 6);
 
-  auto values = EnumNamesAlarmStatus();
+  auto StatusNames = EnumNamesAlarmStatus();
   int i = 0;
-  while (values[i] != nullptr) {
-    if (MessageString.compare(values[i]) == 0) {
-      break;
+  while (StatusNames[i] != nullptr) {
+    if (MessageString.compare(StatusNames[i]) == 0) {
+      return make_unique<AlarmStatus>(EnumValuesAlarmStatus()[i]);
     }
     i++;
   }
-  return make_unique<AlarmStatus>(EnumValuesAlarmStatus()[i]);
+  return make_unique<AlarmStatus>(AlarmStatus::UDF);
 }
 
 class Converter : public FlatBufferCreator {
