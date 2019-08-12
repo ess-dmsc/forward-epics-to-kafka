@@ -23,13 +23,11 @@ as sending values periodically.
 
 By default this is not enabled.
 
-## Adding New Converter Plugins
+## Adding New Converter Modules
 
-New converters from EPICS to Flatbuffers can be easily added.
+New modules for moving EPICS updates into flatbuffers are relatively straight forward to develop. Look in the *src/schemas* directory for examples.
 
-Please have a look at the last 20 lines of `src/schemas/f142/f142.cxx` on how to register your plugin with the 
-SchemaRegistry.
-There is no need to touch existing code at all to register a new plugin, but you probably want to add it to `CMakeLists.txt`.
+For registering new modules, please examine the function `registerSchemas()` in *src/Forwarder.cpp*.
 
-Beware that converter instances are used from different threads.  If the converter instance has state, it must take care 
+Beware that converter instances are used from different threads. If the converter instance has state, it must take care 
 of thread safety itself.
