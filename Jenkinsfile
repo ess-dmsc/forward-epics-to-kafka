@@ -52,7 +52,7 @@ builders = pipeline_builder.createBuilders { container ->
             conan remote add --insert 0 ess-dmsc-local ${local_conan_server}
         """
     }  // stage
-    
+
     pipeline_builder.stage("${container.key}: configure") {
         if (container.key != release_os) {
             def coverage_on
@@ -61,7 +61,7 @@ builders = pipeline_builder.createBuilders { container ->
             } else {
                 coverage_on = ""
             }
-            
+
             def configure_epics = ""
             //if (container.key == eee_os) {
             //    // Only use the host machine's EPICS environment on eee_os
@@ -79,11 +79,11 @@ builders = pipeline_builder.createBuilders { container ->
         } else {
             container.sh """
                 cd build
-                cmake -DCMAKE_SKIP_BUILD_RPATH=ON -DCMAKE_BUILD_TYPE=Release ../${pipeline_builder.project}
+                cmake -DCMAKE_SKIP_RPATH=FALSE -DCMAKE_INSTALL_RPATH='\\\\\\\$ORIGIN/../lib' -DCMAKE_BUILD_WITH_INSTALL_RPATH=TRUE -DCMAKE_BUILD_TYPE=Release ../${pipeline_builder.project}
             """
         }  // if/else
     }  // stage
-    
+
     pipeline_builder.stage("${container.key}: build") {
         container.sh """
             cd build
@@ -183,7 +183,7 @@ builders = pipeline_builder.createBuilders { container ->
                 // Clean up
             }
         }
-        
+
         pipeline_builder.stage("${container.key}: Cppcheck") {
         def test_output = "cppcheck.xml"
             container.sh """
@@ -205,7 +205,7 @@ def failure_function(exception_obj, failureMessage) {
 def get_win10_pipeline() {
     return {
         node('windows10') {
-        
+
         // Use custom location to avoid Win32 path length issues
             ws('c:\\jenkins\\') {
                 cleanWs()
@@ -222,7 +222,7 @@ def get_win10_pipeline() {
                         mkdir _build
                         """
                     } // stage
-                    
+
                     stage("win10: Install") {
                       bat """cd _build
                     conan.exe \
@@ -301,7 +301,7 @@ node('docker && eee') {
     }
 
     parallel builders
-	
+
     // Delete workspace when build is done
     cleanWs()
 }
