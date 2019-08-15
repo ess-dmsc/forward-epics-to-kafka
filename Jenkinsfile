@@ -79,7 +79,7 @@ builders = pipeline_builder.createBuilders { container ->
         } else {
             container.sh """
                 cd build
-                cmake -DCMAKE_SKIP_RPATH=FALSE -DCMAKE_INSTALL_RPATH='\\\\\\\$ORIGIN/../lib' -DCMAKE_BUILD_WITH_INSTALL_RPATH=TRUE -DCMAKE_BUILD_TYPE=Release ../${pipeline_builder.project}
+                cmake -DCMAKE_BUILD_TYPE=Release ../${pipeline_builder.project}
             """
         }  // if/else
     }  // stage

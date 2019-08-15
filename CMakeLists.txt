@@ -12,8 +12,8 @@ else()
     else ()
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fdiagnostics-color=auto")
     endif()
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,-rpath=$ORIGIN/../lib -Wl,--disable-new-dtags")
 endif(WIN32)
-
 
 # Test Coverage - with gcc only and enable with -DCOV
 if(CMAKE_COMPILER_IS_GNUCXX AND COV)
@@ -27,12 +27,6 @@ endif()
 set(CONAN_PROFILE "default" CACHE STRING "Name of conan profile to use, uses default by default")
 set(CONAN "AUTO" CACHE STRING "conan options AUTO (conan must be in path), MANUAL (expects conanbuildinfo.cmake in build directory) or DISABLE")
 
-if(CMAKE_BUILD_TYPE MATCHES "Release")
-  set(OUTPUT_DIRS "")
-else()
-  set(OUTPUT_DIRS "NO_OUTPUT_DIRS")
-endif()
-
 if(WIN32)
     set(CONAN_FILE conan/conanfile_win32.txt)
 else()
@@ -43,7 +37,7 @@ if(${CONAN} MATCHES "AUTO")
     include(${CMAKE_MODULE_PATH}/conan.cmake)
     conan_cmake_run(CONANFILE ${CONAN_FILE}
             PROFILE ${CONAN_PROFILE}
-            BASIC_SETUP ${OUTPUT_DIRS} KEEP_RPATHS CMAKE_TARGETS
+            BASIC_SETUP KEEP_RPATHS CMAKE_TARGETS
             BUILD_TYPE "None"
             BUILD outdated)
 elseif(${CONAN} MATCHES "MANUAL")
