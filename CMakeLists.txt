@@ -12,8 +12,10 @@ else()
     else ()
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fdiagnostics-color=auto")
     endif()
+    # Set a relative RPATH on Mac and Linux to use libraries in the <BUILD_DIR>/lib directory
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,-rpath,'\\\$ORIGIN/../lib'")
     if (CMAKE_COMPILER_IS_GNUCXX)
+        # Stop gcc linker (version 7 onwards) from overriding rpath with runpath in the dynamic table
         set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,--disable-new-dtags")
     endif()
 endif(WIN32)
