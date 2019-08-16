@@ -79,7 +79,7 @@ builders = pipeline_builder.createBuilders { container ->
         } else {
             container.sh """
                 cd build
-                cmake -DCMAKE_BUILD_TYPE=Release ../${pipeline_builder.project}
+                cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo ../${pipeline_builder.project}
             """
         }  // if/else
     }  // stage
@@ -233,8 +233,8 @@ def get_win10_pipeline() {
 
                     stage("win10: Build") {
                            bat """cd _build
-                        cmake .. -G \"Visual Studio 15 2017 Win64\" -DCMAKE_BUILD_TYPE=Release -DCONAN=MANUAL
-                        cmake --build . --config Release
+                        cmake .. -G \"Visual Studio 15 2017 Win64\" -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCONAN=MANUAL
+                        cmake --build . --config RelWithDebInfo
                         """
                     }  // stage
                 }  // dir
