@@ -12,7 +12,10 @@ else()
     else ()
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fdiagnostics-color=auto")
     endif()
-    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,-rpath=$ORIGIN/../lib -Wl,--disable-new-dtags")
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,-rpath,\\\$ORIGIN/../lib")
+    if (CMAKE_COMPILER_IS_GNUCXX)
+        set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,--disable-new-dtags")
+    endif()
 endif(WIN32)
 
 # Test Coverage - with gcc only and enable with -DCOV
