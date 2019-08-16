@@ -99,7 +99,7 @@ builders = pipeline_builder.createBuilders { container ->
             container.sh """
                 cd build
                 . ./activate_run.sh
-                ./tests/tests -- --gtest_output=xml:${test_output}
+                ./bin/tests -- --gtest_output=xml:${test_output}
                 make coverage
                 lcov --directory . --capture --output-file coverage.info
                 lcov --remove coverage.info '*_generated.h' '*/src/date/*' '*/.conan/data/*' '*/usr/*' --output-file coverage.info
@@ -118,7 +118,7 @@ builders = pipeline_builder.createBuilders { container ->
             container.sh """
                 cd build
                 . ./activate_run.sh
-                ./tests/tests
+                ./bin/tests
                 pkill caRepeater || true
             """
         }  // if/else
