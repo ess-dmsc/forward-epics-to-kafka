@@ -79,7 +79,7 @@ builders = pipeline_builder.createBuilders { container ->
         } else {
             container.sh """
                 cd build
-                cmake -DCMAKE_SKIP_RPATH=FALSE -DCMAKE_INSTALL_RPATH='\\\\\\\$ORIGIN/../lib' -DCMAKE_BUILD_WITH_INSTALL_RPATH=TRUE -DCMAKE_BUILD_TYPE=Release ../${pipeline_builder.project}
+                cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo ../${pipeline_builder.project}
             """
         }  // if/else
     }  // stage
@@ -99,7 +99,7 @@ builders = pipeline_builder.createBuilders { container ->
             container.sh """
                 cd build
                 . ./activate_run.sh
-                ./tests/tests -- --gtest_output=xml:${test_output}
+                ./bin/tests -- --gtest_output=xml:${test_output}
                 make coverage
                 lcov --directory . --capture --output-file coverage.info
                 lcov --remove coverage.info '*_generated.h' '*/src/date/*' '*/.conan/data/*' '*/usr/*' --output-file coverage.info
@@ -118,7 +118,7 @@ builders = pipeline_builder.createBuilders { container ->
             container.sh """
                 cd build
                 . ./activate_run.sh
-                ./tests/tests
+                ./bin/tests
                 pkill caRepeater || true
             """
         }  // if/else
@@ -233,8 +233,8 @@ def get_win10_pipeline() {
 
                     stage("win10: Build") {
                            bat """cd _build
-                        cmake .. -G \"Visual Studio 15 2017 Win64\" -DCMAKE_BUILD_TYPE=Release -DCONAN=MANUAL
-                        cmake --build . --config Release
+                        cmake .. -G \"Visual Studio 15 2017 Win64\" -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCONAN=MANUAL
+                        cmake --build . --config RelWithDebInfo
                         """
                     }  // stage
                 }  // dir
