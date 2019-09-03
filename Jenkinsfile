@@ -77,7 +77,7 @@ builders = pipeline_builder.createBuilders { container ->
         container.sh """
             cd build
             . ./activate_run.sh
-            make VERBOSE=1
+            make VERBOSE=1 -j4
         """
     }  // stage
 
@@ -89,7 +89,7 @@ builders = pipeline_builder.createBuilders { container ->
                 cd build
                 . ./activate_run.sh
                 ./bin/tests -- --gtest_output=xml:${test_output}
-                make coverage
+                make coverage -j4
                 lcov --directory . --capture --output-file coverage.info
                 lcov --remove coverage.info '*_generated.h' '*/src/date/*' '*/.conan/data/*' '*/usr/*' --output-file coverage.info
                 pkill caRepeater || true
