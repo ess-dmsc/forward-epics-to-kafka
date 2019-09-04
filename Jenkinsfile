@@ -58,11 +58,8 @@ builders = pipeline_builder.createBuilders { container ->
                 coverage_on = ""
             }
 
-            def configure_epics = ""
-
             container.sh """
                 cd build
-                ${configure_epics}
                 cmake -DCMAKE_BUILD_TYPE=Debug ../${pipeline_builder.project} ${coverage_on}
             """
         } else {
