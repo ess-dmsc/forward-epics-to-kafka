@@ -12,6 +12,7 @@
 #include "../../helper.h"
 #include "../../logger.h"
 #include <pv/nt.h>
+#include <pv/pvIntrospect.h>
 #include <tdct_timestamps_generated.h>
 
 namespace TdcTime {
@@ -63,8 +64,12 @@ std::unique_ptr<FlatBufs::FlatbufferMessage>
 Converter::create(FlatBufs::EpicsPVUpdate const &PvData) {
   auto pvUpdateStruct = PvData.epics_pvstr;
   std::string pvStructType = pvUpdateStruct->getField()->getID();
-  if (pvStructType != "epics:nt/NTScalarArray:1.0") {
-    getLogger()->critical("PV is not of expected type for chopper TDC.");
+  const std::string ExpectedStructType{"epics:nt/NTScalarArray:1.0"};
+  if (pvStructType != ExpectedStructType) {
+    getLogger()->critical(
+        "PV is not of expected type for chopper TDC with PV name \"" +
+        PvData.channel + "\". Expected \"" + ExpectedStructType + "\" got \"" +
+        pvStructType + "\".");
     return {};
   }
   pvNT::NTScalarArrayPtr ntScalarData =
@@ -73,7 +78,9 @@ Converter::create(FlatBufs::EpicsPVUpdate const &PvData) {
       dynamic_cast<pv::PVScalarArray *>(ntScalarData->getValue().get());
   auto ElementType = scalarArrPtr->getScalarArray()->getElementType();
   if (ElementType != pv::ScalarType::pvInt) {
-    getLogger()->error("Array elements are not of expected type.");
+    getLogger()->error("Array elements are not of expected type for chopper "
+                       "TDC with PV name \"" +
+                       PvData.channel + "\".");
     return {};
   } else {
     auto ConvertField = ntScalarData->getValue();
@@ -84,8 +91,9 @@ Converter::create(FlatBufs::EpicsPVUpdate const &PvData) {
       }
       return generateFlatbufferFromData(PvData.channel, NewTimestamps);
     } catch (std::runtime_error &E) {
-      getLogger()->critical("Unable to convert pv-array into timestamps: {}",
-                            E.what());
+      getLogger()->critical(
+          "Unable to convert pv-array of PV \"{}\" into timestamps: {}",
+          PvData.channel, E.what());
       return {};
     }
   }
