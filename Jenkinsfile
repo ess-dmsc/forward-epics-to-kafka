@@ -7,10 +7,6 @@ project = "forward-epics-to-kafka"
 clangformat_os = "debian9"
 test_and_coverage_os = "centos7"
 release_os = "centos7-release"
-eee_os = "centos7"
-
-epics_dir = "/opt/epics"
-epics_profile_file = "/etc/profile.d/ess_epics_env.sh"
 
 // Set number of old builds to keep.
 properties([[
@@ -62,18 +58,8 @@ builders = pipeline_builder.createBuilders { container ->
                 coverage_on = ""
             }
 
-            def configure_epics = ""
-            //if (container.key == eee_os) {
-            //    // Only use the host machine's EPICS environment on eee_os
-            //    configure_epics = ". ${epics_profile_file}"
-            //} else {
-            //    // A problem is caused by "&& \" if left empty
-            //    configure_epics = "true"
-            //}
-
             container.sh """
                 cd build
-                ${configure_epics}
                 cmake -DCMAKE_BUILD_TYPE=Debug ../${pipeline_builder.project} ${coverage_on}
             """
         } else {
@@ -88,7 +74,7 @@ builders = pipeline_builder.createBuilders { container ->
         container.sh """
             cd build
             . ./activate_run.sh
-            make VERBOSE=1
+            make VERBOSE=1 -j4
         """
     }  // stage
 
@@ -100,7 +86,7 @@ builders = pipeline_builder.createBuilders { container ->
                 cd build
                 . ./activate_run.sh
                 ./bin/tests -- --gtest_output=xml:${test_output}
-                make coverage
+                make coverage -j4
                 lcov --directory . --capture --output-file coverage.info
                 lcov --remove coverage.info '*_generated.h' '*/src/date/*' '*/.conan/data/*' '*/usr/*' --output-file coverage.info
                 pkill caRepeater || true
@@ -281,7 +267,7 @@ def get_system_tests_pipeline() {
     }  // return
 }  // def
 
-node('docker && eee') {
+node {
     cleanWs()
 
     stage('Checkout') {
@@ -296,7 +282,7 @@ node('docker && eee') {
 
     builders['windows10'] = get_win10_pipeline()
 
-    if ( env.CHANGE_ID ) {
+    if (env.CHANGE_ID) {
         builders['system tests'] = get_system_tests_pipeline()
     }
 
