@@ -12,8 +12,8 @@
 #include "../../helper.h"
 #include "../../logger.h"
 #include <pv/nt.h>
-#include <tdct_timestamps_generated.h>
 #include <pv/pvIntrospect.h>
+#include <tdct_timestamps_generated.h>
 
 namespace TdcTime {
 
@@ -66,7 +66,10 @@ Converter::create(FlatBufs::EpicsPVUpdate const &PvData) {
   std::string pvStructType = pvUpdateStruct->getField()->getID();
   const std::string ExpectedStructType{"epics:nt/NTScalarArray:1.0"};
   if (pvStructType != ExpectedStructType) {
-    getLogger()->critical("PV is not of expected type for chopper TDC with PV name \"" + PvData.channel + "\". Expected \"" + ExpectedStructType + "\" got \"" + pvStructType + "\"." );
+    getLogger()->critical(
+        "PV is not of expected type for chopper TDC with PV name \"" +
+        PvData.channel + "\". Expected \"" + ExpectedStructType + "\" got \"" +
+        pvStructType + "\".");
     return {};
   }
   pvNT::NTScalarArrayPtr ntScalarData =
@@ -75,7 +78,9 @@ Converter::create(FlatBufs::EpicsPVUpdate const &PvData) {
       dynamic_cast<pv::PVScalarArray *>(ntScalarData->getValue().get());
   auto ElementType = scalarArrPtr->getScalarArray()->getElementType();
   if (ElementType != pv::ScalarType::pvInt) {
-    getLogger()->error("Array elements are not of expected type for chopper TDC with PV name \"" + PvData.channel + "\".");
+    getLogger()->error("Array elements are not of expected type for chopper "
+                       "TDC with PV name \"" +
+                       PvData.channel + "\".");
     return {};
   } else {
     auto ConvertField = ntScalarData->getValue();
@@ -86,8 +91,9 @@ Converter::create(FlatBufs::EpicsPVUpdate const &PvData) {
       }
       return generateFlatbufferFromData(PvData.channel, NewTimestamps);
     } catch (std::runtime_error &E) {
-      getLogger()->critical("Unable to convert pv-array of PV \"{}\" into timestamps: {}"
-                            , PvData.channel, E.what());
+      getLogger()->critical(
+          "Unable to convert pv-array of PV \"{}\" into timestamps: {}",
+          PvData.channel, E.what());
       return {};
     }
   }
