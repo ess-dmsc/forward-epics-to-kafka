@@ -207,7 +207,7 @@ std::pair<ParseOptRet, std::unique_ptr<MainOpt>> parse_opt(int argc,
   }
 
   if (MainOptions.PrintVersion) {
-    fmt::print("{}\n", GetVersion());
+    fmt::print("{}\n", Versioning::GetVersion());
     ret.first = ParseOptRet::VersionRequested;
     return ret;
   }
