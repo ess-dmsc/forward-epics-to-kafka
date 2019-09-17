@@ -63,7 +63,9 @@ int main(int argc, char **argv) {
   auto op = Forwarder::parse_opt(argc, argv);
   auto &opt = *op.second;
 
-  if (op.first != 0) {
+  if (op.first == Forwarder::ParseOptRet::VersionRequested) {
+    return 0;
+  } else if (op.first == Forwarder::ParseOptRet::Error) {
     return 1;
   }
 
