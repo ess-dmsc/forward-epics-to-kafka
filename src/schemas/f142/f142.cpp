@@ -5,13 +5,11 @@
 #include "../../logger.h"
 #include <atomic>
 #include <f142_logdata_generated.h>
-#include <mutex>
 #include <pv/nt.h>
 #include <pv/ntndarray.h>
 #include <pv/ntndarrayAttribute.h>
 #include <pv/ntutils.h>
 #include <pv/pvEnumerated.h>
-#include <set>
 
 namespace FlatBufs {
 namespace f142 {
@@ -350,20 +348,22 @@ Value_t makeValue(flatbuffers::FlatBufferBuilder &Builder,
 std::unique_ptr<AlarmStatus>
 getAlarmInfo(epics::pvData::PVStructurePtr const &PVStructureField) {
   auto AlarmField = PVStructureField->getSubField("alarm");
-  auto MessageField = ((epics::pvData::PVStructure *)(AlarmField.get()))
-                          ->getSubField("message");
-  auto MessageString = static_cast<epics::pvData::PVScalarValue<std::string> *>(
-                           MessageField.get())
-                           ->get();
+  auto MessageField =
+      (dynamic_cast<epics::pvData::PVStructure *>(AlarmField.get()))
+          ->getSubField("message");
+  auto MessageString =
+      dynamic_cast<epics::pvData::PVScalarValue<std::string> *>(
+          MessageField.get())
+          ->get();
   // Message field is HIHI_ALARM, LOW_ALARM, etc. We have to drop _ALARM in
   // every case apart from NO_ALARM
-  if (MessageString.compare("NO_ALARM") != 0)
+  if (MessageString != "NO_ALARM")
     MessageString = MessageString.substr(0, MessageString.length() - 6);
 
   auto StatusNames = EnumNamesAlarmStatus();
   int i = 0;
   while (StatusNames[i] != nullptr) {
-    if (MessageString.compare(StatusNames[i]) == 0) {
+    if (MessageString == StatusNames[i]) {
       return make_unique<AlarmStatus>(EnumValuesAlarmStatus()[i]);
     }
     i++;
@@ -392,7 +392,7 @@ public:
     LogDataBuilder.add_value_type(Value.Type);
     LogDataBuilder.add_value(Value.Offset);
     auto alarmInfo = getAlarmInfo(PVStructure);
-    LogDataBuilder.add_status(*alarmInfo.get());
+    LogDataBuilder.add_status(*alarmInfo);
 
     // Use the PV name as the message key so that all messages for the same PV
     // end up in the same Kafka partition and thus have publish order maintained
