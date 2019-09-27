@@ -140,6 +140,7 @@ add_library(forwarder-library ${forwarder-library_SRC} ${forwarder-library_INC})
 target_compile_definitions(forwarder-library PRIVATE ${compile_defs_common})
 target_link_libraries(forwarder-library ${libraries_common})
 target_include_directories(forwarder-library SYSTEM PUBLIC ${path_include_common} INTERFACE ".")
+target_include_directories(forwarder-library PRIVATE ${VERSION_INCLUDE_DIR})
 
 if (WIN32)
     target_link_libraries(forwarder-library Ws2_32.lib dbghelp.lib)
