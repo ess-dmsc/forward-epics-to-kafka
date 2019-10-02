@@ -22,9 +22,6 @@ struct EpicsPVUpdate {
   EpicsPVUpdate(EpicsPVUpdate &&) = delete;
   ~EpicsPVUpdate() = default;
   ::epics::pvData::PVStructure::shared_pointer epics_pvstr;
-  /// Do not rely on channel, will likely go away...
   std::string channel;
-  /// Timestamp when monitorEvent() was called
-  uint64_t ts_epics_monitor = 0;
 };
 }
