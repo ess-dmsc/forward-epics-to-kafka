@@ -89,7 +89,8 @@ void EpicsClientMonitor::errorInEpics() { status_ = -1; }
 void EpicsClientMonitor::emitCachedValue() {
   std::lock_guard<std::mutex> lock(CachedUpdateMutex);
   if (CachedUpdate != nullptr) {
-    // Always include alarm status in cached updates
+    // Always include alarm status in cached updates because the file writer
+    // uses them as the first value in an NXlog
     CachedUpdate->AlarmStatusChanged = true;
     emitWithoutCaching(CachedUpdate);
   }
