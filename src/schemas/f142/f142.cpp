@@ -360,19 +360,20 @@ getAlarmInfo(epics::pvData::PVStructurePtr const &PVStructureField) {
   auto MessageField =
       (dynamic_cast<epics::pvData::PVStructure *>(AlarmField.get()))
           ->getSubField("message");
-  auto MessageString =
-      dynamic_cast<epics::pvData::PVScalarValue<std::string> *>(
-          MessageField.get())
-          ->get();
+  auto AlarmString = dynamic_cast<epics::pvData::PVScalarValue<std::string> *>(
+                         MessageField.get())
+                         ->get();
   // Message field is HIHI_ALARM, LOW_ALARM, etc. We have to drop _ALARM in
   // every case apart from NO_ALARM
-  if (MessageString != "NO_ALARM")
-    MessageString = MessageString.substr(0, MessageString.length() - 6);
+  if (AlarmString != "NO_ALARM")
+    AlarmString = AlarmString.substr(0, AlarmString.length() - 6);
 
   auto StatusNames = EnumNamesAlarmStatus();
   int i = 0;
+  // Match the alarm string from EPICS with an enum value in our flatbuffer
+  // schema
   while (StatusNames[i] != nullptr) {
-    if (MessageString == StatusNames[i]) {
+    if (AlarmString == StatusNames[i]) {
       return make_unique<AlarmStatus>(EnumValuesAlarmStatus()[i]);
     }
     i++;
