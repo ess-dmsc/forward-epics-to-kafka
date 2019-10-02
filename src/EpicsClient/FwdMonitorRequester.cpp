@@ -77,9 +77,6 @@ void FwdMonitorRequester::monitorEvent(
 
     static_assert(sizeof(uint64_t) == sizeof(std::chrono::nanoseconds::rep),
                   "Types not compatible");
-    int64_t ts = std::chrono::duration_cast<std::chrono::nanoseconds>(
-                     std::chrono::system_clock::now().time_since_epoch())
-                     .count();
 
     // Seems like MonitorElement always returns a Structure type ?
     // The inheritance diagram shows that scalars derive from Field, not from
@@ -92,7 +89,6 @@ void FwdMonitorRequester::monitorEvent(
         new ::epics::pvData::PVStructure(ele->pvStructurePtr->getStructure()));
     Update->epics_pvstr->copyUnchecked(*ele->pvStructurePtr);
     Monitor->release(ele);
-    Update->ts_epics_monitor = ts;
     Updates.push_back(Update);
   }
   for (auto &up : Updates) {
