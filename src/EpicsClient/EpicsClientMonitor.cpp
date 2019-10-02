@@ -23,6 +23,20 @@
 #include <iso646.h>
 #endif
 
+namespace {
+std::string
+getAlarmStringFromUpdate(std::shared_ptr<FlatBufs::EpicsPVUpdate> &Update) {
+  auto AlarmField = Update->epics_pvstr->getSubField("alarm");
+  auto MessageField =
+      (dynamic_cast<epics::pvData::PVStructure *>(AlarmField.get()))
+          ->getSubField("message");
+  auto AlarmString = dynamic_cast<epics::pvData::PVScalarValue<std::string> *>(
+                         MessageField.get())
+                         ->get();
+  return AlarmString;
+}
+}
+
 namespace Forwarder {
 namespace EpicsClient {
 
@@ -54,8 +68,18 @@ EpicsClientMonitor::~EpicsClientMonitor() {
 
 int EpicsClientMonitor::stop() { return Impl->stop(); }
 
+bool EpicsClientMonitor::alarmMessageChanged(
+    std::shared_ptr<FlatBufs::EpicsPVUpdate> &Update) {
+  auto CurrentAlarmString = getAlarmStringFromUpdate(Update);
+  auto CachedAlarmString = getAlarmStringFromUpdate(CachedUpdate);
+  return CurrentAlarmString != CachedAlarmString;
+}
+
 void EpicsClientMonitor::emit(std::shared_ptr<FlatBufs::EpicsPVUpdate> Update) {
   std::lock_guard<std::mutex> lock(CachedUpdateMutex);
+  if (CachedUpdate == nullptr || alarmMessageChanged(Update)) {
+    Update->AlarmStatusChanged = true;
+  }
   CachedUpdate = Update;
   emitWithoutCaching(Update);
 }
@@ -65,6 +89,8 @@ void EpicsClientMonitor::errorInEpics() { status_ = -1; }
 void EpicsClientMonitor::emitCachedValue() {
   std::lock_guard<std::mutex> lock(CachedUpdateMutex);
   if (CachedUpdate != nullptr) {
+    // Always include alarm status in cached updates
+    CachedUpdate->AlarmStatusChanged = true;
     emitWithoutCaching(CachedUpdate);
   }
 }

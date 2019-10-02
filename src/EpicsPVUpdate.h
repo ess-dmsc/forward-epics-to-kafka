@@ -26,5 +26,7 @@ struct EpicsPVUpdate {
   std::string channel;
   /// Timestamp when monitorEvent() was called
   uint64_t ts_epics_monitor = 0;
+  /// True if the alarm message changed from the previous cached update
+  bool AlarmStatusChanged = false;
 };
 }

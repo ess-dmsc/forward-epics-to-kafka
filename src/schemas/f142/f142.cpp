@@ -401,8 +401,13 @@ public:
     LogDataBuilder.add_source_name(PVName);
     LogDataBuilder.add_value_type(Value.Type);
     LogDataBuilder.add_value(Value.Offset);
-    auto alarmInfo = getAlarmInfo(PVStructure);
-    LogDataBuilder.add_status(*alarmInfo);
+    if (PVUpdate.AlarmStatusChanged) {
+      // The default value of the alarm field in the schema indicates that there
+      // was no change, so we only need to populate the field if there is a
+      // change
+      auto alarmInfo = getAlarmInfo(PVStructure);
+      LogDataBuilder.add_status(*alarmInfo);
+    }
 
     // Use the PV name as the message key so that all messages for the same PV
     // end up in the same Kafka partition and thus have publish order maintained
