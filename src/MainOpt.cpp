@@ -1,3 +1,12 @@
+// SPDX-License-Identifier: BSD-2-Clause
+//
+// This code has been produced by the European Spallation Source
+// and its partner institutes under the BSD 2 Clause License.
+//
+// See LICENSE.md at the top level for license information.
+//
+// Screaming Udder!                              https://esss.se
+
 #include "MainOpt.h"
 
 #ifdef _MSC_VER
@@ -6,6 +15,7 @@
 #include <unistd.h>
 #endif
 #include "SchemaRegistry.h"
+#include "Version.h"
 #include "git_commit_current.h"
 #include "helper.h"
 #include "logger.h"
@@ -120,13 +130,17 @@ CLI::Option *addKafkaOption(CLI::App &App, std::string const &Name,
   return SetKeyValueOptions(App, Name, Description, Defaulted, Fun);
 }
 
-std::pair<int, std::unique_ptr<MainOpt>> parse_opt(int argc, char **argv) {
-  std::pair<int, std::unique_ptr<MainOpt>> ret{0, make_unique<MainOpt>()};
+std::pair<ParseOptRet, std::unique_ptr<MainOpt>> parse_opt(int argc,
+                                                           char **argv) {
+  std::pair<ParseOptRet, std::unique_ptr<MainOpt>> ret{ParseOptRet::Success,
+                                                       make_unique<MainOpt>()};
   auto &MainOptions = *ret.second;
   CLI::App App{
       fmt::format("forward-epics-to-kafka-0.1.0 {:.7} (ESS, BrightnESS)\n"
                   "  https://github.com/ess-dmsc/forward-epics-to-kafka\n\n",
                   GIT_COMMIT)};
+  App.add_flag("--version", MainOptions.PrintVersion,
+               "Print application version and exit");
   App.add_option("--log-file", MainOptions.LogFilename, "Log filename");
   App.add_option("--streams-json", MainOptions.StreamsFile,
                  "Json file for streams to add")
@@ -183,17 +197,26 @@ std::pair<int, std::unique_ptr<MainOpt>> parse_opt(int argc, char **argv) {
   try {
     App.parse(argc, argv);
   } catch (CLI::CallForHelp const &) {
-    ret.first = 1;
+    ret.first = ParseOptRet::Error;
   } catch (CLI::ParseError const &e) {
-    spdlog::log(spdlog::level::err, "Can not parse command line options: {}",
-                e.what());
-    ret.first = 1;
+    if (!MainOptions.PrintVersion) {
+      spdlog::log(spdlog::level::err, "Can not parse command line options: {}",
+                  e.what());
+      ret.first = ParseOptRet::Error;
+    }
   }
+
+  if (MainOptions.PrintVersion) {
+    fmt::print("{}\n", Versioning::GetVersion());
+    ret.first = ParseOptRet::VersionRequested;
+    return ret;
+  }
+
   setUpLogging(MainOptions.LogLevel, MainOptions.LogFilename,
                MainOptions.GraylogLoggerAddress);
   SharedLogger Logger = getLogger();
 
-  if (ret.first == 1) {
+  if (ret.first == ParseOptRet::Error) {
     std::cout << App.help();
     return ret;
   }
@@ -203,7 +226,7 @@ std::pair<int, std::unique_ptr<MainOpt>> parse_opt(int argc, char **argv) {
           parseStreamsJson(MainOptions.StreamsFile);
     } catch (std::exception const &e) {
       Logger->warn("Can not parse configuration file: {}", e.what());
-      ret.first = 1;
+      ret.first = ParseOptRet::Error;
       return ret;
     }
   }

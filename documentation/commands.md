@@ -26,14 +26,14 @@ Channel Access (ca):
       "channel": "MYIOC:VALUE1",
       "converter": {
         "schema": "f142",
-        "topic": "//my_kafka_server:9092/some_topic"
+        "topic": "my_kafka_server:9092/some_topic"
       }
     },
     {
       "channel": "MYIOC:VALUE2",
       "converter": {
-        "schema": "f142",
-        "topic": "//my_kafka_server:9092/some_topic2"
+        "schema": "TdcTime",
+        "topic": "my_kafka_server:9092/some_topic2"
       }
     },
     {
@@ -41,7 +41,7 @@ Channel Access (ca):
       "channel_provider_type": "ca",
       "converter": {
         "schema": "f142",
-        "topic": "//my_kafka_server:9092/some_topic"
+        "topic": "my_kafka_server:9092/some_topic"
       }
     }
   ]
@@ -68,15 +68,24 @@ For example:
   "converter": [
     {
       "schema": "f142",
-      "topic": "//my_kafka_server:9092/some_topic"
+      "topic": "my_kafka_server:9092/some_topic"
     },
     {
       "schema": "fXXX",                                     # Different schema used
-      "topic": "//my_other_kafka_server:9092/some_topic2"   # Send to a different topic on a different server
+      "topic": "my_other_kafka_server:9092/some_topic2"   # Send to a different topic on a different server
     }
   ]
 }
 ```
+
+The following converters have been implemented so far:
+#### *f142* General EPICS data
+Can convert most EPICS update structure types and put the values into *f142* schema flatbuffers.
+
+#### *TdcTime* Chopper TDC timestamp
+Should only be used for converting chopper TDC timestamp updates in the form of arrays with size *n * 2*. The array
+elements must be integers with a size of 32 bits (int32/`epics::pvData::ScalarType::pvInt`). Arrays that are of size 0
+are ignored. The timestamps are put in flatbuffers of type *tdct*.
 
 ### Shared converters (advanced)
 The same converter instance can be shared across different channels. This allows one converter instance to process 
@@ -93,7 +102,7 @@ For example:
       "converter": {
         "schema": "f142", 
         "name": "shared_converter", 
-        "topic": "//my_kafka_server:9092/some_topic" 
+        "topic": "my_kafka_server:9092/some_topic" 
       }
     },
     {
@@ -101,7 +110,7 @@ For example:
       "converter": {
       "schema": "f142", 
         "name": "shared_converter", 
-        "topic": "//my_kafka_server:9092/some_topic2" 
+        "topic": "my_kafka_server:9092/some_topic2" 
       }
     }
 ]

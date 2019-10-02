@@ -1,3 +1,12 @@
+// SPDX-License-Identifier: BSD-2-Clause
+//
+// This code has been produced by the European Spallation Source
+// and its partner institutes under the BSD 2 Clause License.
+//
+// See LICENSE.md at the top level for license information.
+//
+// Screaming Udder!                              https://esss.se
+
 #include "ConfigParser.h"
 #include "Forwarder.h"
 #include "MainOpt.h"
@@ -54,7 +63,9 @@ int main(int argc, char **argv) {
   auto op = Forwarder::parse_opt(argc, argv);
   auto &opt = *op.second;
 
-  if (op.first != 0) {
+  if (op.first == Forwarder::ParseOptRet::VersionRequested) {
+    return 0;
+  } else if (op.first == Forwarder::ParseOptRet::Error) {
     return 1;
   }
 

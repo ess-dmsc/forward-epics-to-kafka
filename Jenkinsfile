@@ -7,10 +7,6 @@ project = "forward-epics-to-kafka"
 clangformat_os = "debian9"
 test_and_coverage_os = "centos7"
 release_os = "centos7-release"
-eee_os = "centos7"
-
-epics_dir = "/opt/epics"
-epics_profile_file = "/etc/profile.d/ess_epics_env.sh"
 
 // Set number of old builds to keep.
 properties([[
@@ -52,7 +48,7 @@ builders = pipeline_builder.createBuilders { container ->
             conan remote add --insert 0 ess-dmsc-local ${local_conan_server}
         """
     }  // stage
-    
+
     pipeline_builder.stage("${container.key}: configure") {
         if (container.key != release_os) {
             def coverage_on
@@ -61,34 +57,24 @@ builders = pipeline_builder.createBuilders { container ->
             } else {
                 coverage_on = ""
             }
-            
-            def configure_epics = ""
-            //if (container.key == eee_os) {
-            //    // Only use the host machine's EPICS environment on eee_os
-            //    configure_epics = ". ${epics_profile_file}"
-            //} else {
-            //    // A problem is caused by "&& \" if left empty
-            //    configure_epics = "true"
-            //}
 
             container.sh """
                 cd build
-                ${configure_epics}
                 cmake -DCMAKE_BUILD_TYPE=Debug ../${pipeline_builder.project} ${coverage_on}
             """
         } else {
             container.sh """
                 cd build
-                cmake -DCMAKE_SKIP_BUILD_RPATH=ON -DCMAKE_BUILD_TYPE=Release ../${pipeline_builder.project}
+                cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo ../${pipeline_builder.project}
             """
         }  // if/else
     }  // stage
-    
+
     pipeline_builder.stage("${container.key}: build") {
         container.sh """
             cd build
             . ./activate_run.sh
-            make VERBOSE=1
+            make VERBOSE=1 -j4
         """
     }  // stage
 
@@ -99,8 +85,8 @@ builders = pipeline_builder.createBuilders { container ->
             container.sh """
                 cd build
                 . ./activate_run.sh
-                ./tests/tests -- --gtest_output=xml:${test_output}
-                make coverage
+                ./bin/tests -- --gtest_output=xml:${test_output}
+                make coverage -j4
                 lcov --directory . --capture --output-file coverage.info
                 lcov --remove coverage.info '*_generated.h' '*/src/date/*' '*/.conan/data/*' '*/usr/*' --output-file coverage.info
                 pkill caRepeater || true
@@ -118,7 +104,7 @@ builders = pipeline_builder.createBuilders { container ->
             container.sh """
                 cd build
                 . ./activate_run.sh
-                ./tests/tests
+                ./bin/tests
                 pkill caRepeater || true
             """
         }  // if/else
@@ -183,7 +169,7 @@ builders = pipeline_builder.createBuilders { container ->
                 // Clean up
             }
         }
-        
+
         pipeline_builder.stage("${container.key}: Cppcheck") {
         def test_output = "cppcheck.xml"
             container.sh """
@@ -205,7 +191,7 @@ def failure_function(exception_obj, failureMessage) {
 def get_win10_pipeline() {
     return {
         node('windows10') {
-        
+
         // Use custom location to avoid Win32 path length issues
             ws('c:\\jenkins\\') {
                 cleanWs()
@@ -222,7 +208,7 @@ def get_win10_pipeline() {
                         mkdir _build
                         """
                     } // stage
-                    
+
                     stage("win10: Install") {
                       bat """cd _build
                     conan.exe \
@@ -233,8 +219,8 @@ def get_win10_pipeline() {
 
                     stage("win10: Build") {
                            bat """cd _build
-                        cmake .. -G \"Visual Studio 15 2017 Win64\" -DCMAKE_BUILD_TYPE=Release -DCONAN=MANUAL
-                        cmake --build . --config Release
+                        cmake .. -G \"Visual Studio 15 2017 Win64\" -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCONAN=MANUAL
+                        cmake --build . --config RelWithDebInfo
                         """
                     }  // stage
                 }  // dir
@@ -281,7 +267,7 @@ def get_system_tests_pipeline() {
     }  // return
 }  // def
 
-node('docker && eee') {
+node {
     cleanWs()
 
     stage('Checkout') {
@@ -296,12 +282,12 @@ node('docker && eee') {
 
     builders['windows10'] = get_win10_pipeline()
 
-    if ( env.CHANGE_ID ) {
+    if (env.CHANGE_ID) {
         builders['system tests'] = get_system_tests_pipeline()
     }
 
     parallel builders
-	
+
     // Delete workspace when build is done
     cleanWs()
 }
