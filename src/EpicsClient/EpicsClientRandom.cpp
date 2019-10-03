@@ -24,7 +24,6 @@ void EpicsClientRandom::generateFakePVUpdate() {
   FakePVUpdate->epics_pvstr = epics::pvData::PVStructure::shared_pointer(
       createFakePVStructure(UniformDistribution(RandomEngine)));
   FakePVUpdate->channel = ChannelInformation.channel_name;
-  FakePVUpdate->ts_epics_monitor = getCurrentTimestamp();
 
   emit(std::move(FakePVUpdate));
 }
