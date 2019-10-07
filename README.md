@@ -51,7 +51,7 @@ verbosity=5
 Note: the Kafka options are key-value pairs and the forwarder can be given multiple by appending the key-value pair to 
 the end of the command line option.
 
-### Sending commands to the file-writer
+### Sending commands to the forwarder
 
 Beyond the configuration options given at start-up, the forwarder can be sent commands via Kafka to configure which PVs 
 are forwarded.
