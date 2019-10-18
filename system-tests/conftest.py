@@ -211,7 +211,7 @@ def docker_compose(request):
     # Options must be given as long form
     options = common_options
     options["--project-name"] = "forwarder"
-    options["--file"] = ["compose/docker-compose.yml"]
+    options["--file"] = [os.path.join("compose", "docker-compose.yml")]
 
     build_and_run(options, request,
                   "forwarder_config.ini",
@@ -229,7 +229,7 @@ def docker_compose_no_command(request):
     # Options must be given as long form
     options = common_options
     options["--project-name"] = "forwarderNoCommand"
-    options["--file"] = ["compose/docker-compose-no-command.yml"]
+    options["--file"] = [os.path.join("compose", "docker-compose-no-command.yml")]
 
     build_and_run(options, request,
                   "forwarder_config_no_command.ini",
@@ -246,7 +246,7 @@ def docker_compose_fake_epics(request):
     # Options must be given as long form
     options = common_options
     options["--project-name"] = "fake"
-    options["--file"] = ["compose/docker-compose-fake-epics.yml"]
+    options["--file"] = [os.path.join("compose","docker-compose-fake-epics.yml")]
 
     build_and_run(options, request,
                   "forwarder_config_fake_epics.ini",
@@ -264,7 +264,7 @@ def docker_compose_idle_updates(request):
     # Options must be given as long form
     options = common_options
     options["--project-name"] = "idle"
-    options["--file"] = ["compose/docker-compose-idle-updates.yml"]
+    options["--file"] = [os.path.join("compose", "docker-compose-idle-updates.yml")]
 
     build_and_run(options, request,
                   "forwarder_config_idle_updates.ini",
@@ -282,7 +282,7 @@ def docker_compose_idle_updates_long_period(request):
     # Options must be given as long form
     options = common_options
     options["--project-name"] = "longi"
-    options["--file"] = ["compose/docker-compose-idle-updates-long-period.yml"]
+    options["--file"] = [os.path.join("compose","docker-compose-idle-updates-long-period.yml")]
 
     build_and_run(options, request,
                   "forwarder_config_idle_updates_long.ini",
@@ -300,7 +300,7 @@ def docker_compose_lr(request):
     # Options must be given as long form
     options = common_options
     options["--project-name"] = "lr"
-    options["--file"] = ["compose/docker-compose-long-running.yml"]
+    options["--file"] = [os.path.join("compose","docker-compose-long-running.yml")]
 
     build_and_run(options, request,
                   "forwarder_config_lr.ini",
