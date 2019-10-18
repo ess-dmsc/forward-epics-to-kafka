@@ -223,14 +223,13 @@ def test_forwarder_can_handle_multiple_config_updates(docker_compose_no_command)
 
     base_pv = PVDOUBLE
     prod = ProducerWrapper("localhost:9092", CONFIG_TOPIC, data_topic)
-    cons = create_consumer()
-    cons.assign([TopicPartition(status_topic, partition=0)])
     list_of_pvs = []
     for i in range(100):
         pv = base_pv + str(i)
         prod.add_config([pv])
         list_of_pvs.append(pv)
 
+    #TODO: refactor this out
     sleep(5)
     cons = create_consumer()
     sleep(2)
@@ -243,10 +242,10 @@ def test_forwarder_can_handle_multiple_config_updates(docker_compose_no_command)
     cons.assign([TopicPartition(status_topic, partition=0, offset=last_msg_offset)])
     status_msg, _ = poll_for_valid_message(cons, expected_file_identifier=None)
 
-    streams_json = json.loads(status_msg)["streams"]
+    streams_json = json.loads(status_msg)['streams']
     streams = []
     for item in streams_json:
-        streams.append(item["channel_name"])
+        streams.append(item['channel_name'])
 
     for pv in list_of_pvs:
         assert pv in streams
