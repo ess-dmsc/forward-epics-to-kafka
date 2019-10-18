@@ -2,7 +2,8 @@ from confluent_kafka import TopicPartition
 from helpers.producerwrapper import ProducerWrapper
 from helpers.f142_logdata.Value import Value
 from time import sleep
-from helpers.kafka_helpers import create_consumer, poll_for_valid_message, poll_for_connection_status_message
+from helpers.kafka_helpers import create_consumer, poll_for_valid_message, poll_for_connection_status_message, \
+    get_all_available_messages
 from helpers.flatbuffer_helpers import check_expected_values, check_expected_array_values, \
     check_multiple_expected_values, check_expected_connection_status_values
 from helpers.epics_helpers import change_pv_value, change_array_pv_value
@@ -214,3 +215,38 @@ def test_connection_status_messages(docker_compose_no_command):
     check_expected_connection_status_values(first_msg, EventType.CONNECTED)
 
     cons.close()
+
+
+def test_forwarder_can_handle_multiple_config_updates(docker_compose_no_command):
+    status_topic = "TEST_forwarderStatus"
+    data_topic = "TEST_forwarderData_connection_status"
+
+    base_pv = PVDOUBLE
+    prod = ProducerWrapper("localhost:9092", CONFIG_TOPIC, data_topic)
+    cons = create_consumer()
+    cons.assign([TopicPartition(status_topic, partition=0)])
+    list_of_pvs = []
+    for i in range(100):
+        pv = base_pv + str(i)
+        prod.add_config([pv])
+        list_of_pvs.append(pv)
+
+    sleep(5)
+    cons = create_consumer()
+    sleep(2)
+    cons.assign([TopicPartition(status_topic, partition=0)])
+    sleep(2)
+    # Get the last available status message
+    partitions = cons.assignment()
+    _, hi = cons.get_watermark_offsets(partitions[0], cached=False, timeout=2.0)
+    last_msg_offset = hi - 1
+    cons.assign([TopicPartition(status_topic, partition=0, offset=last_msg_offset)])
+    status_msg, _ = poll_for_valid_message(cons, expected_file_identifier=None)
+
+    streams_json = json.loads(status_msg)["streams"]
+    streams = []
+    for item in streams_json:
+        streams.append(item["channel_name"])
+
+    for pv in list_of_pvs:
+        assert pv in streams
