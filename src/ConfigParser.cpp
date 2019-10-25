@@ -99,7 +99,7 @@ void ConfigParser::extractMappingInfo(nlohmann::json const &Mapping,
       Protocol = TempProtocol;
     } else {
       getLogger()->warn(
-          R"xx(When setting up stream "{}": Does not recognise protocol of type "{}", using the default ("pva").)xx",
+          R"xx(When setting up stream "{}": Does not recognise protocol of type "{}", using the default ("{}").)xx",
           Channel, TempProtocol);
     }
   }
