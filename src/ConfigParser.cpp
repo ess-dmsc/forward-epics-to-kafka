@@ -100,7 +100,7 @@ void ConfigParser::extractMappingInfo(nlohmann::json const &Mapping,
     } else {
       getLogger()->warn(
           R"xx(When setting up stream "{}": Does not recognise protocol of type "{}", using the default ("{}").)xx",
-          Channel, TempProtocol);
+          Channel, TempProtocol, Protocol);
     }
   }
 }
