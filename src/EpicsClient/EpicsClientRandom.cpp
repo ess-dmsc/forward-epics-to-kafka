@@ -74,5 +74,5 @@ uint64_t EpicsClientRandom::getCurrentTimestamp() const {
           .count());
   return CurrentTimestamp;
 }
-}
-}
+} // namespace EpicsClient
+} // namespace Forwarder

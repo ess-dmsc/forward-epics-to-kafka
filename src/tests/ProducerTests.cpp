@@ -12,10 +12,10 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include <librdkafka/rdkafkacpp.h>
+using ::testing::_;
 using ::testing::AtLeast;
 using ::testing::Exactly;
 using ::testing::Return;
-using ::testing::_;
 
 using namespace KafkaW;
 

@@ -71,5 +71,5 @@ private:
   static std::atomic<uint32_t> GlobalIdCounter;
   SharedLogger Logger = getLogger();
 };
-}
-}
+} // namespace EpicsClient
+} // namespace Forwarder

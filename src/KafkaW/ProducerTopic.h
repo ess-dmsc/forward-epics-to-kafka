@@ -43,4 +43,4 @@ private:
   bool DoCopyMsg{false};
   SharedLogger Logger = getLogger();
 };
-}
+} // namespace KafkaW

@@ -58,7 +58,7 @@ void registerSchemas() {
   FlatBufs::SchemaRegistry::Registrar<FlatBufs::SchemaInfo> Reg2(
       "TdcTime", TdcTime::Info::ptr(new TdcTime::Info));
 }
-}
+} // namespace
 
 namespace Forwarder {
 

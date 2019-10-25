@@ -24,7 +24,7 @@ public:
   };
   void addTopic(const std::string &Topic) override { UNUSED_ARG(Topic); };
 };
-}
+} // namespace KafkaW
 
 TEST(ListenerTest, successfully_create_listener_and_poll) {
   KafkaW::BrokerSettings bopt;

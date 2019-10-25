@@ -24,4 +24,4 @@ struct EpicsPVUpdate {
   ::epics::pvData::PVStructure::shared_pointer epics_pvstr;
   std::string channel;
 };
-}
+} // namespace FlatBufs
