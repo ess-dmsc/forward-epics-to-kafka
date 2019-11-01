@@ -117,4 +117,4 @@ std::string ProducerTopic::name() const { return Name; }
 std::string ProducerTopic::brokerAddress() const {
   return KafkaProducer->ProducerBrokerSettings.Address;
 }
-}
+} // namespace KafkaW

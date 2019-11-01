@@ -12,9 +12,9 @@
 #include <gtest/gtest.h>
 #include <librdkafka/rdkafkacpp.h>
 
-using ::testing::Exactly;
 using ::testing::_;
 using ::testing::An;
+using ::testing::Exactly;
 using ::testing::Return;
 
 using namespace KafkaW;

@@ -91,12 +91,17 @@ void ConfigParser::extractMappingInfo(nlohmann::json const &Mapping,
     throw MappingAddException("Cannot find channel");
   }
 
+  Protocol = "pva";
   if (auto ChannelProviderTypeMaybe =
           find<std::string>("channel_provider_type", Mapping)) {
-    Protocol = ChannelProviderTypeMaybe.inner();
-  } else {
-    // Default is pva
-    Protocol = "pva";
+    auto TempProtocol = ChannelProviderTypeMaybe.inner();
+    if (TempProtocol == "ca" or TempProtocol == "pva") {
+      Protocol = TempProtocol;
+    } else {
+      getLogger()->warn(
+          R"xx(When setting up stream "{}": Does not recognise protocol of type "{}", using the default ("{}").)xx",
+          Channel, TempProtocol, Protocol);
+    }
   }
 }
 

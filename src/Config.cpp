@@ -24,7 +24,7 @@ Listener::Listener(URI uri,
   try {
     Consumer->addTopic(uri.Topic);
   } catch (MetadataException &E) {
-    Logger->error("{}", E.what());
+    Logger->error("Failed to add topic: {}", E.what());
   }
 }
 

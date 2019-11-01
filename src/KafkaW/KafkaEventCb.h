@@ -57,4 +57,4 @@ private:
       {RdKafka::Event::Severity::EVENT_SEVERITY_EMERG, SPDLOG_LEVEL_CRITICAL}};
   SharedLogger Logger = getLogger();
 };
-}
+} // namespace KafkaW

@@ -12,9 +12,9 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include <librdkafka/rdkafkacpp.h>
+using ::testing::_;
 using ::testing::Exactly;
 using ::testing::Return;
-using ::testing::_;
 using ::testing::SetArgPointee;
 
 using namespace KafkaW;

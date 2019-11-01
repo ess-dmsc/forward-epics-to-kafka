@@ -46,5 +46,5 @@ private:
   EpicsClientInterface *EpicsClient = nullptr;
   SharedLogger Logger = getLogger();
 };
-}
+} // namespace EpicsClient
 } // namespace Forwarder

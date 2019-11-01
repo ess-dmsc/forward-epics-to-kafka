@@ -56,5 +56,5 @@ private:
   std::uniform_real_distribution<double> UniformDistribution;
   std::default_random_engine RandomEngine;
 };
-}
-}
+} // namespace EpicsClient
+} // namespace Forwarder

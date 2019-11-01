@@ -55,8 +55,10 @@ endif(CONAN_SPDLOG-GRAYLOG_ROOT AND USE_GRAYLOG_LOGGER)
 
 set(forwarder-library_INC
     EpicsClient/EpicsClientMonitor.h
+    EpicsClient/EpicsClientMonitorImpl.h
     EpicsClient/EpicsClientRandom.h
     EpicsClient/EpicsClientFactory.h
+    EpicsClient/EpicsClientInterface.h
     EpicsClient/FwdMonitorRequester.h
     EpicsClient/EpicsClientInterface.h
     EpicsClient/ChannelRequester.h

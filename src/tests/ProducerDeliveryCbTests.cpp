@@ -12,8 +12,8 @@
 #include <gtest/gtest.h>
 #include <librdkafka/rdkafkacpp.h>
 
-using ::testing::Exactly;
 using ::testing::AtLeast;
+using ::testing::Exactly;
 using ::testing::Return;
 using namespace KafkaW;
 
