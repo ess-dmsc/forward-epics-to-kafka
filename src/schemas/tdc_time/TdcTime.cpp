@@ -9,7 +9,6 @@
 
 #include "TdcTime.h"
 #include "../../EpicsPVUpdate.h"
-#include "../../helper.h"
 #include "../../logger.h"
 #include <pv/nt.h>
 #include <pv/pvIntrospect.h>
@@ -27,7 +26,7 @@ std::unique_ptr<FlatBufs::FlatbufferMessage>
 generateFlatbufferFromData(std::string const &Name,
                            std::vector<std::uint64_t> const &Timestamps) {
   static std::uint64_t SequenceNumber{0};
-  auto ReturnMessage = make_unique<FlatBufs::FlatbufferMessage>();
+  auto ReturnMessage = std::make_unique<FlatBufs::FlatbufferMessage>();
   auto Builder = ReturnMessage->builder.get();
   std::vector<std::uint16_t> ZeroValues(Timestamps.size());
   std::fill(ZeroValues.begin(), ZeroValues.end(), 0);
@@ -103,6 +102,6 @@ Converter::create(FlatBufs::EpicsPVUpdate const &PvData) {
 void Converter::config(std::map<std::string, std::string> const &) {}
 
 std::unique_ptr<FlatBufs::FlatBufferCreator> Info::createConverter() {
-  return make_unique<TdcTime::Converter>();
+  return std::make_unique<TdcTime::Converter>();
 }
 } // namespace TdcTime

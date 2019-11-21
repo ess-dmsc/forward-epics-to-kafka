@@ -10,7 +10,6 @@
 #include "../../EpicsPVUpdate.h"
 #include "../../RangeSet.h"
 #include "../../SchemaRegistry.h"
-#include "../../helper.h"
 #include "../../logger.h"
 #include <atomic>
 #include <f142_logdata_generated.h>
@@ -365,7 +364,7 @@ public:
   std::unique_ptr<FlatBufs::FlatbufferMessage>
   create(EpicsPVUpdate const &PVUpdate) override {
     auto &PVStructure = PVUpdate.epics_pvstr;
-    auto FlatbufferMessage = make_unique<FlatBufs::FlatbufferMessage>();
+    auto FlatbufferMessage = std::make_unique<FlatBufs::FlatbufferMessage>();
 
     auto Builder = FlatbufferMessage->builder.get();
     // this is the field type ID string: up.pvstr->getStructure()->getID()
@@ -419,7 +418,7 @@ public:
 };
 
 std::unique_ptr<FlatBufferCreator> Info::createConverter() {
-  return make_unique<Converter>();
+  return std::make_unique<Converter>();
 }
 
 } // namespace f142

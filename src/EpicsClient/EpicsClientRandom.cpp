@@ -8,7 +8,6 @@
 // Screaming Udder!                              https://esss.se
 
 #include "EpicsClientRandom.h"
-#include "../helper.h"
 #include <memory>
 #include <pv/pvData.h>
 
@@ -20,7 +19,7 @@ void EpicsClientRandom::emit(std::shared_ptr<FlatBufs::EpicsPVUpdate> Update) {
 }
 
 void EpicsClientRandom::generateFakePVUpdate() {
-  auto FakePVUpdate = make_unique<FlatBufs::EpicsPVUpdate>();
+  auto FakePVUpdate = std::make_unique<FlatBufs::EpicsPVUpdate>();
   FakePVUpdate->epics_pvstr = epics::pvData::PVStructure::shared_pointer(
       createFakePVStructure(UniformDistribution(RandomEngine)));
   FakePVUpdate->channel = ChannelInformation.channel_name;

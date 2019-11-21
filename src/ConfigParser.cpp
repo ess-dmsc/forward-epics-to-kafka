@@ -9,7 +9,6 @@
 
 #include "ConfigParser.h"
 #include "Forwarder.h"
-#include "helper.h"
 #include "json.h"
 #include "logger.h"
 #include <iostream>

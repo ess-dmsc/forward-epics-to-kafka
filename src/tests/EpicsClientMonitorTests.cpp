@@ -9,7 +9,6 @@
 
 #include <EpicsClient/EpicsClientMonitor.h>
 #include <gtest/gtest.h>
-#include <helper.h>
 
 using namespace Forwarder;
 

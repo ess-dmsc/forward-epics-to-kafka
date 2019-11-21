@@ -80,8 +80,7 @@ set(forwarder-library_INC
     Forwarder.h
     FlatBufferCreator.h
     git_commit_current.h
-    helper.h
-    json.h
+        json.h
     Kafka.h
     KafkaW/BrokerSettings.h
     KafkaW/Consumer.h
