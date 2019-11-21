@@ -11,7 +11,7 @@ create_version_header(
   ${VERSION_INCLUDE_DIR}/Version.h
 )
 
-set (CMAKE_CXX_STANDARD 11)
+set (CMAKE_CXX_STANDARD 17)
 
 if (WIN32)
     add_definitions(-DNOGDI -DNOMINMAX)

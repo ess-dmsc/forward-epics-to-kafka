@@ -9,7 +9,6 @@
 
 #include "FwdMonitorRequester.h"
 #include "../EpicsPVUpdate.h"
-#include "../helper.h"
 #include "../logger.h"
 #include "EpicsClientMonitor.h"
 #include <memory>

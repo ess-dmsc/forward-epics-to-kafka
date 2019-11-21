@@ -14,7 +14,6 @@
 #include <Forwarder.h>
 #include <MainOpt.h>
 #include <gtest/gtest.h>
-#include <helper.h>
 #include <iostream>
 #include <sstream>
 #include <string>

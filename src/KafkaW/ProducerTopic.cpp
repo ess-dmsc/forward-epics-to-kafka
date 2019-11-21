@@ -8,7 +8,6 @@
 // Screaming Udder!                              https://esss.se
 
 #include "ProducerTopic.h"
-#include "../helper.h"
 #include <vector>
 
 namespace KafkaW {
