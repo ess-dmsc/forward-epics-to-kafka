@@ -120,9 +120,8 @@ std::unique_ptr<ConsumerMessage> Consumer::poll() {
     if (KafkaMsg->len() > 0) {
       std::string MessageString = {
           reinterpret_cast<const char *>(KafkaMsg->payload())};
-      auto Message =
-          std::make_unique<ConsumerMessage>(MessageString, PollStatus::Message);
-      return Message;
+      return std::make_unique<ConsumerMessage>(MessageString,
+                                               PollStatus::Message);
     } else {
       return std::make_unique<ConsumerMessage>(PollStatus::Empty);
     }
