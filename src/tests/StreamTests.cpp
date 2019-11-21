@@ -43,8 +43,8 @@ std::shared_ptr<Stream> createStreamWithEntries(size_t Conversions,
   auto Stream = createStreamRandom("provider", "channel");
 
   for (size_t i = 0; i < Conversions; ++i) {
-    auto Path = std::make_unique<FakeConversionPath>("Topic" + std::to_string(i),
-                                                  "Schema" + std::to_string(i));
+    auto Path = std::make_unique<FakeConversionPath>(
+        "Topic" + std::to_string(i), "Schema" + std::to_string(i));
     Stream->addConverter(std::move(Path));
   }
 
