@@ -100,6 +100,7 @@ set(forwarder-library_INC
     Stream.h
     Streams.h
     schemas/f142/f142.h
+    schemas/f142/DataFromPVStruct.h
     Timer.h
     URI.h
     schemas/tdc_time/TdcTime.h)
@@ -133,6 +134,7 @@ set(forwarder-library_SRC
     Stream.cpp
     Streams.cpp
     schemas/f142/f142.cpp
+    schemas/f142/DataFromPVStruct.cpp
     Timer.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/git_commit_current.cpp
     schemas/tdc_time/TdcTime.cpp)

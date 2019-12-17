@@ -8,6 +8,7 @@
 // Screaming Udder!                              https://esss.se
 
 #include "f142.h"
+#include "DataFromPVStruct.h"
 #include "../../EpicsPVUpdate.h"
 #include "../../helper.h"
 #include <atomic>
@@ -17,6 +18,7 @@
 #include <pv/ntndarrayAttribute.h>
 #include <pv/ntutils.h>
 #include <pv/pvEnumerated.h>
+#include <pv/pvData.h>
 
 namespace FlatBufs {
 namespace f142 {
@@ -352,35 +354,6 @@ Value_t makeValue(flatbuffers::FlatBufferBuilder &Builder,
 //  std::unique_ptr<AlarmStatus> AlarmStatusValue;
 //  std::unique_ptr<AlarmSeverity> AlarmSeverityValue;
 //};
-
-AlarmStatus
-getAlarmStatus(epics::pvData::PVStructurePtr const &PVStructureField) {
-  auto AlarmField = PVStructureField->getSubField("alarm");
-  auto MessageField =
-      (dynamic_cast<epics::pvData::PVStructure *>(AlarmField.get()))
-          ->getSubField("message");
-  auto AlarmString = dynamic_cast<epics::pvData::PVScalarValue<std::string> *>(
-                         MessageField.get())
-                         ->get();
-  // Message field is HIHI_ALARM, LOW_ALARM, etc. We have to drop _ALARM in
-  // every case apart from NO_ALARM
-  if (AlarmString != "NO_ALARM")
-    AlarmString = AlarmString.substr(0, AlarmString.length() - 6);
-
-  // Match the alarm string from EPICS with an enum value in our flatbuffer
-  // schema
-  auto StatusNames = EnumNamesAlarmStatus();
-  int i = 0;
-  while (StatusNames[i] != nullptr) {
-    if (AlarmString == StatusNames[i]) {
-      return static_cast<AlarmStatus>(i);
-      //TODO
-      // return EnumValuesAlarmStatus()[i];
-    }
-    i++;
-  }
-  return AlarmStatus::UDF;
-}
 
 std::unique_ptr<FlatBufs::FlatbufferMessage>
 Converter::create(EpicsPVUpdate const &PVUpdate) {
