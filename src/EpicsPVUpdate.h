@@ -26,4 +26,4 @@ struct EpicsPVUpdate {
   /// True if the alarm message changed from the previous cached update
   bool AlarmStatusChanged = false;
 };
-}
+} // namespace FlatBufs

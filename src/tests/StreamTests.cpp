@@ -14,7 +14,6 @@
 #include <Stream.h>
 #include <Streams.h>
 #include <gmock/gmock.h>
-#include <helper.h>
 
 using namespace testing;
 using namespace Forwarder;
@@ -44,8 +43,8 @@ std::shared_ptr<Stream> createStreamWithEntries(size_t Conversions,
   auto Stream = createStreamRandom("provider", "channel");
 
   for (size_t i = 0; i < Conversions; ++i) {
-    auto Path = ::make_unique<FakeConversionPath>("Topic" + std::to_string(i),
-                                                  "Schema" + std::to_string(i));
+    auto Path = std::make_unique<FakeConversionPath>(
+        "Topic" + std::to_string(i), "Schema" + std::to_string(i));
     Stream->addConverter(std::move(Path));
   }
 
@@ -113,17 +112,17 @@ TEST(StreamTest, stream_with_updates_has_non_empty_queue) {
 
 TEST(StreamTest, add_conversion_path_once_is_okay) {
   auto Stream = createStream("provider", "channel1");
-  auto Path = ::make_unique<FakeConversionPath>("Topic", "Schema");
+  auto Path = std::make_unique<FakeConversionPath>("Topic", "Schema");
   int ErrorCode = Stream->addConverter(std::move(Path));
   ASSERT_EQ(ErrorCode, 0);
 }
 
 TEST(StreamTest, add_conversion_path_twice_is_not_okay) {
   auto Stream = createStream("provider", "channel1");
-  auto Path = ::make_unique<FakeConversionPath>("Topic", "Schema");
+  auto Path = std::make_unique<FakeConversionPath>("Topic", "Schema");
   Stream->addConverter(std::move(Path));
   // Add a second one
-  auto DuplicatePath = ::make_unique<FakeConversionPath>("Topic", "Schema");
+  auto DuplicatePath = std::make_unique<FakeConversionPath>("Topic", "Schema");
   int ErrorCode = Stream->addConverter(std::move(DuplicatePath));
   ASSERT_EQ(ErrorCode, 1);
 }

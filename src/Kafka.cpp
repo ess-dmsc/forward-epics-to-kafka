@@ -63,4 +63,4 @@ std::vector<KafkaW::ProducerStats> InstanceSet::getStatsForAllProducers() {
              &CProducer) { return CProducer.second->Stats; });
   return ret;
 }
-}
+} // namespace Forwarder

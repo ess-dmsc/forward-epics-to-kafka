@@ -11,7 +11,6 @@
 #include "Converter.h"
 #include "EpicsClient/EpicsClientMonitor.h"
 #include "EpicsPVUpdate.h"
-#include "helper.h"
 #include "logger.h"
 #include <algorithm>
 
@@ -125,7 +124,7 @@ uint32_t Stream::fillConversionQueue(
     }
     size_t ConversionPathID = 0;
     for (auto &ConversionPath : ConversionPaths) {
-      auto ConversionPacket = ::make_unique<ConversionWorkPacket>();
+      auto ConversionPacket = std::make_unique<ConversionWorkPacket>();
       cwp_last[ConversionPathID] = ConversionPacket.get();
       ConversionPacket->Path = ConversionPath.get();
       ConversionPacket->Update = EpicsUpdate;

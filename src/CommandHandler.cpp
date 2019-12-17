@@ -9,7 +9,6 @@
 
 #include "CommandHandler.h"
 #include "ConfigParser.h"
-#include "helper.h"
 #include "json.h"
 #include "logger.h"
 #include <nlohmann/json.hpp>

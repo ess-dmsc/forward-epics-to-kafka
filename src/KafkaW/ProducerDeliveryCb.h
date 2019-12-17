@@ -41,4 +41,4 @@ private:
   ProducerStats &Stats;
   SharedLogger Logger = getLogger();
 };
-}
+} // namespace KafkaW

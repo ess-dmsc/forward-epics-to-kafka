@@ -8,7 +8,6 @@
 // Screaming Udder!                              https://esss.se
 
 #include "EpicsClientFactory.h"
-#include "../helper.h"
 #include "../logger.h"
 // For epics::pvAccess::ClientFactory::start()
 #include <pv/caProvider.h>
@@ -22,7 +21,7 @@ std::atomic<int> EpicsClientFactoryInit::Count{0};
 std::mutex EpicsClientFactoryInit::MutexLock;
 
 std::unique_ptr<EpicsClientFactoryInit> EpicsClientFactoryInit::factory_init() {
-  return ::make_unique<EpicsClientFactoryInit>();
+  return std::make_unique<EpicsClientFactoryInit>();
 }
 
 EpicsClientFactoryInit::EpicsClientFactoryInit() {

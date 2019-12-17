@@ -8,7 +8,6 @@
 // Screaming Udder!                              https://esss.se
 
 #include "ProducerTopic.h"
-#include "../helper.h"
 #include <vector>
 
 namespace KafkaW {
@@ -117,4 +116,4 @@ std::string ProducerTopic::name() const { return Name; }
 std::string ProducerTopic::brokerAddress() const {
   return KafkaProducer->ProducerBrokerSettings.Address;
 }
-}
+} // namespace KafkaW

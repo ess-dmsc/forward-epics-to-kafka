@@ -17,7 +17,6 @@
 #include "SchemaRegistry.h"
 #include "Version.h"
 #include "git_commit_current.h"
-#include "helper.h"
 #include "logger.h"
 #include <CLI/CLI.hpp>
 #include <fstream>
@@ -132,8 +131,8 @@ CLI::Option *addKafkaOption(CLI::App &App, std::string const &Name,
 
 std::pair<ParseOptRet, std::unique_ptr<MainOpt>> parse_opt(int argc,
                                                            char **argv) {
-  std::pair<ParseOptRet, std::unique_ptr<MainOpt>> ret{ParseOptRet::Success,
-                                                       make_unique<MainOpt>()};
+  std::pair<ParseOptRet, std::unique_ptr<MainOpt>> ret{
+      ParseOptRet::Success, std::make_unique<MainOpt>()};
   auto &MainOptions = *ret.second;
   CLI::App App{
       fmt::format("forward-epics-to-kafka-0.1.0 {:.7} (ESS, BrightnESS)\n"

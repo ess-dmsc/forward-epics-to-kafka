@@ -55,8 +55,10 @@ endif(CONAN_SPDLOG-GRAYLOG_ROOT AND USE_GRAYLOG_LOGGER)
 
 set(forwarder-library_INC
     EpicsClient/EpicsClientMonitor.h
+    EpicsClient/EpicsClientMonitorImpl.h
     EpicsClient/EpicsClientRandom.h
     EpicsClient/EpicsClientFactory.h
+    EpicsClient/EpicsClientInterface.h
     EpicsClient/FwdMonitorRequester.h
     EpicsClient/EpicsClientInterface.h
     EpicsClient/ChannelRequester.h
@@ -78,8 +80,7 @@ set(forwarder-library_INC
     Forwarder.h
     FlatBufferCreator.h
     git_commit_current.h
-    helper.h
-    json.h
+        json.h
     Kafka.h
     KafkaW/BrokerSettings.h
     KafkaW/Consumer.h

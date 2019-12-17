@@ -40,5 +40,5 @@ public:
   virtual void setServiceID(const std::string & /* ServiceID */){};
   virtual void setProducer(std::unique_ptr<KafkaW::ProducerTopic>){};
 };
-}
-}
+} // namespace EpicsClient
+} // namespace Forwarder

@@ -31,5 +31,5 @@ public:
 private:
   SharedLogger Logger = getLogger();
 };
-}
-}
+} // namespace EpicsClient
+} // namespace Forwarder

@@ -408,7 +408,7 @@ public:
 };
 
 std::unique_ptr<FlatBufferCreator> Info::createConverter() {
-  return make_unique<Converter>();
+  return std::make_unique<Converter>();
 }
 
 } // namespace f142

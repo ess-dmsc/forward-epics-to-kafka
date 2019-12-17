@@ -36,4 +36,4 @@ struct ProducerStats {
     out_queue = x.out_queue.load();
   };
 };
-}
+} // namespace KafkaW

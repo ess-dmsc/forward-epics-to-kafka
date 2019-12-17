@@ -18,4 +18,4 @@ struct ProducerMessage {
   uint32_t Size;
   std::string Key; // Used by producer if not empty
 };
-}
+} // namespace KafkaW

@@ -33,4 +33,4 @@ private:
   std::string Data;
   PollStatus Status;
 };
-}
+} // namespace KafkaW

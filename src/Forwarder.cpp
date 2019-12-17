@@ -12,7 +12,6 @@
 #include <WinSock2.h>
 #include <windows.h>
 #endif
-
 #include "CommandHandler.h"
 #include "Converter.h"
 #include "EpicsClient/EpicsClientInterface.h"
@@ -22,9 +21,9 @@
 #include "KafkaOutput.h"
 #include "Stream.h"
 #include "Timer.h"
-#include "helper.h"
 #include "logger.h"
 #include <algorithm>
+#include <memory>
 #include <nlohmann/json.hpp>
 #include <sys/types.h>
 #ifdef _MSC_VER
@@ -58,7 +57,7 @@ void registerSchemas() {
   FlatBufs::SchemaRegistry::Registrar<FlatBufs::SchemaInfo> Reg2(
       "TdcTime", TdcTime::Info::ptr(new TdcTime::Info));
 }
-}
+} // namespace
 
 namespace Forwarder {
 
@@ -70,13 +69,13 @@ static bool isStopDueToSignal(ForwardingRunState Flag) {
 /// Main program entry class.
 Forwarder::Forwarder(MainOpt &Opt)
     : main_opt(Opt),
-      KafkaInstanceSet(make_unique<InstanceSet>(Opt.GlobalBrokerSettings)),
+      KafkaInstanceSet(std::make_unique<InstanceSet>(Opt.GlobalBrokerSettings)),
       conversion_scheduler(this) {
 
   registerSchemas();
 
   for (size_t i = 0; i < Opt.MainSettings.ConversionThreads; ++i) {
-    conversion_workers.emplace_back(make_unique<ConversionWorker>(
+    conversion_workers.emplace_back(std::make_unique<ConversionWorker>(
         &conversion_scheduler,
         static_cast<uint32_t>(Opt.MainSettings.ConversionWorkerQueueSize)));
   }
@@ -94,7 +93,7 @@ Forwarder::Forwarder(MainOpt &Opt)
     KafkaW::BrokerSettings ConsumerSettings;
     ConsumerSettings.Address = main_opt.MainSettings.BrokerConfig.HostPort;
     ConsumerSettings.PollTimeoutMS = 0;
-    auto NewConsumer = make_unique<KafkaW::Consumer>(ConsumerSettings);
+    auto NewConsumer = std::make_unique<KafkaW::Consumer>(ConsumerSettings);
     config_listener.reset(new Config::Listener{
         main_opt.MainSettings.BrokerConfig, std::move(NewConsumer)});
   }
@@ -113,7 +112,7 @@ Forwarder::Forwarder(MainOpt &Opt)
     KafkaW::BrokerSettings BrokerSettings;
     BrokerSettings.Address = main_opt.MainSettings.StatusReportURI.HostPort;
     status_producer = std::make_shared<KafkaW::Producer>(BrokerSettings);
-    status_producer_topic = ::make_unique<KafkaW::ProducerTopic>(
+    status_producer_topic = std::make_unique<KafkaW::ProducerTopic>(
         status_producer, main_opt.MainSettings.StatusReportURI.Topic);
   }
 }
@@ -128,14 +127,14 @@ Forwarder::~Forwarder() {
 void Forwarder::createPVUpdateTimerIfRequired() {
   if (main_opt.PeriodMS > 0) {
     auto Interval = std::chrono::milliseconds(main_opt.PeriodMS);
-    PVUpdateTimer = ::make_unique<Timer>(Interval);
+    PVUpdateTimer = std::make_unique<Timer>(Interval);
   }
 }
 
 void Forwarder::createFakePVUpdateTimerIfRequired() {
   if (main_opt.FakePVPeriodMS > 0) {
     auto Interval = std::chrono::milliseconds(main_opt.FakePVPeriodMS);
-    GenerateFakePVUpdateTimer = ::make_unique<Timer>(Interval);
+    GenerateFakePVUpdateTimer = std::make_unique<Timer>(Interval);
   }
 }
 
@@ -391,8 +390,9 @@ void Forwarder::pushConverterToStream(ConverterSettings const &ConverterInfo,
 
   // Create a conversion path then add it
   auto Topic = KafkaInstanceSet->createProducerTopic(std::move(TopicURI));
-  auto cp = ::make_unique<ConversionPath>(
-      std::move(ConverterShared), ::make_unique<KafkaOutput>(std::move(Topic)));
+  auto cp = std::make_unique<ConversionPath>(
+      std::move(ConverterShared),
+      std::make_unique<KafkaOutput>(std::move(Topic)));
 
   Stream->addConverter(std::move(cp));
 }
@@ -425,8 +425,9 @@ void Forwarder::addMapping(StreamSettings const &StreamInfo) {
     if (StreamInfo.Converters.size() > 0) {
       auto ConnectionStatusProducer = KafkaInstanceSet->createProducerTopic(
           URI(StreamInfo.Converters[0].Topic));
-      Stream->getEpicsClient()->setProducer(make_unique<KafkaW::ProducerTopic>(
-          std::move(ConnectionStatusProducer)));
+      Stream->getEpicsClient()->setProducer(
+          std::make_unique<KafkaW::ProducerTopic>(
+              std::move(ConnectionStatusProducer)));
     }
     Stream->getEpicsClient()->setServiceID(main_opt.MainSettings.ServiceID);
     for (auto &Converter : StreamInfo.Converters) {
