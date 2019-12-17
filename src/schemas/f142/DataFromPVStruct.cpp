@@ -24,8 +24,6 @@ getAlarmStatus(epics::pvData::PVStructurePtr const &PVStructureField) {
   while (StatusNames[i] != nullptr) {
     if (AlarmString == StatusNames[i]) {
       return static_cast<AlarmStatus>(i);
-      // TODO
-      // return EnumValuesAlarmStatus()[i];
     }
     i++;
   }

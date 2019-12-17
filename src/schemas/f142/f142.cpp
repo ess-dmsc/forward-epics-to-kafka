@@ -348,12 +348,6 @@ Value_t makeValue(flatbuffers::FlatBufferBuilder &Builder,
   return {Value::NONE, 0};
 }
 
-// TODO
-// struct AlarmInfo {
-//  std::unique_ptr<AlarmStatus> AlarmStatusValue;
-//  std::unique_ptr<AlarmSeverity> AlarmSeverityValue;
-//};
-
 std::unique_ptr<FlatBufs::FlatbufferMessage>
 Converter::create(EpicsPVUpdate const &PVUpdate) {
   auto &PVStructure = PVUpdate.epics_pvstr;
