@@ -4,7 +4,7 @@ gtest/1.8.1@bincrafters/stable
 librdkafka/0.11.4-dm2@ess-dmsc/stable
 spdlog/1.3.1@bincrafters/stable
 epics/3.16.1-4.6.0-dm6@ess-dmsc/stable
-streaming-data-types/b2faa3c@ess-dmsc/testing
+streaming-data-types/70c9a71@ess-dmsc/stable
 CLI11/1.8.0@cliutils/stable
 jsonformoderncpp/3.6.1@vthiery/stable
 concurrentqueue/8f7e861@ess-dmsc/stable
