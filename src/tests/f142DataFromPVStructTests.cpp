@@ -42,5 +42,6 @@ TEST(
   testAlarmStatusFromAlarmMessage("NO_ALARM", AlarmStatus::NO_ALARM);
   testAlarmStatusFromAlarmMessage("HIHI_ALARM", AlarmStatus::HIHI);
   testAlarmStatusFromAlarmMessage("LOW_ALARM", AlarmStatus::LOW);
-  testAlarmStatusFromAlarmMessage("READ_ACCESS_ALARM", AlarmStatus::READ_ACCESS);
+  testAlarmStatusFromAlarmMessage("READ_ACCESS_ALARM",
+                                  AlarmStatus::READ_ACCESS);
 }

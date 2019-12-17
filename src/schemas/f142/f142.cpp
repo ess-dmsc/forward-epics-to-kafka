@@ -348,7 +348,7 @@ Value_t makeValue(flatbuffers::FlatBufferBuilder &Builder,
   return {Value::NONE, 0};
 }
 
-//TODO
+// TODO
 // struct AlarmInfo {
 //  std::unique_ptr<AlarmStatus> AlarmStatusValue;
 //  std::unique_ptr<AlarmSeverity> AlarmSeverityValue;
