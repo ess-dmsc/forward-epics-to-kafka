@@ -9,7 +9,6 @@
 
 #include "f142.h"
 #include "../../EpicsPVUpdate.h"
-#include "../../helper.h"
 #include "DataFromPVStruct.h"
 #include <atomic>
 #include <f142_logdata_generated.h>
@@ -358,7 +357,7 @@ Value_t makeValue(flatbuffers::FlatBufferBuilder &Builder,
 std::unique_ptr<FlatBufs::FlatbufferMessage>
 Converter::create(EpicsPVUpdate const &PVUpdate) {
   auto &PVStructure = PVUpdate.epics_pvstr;
-  auto FlatbufferMessage = make_unique<FlatBufs::FlatbufferMessage>();
+  auto FlatbufferMessage = std::make_unique<FlatBufs::FlatbufferMessage>();
 
   auto Builder = FlatbufferMessage->builder.get();
   // this is the field type ID string: up.pvstr->getStructure()->getID()
