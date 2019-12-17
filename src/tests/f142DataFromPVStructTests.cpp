@@ -1,11 +1,12 @@
 #include "schemas/f142/DataFromPVStruct.h"
-#include <fmt/core.h>
 #include <gtest/gtest.h>
+#include <pv/pvAlarm.h>
 #include <pv/nt.h>
 #include <pv/pvTimeStamp.h>
 
 epics::pvData::PVStructure::shared_pointer CreateTestPVStructWithAlarm(std::string const &AlarmMessage) {
   auto Builder = epics::nt::NTScalar::createBuilder();
+  Builder->addAlarm();
   auto PVStruct =
       Builder->value(epics::pvData::pvDouble)->addTimeStamp()->create();
   auto ValueField = PVStruct->getValue<epics::pvData::PVDouble>();
@@ -15,24 +16,20 @@ epics::pvData::PVStructure::shared_pointer CreateTestPVStructWithAlarm(std::stri
   epics::pvData::PVTimeStamp pvTS;
   PVStruct->attachTimeStamp(pvTS);
 
-  fmt::print("{}\n", AlarmMessage);
-  auto AlarmStruct = PVStruct->getAlarm();
-
-  // Make one of these:
-  auto AlarmBuilder = epics::pvData::Alarm();
-  AlarmBuilder.setMessage(AlarmMessage);
-  AlarmBuilder.setStatus();
-  AlarmBuilder.setSeverity();
-
-  // Convert it to one of these:
-  pvAlarm ConstructedPVAlarm;
-
-  // Then attach it to the PVStruct
+  // Construct an alarm structure
+  auto AlarmData = epics::pvData::Alarm();
+  AlarmData.setMessage(AlarmMessage);
+  AlarmData.setStatus(epics::pvData::AlarmStatus::noStatus);
+  AlarmData.setSeverity(epics::pvData::AlarmSeverity::majorAlarm);
+  auto ConstructedPVAlarm = epics::pvData::PVAlarm();
   PVStruct->attachAlarm(ConstructedPVAlarm);
+  ConstructedPVAlarm.set(AlarmData);
 
   return PVStruct->getPVStructure();
 }
 
 TEST(f142Test, some_test) {
-  ASSERT_NO_THROW(CreateTestPVStructWithAlarm("HIHI_ALARM"));
+  auto PVStruct = CreateTestPVStructWithAlarm("HIHI_ALARM");
+  // auto AlarmStatusFromStruct = FlatBufs::f142::getAlarmStatus(PVStruct);
+  
 }
