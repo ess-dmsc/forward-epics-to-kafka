@@ -8,17 +8,17 @@
 // Screaming Udder!                              https://esss.se
 
 #include "f142.h"
-#include "DataFromPVStruct.h"
 #include "../../EpicsPVUpdate.h"
 #include "../../helper.h"
+#include "DataFromPVStruct.h"
 #include <atomic>
 #include <f142_logdata_generated.h>
 #include <pv/nt.h>
 #include <pv/ntndarray.h>
 #include <pv/ntndarrayAttribute.h>
 #include <pv/ntutils.h>
-#include <pv/pvEnumerated.h>
 #include <pv/pvData.h>
+#include <pv/pvEnumerated.h>
 
 namespace FlatBufs {
 namespace f142 {
