@@ -99,6 +99,7 @@ set(forwarder-library_INC
     SchemaRegistry.h
     Stream.h
     Streams.h
+    schemas/f142/f142.h
     Timer.h
     URI.h
     schemas/tdc_time/TdcTime.h)
