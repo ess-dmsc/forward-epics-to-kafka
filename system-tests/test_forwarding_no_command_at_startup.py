@@ -2,7 +2,7 @@ from confluent_kafka import TopicPartition
 from helpers.producerwrapper import ProducerWrapper
 from helpers.f142_logdata.Value import Value
 from time import sleep
-from helpers.kafka_helpers import create_consumer, poll_for_valid_message, poll_for_connection_status_message
+from helpers.kafka_helpers import create_consumer, poll_for_valid_message
 from helpers.flatbuffer_helpers import check_expected_value, \
     check_multiple_expected_values, check_expected_connection_status_values
 from helpers.epics_helpers import change_pv_value
@@ -12,6 +12,7 @@ import json
 import numpy as np
 
 CONFIG_TOPIC = "TEST_forwarderConfig"
+INITIAL_FLOATARRAY_VALUE = (1.1, 2.2, 3.3)
 
 
 def teardown_function(function):
@@ -26,14 +27,14 @@ def teardown_function(function):
         PVDOUBLE: 0.0,
         # We have to use this as the second parameter for caput gets parsed as empty so does not change the value of
         # the PV
-        PVSTR: "\"\"",
+        PVSTR: "",
         PVLONG: 0,
         PVENUM: np.array(["INIT"]).astype(np.string_)
     }
 
     for key, value in defaults.items():
         change_pv_value(key, value)
-    change_pv_value(PVFLOATARRAY, [3, 1.1, 2.2, 3.3])
+    change_pv_value(PVFLOATARRAY, INITIAL_FLOATARRAY_VALUE)
     sleep(3)
 
 
@@ -92,8 +93,7 @@ def test_forwarder_sends_pv_updates_single_floatarray(docker_compose_no_command)
     sleep(5)
 
     first_msg, _ = poll_for_valid_message(cons)
-    expectedarray = (1.1, 2.2, 3.3)
-    check_expected_value(first_msg, Value.ArrayFloat, PVFLOATARRAY, expectedarray)
+    check_expected_value(first_msg, Value.ArrayFloat, PVFLOATARRAY, INITIAL_FLOATARRAY_VALUE)
     cons.close()
 
 
@@ -181,38 +181,8 @@ def test_forwarder_updates_pv_when_config_change_add_two_pvs(docker_compose_no_c
     poll_for_valid_message(cons)
     poll_for_valid_message(cons)
 
-    expected_values = {PVSTR: (Value.String, ""), PVLONG: (Value.Int, 0)}
+    expected_values = {PVSTR: (Value.String, b""), PVLONG: (Value.Int, 0)}
 
     messages = [poll_for_valid_message(cons)[0], poll_for_valid_message(cons)[0]]
     check_multiple_expected_values(messages, expected_values)
-    cons.close()
-
-
-def test_connection_status_messages(docker_compose_no_command):
-    """
-      GIVEN PV is configured to be forwarded
-      WHEN Connection status changes
-      THEN Forwarder publishes ep00 message with connection status
-
-      NOTE: Enums are converted to Ints in the forwarder.
-      """
-    data_topic = "TEST_forwarderData_connection_status"
-    pvs = [PVENUM]
-
-    prod = ProducerWrapper("localhost:9092", CONFIG_TOPIC, data_topic)
-    prod.add_config(pvs)
-    # Wait for config to be pushed
-    sleep(5)
-
-    cons = create_consumer()
-
-    # Update value
-    change_pv_value(PVENUM, np.array(["START"]).astype(np.string_))
-    # Wait for PV to be updated
-    sleep(5)
-    cons.subscribe([data_topic])
-
-    first_msg = poll_for_connection_status_message(cons)
-    check_expected_connection_status_values(first_msg, EventType.CONNECTED)
-
     cons.close()

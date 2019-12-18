@@ -54,27 +54,6 @@ def poll_for_valid_message(consumer, expected_file_identifier=b"f142", timeout=1
                 return LogData.LogData.GetRootAsLogData(msg.value(), 0), msg.key()
 
 
-def poll_for_connection_status_message(consumer, timeout=15.0):
-    """
-    Polls the subscribed topics by the consumer and checks the buffer is not empty or malformed.
-    Skips connection status messages.
-
-    :param consumer: The consumer object
-    :param timeout: give up if we haven't found a connection status message after this length of time
-    :return: The LogData flatbuffer from the message payload
-    """
-    timer = TicToc()
-    timer.tic()
-    while timer.tocvalue() < timeout:
-        msg = consumer.poll(timeout=1.0)
-        assert msg is not None
-        if msg.error():
-            raise MsgErrorException("Consumer error when polling: {}".format(msg.error()))
-        message_file_id = msg.value()[4:8]
-        if message_file_id == b"ep00":
-            return EpicsConnectionInfo.EpicsConnectionInfo.GetRootAsEpicsConnectionInfo(msg.value(), 0)
-
-
 def create_consumer(offset_reset="earliest"):
     consumer_config = {'bootstrap.servers': 'localhost:9092', 'default.topic.config': {'auto.offset.reset': offset_reset},
                        'group.id': uuid.uuid4()}
