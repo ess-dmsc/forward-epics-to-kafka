@@ -17,5 +17,8 @@ namespace f142 {
 
 AlarmStatus
 getAlarmStatus(epics::pvData::PVStructurePtr const &PVStructureField);
+
+AlarmSeverity
+getAlarmSeverity(epics::pvData::PVStructurePtr const &PVStructureField);
 }
 }

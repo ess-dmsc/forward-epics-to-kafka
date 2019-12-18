@@ -29,5 +29,12 @@ getAlarmStatus(epics::pvData::PVStructurePtr const &PVStructureField) {
   }
   return AlarmStatus::UDF;
 }
+
+AlarmSeverity
+getAlarmSeverity(epics::pvData::PVStructurePtr const &PVStructureField) {
+  auto AlarmField = PVStructureField->getSubField("alarm");
+
+  return AlarmSeverity::NO_ALARM;
+}
 }
 }
