@@ -116,7 +116,7 @@ def run_containers(cmd, options):
     print("\nFinished docker-compose up\n", flush=True)
 
 
-def build_and_run(options, request, local_path=None, wait_for_debugger=False, config_file=None, json_file=None):
+def build_and_run(options, request, local_path=None, wait_for_debugger=False, config_file=None, log_file=None, json_file=None):
     if wait_for_debugger and local_path is None:
         warnings.warn(
             "Option specified to wait for debugger to attach, but this "
@@ -133,12 +133,14 @@ def build_and_run(options, request, local_path=None, wait_for_debugger=False, co
         command_options = [
             full_path_of_forwarder_exe,
             "-c",
-            "./config-files/{config_file}",
+            f"./config-files/{config_file}",
+            "--log-file",
+            f"{log_file}",
         ]
         if json_file is not None:
             command_options.extend([
                 "--streams-json",
-                "./config-files/{json_file}",
+                f"./config-files/{json_file}",
             ])
         proc = Popen(command_options)
         if wait_for_debugger:
@@ -222,6 +224,7 @@ def docker_compose(request):
                   request.config.getoption(LOCAL_BUILD),
                   request.config.getoption(WAIT_FOR_DEBUGGER_ATTACH),
                   "forwarder_config.ini",
+                  "forwarder_tests.log",
                   "forwarder_config.json",)
 
 
@@ -259,6 +262,7 @@ def docker_compose_fake_epics(request):
                   request.config.getoption(LOCAL_BUILD),
                   request.config.getoption(WAIT_FOR_DEBUGGER_ATTACH),
                   "forwarder_config_fake_epics.ini",
+                  "forwarder_tests.log",
                   "forwarder_config_fake_epics.json",)
 
 
@@ -278,6 +282,7 @@ def docker_compose_idle_updates(request):
                   request.config.getoption(LOCAL_BUILD),
                   request.config.getoption(WAIT_FOR_DEBUGGER_ATTACH),
                   "forwarder_config_idle_updates.ini",
+                  "forwarder_tests.log",
                   "forwarder_config_idle_updates.json",)
 
 
@@ -297,6 +302,7 @@ def docker_compose_idle_updates_long_period(request):
                   request.config.getoption(LOCAL_BUILD),
                   request.config.getoption(WAIT_FOR_DEBUGGER_ATTACH),
                   "forwarder_config_idle_updates_long.ini",
+                  "forwarder_tests.log",
                   "forwarder_config_idle_updates_long.json",)
 
 
@@ -316,4 +322,5 @@ def docker_compose_lr(request):
                   request.config.getoption(LOCAL_BUILD),
                   request.config.getoption(WAIT_FOR_DEBUGGER_ATTACH),
                   "forwarder_config_lr.ini",
+                  "forwarder_tests.log",
                   "forwarder_config_lr.json",)
