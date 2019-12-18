@@ -1,7 +1,6 @@
 from confluent_kafka import Consumer
 import uuid
 from helpers.f142_logdata import LogData
-from helpers.ep00 import EpicsConnectionInfo
 from pytictoc import TicToc
 
 

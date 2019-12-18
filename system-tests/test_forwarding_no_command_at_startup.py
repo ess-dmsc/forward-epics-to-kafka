@@ -4,10 +4,9 @@ from helpers.f142_logdata.Value import Value
 from time import sleep
 from helpers.kafka_helpers import create_consumer, poll_for_valid_message
 from helpers.flatbuffer_helpers import check_expected_value, \
-    check_multiple_expected_values, check_expected_connection_status_values
+    check_multiple_expected_values
 from helpers.epics_helpers import change_pv_value
 from helpers.PVs import PVDOUBLE, PVSTR, PVLONG, PVENUM, PVFLOATARRAY
-from helpers.ep00.EventType import EventType
 import json
 import numpy as np
 
