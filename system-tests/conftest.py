@@ -5,6 +5,23 @@ from confluent_kafka.admin import AdminClient
 from confluent_kafka import Producer
 import docker
 from time import sleep
+from helpers.epics_helpers import check_pv_exists
+
+
+def wait_unit_epics_ioc_ready():
+    print('Waiting for IOC to be ready for system tests...', flush=True)
+    ready = False
+    attempts = 0
+    while not ready:
+        try:
+            ready = check_pv_exists('SIMPLE:DOUBLE')
+        except:
+            pass  # container is not up yet
+        attempts += 1
+        if attempts > 100:
+            raise Exception('IOC taking too long to be ready, aborting tests')
+        sleep(2)
+    print('IOC Ready!', flush=True)
 
 
 def wait_until_kafka_ready(docker_cmd, docker_options):
@@ -133,6 +150,7 @@ def start_kafka(request):
     cmd.up(options)
     print("Started kafka containers", flush=True)
     wait_until_kafka_ready(cmd, options)
+    wait_unit_epics_ioc_ready()
 
     def fin():
         print("Stopping zookeeper and kafka", flush=True)

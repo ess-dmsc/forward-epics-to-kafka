@@ -25,6 +25,27 @@ def change_pv_value(pvname, value):
     assert exit_code == 0
 
 
+def check_pv_exists(pvname):
+    """
+    Checks EPICS pv exists by trying to caget it
+
+    :param pvname:(string) PV name
+    :return True if exists
+    """
+    container = False
+    client = docker.from_env()
+    for item in client.containers.list():
+        if "_ioc_1" in item.name:
+            container = item
+            break
+    if not container:
+        raise Exception("IOC Container not found")
+    exit_code, output = container.exec_run("caget -a {}".format(pvname), privileged=True)
+    print(output)
+
+    return exit_code == 0
+
+
 def change_array_pv_value(pvname, value):
     """
     Epics call to change PV value.
