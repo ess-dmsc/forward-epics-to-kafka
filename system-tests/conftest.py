@@ -123,11 +123,11 @@ def build_and_run(options, request, local_path=None, wait_for_debugger=False, co
             "can only be used if a local build path is provided"
         )
 
-    project = project_from_options(os.path.dirname(__file__), options)
-    cmd = TopLevelCommand(project)
-    run_containers(cmd, options)
-
-    if local_path is not None:
+    if local_path is None:
+        project = project_from_options(os.path.dirname(__file__), options)
+        cmd = TopLevelCommand(project)
+        run_containers(cmd, options)
+    else:
         # Launch local build of forwarder
         full_path_of_forwarder_exe = os.path.join(local_path, "bin", "forward-epics-to-kafka")
         command_options = [
@@ -164,10 +164,10 @@ def build_and_run(options, request, local_path=None, wait_for_debugger=False, co
             log_options = dict(options)
             log_options["SERVICE"] = ["forwarder"]
             cmd.logs(log_options)
+            options["--timeout"] = 30
+            cmd.down(options)
         else:
             proc.kill()
-        options["--timeout"] = 30
-        cmd.down(options)
         print("containers stopped", flush=True)
 
     # Using a finalizer rather than yield in the fixture means
@@ -243,7 +243,8 @@ def docker_compose_no_command(request):
     build_and_run(options, request,
                   request.config.getoption(LOCAL_BUILD),
                   request.config.getoption(WAIT_FOR_DEBUGGER_ATTACH),
-                  "forwarder_config_no_command.ini",)
+                  "forwarder_config_no_command.ini",
+                  "forwarder_tests.log",)
 
 
 @pytest.fixture(scope="module")
