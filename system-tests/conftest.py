@@ -144,18 +144,10 @@ def build_and_run(options, request, local_path=None, wait_for_debugger=False, co
             ])
         proc = Popen(command_options)
         if wait_for_debugger:
-            proc.send_signal(
-                signal.SIGSTOP
-            )  # Pause the forwarder until we've had chance to attach a debugger
             input(
                 f"\n"
-                f"Attach a debugger to process id {proc.pid} now if you wish, then press enter to continue: "
+                f"Attach a debugger to process id {proc.pid} now if you wish, then press enter to continue the tests: "
             )
-            print(
-                "You'll need to tell the debugger to continue after it has attached, "
-                'for example type "continue" if using gdb.'
-            )
-            proc.send_signal(signal.SIGCONT)
 
     def fin():
         # Stop the containers then remove them and their volumes (--volumes option)
