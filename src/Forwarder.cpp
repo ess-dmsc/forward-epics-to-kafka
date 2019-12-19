@@ -172,11 +172,11 @@ std::unique_lock<std::mutex> Forwarder::get_lock_converters() {
 /// Start conversion worker threads, poll for commands from Kafka.
 /// When stop flag raised, clear all workers and streams.
 void Forwarder::forward_epics_to_kafka() {
-  using CLK = std::chrono::steady_clock;
-  using MS = std::chrono::milliseconds;
-  auto Dt = MS(main_opt.MainSettings.MainPollInterval);
-  auto t_lf_last = CLK::now();
-  auto t_status_last = CLK::now() - MS(4000);
+  using STEADY_CLOCK = std::chrono::steady_clock;
+  using MILLISECONDS = std::chrono::milliseconds;
+  auto Dt = MILLISECONDS(main_opt.MainSettings.MainPollInterval);
+  auto time_since_last_poll = STEADY_CLOCK::now();
+  auto time_since_last_status = STEADY_CLOCK::now() - MILLISECONDS(4000);
   ConfigCB config_cb(*this);
   {
     std::lock_guard<std::mutex> lock(conversion_workers_mx);
@@ -195,24 +195,24 @@ void Forwarder::forward_epics_to_kafka() {
 
   while (ForwardingRunFlag.load() == ForwardingRunState::RUN) {
     auto do_stats = false;
-    auto t1 = CLK::now();
-    if (t1 - t_lf_last > MS(2000)) {
+    auto current_time = STEADY_CLOCK::now();
+    if (current_time - time_since_last_poll > MILLISECONDS(2000)) {
       if (config_listener) {
         config_listener->poll(config_cb);
       }
       streams.checkStreamStatus();
-      t_lf_last = t1;
+      time_since_last_poll = current_time;
       do_stats = true;
     }
     KafkaInstanceSet->poll();
 
-    auto t2 = CLK::now();
-    auto dt = std::chrono::duration_cast<MS>(t2 - t1);
-    if (t2 - t_status_last > MS(3000)) {
+    auto t2 = STEADY_CLOCK::now();
+    auto dt = std::chrono::duration_cast<MILLISECONDS>(t2 - current_time);
+    if (t2 - time_since_last_status > MILLISECONDS(3000)) {
       if (status_producer_topic) {
         report_status();
       }
-      t_status_last = t2;
+      time_since_last_status = t2;
     }
     if (do_stats) {
       KafkaInstanceSet->logStats();
