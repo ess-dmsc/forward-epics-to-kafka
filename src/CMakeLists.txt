@@ -102,7 +102,7 @@ set(forwarder-library_INC
     Streams.h
     Timer.h
     URI.h
-    schemas/tdc_time/TdcTime.h)
+    schemas/tdc_time/TdcTime.h MetricsTimer.h)
 
 set(forwarder-library_SRC
     MainOpt.cpp
@@ -135,9 +135,9 @@ set(forwarder-library_SRC
     schemas/f142/f142.cpp
     Timer.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/git_commit_current.cpp
-    schemas/tdc_time/TdcTime.cpp)
+    schemas/tdc_time/TdcTime.cpp MetricsTimer.h)
 
-add_library(forwarder-library ${forwarder-library_SRC} ${forwarder-library_INC})
+add_library(forwarder-library ${forwarder-library_SRC} ${forwarder-library_INC} MetricsTimer.h)
 target_compile_definitions(forwarder-library PRIVATE ${compile_defs_common})
 target_link_libraries(forwarder-library ${libraries_common})
 target_include_directories(forwarder-library SYSTEM PUBLIC ${path_include_common} INTERFACE ".")
