@@ -47,7 +47,7 @@ def poll_for_valid_message(consumer, expected_file_identifier=b"f142", timeout=1
             return msg.value(), msg.key()
         elif expected_file_identifier is not None:
             message_file_id = msg.value()[4:8]
-            assert (message_file_id == expected_file_identifier), \
+            assert (message_file_id == expected_file_identifier or message_file_id == b'ep00'), \
                 f"Expected message to have schema id of {expected_file_identifier}, but it has {message_file_id}"
             if message_file_id == b"f142":
                 return LogData.LogData.GetRootAsLogData(msg.value(), 0), msg.key()

@@ -116,7 +116,9 @@ def run_containers(cmd, options):
     print("\nFinished docker-compose up\n", flush=True)
 
 
-def build_and_run(options, request, local_path=None, wait_for_debugger=False, config_file=None, log_file=None, json_file=None):
+def build_and_run(options, request, config_file=None, log_file=None, json_file=None):
+    local_path = request.config.getoption(LOCAL_BUILD)
+    wait_for_debugger = request.config.getoption(WAIT_FOR_DEBUGGER_ATTACH)
     if wait_for_debugger and local_path is None:
         warnings.warn(
             "Option specified to wait for debugger to attach, but this "
@@ -213,8 +215,6 @@ def docker_compose(request):
     options["--file"] = ["compose/docker-compose.yml"]
 
     build_and_run(options, request,
-                  request.config.getoption(LOCAL_BUILD),
-                  request.config.getoption(WAIT_FOR_DEBUGGER_ATTACH),
                   "forwarder_config.ini",
                   "forwarder_tests.log",
                   "forwarder_config.json",)
@@ -233,8 +233,6 @@ def docker_compose_no_command(request):
     options["--file"] = ["compose/docker-compose-no-command.yml"]
 
     build_and_run(options, request,
-                  request.config.getoption(LOCAL_BUILD),
-                  request.config.getoption(WAIT_FOR_DEBUGGER_ATTACH),
                   "forwarder_config_no_command.ini",
                   "forwarder_tests.log",)
 
@@ -252,8 +250,6 @@ def docker_compose_fake_epics(request):
     options["--file"] = ["compose/docker-compose-fake-epics.yml"]
 
     build_and_run(options, request,
-                  request.config.getoption(LOCAL_BUILD),
-                  request.config.getoption(WAIT_FOR_DEBUGGER_ATTACH),
                   "forwarder_config_fake_epics.ini",
                   "forwarder_tests.log",
                   "forwarder_config_fake_epics.json",)
@@ -272,8 +268,6 @@ def docker_compose_idle_updates(request):
     options["--file"] = ["compose/docker-compose-idle-updates.yml"]
 
     build_and_run(options, request,
-                  request.config.getoption(LOCAL_BUILD),
-                  request.config.getoption(WAIT_FOR_DEBUGGER_ATTACH),
                   "forwarder_config_idle_updates.ini",
                   "forwarder_tests.log",
                   "forwarder_config_idle_updates.json",)
@@ -292,8 +286,6 @@ def docker_compose_idle_updates_long_period(request):
     options["--file"] = ["compose/docker-compose-idle-updates-long-period.yml"]
 
     build_and_run(options, request,
-                  request.config.getoption(LOCAL_BUILD),
-                  request.config.getoption(WAIT_FOR_DEBUGGER_ATTACH),
                   "forwarder_config_idle_updates_long.ini",
                   "forwarder_tests.log",
                   "forwarder_config_idle_updates_long.json",)
@@ -312,8 +304,6 @@ def docker_compose_lr(request):
     options["--file"] = ["compose/docker-compose-long-running.yml"]
 
     build_and_run(options, request,
-                  request.config.getoption(LOCAL_BUILD),
-                  request.config.getoption(WAIT_FOR_DEBUGGER_ATTACH),
                   "forwarder_config_lr.ini",
                   "forwarder_tests.log",
                   "forwarder_config_lr.json",)
