@@ -57,8 +57,8 @@ public:
   void stopForwarding();
   void stopForwardingDueToSignal();
   void report_status();
-  void report_stats(int dt);
-  int conversion_workers_clear();
+  MainOpt &main_opt;
+    int conversion_workers_clear();
   int converters_clear();
   std::unique_lock<std::mutex> get_lock_streams();
   std::unique_lock<std::mutex> get_lock_converters();
@@ -70,7 +70,6 @@ private:
   void createPVUpdateTimerIfRequired();
   template <typename T>
   std::shared_ptr<Stream> addStream(ChannelInfo &ChannelInfo);
-  MainOpt &main_opt;
   std::unique_ptr<InstanceSet> KafkaInstanceSet;
   std::unique_ptr<Config::Listener> config_listener;
   std::unique_ptr<Timer> PVUpdateTimer;

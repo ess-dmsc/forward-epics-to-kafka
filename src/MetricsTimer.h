@@ -9,6 +9,9 @@
 
 #pragma once
 #include "logger.h"
+#include "MainOpt.h"
+#include "Kafka.h"
+#include "Forwarder.h"
 #include <asio.hpp>
 #include <atomic>
 #include <chrono>
@@ -25,8 +28,8 @@ using CallbackFunction = std::function<void()>;
 /// execute them at a set interval
 class MetricsTimer {
 public:
-  explicit MetricsTimer(std::chrono::milliseconds Interval)
-      : IO(), Period(Interval), AsioTimer(IO, Period), Running(false) {}
+  explicit MetricsTimer(std::chrono::milliseconds Interval, MainOpt &main_opt)
+      : IO(), Period(Interval), AsioTimer(IO, Period), Running(false), main_opt(main_opt) {}
 
   /// Perform status reports
   void collectMetrics();
@@ -37,6 +40,10 @@ public:
   /// Blocks until the timer thread has stopped
   void waitForStop();
 
+  std::unique_lock<std::mutex> get_lock_converters();
+
+    void report_stats(int dt);
+
 private:
   void run() { IO.run(); }
   asio::io_context IO;
@@ -44,8 +51,13 @@ private:
   asio::steady_timer AsioTimer;
   std::atomic_bool Running;
   std::mutex CallbacksMutex;
-  std::vector<CallbackFunction> Callbacks{};
   std::thread TimerThread;
+  std::unique_ptr<InstanceSet> KafkaInstanceSet;
+  static MainOpt &main_opt;
+  SharedLogger Logger = getLogger();
+std::map<std::string, std::weak_ptr<Converter>> converters;
+  std::mutex converters_mutex;
+
 };
 
 } // namespace Forwarder

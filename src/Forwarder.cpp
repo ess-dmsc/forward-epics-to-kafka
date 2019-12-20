@@ -33,22 +33,13 @@ std::vector<char> getHostname() {
 }
 #else
 #include <unistd.h>
-std::vector<char> getHostname() {
-  std::vector<char> Hostname;
-  Hostname.resize(256);
-  gethostname(Hostname.data(), Hostname.size());
-  if (Hostname.back() != 0) {
-    // likely an error
-    Hostname.back() = 0;
-  }
-  return Hostname;
-}
 
 #endif
 
 #include "CURLReporter.h"
 #include "schemas/f142/f142.cpp"
 #include "schemas/tdc_time/TdcTime.h"
+#include "MetricsTimer.h"
 
 namespace {
 void registerSchemas() {
@@ -213,10 +204,10 @@ void Forwarder::forward_epics_to_kafka() {
         report_status();
       }
       time_since_last_status = t2;
-      if (do_stats) {
-        KafkaInstanceSet->logStats();
-        report_stats(dt.count());
-      }
+    }
+    if (do_stats) {
+      KafkaInstanceSet->logStats();
+      MetricsTimer::report_stats(dt.count());
     }
     if (dt >= Dt) {
       Logger->error("slow main loop: {}", dt.count());
@@ -269,64 +260,7 @@ void Forwarder::report_status() {
                                  StatusString.size());
 }
 
-void Forwarder::report_stats(int dt) {
-  auto m1 = g__total_msgs_to_kafka.load();
-  auto m2 = m1 / 1000;
-  m1 = m1 % 1000;
-  uint64_t b1 = g__total_bytes_to_kafka.load();
-  auto b2 = b1 / 1024;
-  b1 %= 1024;
-  auto b3 = b2 / 1024;
-  b2 %= 1024;
-  Logger->info("dt: {:4}  m: {:4}.{:03}  b: {:3}.{:03}.{:03}", dt, m2, m1, b3,
-               b2, b1);
-  if (CURLReporter::HaveCURL && !main_opt.InfluxURI.empty()) {
-    std::vector<char> Hostname = getHostname();
-    int i1 = 0;
-    fmt::memory_buffer StatsBuffer;
-    for (auto &s : KafkaInstanceSet->getStatsForAllProducers()) {
-      fmt::format_to(StatsBuffer, "forward-epics-to-kafka,hostname={},set={}",
-                     Hostname.data(), i1);
-      fmt::format_to(StatsBuffer, " produced={}", s.produced);
-      fmt::format_to(StatsBuffer, ",produce_fail={}", s.produce_fail);
-      fmt::format_to(StatsBuffer, ",local_queue_full={}", s.local_queue_full);
-      fmt::format_to(StatsBuffer, ",produce_cb={}", s.produce_cb);
-      fmt::format_to(StatsBuffer, ",produce_cb_fail={}", s.produce_cb_fail);
-      fmt::format_to(StatsBuffer, ",poll_served={}", s.poll_served);
-      fmt::format_to(StatsBuffer, ",msg_too_large={}", s.msg_too_large);
-      fmt::format_to(StatsBuffer, ",produced_bytes={}",
-                     double(s.produced_bytes));
-      fmt::format_to(StatsBuffer, ",outq={}", s.out_queue);
-      fmt::format_to(StatsBuffer, "\n");
-      ++i1;
-    }
-    {
-      auto lock = get_lock_converters();
-      Logger->info("N converters: {}", converters.size());
-      i1 = 0;
-      for (auto &c : converters) {
-        auto stats = c.second.lock()->stats();
-        fmt::format_to(StatsBuffer, "forward-epics-to-kafka,hostname={},set={}",
-                       Hostname.data(), i1);
-        int i2 = 0;
-        for (auto x : stats) {
-          if (i2 > 0) {
-            fmt::format_to(StatsBuffer, ",");
-          } else {
-            fmt::format_to(StatsBuffer, " ");
-          }
-          fmt::format_to(StatsBuffer, "{}={}", x.first, x.second);
-          ++i2;
-        }
-        fmt::format_to(StatsBuffer, "\n");
-        ++i1;
-      }
-    }
-    CURLReporter::send(StatsBuffer, main_opt.InfluxURI);
-  }
-}
-
-URI Forwarder::createTopicURI(ConverterSettings const &ConverterInfo) const {
+    URI Forwarder::createTopicURI(ConverterSettings const &ConverterInfo) const {
   URI BrokerURI;
   if (!main_opt.MainSettings.Brokers.empty()) {
     BrokerURI = main_opt.MainSettings.Brokers[0];
