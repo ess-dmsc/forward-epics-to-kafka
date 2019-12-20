@@ -40,9 +40,9 @@ public:
   /// Blocks until the timer thread has stopped
   void waitForStop();
 
-  std::unique_lock<std::mutex> get_lock_converters();
+  static std::unique_lock<std::mutex> get_lock_converters();
 
-    void report_stats(int dt);
+    static void report_stats(int dt);
 
 private:
   void run() { IO.run(); }
@@ -52,11 +52,11 @@ private:
   std::atomic_bool Running;
   std::mutex CallbacksMutex;
   std::thread TimerThread;
-  std::unique_ptr<InstanceSet> KafkaInstanceSet;
+  static std::unique_ptr<InstanceSet> KafkaInstanceSet;
   static MainOpt &main_opt;
-  SharedLogger Logger = getLogger();
-std::map<std::string, std::weak_ptr<Converter>> converters;
-  std::mutex converters_mutex;
+  static SharedLogger Logger = getLogger();
+static std::map<std::string, std::weak_ptr<Converter>> converters;
+  static std::mutex converters_mutex;
 
 };
 
