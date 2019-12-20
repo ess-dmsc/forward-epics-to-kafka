@@ -1,7 +1,16 @@
 #include "DataFromPVStruct.h"
+#include <pv/nt.h>
 
 namespace FlatBufs {
 namespace f142 {
+
+std::map<epics::pvData::AlarmSeverity, AlarmSeverity>
+    EpicsSeverityToFlatbufferSeverity = {
+        {epics::pvData::AlarmSeverity::minorAlarm, AlarmSeverity::MINOR},
+        {epics::pvData::AlarmSeverity::majorAlarm, AlarmSeverity::MAJOR},
+        {epics::pvData::AlarmSeverity::noAlarm, AlarmSeverity::NO_ALARM},
+        {epics::pvData::AlarmSeverity::invalidAlarm, AlarmSeverity::INVALID},
+        {epics::pvData::AlarmSeverity::undefinedAlarm, AlarmSeverity::INVALID}};
 
 AlarmStatus
 getAlarmStatus(epics::pvData::PVStructurePtr const &PVStructureField) {
@@ -33,8 +42,15 @@ getAlarmStatus(epics::pvData::PVStructurePtr const &PVStructureField) {
 AlarmSeverity
 getAlarmSeverity(epics::pvData::PVStructurePtr const &PVStructureField) {
   auto AlarmField = PVStructureField->getSubField("alarm");
+  auto SeverityField =
+      (dynamic_cast<epics::pvData::PVStructure *>(AlarmField.get()))
+          ->getSubField("severity");
+  auto SeverityValue =
+      dynamic_cast<epics::pvData::PVScalarValue<int32_t> *>(SeverityField.get())
+          ->get();
+  auto Severity = epics::pvData::AlarmSeverity(SeverityValue);
 
-  return AlarmSeverity::NO_ALARM;
+  return EpicsSeverityToFlatbufferSeverity[Severity];
 }
 }
 }
