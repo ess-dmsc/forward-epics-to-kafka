@@ -213,10 +213,10 @@ void Forwarder::forward_epics_to_kafka() {
         report_status();
       }
       time_since_last_status = t2;
-    }
-    if (do_stats) {
-      KafkaInstanceSet->logStats();
-      report_stats(dt.count());
+      if (do_stats) {
+        KafkaInstanceSet->logStats();
+        report_stats(dt.count());
+      }
     }
     if (dt >= Dt) {
       Logger->error("slow main loop: {}", dt.count());

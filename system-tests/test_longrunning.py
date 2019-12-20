@@ -5,7 +5,7 @@ import pytest
 import docker
 from time import sleep
 from datetime import datetime
-from helpers.flatbuffer_helpers import check_expected_values
+from helpers.flatbuffer_helpers import check_expected_value
 from helpers.f142_logdata.Value import Value
 
 
@@ -34,7 +34,7 @@ def test_long_run(docker_compose_lr):
                     sleep(3)
                     msg, _ = poll_for_valid_message(cons)
                 try:
-                    check_expected_values(msg, Value.Double, PVDOUBLE, float(i))
+                    check_expected_value(msg, Value.Double, PVDOUBLE, float(i))
                 except AssertionError:
                     # Message is either incorrect or empty - log expected value to file
                     file.write(str(i) + '\n')
