@@ -5,23 +5,29 @@ from confluent_kafka.admin import AdminClient
 from confluent_kafka import Producer
 import docker
 from time import sleep
-from helpers.epics_helpers import check_pv_exists
+from subprocess import Popen
+import warnings
 
 
-def wait_unit_epics_ioc_ready():
-    print('Waiting for IOC to be ready for system tests...', flush=True)
-    ready = False
-    attempts = 0
-    while not ready:
-        try:
-            ready = check_pv_exists('SIMPLE:DOUBLE')
-        except:
-            pass  # container is not up yet
-        attempts += 1
-        if attempts > 100:
-            raise Exception('IOC taking too long to be ready, aborting tests')
-        sleep(2)
-    print('IOC Ready!', flush=True)
+LOCAL_BUILD = "--local-build"
+WAIT_FOR_DEBUGGER_ATTACH = "--wait-to-attach-debugger"
+
+
+def pytest_addoption(parser):
+    parser.addoption(
+        LOCAL_BUILD,
+        action="store",
+        default=None,
+        help="Directory of local build to run tests against instead of rebuilding in a container",
+    )
+    parser.addoption(
+        WAIT_FOR_DEBUGGER_ATTACH,
+        type=bool,
+        action="store",
+        default=False,
+        help=f"Use this flag when using the {LOCAL_BUILD} option to cause the system "
+             f"tests to prompt you to attach a debugger to the file writer process",
+    )
 
 
 def wait_until_kafka_ready(docker_cmd, docker_options):
@@ -86,19 +92,21 @@ common_options = {"--no-deps": False,
 
 
 @pytest.fixture(scope="session", autouse=True)
-def build_forwarder_image():
-    client = docker.from_env()
-    print("Building Forwarder image", flush=True)
-    build_args = {}
-    if "http_proxy" in os.environ:
-        build_args["http_proxy"] = os.environ["http_proxy"]
-    if "https_proxy" in os.environ:
-        build_args["https_proxy"] = os.environ["https_proxy"]
-    if "local_conan_server" in os.environ:
-        build_args["local_conan_server"] = os.environ["local_conan_server"]
-    image, logs = client.images.build(path="../", tag="forwarder:latest", rm=False, buildargs=build_args)
-    for item in logs:
-        print(item, flush=True)
+def build_forwarder_image(request):
+    # Only build image if we are not running against a local build
+    if request.config.getoption(LOCAL_BUILD) is None:
+        client = docker.from_env()
+        print("Building Forwarder image", flush=True)
+        build_args = {}
+        if "http_proxy" in os.environ:
+            build_args["http_proxy"] = os.environ["http_proxy"]
+        if "https_proxy" in os.environ:
+            build_args["https_proxy"] = os.environ["https_proxy"]
+        if "local_conan_server" in os.environ:
+            build_args["local_conan_server"] = os.environ["local_conan_server"]
+        image, logs = client.images.build(path="../", tag="forwarder:latest", rm=False, buildargs=build_args)
+        for item in logs:
+            print(item, flush=True)
 
 
 def run_containers(cmd, options):
@@ -107,19 +115,52 @@ def run_containers(cmd, options):
     print("\nFinished docker-compose up\n", flush=True)
 
 
-def build_and_run(options, request):
-    project = project_from_options(os.path.dirname(__file__), options)
-    cmd = TopLevelCommand(project)
-    run_containers(cmd, options)
+def build_and_run(options, request, config_file=None, log_file=None, json_file=None):
+    local_path = request.config.getoption(LOCAL_BUILD)
+    wait_for_debugger = request.config.getoption(WAIT_FOR_DEBUGGER_ATTACH)
+    if wait_for_debugger and local_path is None:
+        warnings.warn(
+            "Option specified to wait for debugger to attach, but this "
+            "can only be used if a local build path is provided"
+        )
+
+    if local_path is None:
+        project = project_from_options(os.path.dirname(__file__), options)
+        cmd = TopLevelCommand(project)
+        run_containers(cmd, options)
+    else:
+        # Launch local build of forwarder
+        full_path_of_forwarder_exe = os.path.join(local_path, "bin", "forward-epics-to-kafka")
+        command_options = [
+            full_path_of_forwarder_exe,
+            "-c",
+            f"./config-files/{config_file}",
+            "--log-file",
+            f"{log_file}",
+        ]
+        if json_file is not None:
+            command_options.extend([
+                "--streams-json",
+                f"./config-files/{json_file}",
+            ])
+        proc = Popen(command_options)
+        if wait_for_debugger:
+            input(
+                f"\n"
+                f"Attach a debugger to process id {proc.pid} now if you wish, then press enter to continue the tests: "
+            )
 
     def fin():
         # Stop the containers then remove them and their volumes (--volumes option)
         print("containers stopping", flush=True)
-        log_options = dict(options)
-        log_options["SERVICE"] = ["forwarder"]
-        cmd.logs(log_options)
-        options["--timeout"] = 30
-        cmd.down(options)
+        if local_path is None:
+            log_options = dict(options)
+            log_options["SERVICE"] = ["forwarder"]
+            cmd.logs(log_options)
+            options["--timeout"] = 30
+            cmd.down(options)
+        else:
+            proc.kill()
         print("containers stopped", flush=True)
 
     # Using a finalizer rather than yield in the fixture means
@@ -150,7 +191,6 @@ def start_kafka(request):
     cmd.up(options)
     print("Started kafka containers", flush=True)
     wait_until_kafka_ready(cmd, options)
-    wait_unit_epics_ioc_ready()
 
     def fin():
         print("Stopping zookeeper and kafka", flush=True)
@@ -173,7 +213,10 @@ def docker_compose(request):
     options["--project-name"] = "forwarder"
     options["--file"] = ["compose/docker-compose.yml"]
 
-    build_and_run(options, request)
+    build_and_run(options, request,
+                  "forwarder_config.ini",
+                  "forwarder_tests.log",
+                  "forwarder_config.json",)
 
 
 @pytest.fixture(scope="module")
@@ -188,7 +231,9 @@ def docker_compose_no_command(request):
     options["--project-name"] = "forwarderNoCommand"
     options["--file"] = ["compose/docker-compose-no-command.yml"]
 
-    build_and_run(options, request)
+    build_and_run(options, request,
+                  "forwarder_config_no_command.ini",
+                  "forwarder_tests.log",)
 
 
 @pytest.fixture(scope="module")
@@ -203,7 +248,10 @@ def docker_compose_fake_epics(request):
     options["--project-name"] = "fake"
     options["--file"] = ["compose/docker-compose-fake-epics.yml"]
 
-    build_and_run(options, request)
+    build_and_run(options, request,
+                  "forwarder_config_fake_epics.ini",
+                  "forwarder_tests.log",
+                  "forwarder_config_fake_epics.json",)
 
 
 @pytest.fixture(scope="module")
@@ -218,7 +266,10 @@ def docker_compose_idle_updates(request):
     options["--project-name"] = "idle"
     options["--file"] = ["compose/docker-compose-idle-updates.yml"]
 
-    build_and_run(options, request)
+    build_and_run(options, request,
+                  "forwarder_config_idle_updates.ini",
+                  "forwarder_tests.log",
+                  "forwarder_config_idle_updates.json",)
 
 
 @pytest.fixture(scope="module")
@@ -233,7 +284,10 @@ def docker_compose_idle_updates_long_period(request):
     options["--project-name"] = "longi"
     options["--file"] = ["compose/docker-compose-idle-updates-long-period.yml"]
 
-    build_and_run(options, request)
+    build_and_run(options, request,
+                  "forwarder_config_idle_updates_long.ini",
+                  "forwarder_tests.log",
+                  "forwarder_config_idle_updates_long.json",)
 
 
 @pytest.fixture(scope="module", autouse=False)
@@ -248,4 +302,7 @@ def docker_compose_lr(request):
     options["--project-name"] = "lr"
     options["--file"] = ["compose/docker-compose-long-running.yml"]
 
-    build_and_run(options, request)
+    build_and_run(options, request,
+                  "forwarder_config_lr.ini",
+                  "forwarder_tests.log",
+                  "forwarder_config_lr.json",)

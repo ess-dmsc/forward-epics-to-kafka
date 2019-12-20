@@ -12,13 +12,24 @@ It uses Docker containers to create containerised instances of Kafka and other c
 
 * Install the requirements using pip: `pip install -r system-tests/requirements.txt`
 
-* Stop and remove any containers that may interfere with the system tests, e.g IOC containers, Kafka containers and containers from previous runs. To stop and remove all containers use `docker stop $(docker ps -a -q) && docker rm $(docker ps -a -q)`
+* Stop and remove any containers that may interfere with the system tests, e.g IOC containers, Kafka containers and 
+containers from previous runs. To stop and remove all containers use `docker stop $(docker ps -a -q) && docker 
+rm $(docker ps -a -q)`
 
 * Run `pytest -s .` from the `system-tests/` directory
 
 * Wait
 
 Note: these tests take some time to run.
+
+Append `--local-build <PATH_TO_BUILD_DIRECTORY>` to the `pytest` command to run the system tests against a local build 
+of the Forwarder instead of rebuilding in a container.
+
+Append `--wait-to-attach-debugger` to the `pytest` command to pause running the system tests until a debugger has 
+been attached. This option only works in conjunction with the `--local-build` option. A message will appear in the 
+console and it will report the process ID and wait for user input before continuing. However note that the Forwarder 
+process itself continues running so you may need to find the debugger message amoung other output, I haven't found a 
+solution to this as SIGSTOP seems to causes the Forwarder process to terminate rather than pause.  
 
 ### General Architecture
 

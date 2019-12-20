@@ -4,3 +4,5 @@ confluent-kafka
 flatbuffers
 docker
 pytictoc
+caproto
+numpy
