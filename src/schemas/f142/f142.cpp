@@ -363,11 +363,14 @@ Converter::create(EpicsPVUpdate const &PVUpdate) {
   LogDataBuilder.add_value_type(Value.Type);
   LogDataBuilder.add_value(Value.Offset);
   if (PVUpdate.AlarmStatusChanged) {
-    // The default value of the alarm field in the schema indicates that there
-    // was no change, so we only need to populate the field if there is a
+    // The default values of the alarm fields in the schema indicate that there
+    // was no change, so we only need to populate the fields if there is a
     // change
-    auto alarmInfo = getAlarmStatus(PVStructure);
-    LogDataBuilder.add_status(alarmInfo);
+    auto AlarmStatusInfo = getAlarmStatus(PVStructure);
+    LogDataBuilder.add_status(AlarmStatusInfo);
+
+    auto AlarmSeverityInfo = getAlarmSeverity(PVStructure);
+    LogDataBuilder.add_severity(AlarmSeverityInfo);
   }
 
   // Use the PV name as the message key so that all messages for the same PV
