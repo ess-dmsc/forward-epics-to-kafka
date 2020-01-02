@@ -1,12 +1,15 @@
-from helpers.f142_logdata import Int, Double, String, Long, Value, ArrayFloat
+from helpers.f142_logdata import Int, Double, String, ArrayFloat, LogData
+from helpers.f142_logdata.Value import Value
+from helpers.f142_logdata.AlarmSeverity import AlarmSeverity
+from helpers.f142_logdata.AlarmStatus import AlarmStatus
 from cmath import isclose
 import numpy as np
 
 ValueTypes = {
-    Value.Value.Int: Int.Int,
-    Value.Value.Double: Double.Double,
-    Value.Value.String: String.String,
-    Value.Value.ArrayFloat: ArrayFloat.ArrayFloat,
+    Value.Int: Int.Int,
+    Value.Double: Double.Double,
+    Value.String: String.String,
+    Value.ArrayFloat: ArrayFloat.ArrayFloat,
 }
 
 
@@ -27,7 +30,7 @@ def check_multiple_expected_values(message_list, expected_values):
         check_expected_value(log_data, expected_values[name][0], name, expected_values[name][1])
 
 
-def check_expected_value(log_data, value_type, pv_name, expected_value=None):
+def check_expected_value(log_data: LogData, value_type, pv_name, expected_value=None):
     """
     Checks the message name (PV) and value type (type of PV), and, optionally, the value.
 
@@ -58,3 +61,8 @@ def check_expected_value(log_data, value_type, pv_name, expected_value=None):
                 assert isclose(expected_value, union_val.Value())
             else:
                 assert expected_value == union_val.Value()
+
+
+def check_expected_alarm_status(log_data: LogData, expected_status: AlarmStatus, expected_severity: AlarmSeverity):
+    assert log_data.Severity() == expected_severity
+    assert log_data.Status() == expected_status
