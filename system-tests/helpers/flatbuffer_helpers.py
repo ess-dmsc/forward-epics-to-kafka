@@ -64,5 +64,5 @@ def check_expected_value(log_data: LogData, value_type, pv_name, expected_value=
 
 
 def check_expected_alarm_status(log_data: LogData, expected_status: AlarmStatus, expected_severity: AlarmSeverity):
-    assert log_data.Severity() == expected_severity
-    assert log_data.Status() == expected_status
+    assert log_data.Severity() == expected_severity, f"Actual alarm severity: {log_data.Severity()}, Expected alarm severity: {expected_severity}"
+    assert log_data.Status() == expected_status, f"Actual alarm status: {log_data.Status()}, Expected alarm status: {expected_status}"
