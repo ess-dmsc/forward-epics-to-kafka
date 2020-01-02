@@ -77,6 +77,15 @@ public:
   MOCK_METHOD1(assignment,
                RdKafka::ErrorCode(std::vector<RdKafka::TopicPartition *> &));
   MOCK_METHOD1(subscription, RdKafka::ErrorCode(std::vector<std::string> &));
+  MOCK_METHOD1(controllerid, int32_t(int));
+  MOCK_METHOD1(fatal_error, RdKafka::ErrorCode(std::string &));
+  MOCK_METHOD5(oauthbearer_set_token,
+               RdKafka::ErrorCode(const std::string &, int64_t,
+                                  const std::string &,
+                                  const std::list<std::basic_string<char>> &,
+                                  std::string &));
+  MOCK_METHOD1(oauthbearer_set_token_failure,
+               RdKafka::ErrorCode(const std::string &));
 };
 
 class MockMetadata : public RdKafka::Metadata {
