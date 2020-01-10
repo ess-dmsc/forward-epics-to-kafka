@@ -14,7 +14,7 @@ create_version_header(
 set (CMAKE_CXX_STANDARD 14)
 
 if (WIN32)
-    add_definitions(-DNOGDI -DNOMINMAX)
+    add_definitions(-DNOGDI -DNOMINMAX -DWIN32_LEAN_AND_MEAN)
 else()
     if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS "4.9.3")
     else ()
