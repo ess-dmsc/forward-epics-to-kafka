@@ -32,14 +32,20 @@ EpicsClientRandom::createFakePVStructure(double Value) const {
   auto FieldCreator = epics::pvData::getFieldCreate();
   auto PVDataCreator = epics::pvData::getPVDataCreate();
   auto PVFieldBuilder = FieldCreator->createFieldBuilder();
-  auto PVTimestampFieldBuilder = FieldCreator->createFieldBuilder();
 
+  auto PVTimestampFieldBuilder = FieldCreator->createFieldBuilder();
   PVTimestampFieldBuilder->add("secondsPastEpoch", epics::pvData::pvLong);
   PVTimestampFieldBuilder->add("nanoseconds", epics::pvData::pvInt);
   auto TimestampStructure = PVTimestampFieldBuilder->createStructure();
 
+  auto PVAlarmFieldBuilder = FieldCreator->createFieldBuilder();
+  PVAlarmFieldBuilder->add("message", epics::pvData::pvString);
+  auto AlarmStructure = PVAlarmFieldBuilder->createStructure();
+
   PVFieldBuilder->add("value", epics::pvData::pvDouble);
   PVFieldBuilder->add("timeStamp", TimestampStructure);
+  PVFieldBuilder->add("alarm", AlarmStructure);
+
   auto Structure = PVFieldBuilder->createStructure();
   auto FakePVStructure = PVDataCreator->createPVStructure(Structure);
   epics::pvData::PVDoublePtr FakePVDouble =
@@ -62,6 +68,14 @@ EpicsClientRandom::createFakePVStructure(double Value) const {
           "nanoseconds");
   TimestampNanoseconds->put(
       static_cast<int32_t>(currentTimestampNanosecondsComponent));
+
+  // Populate alarm
+  auto AlarmField =
+      FakePVStructure->getSubField<epics::pvData::PVStructure>("alarm");
+  auto AlarmMessage =
+      AlarmField->getSubField<epics::pvData::PVScalarValue<std::string>>(
+          "message");
+  AlarmMessage->put("NO_ALARM");
 
   return FakePVStructure;
 }

@@ -20,6 +20,7 @@ set(tests_SRC
     ConsumerTests.cpp
     MockMessage.h
     ConvertTDCTest.cpp
+    f142DataFromPVStructTests.cpp
     UnitTests.cpp)
 
 add_executable(tests ${tests_SRC})

@@ -72,6 +72,20 @@ public:
                                            const std::vector<char> *,
                                            const std::vector<char> *, void *));
   MOCK_METHOD1(flush, RdKafka::ErrorCode(int));
+  MOCK_METHOD1(controllerid, int32_t(int));
+  MOCK_METHOD1(fatal_error, RdKafka::ErrorCode(std::string &));
+  MOCK_METHOD5(oauthbearer_set_token,
+               RdKafka::ErrorCode(const std::string &, int64_t,
+                                  const std::string &,
+                                  const std::list<std::basic_string<char>> &,
+                                  std::string &));
+  MOCK_METHOD1(oauthbearer_set_token_failure,
+               RdKafka::ErrorCode(const std::string &));
+  MOCK_METHOD10(produce,
+                RdKafka::ErrorCode(std::string, int32_t, int, void *, size_t,
+                                   const void *, size_t, int64_t,
+                                   RdKafka::Headers *, void *));
+  MOCK_METHOD1(purge, RdKafka::ErrorCode(int));
 };
 
 class FakeTopic : public RdKafka::Topic {

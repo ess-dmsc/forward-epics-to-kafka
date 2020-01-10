@@ -28,4 +28,7 @@ public:
   MOCK_CONST_METHOD0(msg_opaque, void *());
   MOCK_CONST_METHOD0(latency, int64_t());
   MOCK_METHOD0(c_ptr, rd_kafka_message_s *());
+  MOCK_CONST_METHOD0(status, RdKafka::Message::Status());
+  MOCK_METHOD0(headers, RdKafka::Headers *());
+  MOCK_METHOD1(headers, RdKafka::Headers *(RdKafka::ErrorCode *));
 };
