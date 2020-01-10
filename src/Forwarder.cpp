@@ -7,11 +7,6 @@
 //
 // Screaming Udder!                              https://esss.se
 
-// solve issue with multiple winsock include
-#ifdef _MSC_VER
-#include <WinSock2.h>
-#include <windows.h>
-#endif
 #include "CommandHandler.h"
 #include "Converter.h"
 #include "EpicsClient/EpicsClientInterface.h"
@@ -166,7 +161,7 @@ void Forwarder::forward_epics_to_kafka() {
   using MILLISECONDS = std::chrono::milliseconds;
   auto Dt = MILLISECONDS(main_opt.MainSettings.MainPollInterval);
   auto TimeSinceLastPoll = STEADY_CLOCK::now();
-  auto time_since_last_status = STEADY_CLOCK::now() - MILLISECONDS(4000);
+  auto TimeSinceLastStatus = STEADY_CLOCK::now() - MILLISECONDS(4000);
   ConfigCB config_cb(*this);
   {
     std::lock_guard<std::mutex> lock(conversion_workers_mx);
@@ -184,34 +179,34 @@ void Forwarder::forward_epics_to_kafka() {
   }
 
   using namespace std::chrono;
-  std::atomic<MILLISECONDS> iteration_execution_duration(0ms);
-  MetricsTimer MetricsTimerInstance(MILLISECONDS(200), main_opt, iteration_execution_duration, KafkaInstanceSet);
+  std::atomic<MILLISECONDS> IterationExecutionDuration(0ms);
+  MetricsTimer MetricsTimerInstance(MILLISECONDS(200), main_opt, IterationExecutionDuration, KafkaInstanceSet);
 
   MetricsTimerInstance.start();
 
   while (ForwardingRunFlag.load() == ForwardingRunState::RUN) {
-    auto time_at_start_of_loop = STEADY_CLOCK::now();
-    if (time_at_start_of_loop - TimeSinceLastPoll > MILLISECONDS(2000)) {
+    auto TimeAtStartOfLoop = STEADY_CLOCK::now();
+    if (TimeAtStartOfLoop - TimeSinceLastPoll > MILLISECONDS(2000)) {
       if (config_listener) {
         config_listener->poll(config_cb);
       }
       streams.checkStreamStatus();
-      TimeSinceLastPoll = time_at_start_of_loop;
+      TimeSinceLastPoll = TimeAtStartOfLoop;
     }
     KafkaInstanceSet->poll();
 
     auto time_after_iteration_execution = STEADY_CLOCK::now();
-    iteration_execution_duration = std::chrono::duration_cast<MILLISECONDS>(time_after_iteration_execution - time_at_start_of_loop);
-    if (time_after_iteration_execution - time_since_last_status > MILLISECONDS(3000)) {
+      IterationExecutionDuration = std::chrono::duration_cast<MILLISECONDS>(time_after_iteration_execution - TimeAtStartOfLoop);
+    if (time_after_iteration_execution - TimeSinceLastStatus > MILLISECONDS(3000)) {
       if (status_producer_topic) {
         report_status();
       }
-      time_since_last_status = time_after_iteration_execution;
+        TimeSinceLastStatus = time_after_iteration_execution;
     }
-    if (iteration_execution_duration.load() >= Dt) {
-      Logger->error("slow main loop: {}", iteration_execution_duration.load().count());
+    if (IterationExecutionDuration.load() >= Dt) {
+      Logger->error("slow main loop: {}", IterationExecutionDuration.load().count());
     } else {
-      std::this_thread::sleep_for(Dt - iteration_execution_duration.load());
+      std::this_thread::sleep_for(Dt - IterationExecutionDuration.load());
     }
   }
   if (isStopDueToSignal(ForwardingRunFlag.load())) {
