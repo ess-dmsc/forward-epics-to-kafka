@@ -63,4 +63,22 @@ public:
                RdKafka::Conf::ConfResult(const std::string &,
                                          RdKafka::ConsumeCb *, std::string &));
   MOCK_METHOD0(dump, std::list<std::string> *());
+
+  MOCK_METHOD3(set,
+               RdKafka::Conf::ConfResult(const std::string &,
+                                         RdKafka::OAuthBearerTokenRefreshCb *,
+                                         std::string &));
+  MOCK_METHOD3(set, RdKafka::Conf::ConfResult(const std::string &,
+                                              RdKafka::SslCertificateVerifyCb *,
+                                              std::string &));
+  MOCK_METHOD5(set_ssl_cert,
+               RdKafka::Conf::ConfResult(RdKafka::CertificateType,
+                                         RdKafka::CertificateEncoding,
+                                         const void *, size_t, std::string &));
+  MOCK_CONST_METHOD1(
+      get, RdKafka::Conf::ConfResult(RdKafka::OAuthBearerTokenRefreshCb *&));
+  MOCK_CONST_METHOD1(
+      get, RdKafka::Conf::ConfResult(RdKafka::SslCertificateVerifyCb *&));
+  MOCK_METHOD0(c_ptr_global, rd_kafka_conf_s *());
+  MOCK_METHOD0(c_ptr_topic, rd_kafka_topic_conf_s *());
 };

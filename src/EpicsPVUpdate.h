@@ -23,5 +23,7 @@ struct EpicsPVUpdate {
   ~EpicsPVUpdate() = default;
   ::epics::pvData::PVStructure::shared_pointer epics_pvstr;
   std::string channel;
+  /// True if the alarm message changed from the previous cached update
+  bool AlarmStatusChanged = false;
 };
 } // namespace FlatBufs
