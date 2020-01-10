@@ -15,10 +15,10 @@
 #include <windows.h>
 #endif
 
-#include "logger.h"
-#include "MainOpt.h"
-#include "Kafka.h"
 #include "Forwarder.h"
+#include "Kafka.h"
+#include "MainOpt.h"
+#include "logger.h"
 #include <asio.hpp>
 #include <atomic>
 #include <chrono>
@@ -35,8 +35,15 @@ using CallbackFunction = std::function<void()>;
 /// execute them at a set interval
 class MetricsTimer {
 public:
-  explicit MetricsTimer(std::chrono::milliseconds Interval, MainOpt &ApplicationMainOptions, std::atomic<std::chrono::milliseconds> &MainLoopIterationExecutionDuration, std::shared_ptr<InstanceSet> &MainLoopKafkaInstanceSet)
-      : IO(), Period(Interval), AsioTimer(IO, Period), Running(false), MainOptions(ApplicationMainOptions), IterationExecutionDuration(MainLoopIterationExecutionDuration), KafkaInstanceSet(MainLoopKafkaInstanceSet) {}
+  explicit MetricsTimer(std::chrono::milliseconds Interval,
+                        MainOpt &ApplicationMainOptions,
+                        std::atomic<std::chrono::milliseconds>
+                            &MainLoopIterationExecutionDuration,
+                        std::shared_ptr<InstanceSet> &MainLoopKafkaInstanceSet)
+      : IO(), Period(Interval), AsioTimer(IO, Period), Running(false),
+        MainOptions(ApplicationMainOptions),
+        IterationExecutionDuration(MainLoopIterationExecutionDuration),
+        KafkaInstanceSet(MainLoopKafkaInstanceSet) {}
 
   /// Starts the timer thread with a call to the callbacks
   void start();
@@ -61,8 +68,6 @@ private:
   std::mutex converters_mutex;
   std::atomic<std::chrono::milliseconds> &IterationExecutionDuration;
   std::shared_ptr<InstanceSet> KafkaInstanceSet;
-
-
 };
 
 } // namespace Forwarder
