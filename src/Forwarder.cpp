@@ -36,7 +36,6 @@ std::vector<char> getHostname() {
 
 #endif
 
-#include "CURLReporter.h"
 #include "schemas/f142/f142.cpp"
 #include "schemas/tdc_time/TdcTime.h"
 #include "MetricsTimer.h"
@@ -166,7 +165,7 @@ void Forwarder::forward_epics_to_kafka() {
   using STEADY_CLOCK = std::chrono::steady_clock;
   using MILLISECONDS = std::chrono::milliseconds;
   auto Dt = MILLISECONDS(main_opt.MainSettings.MainPollInterval);
-  auto time_since_last_poll = STEADY_CLOCK::now();
+  auto TimeSinceLastPoll = STEADY_CLOCK::now();
   auto time_since_last_status = STEADY_CLOCK::now() - MILLISECONDS(4000);
   ConfigCB config_cb(*this);
   {
@@ -184,35 +183,35 @@ void Forwarder::forward_epics_to_kafka() {
     GenerateFakePVUpdateTimer->start();
   }
 
+  using namespace std::chrono;
+  std::atomic<MILLISECONDS> iteration_execution_duration(0ms);
+  MetricsTimer MetricsTimerInstance(MILLISECONDS(200), main_opt, iteration_execution_duration, KafkaInstanceSet);
+
+  MetricsTimerInstance.start();
+
   while (ForwardingRunFlag.load() == ForwardingRunState::RUN) {
-    auto do_stats = false;
-    auto current_time = STEADY_CLOCK::now();
-    if (current_time - time_since_last_poll > MILLISECONDS(2000)) {
+    auto time_at_start_of_loop = STEADY_CLOCK::now();
+    if (time_at_start_of_loop - TimeSinceLastPoll > MILLISECONDS(2000)) {
       if (config_listener) {
         config_listener->poll(config_cb);
       }
       streams.checkStreamStatus();
-      time_since_last_poll = current_time;
-      do_stats = true;
+      TimeSinceLastPoll = time_at_start_of_loop;
     }
     KafkaInstanceSet->poll();
 
-    auto t2 = STEADY_CLOCK::now();
-    auto dt = std::chrono::duration_cast<MILLISECONDS>(t2 - current_time);
-    if (t2 - time_since_last_status > MILLISECONDS(3000)) {
+    auto time_after_iteration_execution = STEADY_CLOCK::now();
+    iteration_execution_duration = std::chrono::duration_cast<MILLISECONDS>(time_after_iteration_execution - time_at_start_of_loop);
+    if (time_after_iteration_execution - time_since_last_status > MILLISECONDS(3000)) {
       if (status_producer_topic) {
         report_status();
       }
-      time_since_last_status = t2;
+      time_since_last_status = time_after_iteration_execution;
     }
-    if (do_stats) {
-      KafkaInstanceSet->logStats();
-      MetricsTimer::report_stats(dt.count());
-    }
-    if (dt >= Dt) {
-      Logger->error("slow main loop: {}", dt.count());
+    if (iteration_execution_duration.load() >= Dt) {
+      Logger->error("slow main loop: {}", iteration_execution_duration.load().count());
     } else {
-      std::this_thread::sleep_for(Dt - dt);
+      std::this_thread::sleep_for(Dt - iteration_execution_duration.load());
     }
   }
   if (isStopDueToSignal(ForwardingRunFlag.load())) {
@@ -229,6 +228,8 @@ void Forwarder::forward_epics_to_kafka() {
   if (GenerateFakePVUpdateTimer != nullptr) {
     GenerateFakePVUpdateTimer->waitForStop();
   }
+
+  MetricsTimerInstance.waitForStop();
 
   Logger->info("ForwardingStatus::STOPPED");
   forwarding_status.store(ForwardingStatus::STOPPED);

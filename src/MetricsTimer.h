@@ -28,11 +28,8 @@ using CallbackFunction = std::function<void()>;
 /// execute them at a set interval
 class MetricsTimer {
 public:
-  explicit MetricsTimer(std::chrono::milliseconds Interval, MainOpt &main_opt)
-      : IO(), Period(Interval), AsioTimer(IO, Period), Running(false), main_opt(main_opt) {}
-
-  /// Perform status reports
-  void collectMetrics();
+  explicit MetricsTimer(std::chrono::milliseconds Interval, MainOpt &ApplicationMainOptions, std::atomic<std::chrono::milliseconds> &MainLoopIterationExecutionDuration, std::shared_ptr<InstanceSet> &MainLoopKafkaInstanceSet)
+      : IO(), Period(Interval), AsioTimer(IO, Period), Running(false), MainOptions(ApplicationMainOptions), IterationExecutionDuration(MainLoopIterationExecutionDuration) {KafkaInstanceSet = MainLoopKafkaInstanceSet;}
 
   /// Starts the timer thread with a call to the callbacks
   void start();
@@ -40,9 +37,9 @@ public:
   /// Blocks until the timer thread has stopped
   void waitForStop();
 
-  static std::unique_lock<std::mutex> get_lock_converters();
+  std::unique_lock<std::mutex> get_lock_converters();
 
-    static void report_stats(int dt);
+  void reportStats();
 
 private:
   void run() { IO.run(); }
@@ -50,13 +47,13 @@ private:
   std::chrono::milliseconds Period;
   asio::steady_timer AsioTimer;
   std::atomic_bool Running;
-  std::mutex CallbacksMutex;
   std::thread TimerThread;
-  static std::unique_ptr<InstanceSet> KafkaInstanceSet;
-  static MainOpt &main_opt;
-  static SharedLogger Logger = getLogger();
-static std::map<std::string, std::weak_ptr<Converter>> converters;
-  static std::mutex converters_mutex;
+  std::shared_ptr<InstanceSet> KafkaInstanceSet;
+  MainOpt &MainOptions;
+  SharedLogger Logger = getLogger();
+  std::map<std::string, std::weak_ptr<Converter>> converters;
+  std::mutex converters_mutex;
+  std::atomic<std::chrono::milliseconds> &IterationExecutionDuration;
 
 };
 

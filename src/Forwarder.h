@@ -70,7 +70,7 @@ private:
   void createPVUpdateTimerIfRequired();
   template <typename T>
   std::shared_ptr<Stream> addStream(ChannelInfo &ChannelInfo);
-  std::unique_ptr<InstanceSet> KafkaInstanceSet;
+  std::shared_ptr<InstanceSet> KafkaInstanceSet;
   std::unique_ptr<Config::Listener> config_listener;
   std::unique_ptr<Timer> PVUpdateTimer;
   std::unique_ptr<Timer> GenerateFakePVUpdateTimer;
@@ -89,6 +89,7 @@ private:
   void pushConverterToStream(ConverterSettings const &ConverterInfo,
                              std::shared_ptr<Stream> &Stream);
   SharedLogger Logger = getLogger();
+
 };
 
 extern std::atomic<uint64_t> g__total_msgs_to_kafka;
