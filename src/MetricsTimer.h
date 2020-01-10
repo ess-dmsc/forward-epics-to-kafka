@@ -8,6 +8,13 @@
 // Screaming Udder!                              https://esss.se
 
 #pragma once
+
+// solve issue with multiple winsock include
+#ifdef _MSC_VER
+#include <WinSock2.h>
+#include <windows.h>
+#endif
+
 #include "logger.h"
 #include "MainOpt.h"
 #include "Kafka.h"
