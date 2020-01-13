@@ -191,15 +191,15 @@ void Forwarder::forward_epics_to_kafka() {
     }
     KafkaInstanceSet->poll();
 
-    auto time_after_iteration_execution = STEADY_CLOCK::now();
+    auto TimeAfterIterationExecution = STEADY_CLOCK::now();
     IterationExecutionDuration = std::chrono::duration_cast<MILLISECONDS>(
-        time_after_iteration_execution - TimeAtStartOfLoop);
-    if (time_after_iteration_execution - TimeSinceLastStatus >
+        TimeAfterIterationExecution - TimeAtStartOfLoop);
+    if (TimeAfterIterationExecution - TimeSinceLastStatus >
         MILLISECONDS(3000)) {
       if (status_producer_topic) {
         report_status();
       }
-      TimeSinceLastStatus = time_after_iteration_execution;
+      TimeSinceLastStatus = TimeAfterIterationExecution;
     }
     if (IterationExecutionDuration.load() >= Dt) {
       Logger->error("slow main loop: {}",
