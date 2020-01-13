@@ -7,6 +7,9 @@
 //
 // Screaming Udder!                              https://esss.se
 
+#ifdef _MSC_VER
+#include <windows.h>
+#endif
 #include "CommandHandler.h"
 #include "Converter.h"
 #include "EpicsClient/EpicsClientInterface.h"
