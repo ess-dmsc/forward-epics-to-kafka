@@ -7,18 +7,18 @@
 //
 // Screaming Udder!                              https://esss.se
 
-// solve issue with multiple winsock include
-#ifdef _MSC_VER
-#include <WinSock2.h>
-#include <windows.h>
-#endif
-
 #include "CommandHandler.h"
 #include "MetricsTimer.h"
 #include "CURLReporter.h"
 #include "Converter.h"
 
-
+#ifdef _MSC_VER
+std::vector<char> getHostname() {
+  std::vector<char> Hostname;
+  return Hostname;
+}
+#else
+#include <unistd.h>
 std::vector<char> getHostname() {
   std::vector<char> Hostname;
   Hostname.resize(256);
@@ -29,6 +29,7 @@ std::vector<char> getHostname() {
   }
   return Hostname;
 }
+#endif
 
 namespace Forwarder {
 

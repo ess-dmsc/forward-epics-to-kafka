@@ -21,16 +21,6 @@
 #include <memory>
 #include <nlohmann/json.hpp>
 #include <sys/types.h>
-#ifdef _MSC_VER
-std::vector<char> getHostname() {
-  std::vector<char> Hostname;
-  return Hostname;
-}
-#else
-#include <unistd.h>
-
-#endif
-
 #include "schemas/f142/f142.cpp"
 #include "schemas/tdc_time/TdcTime.h"
 #include "MetricsTimer.h"
