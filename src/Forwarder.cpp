@@ -8,6 +8,7 @@
 // Screaming Udder!                              https://esss.se
 
 #ifdef _MSC_VER
+#include <WinSock2.h>
 #include <windows.h>
 #endif
 #include "CommandHandler.h"
