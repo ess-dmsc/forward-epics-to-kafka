@@ -6,7 +6,6 @@ from confluent_kafka import Producer
 import docker
 from time import sleep
 from subprocess import Popen
-import signal
 import warnings
 
 

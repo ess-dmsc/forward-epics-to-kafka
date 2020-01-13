@@ -7,19 +7,17 @@
 //
 // Screaming Udder!                              https://esss.se
 
+#include "f142.h"
 #include "../../EpicsPVUpdate.h"
-#include "../../RangeSet.h"
-#include "../../SchemaRegistry.h"
-#include "../../logger.h"
+#include "DataFromPVStruct.h"
 #include <atomic>
 #include <f142_logdata_generated.h>
-#include <mutex>
 #include <pv/nt.h>
 #include <pv/ntndarray.h>
 #include <pv/ntndarrayAttribute.h>
 #include <pv/ntutils.h>
+#include <pv/pvData.h>
 #include <pv/pvEnumerated.h>
-#include <set>
 
 namespace FlatBufs {
 namespace f142 {
@@ -28,11 +26,6 @@ typedef struct {
   Value Type;
   flatbuffers::Offset<void> Offset;
 } Value_t;
-
-struct Statistics {
-  uint64_t err_timestamp_not_available = 0;
-  uint64_t err_not_implemented_yet = 0;
-};
 
 namespace PVStructureToFlatBufferN {
 
@@ -355,62 +348,55 @@ Value_t makeValue(flatbuffers::FlatBufferBuilder &Builder,
   return {Value::NONE, 0};
 }
 
-class Converter : public FlatBufferCreator {
-public:
-  Converter() = default;
+std::unique_ptr<FlatBufs::FlatbufferMessage>
+Converter::create(EpicsPVUpdate const &PVUpdate) {
+  auto &PVStructure = PVUpdate.epics_pvstr;
+  auto FlatbufferMessage = std::make_unique<FlatBufs::FlatbufferMessage>();
 
-  ~Converter() override { Logger->error("~Converter"); }
+  auto Builder = FlatbufferMessage->builder.get();
+  // this is the field type ID string: up.pvstr->getStructure()->getID()
+  auto PVName = Builder->CreateString(PVUpdate.channel);
+  auto Value = makeValue(*Builder, PVStructure, true, Stats);
 
-  std::unique_ptr<FlatBufs::FlatbufferMessage>
-  create(EpicsPVUpdate const &PVUpdate) override {
-    auto &PVStructure = PVUpdate.epics_pvstr;
-    auto FlatbufferMessage = std::make_unique<FlatBufs::FlatbufferMessage>();
+  LogDataBuilder LogDataBuilder(*Builder);
+  LogDataBuilder.add_source_name(PVName);
+  LogDataBuilder.add_value_type(Value.Type);
+  LogDataBuilder.add_value(Value.Offset);
+  if (PVUpdate.AlarmStatusChanged) {
+    // The default values of the alarm fields in the schema indicate that there
+    // was no change, so we only need to populate the fields if there is a
+    // change
+    auto AlarmStatusInfo = getAlarmStatus(PVStructure);
+    LogDataBuilder.add_status(AlarmStatusInfo);
 
-    auto Builder = FlatbufferMessage->builder.get();
-    // this is the field type ID string: up.pvstr->getStructure()->getID()
-    auto PVName = Builder->CreateString(PVUpdate.channel);
-    auto Value = makeValue(*Builder, PVStructure, true, Stats);
-
-    LogDataBuilder LogDataBuilder(*Builder);
-    LogDataBuilder.add_source_name(PVName);
-    LogDataBuilder.add_value_type(Value.Type);
-    LogDataBuilder.add_value(Value.Offset);
-
-    // Use the PV name as the message key so that all messages for the same PV
-    // end up in the same Kafka partition and thus have publish order maintained
-    FlatbufferMessage->Key = PVUpdate.channel;
-
-    if (auto PVTimeStamp =
-            PVStructure->getSubField<epics::pvData::PVStructure>("timeStamp")) {
-      uint64_t TimeStamp = static_cast<uint64_t>(
-          PVTimeStamp
-              ->getSubField<epics::pvData::PVScalarValue<int64_t>>(
-                  "secondsPastEpoch")
-              ->get());
-      TimeStamp *= 1000000000;
-      TimeStamp += PVTimeStamp
-                       ->getSubField<epics::pvData::PVScalarValue<int32_t>>(
-                           "nanoseconds")
-                       ->get();
-      LogDataBuilder.add_timestamp(TimeStamp);
-    } else {
-      ++Stats.err_timestamp_not_available;
-    }
-
-    FinishLogDataBuffer(*Builder, LogDataBuilder.Finish());
-    return FlatbufferMessage;
+    auto AlarmSeverityInfo = getAlarmSeverity(PVStructure);
+    LogDataBuilder.add_severity(AlarmSeverityInfo);
   }
 
-  std::map<std::string, double> getStats() override {
-    return {{"ranges_n", seqs.size()}};
+  // Use the PV name as the message key so that all messages for the same PV
+  // end up in the same Kafka partition and thus have publish order maintained
+  FlatbufferMessage->Key = PVUpdate.channel;
+
+  if (auto PVTimeStamp =
+          PVStructure->getSubField<epics::pvData::PVStructure>("timeStamp")) {
+    uint64_t TimeStamp = static_cast<uint64_t>(
+        PVTimeStamp
+            ->getSubField<epics::pvData::PVScalarValue<int64_t>>(
+                "secondsPastEpoch")
+            ->get());
+    TimeStamp *= 1000000000;
+    TimeStamp +=
+        PVTimeStamp
+            ->getSubField<epics::pvData::PVScalarValue<int32_t>>("nanoseconds")
+            ->get();
+    LogDataBuilder.add_timestamp(TimeStamp);
+  } else {
+    ++Stats.err_timestamp_not_available;
   }
 
-  RangeSet<uint64_t> seqs;
-  Statistics Stats;
-
-private:
-  SharedLogger Logger = getLogger();
-};
+  FinishLogDataBuffer(*Builder, LogDataBuilder.Finish());
+  return FlatbufferMessage;
+}
 
 class Info : public SchemaInfo {
 public:

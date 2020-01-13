@@ -29,7 +29,8 @@ struct BrokerSettings {
       {"socket.timeout.ms", "2000"},
       {"message.max.bytes", "24117248"}, // 23 MiB
       {"fetch.message.max.bytes", "24117248"},
-      {"receive.message.max.bytes", "24117248"},
+      {"fetch.max.bytes", "52428800"},
+      {"receive.message.max.bytes", "100000000"},
       {"queue.buffering.max.messages", "100000"},
       {"queue.buffering.max.ms", "50"},
       {"queue.buffering.max.kbytes", "819200"}, // 781.25 MiB

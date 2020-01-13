@@ -71,6 +71,7 @@ public:
   void setProducer(std::unique_ptr<KafkaW::ProducerTopic> Producer) override;
 
 private:
+  bool alarmMessageChanged(std::shared_ptr<FlatBufs::EpicsPVUpdate> &Update);
   std::unique_ptr<EpicsClientMonitorImpl> Impl;
   std::shared_ptr<
       moodycamel::ConcurrentQueue<std::shared_ptr<FlatBufs::EpicsPVUpdate>>>
