@@ -46,7 +46,7 @@ public:
 
   std::unique_lock<std::mutex> get_lock_converters();
 
-  void reportStats();
+  void reportMetrics();
 
 private:
   void run() { IO.run(); }

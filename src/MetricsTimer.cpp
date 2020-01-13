@@ -37,7 +37,7 @@ void MetricsTimer::start() {
   Logger->trace("Starting the MetricsTimer");
   Running = true;
   AsioTimer.async_wait(
-      [this](std::error_code const & /*error*/) { this->reportStats(); });
+      [this](std::error_code const & /*error*/) { this->reportMetrics(); });
   TimerThread = std::thread(&MetricsTimer::run, this);
 }
 
@@ -52,7 +52,7 @@ std::unique_lock<std::mutex> MetricsTimer::get_lock_converters() {
   return std::unique_lock<std::mutex>(converters_mutex);
 }
 
-void MetricsTimer::reportStats() {
+void MetricsTimer::reportMetrics() {
   KafkaInstanceSet->logStats();
   auto m1 = g__total_msgs_to_kafka.load();
   auto m2 = m1 / 1000;
