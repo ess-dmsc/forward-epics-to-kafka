@@ -7,6 +7,10 @@
 //
 // Screaming Udder!                              https://esss.se
 
+#ifdef _MSC_VER
+#include <WinSock2.h>
+#include <windows.h>
+#endif
 #include "CommandHandler.h"
 #include "Converter.h"
 #include "EpicsClient/EpicsClientInterface.h"
@@ -14,26 +18,16 @@
 #include "EpicsClient/EpicsClientRandom.h"
 #include "Forwarder.h"
 #include "KafkaOutput.h"
+#include "MetricsTimer.h"
 #include "Stream.h"
 #include "Timer.h"
 #include "logger.h"
+#include "schemas/f142/f142.cpp"
+#include "schemas/tdc_time/TdcTime.h"
 #include <algorithm>
 #include <memory>
 #include <nlohmann/json.hpp>
 #include <sys/types.h>
-#ifdef _MSC_VER
-std::vector<char> getHostname() {
-  std::vector<char> Hostname;
-  return Hostname;
-}
-#else
-#include <unistd.h>
-
-#endif
-
-#include "schemas/f142/f142.cpp"
-#include "schemas/tdc_time/TdcTime.h"
-#include "MetricsTimer.h"
 
 namespace {
 void registerSchemas() {
@@ -180,7 +174,9 @@ void Forwarder::forward_epics_to_kafka() {
 
   using namespace std::chrono;
   std::atomic<MILLISECONDS> IterationExecutionDuration(0ms);
-  MetricsTimer MetricsTimerInstance(MILLISECONDS(200), main_opt, IterationExecutionDuration, KafkaInstanceSet);
+  MetricsTimer MetricsTimerInstance(MILLISECONDS(200), main_opt,
+                                    IterationExecutionDuration,
+                                    KafkaInstanceSet);
 
   MetricsTimerInstance.start();
 
@@ -196,15 +192,18 @@ void Forwarder::forward_epics_to_kafka() {
     KafkaInstanceSet->poll();
 
     auto time_after_iteration_execution = STEADY_CLOCK::now();
-      IterationExecutionDuration = std::chrono::duration_cast<MILLISECONDS>(time_after_iteration_execution - TimeAtStartOfLoop);
-    if (time_after_iteration_execution - TimeSinceLastStatus > MILLISECONDS(3000)) {
+    IterationExecutionDuration = std::chrono::duration_cast<MILLISECONDS>(
+        time_after_iteration_execution - TimeAtStartOfLoop);
+    if (time_after_iteration_execution - TimeSinceLastStatus >
+        MILLISECONDS(3000)) {
       if (status_producer_topic) {
         report_status();
       }
-        TimeSinceLastStatus = time_after_iteration_execution;
+      TimeSinceLastStatus = time_after_iteration_execution;
     }
     if (IterationExecutionDuration.load() >= Dt) {
-      Logger->error("slow main loop: {}", IterationExecutionDuration.load().count());
+      Logger->error("slow main loop: {}",
+                    IterationExecutionDuration.load().count());
     } else {
       std::this_thread::sleep_for(Dt - IterationExecutionDuration.load());
     }
@@ -256,7 +255,7 @@ void Forwarder::report_status() {
                                  StatusString.size());
 }
 
-    URI Forwarder::createTopicURI(ConverterSettings const &ConverterInfo) const {
+URI Forwarder::createTopicURI(ConverterSettings const &ConverterInfo) const {
   URI BrokerURI;
   if (!main_opt.MainSettings.Brokers.empty()) {
     BrokerURI = main_opt.MainSettings.Brokers[0];

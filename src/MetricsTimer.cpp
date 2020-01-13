@@ -7,18 +7,18 @@
 //
 // Screaming Udder!                              https://esss.se
 
-// solve issue with multiple winsock include
-#ifdef _MSC_VER
-#include <WinSock2.h>
-#include <windows.h>
-#endif
-
-#include "CommandHandler.h"
 #include "MetricsTimer.h"
 #include "CURLReporter.h"
+#include "CommandHandler.h"
 #include "Converter.h"
 
-
+#ifdef _MSC_VER
+std::vector<char> getHostname() {
+  std::vector<char> Hostname;
+  return Hostname;
+}
+#else
+#include <unistd.h>
 std::vector<char> getHostname() {
   std::vector<char> Hostname;
   Hostname.resize(256);
@@ -29,9 +29,9 @@ std::vector<char> getHostname() {
   }
   return Hostname;
 }
+#endif
 
 namespace Forwarder {
-
 
 void MetricsTimer::start() {
   Logger->trace("Starting the MetricsTimer");
@@ -63,24 +63,23 @@ void MetricsTimer::reportStats() {
   auto b3 = b2 / 1024;
   b2 %= 1024;
 
-  Logger->info("dt: {:4}  m: {:4}.{:03}  b: {:3}.{:03}.{:03}", IterationExecutionDuration.load().count(), m2, m1, b3,
-                          b2, b1);
+  Logger->info("dt: {:4}  m: {:4}.{:03}  b: {:3}.{:03}.{:03}",
+               IterationExecutionDuration.load().count(), m2, m1, b3, b2, b1);
   if (CURLReporter::HaveCURL && !MainOptions.InfluxURI.empty()) {
     std::vector<char> Hostname = getHostname();
     int i1 = 0;
     fmt::v5::memory_buffer StatsBuffer;
     for (auto &s : KafkaInstanceSet->getStatsForAllProducers()) {
       format_to(StatsBuffer, "forward-epics-to-kafka,hostname={},set={}",
-                     Hostname.data(), i1);
+                Hostname.data(), i1);
       format_to(StatsBuffer, " produced={}", s.produced);
       format_to(StatsBuffer, ",produce_fail={}", s.produce_fail);
       format_to(StatsBuffer, ",local_queue_full={}", s.local_queue_full);
       format_to(StatsBuffer, ",produce_cb={}", s.produce_cb);
-      format_to(StatsBuffer, ",produce_cb_fail={}", s.produce_cb_fail);//
+      format_to(StatsBuffer, ",produce_cb_fail={}", s.produce_cb_fail); //
       format_to(StatsBuffer, ",poll_served={}", s.poll_served);
       format_to(StatsBuffer, ",msg_too_large={}", s.msg_too_large);
-      format_to(StatsBuffer, ",produced_bytes={}",
-                     double(s.produced_bytes));
+      format_to(StatsBuffer, ",produced_bytes={}", double(s.produced_bytes));
       format_to(StatsBuffer, ",outq={}", s.out_queue);
       format_to(StatsBuffer, "\n");
       ++i1;
@@ -92,7 +91,7 @@ void MetricsTimer::reportStats() {
       for (auto &c : converters) {
         auto stats = c.second.lock()->stats();
         format_to(StatsBuffer, "forward-epics-to-kafka,hostname={},set={}",
-                       Hostname.data(), i1);
+                  Hostname.data(), i1);
         int i2 = 0;
         for (auto x : stats) {
           if (i2 > 0) {
