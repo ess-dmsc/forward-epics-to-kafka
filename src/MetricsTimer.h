@@ -8,7 +8,6 @@
 // Screaming Udder!                              https://esss.se
 
 #pragma once
-#include "Converter.h"
 #include "Kafka.h"
 #include "MainOpt.h"
 #include "logger.h"
@@ -20,9 +19,9 @@
 #include <thread>
 #include <vector>
 
-class Converter;
-
 namespace Forwarder {
+
+class Converter;
 
 using CallbackFunction = std::function<void()>;
 
