@@ -175,7 +175,6 @@ void Forwarder::forward_epics_to_kafka() {
   using namespace std::chrono;
   std::atomic<MILLISECONDS> IterationExecutionDuration(0ms);
   MetricsTimer MetricsTimerInstance(MILLISECONDS(200), main_opt,
-                                    IterationExecutionDuration,
                                     KafkaInstanceSet);
 
   MetricsTimerInstance.start();

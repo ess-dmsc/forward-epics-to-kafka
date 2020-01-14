@@ -31,12 +31,9 @@ class MetricsTimer {
 public:
   explicit MetricsTimer(std::chrono::milliseconds Interval,
                         MainOpt &ApplicationMainOptions,
-                        std::atomic<std::chrono::milliseconds>
-                            &MainLoopIterationExecutionDuration,
                         std::shared_ptr<InstanceSet> &MainLoopKafkaInstanceSet)
       : IO(), Period(Interval), AsioTimer(IO, Period), Running(false),
         MainOptions(ApplicationMainOptions),
-        IterationExecutionDuration(MainLoopIterationExecutionDuration),
         KafkaInstanceSet(MainLoopKafkaInstanceSet) {}
 
   /// Starts the timer thread with a call to the callbacks
@@ -60,7 +57,6 @@ private:
   SharedLogger Logger = getLogger();
   std::map<std::string, std::weak_ptr<Converter>> converters;
   std::mutex converters_mutex;
-  std::atomic<std::chrono::milliseconds> &IterationExecutionDuration;
   std::shared_ptr<InstanceSet> KafkaInstanceSet;
 };
 
