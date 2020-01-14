@@ -155,7 +155,8 @@ void Forwarder::forward_epics_to_kafka() {
   using MILLISECONDS = std::chrono::milliseconds;
   auto Dt = MILLISECONDS(main_opt.MainSettings.MainPollInterval);
   auto TimeSinceLastPoll = STEADY_CLOCK::now();
-  auto TimeSinceLastStatus = STEADY_CLOCK::now() - MILLISECONDS(4000);
+  using namespace std::chrono_literals; 
+  auto TimeSinceLastStatus = STEADY_CLOCK::now() - 4000ms;
   ConfigCB config_cb(*this);
   {
     std::lock_guard<std::mutex> lock(conversion_workers_mx);
@@ -172,16 +173,16 @@ void Forwarder::forward_epics_to_kafka() {
     GenerateFakePVUpdateTimer->start();
   }
 
-  using namespace std::chrono;
+  using namespace std::chrono_literals;
   std::atomic<MILLISECONDS> IterationExecutionDuration(0ms);
-  MetricsTimer MetricsTimerInstance(MILLISECONDS(200), main_opt,
+  MetricsTimer MetricsTimerInstance(200ms, main_opt,
                                     KafkaInstanceSet);
 
   MetricsTimerInstance.start();
 
   while (ForwardingRunFlag.load() == ForwardingRunState::RUN) {
     auto TimeAtStartOfLoop = STEADY_CLOCK::now();
-    if (TimeAtStartOfLoop - TimeSinceLastPoll > MILLISECONDS(2000)) {
+    if (TimeAtStartOfLoop - TimeSinceLastPoll > 2000ms) {
       if (config_listener) {
         config_listener->poll(config_cb);
       }
@@ -194,7 +195,7 @@ void Forwarder::forward_epics_to_kafka() {
     IterationExecutionDuration = std::chrono::duration_cast<MILLISECONDS>(
         TimeAfterIterationExecution - TimeAtStartOfLoop);
     if (TimeAfterIterationExecution - TimeSinceLastStatus >
-        MILLISECONDS(3000)) {
+        3000ms) {
       if (status_producer_topic) {
         report_status();
       }
