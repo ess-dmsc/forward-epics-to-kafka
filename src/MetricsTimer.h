@@ -36,8 +36,7 @@ public:
         MainOptions(ApplicationMainOptions),
         KafkaInstanceSet(MainLoopKafkaInstanceSet) {this->start();}
 
-  /// Starts the timer thread with a call to the callbacks
-  void start();
+
 
   /// Blocks until the timer thread has stopped
   void waitForStop();
@@ -47,6 +46,8 @@ public:
   void reportMetrics();
 
 private:
+  /// Starts the timer thread with a call to the callbacks
+  void start();
   void run() { IO.run(); }
   asio::io_context IO;
   std::chrono::milliseconds Period;
