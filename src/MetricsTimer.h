@@ -11,7 +11,6 @@
 #include "Kafka.h"
 #include "MainOpt.h"
 #include "logger.h"
-#include "Converter.h"
 #include <asio.hpp>
 #include <atomic>
 #include <chrono>
@@ -19,6 +18,8 @@
 #include <mutex>
 #include <thread>
 #include <vector>
+
+class Converter;
 
 namespace Forwarder {
 

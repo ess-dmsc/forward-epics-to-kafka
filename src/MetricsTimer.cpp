@@ -7,10 +7,10 @@
 //
 // Screaming Udder!                              https://esss.se
 
+#include "Converter.h"
 #include "MetricsTimer.h"
 #include "CURLReporter.h"
 #include "CommandHandler.h"
-#include "Converter.h"
 
 #ifdef _MSC_VER
 std::vector<char> getHostname() {
