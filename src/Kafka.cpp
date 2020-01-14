@@ -44,7 +44,7 @@ void InstanceSet::poll() {
   }
 }
 
-void InstanceSet::logStats() {
+void InstanceSet::logMetrics() {
   std::lock_guard<std::mutex> QueryProducersLock(ProducersMutex);
   for (auto const &m : ProducersByHost) {
     auto &Producer = m.second;
