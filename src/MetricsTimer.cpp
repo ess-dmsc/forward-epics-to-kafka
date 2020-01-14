@@ -109,4 +109,5 @@ void MetricsTimer::reportMetrics() {
   }
 }
 
+MetricsTimer::~MetricsTimer() { this->waitForStop(); }
 } // namespace Forwarder

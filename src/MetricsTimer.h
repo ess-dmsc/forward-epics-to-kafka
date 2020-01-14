@@ -45,6 +45,8 @@ public:
 
   void reportMetrics();
 
+  ~MetricsTimer();
+
 private:
   /// Starts the timer thread with a call to the callbacks
   void start();
