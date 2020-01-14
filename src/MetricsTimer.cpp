@@ -7,10 +7,10 @@
 //
 // Screaming Udder!                              https://esss.se
 
-#include "Converter.h"
 #include "MetricsTimer.h"
 #include "CURLReporter.h"
 #include "CommandHandler.h"
+#include "Converter.h"
 
 #ifdef _MSC_VER
 std::vector<char> getHostname() {
@@ -63,8 +63,7 @@ void MetricsTimer::reportMetrics() {
   auto b3 = b2 / 1024;
   b2 %= 1024;
 
-  Logger->info("m: {:4}.{:03}  b: {:3}.{:03}.{:03}",
-                m2, m1, b3, b2, b1);
+  Logger->info("m: {:4}.{:03}  b: {:3}.{:03}.{:03}", m2, m1, b3, b2, b1);
   if (CURLReporter::HaveCURL && !MainOptions.InfluxURI.empty()) {
     std::vector<char> Hostname = getHostname();
     int i1 = 0;

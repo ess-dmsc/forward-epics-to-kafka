@@ -155,7 +155,7 @@ void Forwarder::forward_epics_to_kafka() {
   using MILLISECONDS = std::chrono::milliseconds;
   auto Dt = MILLISECONDS(main_opt.MainSettings.MainPollInterval);
   auto TimeSinceLastPoll = STEADY_CLOCK::now();
-  using namespace std::chrono_literals; 
+  using namespace std::chrono_literals;
   auto TimeSinceLastStatus = STEADY_CLOCK::now() - 4000ms;
   ConfigCB config_cb(*this);
   {
@@ -175,8 +175,7 @@ void Forwarder::forward_epics_to_kafka() {
 
   using namespace std::chrono_literals;
   std::atomic<MILLISECONDS> IterationExecutionDuration(0ms);
-  MetricsTimer MetricsTimerInstance(200ms, main_opt,
-                                    KafkaInstanceSet);
+  MetricsTimer MetricsTimerInstance(200ms, main_opt, KafkaInstanceSet);
 
   while (ForwardingRunFlag.load() == ForwardingRunState::RUN) {
     auto TimeAtStartOfLoop = STEADY_CLOCK::now();
@@ -192,8 +191,7 @@ void Forwarder::forward_epics_to_kafka() {
     auto TimeAfterIterationExecution = STEADY_CLOCK::now();
     IterationExecutionDuration = std::chrono::duration_cast<MILLISECONDS>(
         TimeAfterIterationExecution - TimeAtStartOfLoop);
-    if (TimeAfterIterationExecution - TimeSinceLastStatus >
-        3000ms) {
+    if (TimeAfterIterationExecution - TimeSinceLastStatus > 3000ms) {
       if (status_producer_topic) {
         report_status();
       }
