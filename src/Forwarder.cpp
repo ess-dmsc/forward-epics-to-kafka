@@ -177,8 +177,6 @@ void Forwarder::forward_epics_to_kafka() {
   MetricsTimer MetricsTimerInstance(MILLISECONDS(200), main_opt,
                                     KafkaInstanceSet);
 
-  MetricsTimerInstance.start();
-
   while (ForwardingRunFlag.load() == ForwardingRunState::RUN) {
     auto TimeAtStartOfLoop = STEADY_CLOCK::now();
     if (TimeAtStartOfLoop - TimeSinceLastPoll > MILLISECONDS(2000)) {

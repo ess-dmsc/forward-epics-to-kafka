@@ -34,7 +34,7 @@ public:
                         std::shared_ptr<InstanceSet> &MainLoopKafkaInstanceSet)
       : IO(), Period(Interval), AsioTimer(IO, Period), Running(false),
         MainOptions(ApplicationMainOptions),
-        KafkaInstanceSet(MainLoopKafkaInstanceSet) {}
+        KafkaInstanceSet(MainLoopKafkaInstanceSet) {this->start();}
 
   /// Starts the timer thread with a call to the callbacks
   void start();
