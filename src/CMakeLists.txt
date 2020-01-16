@@ -105,7 +105,8 @@ set(forwarder-library_INC
     Timer.h
     URI.h
     schemas/tdc_time/TdcTime.h
-    MetricsTimer.h)
+    MetricsTimer.h
+    StatusTimer.h)
 
 set(forwarder-library_SRC
     MainOpt.cpp
