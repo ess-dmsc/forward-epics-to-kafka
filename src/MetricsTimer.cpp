@@ -38,14 +38,14 @@ void MetricsTimer::start() {
   Running = true;
   AsioTimer.async_wait(
       [this](std::error_code const & /*error*/) { this->reportMetrics(); });
-  TimerThread = std::thread(&MetricsTimer::run, this);
+  MetricsThread = std::thread(&MetricsTimer::run, this);
 }
 
 void MetricsTimer::waitForStop() {
   Logger->trace("Stopping MetricsTimer");
   Running = false;
   AsioTimer.cancel();
-  TimerThread.join();
+  MetricsThread.join();
 }
 
 std::unique_lock<std::mutex> MetricsTimer::get_lock_converters() {
