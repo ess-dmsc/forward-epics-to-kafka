@@ -23,10 +23,6 @@ namespace Forwarder {
 
 class Converter;
 
-using CallbackFunction = std::function<void()>;
-
-/// Multiple callbacks can be registered with the Timer, which will repeatedly
-/// execute them at a set interval
 class MetricsTimer {
 public:
   explicit MetricsTimer(std::chrono::milliseconds Interval,
