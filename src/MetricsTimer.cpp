@@ -54,17 +54,16 @@ std::unique_lock<std::mutex> MetricsTimer::get_lock_converters() {
 
 void MetricsTimer::reportMetrics() {
   KafkaInstanceSet->logMetrics();
-  auto MessagesModThousand = g__total_msgs_to_kafka.load();
-  auto ThousandsMessages = MessagesModThousand / 1000;
-  MessagesModThousand = MessagesModThousand % 1000;
+  auto m1 = g__total_msgs_to_kafka.load();
+  auto m2 = m1 / 1000;
+  m1 = m1 % 1000;
   uint64_t b1 = g__total_bytes_to_kafka.load();
   auto b2 = b1 / 1024;
   b1 %= 1024;
   auto b3 = b2 / 1024;
   b2 %= 1024;
 
-  Logger->info("m: {:4}.{:03}  b: {:3}.{:03}.{:03}", ThousandsMessages,
-               MessagesModThousand, b3, b2, b1);
+  Logger->info("m: {:4}.{:03}  b: {:3}.{:03}.{:03}", m2, m1, b3, b2, b1);
   if (CURLReporter::HaveCURL && !MainOptions.InfluxURI.empty()) {
     std::vector<char> Hostname = getHostname();
     int i1 = 0;
