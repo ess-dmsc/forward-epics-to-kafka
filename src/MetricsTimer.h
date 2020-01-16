@@ -44,7 +44,6 @@ public:
   ~MetricsTimer();
 
 private:
-  /// Starts the timer thread with a call to the callbacks
   void start();
   void run() { IO.run(); }
   asio::io_context IO;
