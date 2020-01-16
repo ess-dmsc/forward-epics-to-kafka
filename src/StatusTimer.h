@@ -10,6 +10,7 @@
 #pragma once
 
 #include "MainOpt.h"
+#include "Streams.h"
 #include "logger.h"
 #include <asio.hpp>
 
@@ -18,9 +19,10 @@ namespace Forwarder {
 class StatusTimer {
 public:
   explicit StatusTimer(std::chrono::milliseconds Interval,
-                       MainOpt &ApplicationMainOptions)
+                       MainOpt &ApplicationMainOptions,
+                       Streams &ApplicationStreams)
       : IO(), Period(Interval), AsioTimer(IO, Period), Running(false),
-        MainOptions(ApplicationMainOptions) {
+        MainOptions(ApplicationMainOptions), Streams(ApplicationStreams) {
     this->start();
   }
 
@@ -41,6 +43,7 @@ private:
   MainOpt &MainOptions;
   std::thread StatusThread;
   SharedLogger Logger = getLogger();
+  Streams Streams;
 };
 
 } // namespace Forwarder
