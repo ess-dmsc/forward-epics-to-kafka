@@ -9,12 +9,14 @@
 
 #pragma once
 
+#include "logger.h"
+#include <asio.hpp>
 
 namespace Forwarder {
 
 class StatusTimer {
 public:
-  explicit StatusTimer() {
+  explicit StatusTimer() : AsioTimer(nullptr) {
     // this->start();
   }
 
@@ -27,6 +29,13 @@ public:
 
 private:
   void start();
+  void run() { IO.run(); }
+  asio::io_context IO;
+  std::chrono::milliseconds Period;
+  asio::steady_timer AsioTimer;
+  std::atomic_bool Running;
+  std::thread StatusThread;
+  SharedLogger Logger = getLogger();
 };
 
-}
+} // namespace Forwarder
