@@ -9,6 +9,7 @@
 
 #pragma once
 
+#include "MainOpt.h"
 #include "logger.h"
 #include <asio.hpp>
 
@@ -16,8 +17,11 @@ namespace Forwarder {
 
 class StatusTimer {
 public:
-  explicit StatusTimer() : AsioTimer(nullptr) {
-    // this->start();
+  explicit StatusTimer(std::chrono::milliseconds Interval,
+                       MainOpt &ApplicationMainOptions)
+      : IO(), Period(Interval), AsioTimer(IO, Period), Running(false),
+        MainOptions(ApplicationMainOptions) {
+    this->start();
   }
 
   /// Blocks until the timer thread has stopped
@@ -34,6 +38,7 @@ private:
   std::chrono::milliseconds Period;
   asio::steady_timer AsioTimer;
   std::atomic_bool Running;
+  MainOpt &MainOptions;
   std::thread StatusThread;
   SharedLogger Logger = getLogger();
 };

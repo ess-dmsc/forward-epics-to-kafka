@@ -141,7 +141,7 @@ set(forwarder-library_SRC
     Timer.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/git_commit_current.cpp
     schemas/tdc_time/TdcTime.cpp
-    MetricsTimer.cpp)
+    MetricsTimer.cpp StatusTimer.cpp)
 
 add_library(forwarder-library ${forwarder-library_SRC} ${forwarder-library_INC} MetricsTimer.h MetricsTimer.cpp)
 target_compile_definitions(forwarder-library PRIVATE ${compile_defs_common})
