@@ -53,6 +53,9 @@ std::unique_lock<std::mutex> MetricsTimer::get_lock_converters() {
 }
 
 void MetricsTimer::reportMetrics() {
+  if (!Running) {
+    return;
+  }
   KafkaInstanceSet->logMetrics();
   auto m1 = g__total_msgs_to_kafka.load();
   auto m2 = m1 / 1000;
