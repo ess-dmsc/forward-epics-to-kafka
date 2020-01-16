@@ -50,7 +50,7 @@ private:
   std::chrono::milliseconds Period;
   asio::steady_timer AsioTimer;
   std::atomic_bool Running;
-  std::thread TimerThread;
+  std::thread MetricsThread;
   MainOpt &MainOptions;
   SharedLogger Logger = getLogger();
   std::map<std::string, std::weak_ptr<Converter>> converters;
