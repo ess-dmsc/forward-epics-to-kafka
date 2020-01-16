@@ -51,6 +51,10 @@ void StatusTimer::reportStatus() {
   }
   status_producer_topic->produce((unsigned char *)StatusString.c_str(),
                                  StatusString.size());
+  AsioTimer.expires_at(AsioTimer.expires_at() + Period);
+  AsioTimer.async_wait(
+      [this](std::error_code const & /*error*/) { this->reportStatus(); });
 }
 
+StatusTimer::~StatusTimer() { this->waitForStop(); }
 } // namespace Forwarder
