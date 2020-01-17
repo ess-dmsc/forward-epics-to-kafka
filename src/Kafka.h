@@ -47,7 +47,7 @@ public:
   void poll();
 
   /// Log the stats for all the producers.
-  void logMetrics();
+  virtual void logMetrics();
 
   /// Get the stats for the producers.
   ///

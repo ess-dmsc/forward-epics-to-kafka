@@ -9,6 +9,6 @@ public:
   using InstanceSet::InstanceSet;
   //  explicit MockKafkaInstanceSet(KafkaW::BrokerSettings brokerSettings)
   //      : InstanceSet(brokerSettings){};
-  MAKE_MOCK0(logMetrics, void());
+  MAKE_MOCK0(logMetrics, void(), override);
 };
 } // namespace Forwarder

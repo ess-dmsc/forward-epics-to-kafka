@@ -9,7 +9,7 @@ using trompeloeil::_;
 class MetricsTimerTest : public ::testing::Test {};
 
 namespace Forwarder {
-TEST(MetricsTimerTest, BasicTest) {
+TEST(MetricsTimerTest, LogMetricsCallsTest) {
   std::chrono::milliseconds Interval(10);
   auto TestKafkaInstanceSet = std::shared_ptr<InstanceSet>(
       new MockKafkaInstanceSet(KafkaW::BrokerSettings()));
@@ -18,7 +18,7 @@ TEST(MetricsTimerTest, BasicTest) {
   MainOpt MainOptions;
   MetricsTimer TestMetricsTimer(Interval, MainOptions, TestKafkaInstanceSet);
 
-  REQUIRE_CALL(*KafkaInstanceSet, logMetrics());
+  REQUIRE_CALL(*KafkaInstanceSet, logMetrics()).TIMES(AT_LEAST(2));
 
   std::this_thread::sleep_for(100ms);
 }
