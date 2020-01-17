@@ -42,6 +42,10 @@ void MetricsTimer::start() {
 }
 
 void MetricsTimer::waitForStop() {
+  // AsioTimer.cancel() would only stop the timer execution if there is an
+  // async_wait "in flight" we therefore need the Running flag and supporting
+  // logic too, to ensure that the reportMetrics call chain is definitely
+  // stopped
   Logger->trace("Stopping MetricsTimer");
   Running = false;
   AsioTimer.cancel();
@@ -53,6 +57,9 @@ std::unique_lock<std::mutex> MetricsTimer::get_lock_converters() {
 }
 
 void MetricsTimer::reportMetrics() {
+  if (!Running) {
+    return;
+  }
   KafkaInstanceSet->logMetrics();
   auto m1 = g__total_msgs_to_kafka.load();
   auto m2 = m1 / 1000;

@@ -21,9 +21,13 @@ set(tests_SRC
     MockMessage.h
     ConvertTDCTest.cpp
     f142DataFromPVStructTests.cpp
-    UnitTests.cpp)
+    UnitTests.cpp
+    MetricsTimerTests.cpp
+    MockKafkaInstanceSet.h)
 
+find_package(Trompeloeil REQUIRED)
 add_executable(tests ${tests_SRC})
+target_include_directories(tests PRIVATE ${Trompeloeil_INCLUDE_DIR})
 target_link_libraries(tests
         forwarder-library
         CONAN_PKG::gtest)
