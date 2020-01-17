@@ -54,6 +54,8 @@ public:
   /// \return The producer stats.
   std::vector<KafkaW::ProducerStats> getStatsForAllProducers();
 
+  virtual ~InstanceSet() = default;
+
 private:
   /// Contains the general Kafka settings, e.g. timeouts, message sizes etc.
   /// Does not contain the Broker addresses, these are held in the individual
