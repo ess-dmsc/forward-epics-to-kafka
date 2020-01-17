@@ -28,6 +28,9 @@ void StatusTimer::waitForStop() {
 }
 
 void StatusTimer::reportStatus() {
+  if (!StatusProducerTopic || !Running) {
+    return;
+  }
   using nlohmann::json;
   auto Status = json::object();
   Status["service_id"] = MainOptions.MainSettings.ServiceID;
