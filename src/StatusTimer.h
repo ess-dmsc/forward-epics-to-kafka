@@ -18,11 +18,12 @@ namespace Forwarder {
 
 class StatusTimer {
 public:
-  explicit StatusTimer(std::chrono::milliseconds Interval,
-                       MainOpt &ApplicationMainOptions,
-                       Streams &ApplicationStreams)
+  explicit StatusTimer(
+      std::chrono::milliseconds Interval, MainOpt &ApplicationMainOptions,
+      std::shared_ptr<KafkaW::ProducerTopic> &ApplicationStatusProducerTopic)
       : IO(), Period(Interval), AsioTimer(IO, Period), Running(false),
-        MainOptions(ApplicationMainOptions), Streams(ApplicationStreams) {
+        MainOptions(ApplicationMainOptions),
+        StatusProducerTopic(ApplicationStatusProducerTopic) {
     this->start();
   }
 
@@ -43,7 +44,8 @@ private:
   MainOpt &MainOptions;
   std::thread StatusThread;
   SharedLogger Logger = getLogger();
-  Streams Streams;
+  Streams streams;
+  std::shared_ptr<KafkaW::ProducerTopic> StatusProducerTopic;
 };
 
 } // namespace Forwarder
