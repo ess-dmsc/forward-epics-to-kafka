@@ -8,6 +8,7 @@ CLI11/1.8.0@cliutils/stable
 jsonformoderncpp/3.6.1@vthiery/stable
 concurrentqueue/8f7e861@ess-dmsc/stable
 asio/1.13.0@bincrafters/stable
+trompeloeil/v31@ess-dmsc/stable
 
 [generators]
 cmake
