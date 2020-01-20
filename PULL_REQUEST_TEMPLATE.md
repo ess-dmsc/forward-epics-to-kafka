@@ -10,3 +10,7 @@ See [CONTRIBUTING.MD](CONTRIBUTING.MD) for more information on code standards et
 ### Nominate for Group Code Review
 
 - [ ] Nominate for code review 
+
+### Reminder
+
+*Breaking changes should be documented in `breaking-changes.md`*
