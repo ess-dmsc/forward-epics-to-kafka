@@ -176,7 +176,7 @@ void Forwarder::forward_epics_to_kafka() {
 
   using namespace std::chrono_literals;
   std::atomic<MILLISECONDS> IterationExecutionDuration(0ms);
-  MetricsTimer MetricsTimerInstance(200ms, main_opt, KafkaInstanceSet);
+  MetricsTimer MetricsTimerInstance(2000ms, main_opt, KafkaInstanceSet);
 
   while (ForwardingRunFlag.load() == ForwardingRunState::RUN) {
     auto TimeAtStartOfLoop = STEADY_CLOCK::now();
