@@ -57,7 +57,6 @@ public:
   void stopForwarding();
   void stopForwardingDueToSignal();
   void report_status();
-  MainOpt &main_opt;
   int conversion_workers_clear();
   int converters_clear();
   std::unique_lock<std::mutex> get_lock_streams();
@@ -66,6 +65,7 @@ public:
   Streams streams;
 
 private:
+  MainOpt &main_opt;
   void createFakePVUpdateTimerIfRequired();
   void createPVUpdateTimerIfRequired();
   template <typename T>
