@@ -142,7 +142,7 @@ set(forwarder-library_SRC
     schemas/tdc_time/TdcTime.cpp
     MetricsTimer.cpp)
 
-add_library(forwarder-library ${forwarder-library_SRC} ${forwarder-library_INC} MetricsTimer.h MetricsTimer.cpp)
+add_library(forwarder-library ${forwarder-library_SRC} ${forwarder-library_INC})
 target_compile_definitions(forwarder-library PRIVATE ${compile_defs_common})
 target_link_libraries(forwarder-library ${libraries_common})
 target_include_directories(forwarder-library SYSTEM PUBLIC ${path_include_common} INTERFACE ".")
