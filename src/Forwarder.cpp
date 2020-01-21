@@ -153,7 +153,8 @@ std::unique_lock<std::mutex> Forwarder::get_lock_converters() {
 void Forwarder::forward_epics_to_kafka() {
   using STEADY_CLOCK = std::chrono::steady_clock;
   using MILLISECONDS = std::chrono::milliseconds;
-  auto const Dt = static_cast<MILLISECONDS>(main_opt.MainSettings.MainPollInterval);
+  auto const Dt =
+      static_cast<MILLISECONDS>(main_opt.MainSettings.MainPollInterval);
   auto TimeSinceLastPoll = STEADY_CLOCK::now();
   using namespace std::chrono_literals;
   auto TimeSinceLastStatus = STEADY_CLOCK::now() - 4000ms;
