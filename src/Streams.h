@@ -17,6 +17,8 @@
 
 namespace Forwarder {
 
+using nlohmann::json;
+
 class Stream;
 
 class Streams {
@@ -37,6 +39,8 @@ public:
 
   /// Check the status of the streams and stop any that are in error.
   void checkStreamStatus();
+
+  json getStreamStatuses();
 
   /// Add a stream.
   ///

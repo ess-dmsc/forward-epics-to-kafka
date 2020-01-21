@@ -34,13 +34,7 @@ void StatusTimer::reportStatus() {
   using nlohmann::json;
   auto Status = json::object();
   Status["service_id"] = MainOptions.MainSettings.ServiceID;
-  auto Streams = json::array();
-  auto StreamVector = streams.getStreams();
-  std::transform(StreamVector.cbegin(), StreamVector.cend(),
-                 std::back_inserter(Streams),
-                 [](const std::shared_ptr<Stream> &CStream) {
-                   return CStream->getStatusJson();
-                 });
+  auto Streams = streams.getStreamStatuses();
   Status["streams"] = Streams;
   auto StatusString = Status.dump();
   auto StatusStringSize = StatusString.size();

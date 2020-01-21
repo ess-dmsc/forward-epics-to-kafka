@@ -55,6 +55,20 @@ void Streams::checkStreamStatus() {
                        StreamPointers.end());
 }
 
+json Streams::getStreamStatuses() {
+  const std::lock_guard<std::mutex> lock(StreamsMutex);
+
+  auto StreamsArray = json::array();
+  auto StreamVector = getStreams();
+  std::transform(StreamVector.cbegin(), StreamVector.cend(),
+                 std::back_inserter(StreamsArray),
+                 [](const std::shared_ptr<Stream> &CStream) {
+                   return CStream->getStatusJson();
+                 });
+
+  return StreamsArray;
+}
+
 void Streams::add(std::shared_ptr<Stream> s) { StreamPointers.push_back(s); }
 
 std::shared_ptr<Stream> Streams::back() {

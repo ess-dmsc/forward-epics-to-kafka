@@ -34,9 +34,6 @@ public:
     this->start();
   }
 
-  /// Blocks until the timer thread has stopped
-  void waitForStop();
-
   std::unique_lock<std::mutex> get_lock_converters();
 
   void reportMetrics();
@@ -56,6 +53,8 @@ private:
   std::map<std::string, std::weak_ptr<Converter>> converters;
   std::mutex converters_mutex;
   std::shared_ptr<InstanceSet> KafkaInstanceSet;
+  /// Blocks until the timer thread has stopped
+  void waitForStop();
 };
 
 } // namespace Forwarder
