@@ -47,12 +47,14 @@ public:
   void poll();
 
   /// Log the stats for all the producers.
-  void logStats();
+  virtual void logMetrics();
 
   /// Get the stats for the producers.
   ///
   /// \return The producer stats.
   std::vector<KafkaW::ProducerStats> getStatsForAllProducers();
+
+  virtual ~InstanceSet() = default;
 
 private:
   /// Contains the general Kafka settings, e.g. timeouts, message sizes etc.

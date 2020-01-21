@@ -7,7 +7,6 @@
 //
 // Screaming Udder!                              https://esss.se
 
-// solve issue with multiple winsock include
 #ifdef _MSC_VER
 #include <WinSock2.h>
 #include <windows.h>
@@ -19,36 +18,16 @@
 #include "EpicsClient/EpicsClientRandom.h"
 #include "Forwarder.h"
 #include "KafkaOutput.h"
+#include "MetricsTimer.h"
 #include "Stream.h"
 #include "Timer.h"
 #include "logger.h"
+#include "schemas/f142/f142.cpp"
+#include "schemas/tdc_time/TdcTime.h"
 #include <algorithm>
 #include <memory>
 #include <nlohmann/json.hpp>
 #include <sys/types.h>
-#ifdef _MSC_VER
-std::vector<char> getHostname() {
-  std::vector<char> Hostname;
-  return Hostname;
-}
-#else
-#include <unistd.h>
-std::vector<char> getHostname() {
-  std::vector<char> Hostname;
-  Hostname.resize(256);
-  gethostname(Hostname.data(), Hostname.size());
-  if (Hostname.back() != 0) {
-    // likely an error
-    Hostname.back() = 0;
-  }
-  return Hostname;
-}
-
-#endif
-
-#include "CURLReporter.h"
-#include "schemas/f142/f142.cpp"
-#include "schemas/tdc_time/TdcTime.h"
 
 namespace {
 void registerSchemas() {
@@ -172,11 +151,13 @@ std::unique_lock<std::mutex> Forwarder::get_lock_converters() {
 /// Start conversion worker threads, poll for commands from Kafka.
 /// When stop flag raised, clear all workers and streams.
 void Forwarder::forward_epics_to_kafka() {
-  using CLK = std::chrono::steady_clock;
-  using MS = std::chrono::milliseconds;
-  auto Dt = MS(main_opt.MainSettings.MainPollInterval);
-  auto t_lf_last = CLK::now();
-  auto t_status_last = CLK::now() - MS(4000);
+  using STEADY_CLOCK = std::chrono::steady_clock;
+  using MILLISECONDS = std::chrono::milliseconds;
+  auto const Dt =
+      static_cast<MILLISECONDS>(main_opt.MainSettings.MainPollInterval);
+  auto TimeSinceLastPoll = STEADY_CLOCK::now();
+  using namespace std::chrono_literals;
+  auto TimeSinceLastStatus = STEADY_CLOCK::now() - 4000ms;
   ConfigCB config_cb(*this);
   {
     std::lock_guard<std::mutex> lock(conversion_workers_mx);
@@ -193,35 +174,35 @@ void Forwarder::forward_epics_to_kafka() {
     GenerateFakePVUpdateTimer->start();
   }
 
+  using namespace std::chrono_literals;
+  std::atomic<MILLISECONDS> IterationExecutionDuration(0ms);
+  MetricsTimer MetricsTimerInstance(2000ms, main_opt, KafkaInstanceSet);
+
   while (ForwardingRunFlag.load() == ForwardingRunState::RUN) {
-    auto do_stats = false;
-    auto t1 = CLK::now();
-    if (t1 - t_lf_last > MS(2000)) {
+    auto TimeAtStartOfLoop = STEADY_CLOCK::now();
+    if (TimeAtStartOfLoop - TimeSinceLastPoll > 2000ms) {
       if (config_listener) {
         config_listener->poll(config_cb);
       }
       streams.checkStreamStatus();
-      t_lf_last = t1;
-      do_stats = true;
+      TimeSinceLastPoll = TimeAtStartOfLoop;
     }
     KafkaInstanceSet->poll();
 
-    auto t2 = CLK::now();
-    auto dt = std::chrono::duration_cast<MS>(t2 - t1);
-    if (t2 - t_status_last > MS(3000)) {
+    auto TimeAfterIterationExecution = STEADY_CLOCK::now();
+    IterationExecutionDuration = std::chrono::duration_cast<MILLISECONDS>(
+        TimeAfterIterationExecution - TimeAtStartOfLoop);
+    if (TimeAfterIterationExecution - TimeSinceLastStatus > 3000ms) {
       if (status_producer_topic) {
         report_status();
       }
-      t_status_last = t2;
-      if (do_stats) {
-        KafkaInstanceSet->logStats();
-        report_stats(dt.count());
-      }
+      TimeSinceLastStatus = TimeAfterIterationExecution;
     }
-    if (dt >= Dt) {
-      Logger->error("slow main loop: {}", dt.count());
+    if (IterationExecutionDuration.load() >= Dt) {
+      Logger->error("slow main loop: {}",
+                    IterationExecutionDuration.load().count());
     } else {
-      std::this_thread::sleep_for(Dt - dt);
+      std::this_thread::sleep_for(Dt - IterationExecutionDuration.load());
     }
   }
   if (isStopDueToSignal(ForwardingRunFlag.load())) {
@@ -238,6 +219,8 @@ void Forwarder::forward_epics_to_kafka() {
   if (GenerateFakePVUpdateTimer != nullptr) {
     GenerateFakePVUpdateTimer->waitForStop();
   }
+
+  MetricsTimerInstance.waitForStop();
 
   Logger->info("ForwardingStatus::STOPPED");
   forwarding_status.store(ForwardingStatus::STOPPED);
@@ -267,63 +250,6 @@ void Forwarder::report_status() {
   }
   status_producer_topic->produce((unsigned char *)StatusString.c_str(),
                                  StatusString.size());
-}
-
-void Forwarder::report_stats(int dt) {
-  auto m1 = g__total_msgs_to_kafka.load();
-  auto m2 = m1 / 1000;
-  m1 = m1 % 1000;
-  uint64_t b1 = g__total_bytes_to_kafka.load();
-  auto b2 = b1 / 1024;
-  b1 %= 1024;
-  auto b3 = b2 / 1024;
-  b2 %= 1024;
-  Logger->info("dt: {:4}  m: {:4}.{:03}  b: {:3}.{:03}.{:03}", dt, m2, m1, b3,
-               b2, b1);
-  if (CURLReporter::HaveCURL && !main_opt.InfluxURI.empty()) {
-    std::vector<char> Hostname = getHostname();
-    int i1 = 0;
-    fmt::memory_buffer StatsBuffer;
-    for (auto &s : KafkaInstanceSet->getStatsForAllProducers()) {
-      fmt::format_to(StatsBuffer, "forward-epics-to-kafka,hostname={},set={}",
-                     Hostname.data(), i1);
-      fmt::format_to(StatsBuffer, " produced={}", s.produced);
-      fmt::format_to(StatsBuffer, ",produce_fail={}", s.produce_fail);
-      fmt::format_to(StatsBuffer, ",local_queue_full={}", s.local_queue_full);
-      fmt::format_to(StatsBuffer, ",produce_cb={}", s.produce_cb);
-      fmt::format_to(StatsBuffer, ",produce_cb_fail={}", s.produce_cb_fail);
-      fmt::format_to(StatsBuffer, ",poll_served={}", s.poll_served);
-      fmt::format_to(StatsBuffer, ",msg_too_large={}", s.msg_too_large);
-      fmt::format_to(StatsBuffer, ",produced_bytes={}",
-                     double(s.produced_bytes));
-      fmt::format_to(StatsBuffer, ",outq={}", s.out_queue);
-      fmt::format_to(StatsBuffer, "\n");
-      ++i1;
-    }
-    {
-      auto lock = get_lock_converters();
-      Logger->info("N converters: {}", converters.size());
-      i1 = 0;
-      for (auto &c : converters) {
-        auto stats = c.second.lock()->stats();
-        fmt::format_to(StatsBuffer, "forward-epics-to-kafka,hostname={},set={}",
-                       Hostname.data(), i1);
-        int i2 = 0;
-        for (auto x : stats) {
-          if (i2 > 0) {
-            fmt::format_to(StatsBuffer, ",");
-          } else {
-            fmt::format_to(StatsBuffer, " ");
-          }
-          fmt::format_to(StatsBuffer, "{}={}", x.first, x.second);
-          ++i2;
-        }
-        fmt::format_to(StatsBuffer, "\n");
-        ++i1;
-      }
-    }
-    CURLReporter::send(StatsBuffer, main_opt.InfluxURI);
-  }
 }
 
 URI Forwarder::createTopicURI(ConverterSettings const &ConverterInfo) const {

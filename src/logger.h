@@ -9,6 +9,12 @@
 
 #pragma once
 
+// explicitly include winsock2, otherwise something below pulls in
+// winsock and then clashes with winsock2 in asio
+#ifdef _MSC_VER
+#include <WinSock2.h>
+#endif
+
 #include <fmt/format.h>
 #include <spdlog/spdlog.h>
 #include <string>
