@@ -158,7 +158,7 @@ void Forwarder::forward_epics_to_kafka() {
       static_cast<MILLISECONDS>(main_opt.MainSettings.MainPollInterval);
   auto TimeSinceLastPoll = STEADY_CLOCK::now();
   using namespace std::chrono_literals;
-  //  auto TimeSinceLastStatus = STEADY_CLOCK::now() - 4000ms;
+  auto TimeSinceLastStatus = STEADY_CLOCK::now() - 4000ms;
   ConfigCB config_cb(*this);
   {
     std::lock_guard<std::mutex> lock(conversion_workers_mx);
@@ -177,7 +177,7 @@ void Forwarder::forward_epics_to_kafka() {
 
   using namespace std::chrono_literals;
   std::atomic<MILLISECONDS> IterationExecutionDuration(0ms);
-  MetricsTimer MetricsTimerInstance(200ms, main_opt, KafkaInstanceSet);
+  MetricsTimer MetricsTimerInstance(2000ms, main_opt, KafkaInstanceSet);
   StatusTimer StatusTimerInstance(200ms, main_opt, status_producer_topic);
 
   while (ForwardingRunFlag.load() == ForwardingRunState::RUN) {
@@ -194,12 +194,12 @@ void Forwarder::forward_epics_to_kafka() {
     auto TimeAfterIterationExecution = STEADY_CLOCK::now();
     IterationExecutionDuration = std::chrono::duration_cast<MILLISECONDS>(
         TimeAfterIterationExecution - TimeAtStartOfLoop);
-    //    if (TimeAfterIterationExecution - TimeSinceLastStatus > 3000ms) {
-    //      if (status_producer_topic) {
-    //        report_status();
-    //      }
-    //      TimeSinceLastStatus = TimeAfterIterationExecution;
-    //    }
+    if (TimeAfterIterationExecution - TimeSinceLastStatus > 3000ms) {
+      if (status_producer_topic) {
+        report_status();
+      }
+      TimeSinceLastStatus = TimeAfterIterationExecution;
+    }
     if (IterationExecutionDuration.load() >= Dt) {
       Logger->error("slow main loop: {}",
                     IterationExecutionDuration.load().count());
