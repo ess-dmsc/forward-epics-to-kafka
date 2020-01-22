@@ -22,7 +22,7 @@ set(tests_SRC
     ConvertTDCTest.cpp
     f142DataFromPVStructTests.cpp
     UnitTests.cpp
-    MetricsTimerTests.cpp
+        MetricsReporterTests.cpp
     MockKafkaInstanceSet.h)
 
 find_package(Trompeloeil REQUIRED)
