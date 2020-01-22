@@ -14,12 +14,12 @@
 namespace Forwarder {
 
 size_t Streams::size() const {
-  //  const std::lock_guard<std::mutex> lock(StreamsMutex);
+  const std::lock_guard<std::mutex> lock(StreamsMutex);
   return StreamPointers.size();
 }
 
 void Streams::stopChannel(std::string const &channel) {
-  std::lock_guard<std::mutex> lock(StreamsMutex);
+  const std::lock_guard<std::mutex> lock(StreamsMutex);
   StreamPointers.erase(
       std::remove_if(StreamPointers.begin(), StreamPointers.end(),
                      [&](std::shared_ptr<Stream> s) {
@@ -30,7 +30,7 @@ void Streams::stopChannel(std::string const &channel) {
 
 void Streams::clearStreams() {
   Logger->trace("Main::clearStreams()  begin");
-  std::lock_guard<std::mutex> lock(StreamsMutex);
+  const std::lock_guard<std::mutex> lock(StreamsMutex);
   if (!StreamPointers.empty()) {
     for (auto const &Stream : StreamPointers) {
       Stream->stop();

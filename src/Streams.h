@@ -62,7 +62,7 @@ public:
 
 private:
   std::vector<std::shared_ptr<Stream>> StreamPointers;
-  std::mutex StreamsMutex;
+  mutable std::mutex StreamsMutex;
   SharedLogger Logger = getLogger();
 };
 } // namespace Forwarder
