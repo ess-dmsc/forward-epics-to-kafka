@@ -82,7 +82,7 @@ private:
   ConversionScheduler conversion_scheduler;
   std::atomic<ForwardingStatus> forwarding_status{ForwardingStatus::NORMAL};
   std::shared_ptr<KafkaW::Producer> status_producer;
-  std::unique_ptr<KafkaW::ProducerTopic> status_producer_topic;
+  // std::unique_ptr<KafkaW::ProducerTopic> status_producer_topic;
   std::atomic<ForwardingRunState> ForwardingRunFlag{ForwardingRunState::RUN};
   void raiseForwardingFlag(ForwardingRunState ToBeRaised);
   void pushConverterToStream(ConverterSettings const &ConverterInfo,

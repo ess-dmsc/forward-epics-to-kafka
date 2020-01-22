@@ -92,8 +92,6 @@ Forwarder::Forwarder(MainOpt &Opt)
     KafkaW::BrokerSettings BrokerSettings;
     BrokerSettings.Address = main_opt.MainSettings.StatusReportURI.HostPort;
     status_producer = std::make_shared<KafkaW::Producer>(BrokerSettings);
-    status_producer_topic = std::make_unique<KafkaW::ProducerTopic>(
-        status_producer, main_opt.MainSettings.StatusReportURI.Topic);
   }
 }
 
@@ -177,6 +175,11 @@ void Forwarder::forward_epics_to_kafka() {
   using namespace std::chrono_literals;
   std::atomic<MILLISECONDS> IterationExecutionDuration(0ms);
   MetricsReporter MetricsTimerInstance(2000ms, main_opt, KafkaInstanceSet);
+  std::unique_ptr<KafkaW::ProducerTopic> status_producer_topic;
+  if (!main_opt.MainSettings.StatusReportURI.HostPort.empty()) {
+    status_producer_topic = std::make_unique<KafkaW::ProducerTopic>(
+        status_producer, main_opt.MainSettings.StatusReportURI.Topic);
+  }
   StatusReporter StatusTimerInstance(4000ms, main_opt, status_producer_topic,
                                      streams);
 
