@@ -158,7 +158,6 @@ void Forwarder::forward_epics_to_kafka() {
       static_cast<MILLISECONDS>(main_opt.MainSettings.MainPollInterval);
   auto TimeSinceLastPoll = STEADY_CLOCK::now();
   using namespace std::chrono_literals;
-  //  auto TimeSinceLastStatus = STEADY_CLOCK::now() - 4000ms;
   ConfigCB config_cb(*this);
   {
     std::lock_guard<std::mutex> lock(conversion_workers_mx);
@@ -178,7 +177,7 @@ void Forwarder::forward_epics_to_kafka() {
   using namespace std::chrono_literals;
   std::atomic<MILLISECONDS> IterationExecutionDuration(0ms);
   MetricsTimer MetricsTimerInstance(2000ms, main_opt, KafkaInstanceSet);
-  StatusTimer StatusTimerInstance(200ms, main_opt, status_producer_topic,
+  StatusTimer StatusTimerInstance(4000ms, main_opt, status_producer_topic,
                                   streams);
 
   while (ForwardingRunFlag.load() == ForwardingRunState::RUN) {
@@ -195,12 +194,6 @@ void Forwarder::forward_epics_to_kafka() {
     auto TimeAfterIterationExecution = STEADY_CLOCK::now();
     IterationExecutionDuration = std::chrono::duration_cast<MILLISECONDS>(
         TimeAfterIterationExecution - TimeAtStartOfLoop);
-    //    if (TimeAfterIterationExecution - TimeSinceLastStatus > 3000ms) {
-    //      if (status_producer_topic) {
-    //        report_status();
-    //      }
-    //      TimeSinceLastStatus = TimeAfterIterationExecution;
-    //    }
     if (IterationExecutionDuration.load() >= Dt) {
       Logger->error("slow main loop: {}",
                     IterationExecutionDuration.load().count());
@@ -225,32 +218,6 @@ void Forwarder::forward_epics_to_kafka() {
 
   Logger->info("ForwardingStatus::STOPPED");
   forwarding_status.store(ForwardingStatus::STOPPED);
-}
-
-void Forwarder::report_status() {
-  using nlohmann::json;
-  auto Status = json::object();
-  Status["service_id"] = main_opt.MainSettings.ServiceID;
-  auto Streams = json::array();
-  auto StreamVector = streams.getStreams();
-  std::transform(StreamVector.cbegin(), StreamVector.cend(),
-                 std::back_inserter(Streams),
-                 [](const std::shared_ptr<Stream> &CStream) {
-                   return CStream->getStatusJson();
-                 });
-  Status["streams"] = Streams;
-  auto StatusString = Status.dump();
-  auto StatusStringSize = StatusString.size();
-  if (StatusStringSize > 1000) {
-    auto StatusStringShort =
-        StatusString.substr(0, 1000) +
-        fmt::format(" ... {} chars total ...", StatusStringSize);
-    Logger->debug("status: {}", StatusStringShort);
-  } else {
-    Logger->debug("status: {}", StatusString);
-  }
-  status_producer_topic->produce((unsigned char *)StatusString.c_str(),
-                                 StatusString.size());
 }
 
 URI Forwarder::createTopicURI(ConverterSettings const &ConverterInfo) const {

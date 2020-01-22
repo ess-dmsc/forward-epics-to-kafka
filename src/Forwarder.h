@@ -56,7 +56,6 @@ public:
   void addMapping(StreamSettings const &StreamInfo);
   void stopForwarding();
   void stopForwardingDueToSignal();
-  void report_status();
   int conversion_workers_clear();
   int converters_clear();
   std::unique_lock<std::mutex> get_lock_streams();
