@@ -59,8 +59,7 @@ json Streams::getStreamStatuses() {
   const std::lock_guard<std::mutex> lock(StreamsMutex);
 
   auto StreamsArray = json::array();
-  auto StreamVector = getStreams();
-  std::transform(StreamVector.cbegin(), StreamVector.cend(),
+  std::transform(StreamPointers.cbegin(), StreamPointers.cend(),
                  std::back_inserter(StreamsArray),
                  [](const std::shared_ptr<Stream> &CStream) {
                    return CStream->getStatusJson();
