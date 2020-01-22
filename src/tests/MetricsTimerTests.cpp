@@ -1,5 +1,5 @@
 #include "MockKafkaInstanceSet.h"
-#include <MetricsTimer.h>
+#include <MetricsReporter.h>
 #include <gtest/gtest.h>
 #include <trompeloeil.hpp>
 
@@ -16,7 +16,7 @@ TEST(MetricsTimerTest, MetricsTimerLogsKafkaMetrics) {
   auto KafkaInstanceSet =
       dynamic_cast<MockKafkaInstanceSet *>(TestKafkaInstanceSet.get());
   MainOpt MainOptions;
-  MetricsTimer TestMetricsTimer(Interval, MainOptions, TestKafkaInstanceSet);
+  MetricsReporter TestMetricsTimer(Interval, MainOptions, TestKafkaInstanceSet);
 
   REQUIRE_CALL(*KafkaInstanceSet, logMetrics()).TIMES(AT_LEAST(2));
 

@@ -18,8 +18,8 @@
 #include "EpicsClient/EpicsClientRandom.h"
 #include "Forwarder.h"
 #include "KafkaOutput.h"
-#include "MetricsTimer.h"
-#include "StatusTimer.h"
+#include "MetricsReporter.h"
+#include "StatusReporter.h"
 #include "Stream.h"
 #include "Timer.h"
 #include "logger.h"
@@ -176,9 +176,9 @@ void Forwarder::forward_epics_to_kafka() {
 
   using namespace std::chrono_literals;
   std::atomic<MILLISECONDS> IterationExecutionDuration(0ms);
-  MetricsTimer MetricsTimerInstance(2000ms, main_opt, KafkaInstanceSet);
-  StatusTimer StatusTimerInstance(4000ms, main_opt, status_producer_topic,
-                                  streams);
+  MetricsReporter MetricsTimerInstance(2000ms, main_opt, KafkaInstanceSet);
+  StatusReporter StatusTimerInstance(4000ms, main_opt, status_producer_topic,
+                                     streams);
 
   while (ForwardingRunFlag.load() == ForwardingRunState::RUN) {
     auto TimeAtStartOfLoop = STEADY_CLOCK::now();

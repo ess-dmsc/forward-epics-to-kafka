@@ -23,11 +23,11 @@ namespace Forwarder {
 
 class Converter;
 
-class MetricsTimer {
+class MetricsReporter {
 public:
-  explicit MetricsTimer(std::chrono::milliseconds Interval,
-                        MainOpt &ApplicationMainOptions,
-                        std::shared_ptr<InstanceSet> &MainLoopKafkaInstanceSet)
+  explicit MetricsReporter(
+      std::chrono::milliseconds Interval, MainOpt &ApplicationMainOptions,
+      std::shared_ptr<InstanceSet> &MainLoopKafkaInstanceSet)
       : IO(), Period(Interval), AsioTimer(IO, Period), Running(false),
         MainOptions(ApplicationMainOptions),
         KafkaInstanceSet(MainLoopKafkaInstanceSet) {
@@ -38,7 +38,7 @@ public:
 
   void reportMetrics();
 
-  ~MetricsTimer();
+  ~MetricsReporter();
 
 private:
   void start();

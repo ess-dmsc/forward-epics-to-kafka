@@ -16,9 +16,9 @@
 
 namespace Forwarder {
 
-class StatusTimer {
+class StatusReporter {
 public:
-  explicit StatusTimer(
+  explicit StatusReporter(
       std::chrono::milliseconds Interval, MainOpt &ApplicationMainOptions,
       std::shared_ptr<KafkaW::ProducerTopic> &ApplicationStatusProducerTopic,
       Streams &MainLoopStreams)
@@ -30,7 +30,7 @@ public:
 
   void reportStatus();
 
-  ~StatusTimer();
+  ~StatusReporter();
 
 private:
   void start();

@@ -7,7 +7,7 @@
 //
 // Screaming Udder!                              https://esss.se
 
-#include "MetricsTimer.h"
+#include "MetricsReporter.h"
 #include "CURLReporter.h"
 #include "CommandHandler.h"
 #include "Converter.h"
@@ -33,15 +33,15 @@ std::vector<char> getHostname() {
 
 namespace Forwarder {
 
-void MetricsTimer::start() {
+void MetricsReporter::start() {
   Logger->trace("Starting the MetricsTimer");
   Running = true;
   AsioTimer.async_wait(
       [this](std::error_code const & /*error*/) { this->reportMetrics(); });
-  MetricsThread = std::thread(&MetricsTimer::run, this);
+  MetricsThread = std::thread(&MetricsReporter::run, this);
 }
 
-void MetricsTimer::waitForStop() {
+void MetricsReporter::waitForStop() {
   // AsioTimer.cancel() would only stop the timer execution if there is an
   // async_wait "in flight" we therefore need the Running flag and supporting
   // logic too, to ensure that the reportMetrics call chain is definitely
@@ -52,11 +52,11 @@ void MetricsTimer::waitForStop() {
   MetricsThread.join();
 }
 
-std::unique_lock<std::mutex> MetricsTimer::get_lock_converters() {
+std::unique_lock<std::mutex> MetricsReporter::get_lock_converters() {
   return std::unique_lock<std::mutex>(converters_mutex);
 }
 
-void MetricsTimer::reportMetrics() {
+void MetricsReporter::reportMetrics() {
   if (!Running) {
     return;
   }
@@ -119,5 +119,5 @@ void MetricsTimer::reportMetrics() {
       [this](std::error_code const & /*error*/) { this->reportMetrics(); });
 }
 
-MetricsTimer::~MetricsTimer() { this->waitForStop(); }
+MetricsReporter::~MetricsReporter() { this->waitForStop(); }
 } // namespace Forwarder

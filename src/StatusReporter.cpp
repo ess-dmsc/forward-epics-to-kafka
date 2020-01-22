@@ -7,27 +7,27 @@
 //
 // Screaming Udder!                              https://esss.se
 
-#include "StatusTimer.h"
+#include "StatusReporter.h"
 #include "json.h"
 
 namespace Forwarder {
 
-void StatusTimer::start() {
+void StatusReporter::start() {
   Logger->trace("Starting the StatusTimer");
   Running = true;
   AsioTimer.async_wait(
       [this](std::error_code const & /*error*/) { this->reportStatus(); });
-  StatusThread = std::thread(&StatusTimer::run, this);
+  StatusThread = std::thread(&StatusReporter::run, this);
 }
 
-void StatusTimer::waitForStop() {
+void StatusReporter::waitForStop() {
   Logger->trace("Stopping StatusTimer");
   Running = false;
   AsioTimer.cancel();
   StatusThread.join();
 }
 
-void StatusTimer::reportStatus() {
+void StatusReporter::reportStatus() {
   if (!StatusProducerTopic || !Running) {
     return;
   }
@@ -53,5 +53,5 @@ void StatusTimer::reportStatus() {
       [this](std::error_code const & /*error*/) { this->reportStatus(); });
 }
 
-StatusTimer::~StatusTimer() { this->waitForStop(); }
+StatusReporter::~StatusReporter() { this->waitForStop(); }
 } // namespace Forwarder
