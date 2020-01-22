@@ -22,8 +22,7 @@ void StatusReporter::start() {
 
 void StatusReporter::waitForStop() {
   Logger->trace("Stopping StatusTimer");
-  Running = false;
-  AsioTimer.cancel();
+  IO.stop();
   StatusThread.join();
 }
 

@@ -59,7 +59,6 @@ public:
   /// \return The last stream in the vector.
   std::shared_ptr<Stream> back();
   std::shared_ptr<Stream> operator[](size_t s) { return StreamPointers.at(s); };
-  const std::vector<std::shared_ptr<Stream>> &getStreams() const;
 
 private:
   std::vector<std::shared_ptr<Stream>> StreamPointers;

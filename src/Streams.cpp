@@ -13,7 +13,10 @@
 
 namespace Forwarder {
 
-size_t Streams::size() const { return StreamPointers.size(); }
+size_t Streams::size() const {
+  //  const std::lock_guard<std::mutex> lock(StreamsMutex);
+  return StreamPointers.size();
+}
 
 void Streams::stopChannel(std::string const &channel) {
   std::lock_guard<std::mutex> lock(StreamsMutex);
@@ -40,6 +43,7 @@ void Streams::clearStreams() {
 };
 
 void Streams::checkStreamStatus() {
+  const std::lock_guard<std::mutex> lock(StreamsMutex);
   if (StreamPointers.empty()) {
     return;
   }
@@ -68,18 +72,18 @@ json Streams::getStreamStatuses() {
   return StreamsArray;
 }
 
-void Streams::add(std::shared_ptr<Stream> s) { StreamPointers.push_back(s); }
+void Streams::add(std::shared_ptr<Stream> s) {
+  const std::lock_guard<std::mutex> lock(StreamsMutex);
+  StreamPointers.push_back(s);
+}
 
 std::shared_ptr<Stream> Streams::back() {
   return StreamPointers.empty() ? nullptr : StreamPointers.back();
 }
 
-const std::vector<std::shared_ptr<Stream>> &Streams::getStreams() const {
-  return StreamPointers;
-}
-
 std::shared_ptr<Stream>
 Streams::getStreamByChannelName(std::string const &channel_name) {
+  const std::lock_guard<std::mutex> lock(StreamsMutex);
   auto FoundChannel = std::find_if(
       StreamPointers.cbegin(), StreamPointers.cend(),
       [&channel_name](const std::shared_ptr<Stream> &CurrentStream) {
