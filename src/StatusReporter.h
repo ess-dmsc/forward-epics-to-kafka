@@ -20,11 +20,11 @@ class StatusReporter {
 public:
   explicit StatusReporter(
       std::chrono::milliseconds Interval, MainOpt &ApplicationMainOptions,
-      std::shared_ptr<KafkaW::ProducerTopic> &ApplicationStatusProducerTopic,
+      std::unique_ptr<KafkaW::ProducerTopic> &ApplicationStatusProducerTopic,
       Streams &MainLoopStreams)
       : IO(), Period(Interval), AsioTimer(IO, Period), Running(false),
         MainOptions(ApplicationMainOptions), streams(MainLoopStreams),
-        StatusProducerTopic(ApplicationStatusProducerTopic) {
+        StatusProducerTopic(std::move(ApplicationStatusProducerTopic)) {
     this->start();
   }
 
@@ -43,7 +43,7 @@ private:
   std::thread StatusThread;
   SharedLogger Logger = getLogger();
   Streams &streams;
-  std::shared_ptr<KafkaW::ProducerTopic> StatusProducerTopic;
+  std::unique_ptr<KafkaW::ProducerTopic> StatusProducerTopic;
   /// Blocks until the timer thread has stopped
   void waitForStop();
 };
