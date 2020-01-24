@@ -68,6 +68,10 @@ public:
                              int MessageFlags, void *Payload,
                              size_t PayloadSize, const void *Key,
                              size_t KeySize, void *OpaqueMessage) override;
+
+  std::unique_ptr<RdKafka::Topic> createTopic(const std::string &TopicString,
+                                              std::string &ErrStr);
+
   BrokerSettings ProducerBrokerSettings;
   std::atomic<uint64_t> TotalMessagesProduced{0};
 
@@ -76,7 +80,10 @@ protected:
   std::unique_ptr<RdKafka::Handle> ProducerPtr = nullptr;
 
 private:
-  std::unique_ptr<RdKafka::Conf> Conf;
+  std::unique_ptr<RdKafka::Conf> GlobalConf{
+      RdKafka::Conf::create(RdKafka::Conf::CONF_GLOBAL)};
+  std::unique_ptr<RdKafka::Conf> TopicConf{
+      RdKafka::Conf::create(RdKafka::Conf::CONF_TOPIC)};
   ProducerDeliveryCb DeliveryCb{Stats};
   KafkaEventCb EventCb;
   SharedLogger Logger = getLogger();
