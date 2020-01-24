@@ -35,7 +35,9 @@ Producer::~Producer() {
 }
 
 Producer::Producer(BrokerSettings Settings)
-    : ProducerBrokerSettings(std::move(Settings)) {
+    : ProducerBrokerSettings(std::move(Settings)),
+      Conf(std::unique_ptr<RdKafka::Conf>(
+          RdKafka::Conf::create(RdKafka::Conf::CONF_GLOBAL))) {
   ProducerID = ProducerInstanceCount++;
 
   std::string ErrorString;
@@ -91,7 +93,7 @@ RdKafka::ErrorCode Producer::produce(RdKafka::Topic *Topic, int32_t Partition,
 
 std::unique_ptr<RdKafka::Topic>
 Producer::createTopic(const std::string &TopicString, std::string &ErrStr) {
-  return std::unique_ptr<RdKafka::Topic>(
-      RdKafka::Topic::create(getRdKafkaPtr(), TopicString, Conf.get(), ErrStr));
+  return std::unique_ptr<RdKafka::Topic>(RdKafka::Topic::create(
+      getRdKafkaPtr(), TopicString, ConfigPtr.get(), ErrStr));
 }
 } // namespace KafkaW
