@@ -35,25 +35,23 @@ Producer::~Producer() {
 }
 
 Producer::Producer(BrokerSettings Settings)
-    : ProducerBrokerSettings(std::move(Settings)),
-      Conf(std::unique_ptr<RdKafka::Conf>(
-          RdKafka::Conf::create(RdKafka::Conf::CONF_GLOBAL))) {
+    : ProducerBrokerSettings(std::move(Settings)) {
   ProducerID = ProducerInstanceCount++;
 
   std::string ErrorString;
 
   try {
-    ProducerBrokerSettings.apply(Conf.get());
+    ProducerBrokerSettings.apply(GlobalConf.get());
   } catch (std::runtime_error &) {
     throw std::runtime_error(
         "Cannot create kafka handle due to configuration error");
   }
 
-  Conf->set("dr_cb", &DeliveryCb, ErrorString);
-  Conf->set("event_cb", &EventCb, ErrorString);
-  Conf->set("metadata.broker.list", ProducerBrokerSettings.Address,
-            ErrorString);
-  ProducerPtr.reset(RdKafka::Producer::create(Conf.get(), ErrorString));
+  GlobalConf->set("dr_cb", &DeliveryCb, ErrorString);
+  GlobalConf->set("event_cb", &EventCb, ErrorString);
+  GlobalConf->set("metadata.broker.list", ProducerBrokerSettings.Address,
+                  ErrorString);
+  ProducerPtr.reset(RdKafka::Producer::create(GlobalConf.get(), ErrorString));
   if (!ProducerPtr) {
     Logger->error("can not create kafka handle: {}", ErrorString);
     throw std::runtime_error("can not create Kafka handle");
@@ -94,6 +92,6 @@ RdKafka::ErrorCode Producer::produce(RdKafka::Topic *Topic, int32_t Partition,
 std::unique_ptr<RdKafka::Topic>
 Producer::createTopic(const std::string &TopicString, std::string &ErrStr) {
   return std::unique_ptr<RdKafka::Topic>(RdKafka::Topic::create(
-      getRdKafkaPtr(), TopicString, ConfigPtr.get(), ErrStr));
+      getRdKafkaPtr(), TopicString, TopicConf.get(), ErrStr));
 }
 } // namespace KafkaW
