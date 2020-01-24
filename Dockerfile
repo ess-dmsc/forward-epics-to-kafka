@@ -1,24 +1,21 @@
 FROM ubuntu:18.04
 
 ARG http_proxy
-
 ARG https_proxy
-
 ARG local_conan_server
 
-ADD "https://raw.githubusercontent.com/ess-dmsc/docker-ubuntu18.04-build-node/master/files/default_profile" "/root/.conan/profiles/default"
+ADD "https://raw.githubusercontent.com/ess-dmsc/docker-ubuntu18.04-build-node/7a4840422e78d451ada97662399116c31a4bc44e/files/default_profile" "/root/.conan/profiles/default"
 
 COPY conan/ ../forwarder_src/conan/
 
 RUN export DEBIAN_FRONTEND=noninteractive \
     && apt-get update -y \
-    && apt-get --no-install-recommends -y install build-essential git python-pip cmake tzdata vim \
+    && apt-get --no-install-recommends -y install build-essential git python3 python3-pip python3-setuptools cmake tzdata vim \
     && apt-get -y autoremove \
     && apt-get clean all \
     && rm -rf /var/lib/apt/lists/* \
-    && pip install --upgrade pip==9.0.3 \
-    && pip install setuptools \
-    && pip install conan \
+    && pip3 install --upgrade pip \
+    && pip3 install conan \
     && rm -rf /root/.cache/pip/* \
     && mkdir forwarder \
     && conan config install http://github.com/ess-dmsc/conan-configuration.git \
@@ -31,8 +28,8 @@ COPY ./ ../forwarder_src/
 
 RUN cd forwarder \
     && cmake -DCONAN="MANUAL" --target="forward-epics-to-kafka" -DBUILD_TESTS="OFF" ../forwarder_src \
-    && make -j4 forward-epics-to-kafka VERBOSE=1 \
-    && apt-get remove --purge -y build-essential git python-pip cmake \
+    && make -j4 forward-epics-to-kafka \
+    && apt-get remove --purge -y build-essential git python3 python3-pip python3-setuptools cmake \
     && mv ../forwarder_src/docker_launch.sh /docker_launch.sh \
     && rm -rf ../forwarder_src /tmp/* /var/tmp/* /forwarder/src/* \
     && cd /root/.conan/data/ \

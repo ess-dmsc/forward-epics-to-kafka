@@ -38,8 +38,6 @@ private:
   std::shared_ptr<Producer> KafkaProducer;
   std::unique_ptr<RdKafka::Topic> RdKafkaTopic;
   std::string Name;
-  std::unique_ptr<RdKafka::Conf> ConfigPtr{
-      RdKafka::Conf::create(RdKafka::Conf::CONF_TOPIC)};
   bool DoCopyMsg{false};
   SharedLogger Logger = getLogger();
 };
