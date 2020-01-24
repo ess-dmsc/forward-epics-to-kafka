@@ -65,8 +65,8 @@ public:
                              size_t PayloadSize, const void *Key,
                              size_t KeySize, void *OpaqueMessage);
 
-  std::unique_ptr<RdKafka::Topic> createTopic(const std::string &topic_str,
-                                              std::string &errstr);
+  std::unique_ptr<RdKafka::Topic> createTopic(const std::string &TopicString,
+                                              std::string &ErrStr);
 
   BrokerSettings ProducerBrokerSettings;
   std::atomic<uint64_t> TotalMessagesProduced{0};
