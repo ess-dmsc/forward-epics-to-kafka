@@ -76,8 +76,7 @@ protected:
   std::unique_ptr<RdKafka::Handle> ProducerPtr = nullptr;
 
 private:
-  std::unique_ptr<RdKafka::Conf> Conf;
-  std::unique_ptr<RdKafka::Conf> ConfigPtr{
+  std::unique_ptr<RdKafka::Conf> Conf{
       RdKafka::Conf::create(RdKafka::Conf::CONF_TOPIC)};
   ProducerDeliveryCb DeliveryCb{Stats};
   KafkaEventCb EventCb;
