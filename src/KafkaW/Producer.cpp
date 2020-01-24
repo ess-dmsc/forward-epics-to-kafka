@@ -90,4 +90,10 @@ RdKafka::ErrorCode Producer::produce(RdKafka::Topic *Topic, int32_t Partition,
       ->produce(Topic, Partition, MessageFlags, Payload, PayloadSize, Key,
                 KeySize, OpaqueMessage);
 }
+
+std::unique_ptr<RdKafka::Topic>
+Producer::createTopic(const std::string &topic_str, std::string &errstr) {
+  return std::unique_ptr<RdKafka::Topic>(RdKafka::Topic::create(
+      getRdKafkaPtr(), topic_str, ConfigPtr.get(), errstr));
+}
 } // namespace KafkaW
