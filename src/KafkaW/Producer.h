@@ -51,7 +51,7 @@ public:
 
   /// Send a message to Kafka.
   ///
-  /// \param TopicString The topic string.
+  /// \param Topic The topic to publish to.
   /// \param Partition The topic partition to publish to.
   /// \param MessageFlags
   /// \param Payload The actual message data.
@@ -60,13 +60,13 @@ public:
   /// \param KeySize The size of the key.
   /// \param OpaqueMessage Points to the whole message.
   /// \return The Kafka RESP error code.
-  RdKafka::ErrorCode produce(const std::string &TopicString, int32_t Partition,
+  RdKafka::ErrorCode produce(RdKafka::Topic *Topic, int32_t Partition,
                              int MessageFlags, void *Payload,
                              size_t PayloadSize, const void *Key,
                              size_t KeySize, void *OpaqueMessage);
 
-  std::unique_ptr<RdKafka::Topic> createTopic(const std::string &TopicString,
-                                              std::string &ErrStr);
+  std::unique_ptr<RdKafka::Topic> createTopic(const std::string &topic_str,
+                                              std::string &errstr);
 
   BrokerSettings ProducerBrokerSettings;
   std::atomic<uint64_t> TotalMessagesProduced{0};

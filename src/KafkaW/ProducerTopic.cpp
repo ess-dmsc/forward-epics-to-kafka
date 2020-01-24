@@ -79,9 +79,9 @@ int ProducerTopic::produce(std::unique_ptr<ProducerMessage> &Msg) {
     key_len = Msg->Key.size();
   }
 
-  switch (KafkaProducer->produce(Name, RdKafka::Topic::PARTITION_UA, MsgFlags,
-                                 Msg->Data, Msg->Size, key, key_len,
-                                 Msg.get())) {
+  switch (KafkaProducer->produce(
+      RdKafkaTopic.get(), RdKafka::Topic::PARTITION_UA, MsgFlags, Msg->Data,
+      Msg->Size, key, key_len, Msg.get())) {
   case RdKafka::ERR_NO_ERROR:
     ++ProducerStats.produced;
     ProducerStats.produced_bytes += static_cast<uint64_t>(Msg->Size);
