@@ -6,7 +6,7 @@ ARG https_proxy
 
 ARG local_conan_server
 
-ADD "https://raw.githubusercontent.com/ess-dmsc/docker-ubuntu18.04-build-node/master/files/default_profile" "/root/.conan/profiles/default"
+ADD "https://github.com/ess-dmsc/docker-ubuntu18.04-build-node/blob/7a4840422e78d451ada97662399116c31a4bc44e/files/default_profile" "/root/.conan/profiles/default"
 
 COPY conan/ ../forwarder_src/conan/
 
