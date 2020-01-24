@@ -51,6 +51,7 @@ public:
 
   /// Send a message to Kafka.
   ///
+  /// \param TopicString The topic string.
   /// \param Partition The topic partition to publish to.
   /// \param MessageFlags
   /// \param Payload The actual message data.
