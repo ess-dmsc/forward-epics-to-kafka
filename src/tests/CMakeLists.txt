@@ -22,8 +22,10 @@ set(tests_SRC
     ConvertTDCTest.cpp
     f142DataFromPVStructTests.cpp
     UnitTests.cpp
-        MetricsReporterTests.cpp
-    MockKafkaInstanceSet.h)
+    MetricsReporterTests.cpp
+    MockKafkaInstanceSet.h
+    StatusReporterTests.cpp
+    MockProducer.h)
 
 find_package(Trompeloeil REQUIRED)
 add_executable(tests ${tests_SRC})
