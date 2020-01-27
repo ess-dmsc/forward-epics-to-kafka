@@ -27,7 +27,7 @@ public:
   virtual ~ProducerInterface() = default;
   virtual void poll() = 0;
   virtual int outputQueueLength() = 0;
-  virtual RdKafka::Producer *getRdKafkaPtr() const = 0;
+
   virtual RdKafka::ErrorCode produce(RdKafka::Topic *Topic, int32_t Partition,
                                      int MessageFlags, void *Payload,
                                      size_t PayloadSize, const void *Key,
@@ -50,8 +50,6 @@ public:
   ///
   /// \return The number of messages.
   int outputQueueLength() override;
-
-  RdKafka::Producer *getRdKafkaPtr() const override;
 
   /// Send a message to Kafka.
   ///

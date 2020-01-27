@@ -26,15 +26,9 @@ TEST(StatusReporterTest, StatusReporterDoesSomething) {
   StatusReporter TestStatusReporter(Interval, MainOptions,
                                     ApplicationStatusProducerTopic, streams);
 
-  ALLOW_CALL(*MockKafkaProducer, getRdKafkaPtr())
-      .RETURN(ANY(RdKafka::Producer *));
-
-  REQUIRE_CALL(*MockKafkaProducer,
-               produce(ANY(RdKafka::Topic *), ANY(int32_t), ANY(int),
-                       ANY(void *), ANY(size_t), ANY(const void *), ANY(size_t),
-                       ANY(void *)))
+  REQUIRE_CALL(*MockKafkaProducer, produce(_, _, _, _, _, _, _, _))
       .TIMES(AT_LEAST(1))
-      .RETURN(ANY(RdKafka::ErrorCode));
+      .RETURN(RdKafka::ErrorCode::ERR_NO_ERROR);
 
   std::this_thread::sleep_for(100ms);
 }
