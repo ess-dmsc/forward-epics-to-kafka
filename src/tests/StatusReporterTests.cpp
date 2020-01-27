@@ -9,7 +9,7 @@ using trompeloeil::_;
 class StatusReporterTest : public ::testing::Test {};
 
 namespace Forwarder {
-TEST(StatusReporterTest, StatusReporterDoesSomething) {
+TEST(StatusReporterTest, StatusReporterCallsProduce) {
   std::chrono::milliseconds Interval(10);
   MainOpt MainOptions;
   std::string TopicName = "Topic Name";
