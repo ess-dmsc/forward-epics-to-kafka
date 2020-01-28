@@ -55,7 +55,7 @@ public:
   getStreamByChannelName(std::string const &channel_name);
 
   /// Get the last stream in the vector.
-  ///
+  /// NOT THREAD SAFE
   /// \return The last stream in the vector.
   std::shared_ptr<Stream> back();
   std::shared_ptr<Stream> operator[](size_t s) { return StreamPointers.at(s); };

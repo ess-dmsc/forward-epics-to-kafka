@@ -23,14 +23,18 @@ TEST(StatusReporterTest, StatusReporterCallsProduce) {
   ApplicationStatusProducerTopic =
       std::make_unique<KafkaW::ProducerTopic>(KafkaProducer, TopicName);
 
-  StatusReporter TestStatusReporter(Interval, MainOptions,
-                                    ApplicationStatusProducerTopic, streams);
-
   REQUIRE_CALL(*MockKafkaProducer, produce(_, _, _, _, _, _, _, _))
       .TIMES(AT_LEAST(1))
       .RETURN(RdKafka::ErrorCode::ERR_NO_ERROR);
 
-  std::this_thread::sleep_for(100ms);
+  // These braces ensure reporter is stopped and cleaned up before the mock
+  // expectation is, otherwise we occasionally see the test fail with an
+  // unmatched call of produce() on the mock
+  {
+    StatusReporter TestStatusReporter(Interval, MainOptions,
+                                      ApplicationStatusProducerTopic, streams);
+    std::this_thread::sleep_for(100ms);
+  }
 }
 
 } // namespace Forwarder
