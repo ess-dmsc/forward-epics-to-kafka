@@ -35,20 +35,17 @@ namespace Forwarder {
 
 void MetricsReporter::start() {
   Logger->trace("Starting the MetricsTimer");
-  Running = true;
-  AsioTimer.async_wait(
-      [this](std::error_code const & /*error*/) { this->reportMetrics(); });
+  AsioTimer.async_wait([this](std::error_code const &Error) {
+    if (Error != asio::error::operation_aborted) {
+      this->reportMetrics();
+    }
+  });
   MetricsThread = std::thread(&MetricsReporter::run, this);
 }
 
 void MetricsReporter::waitForStop() {
-  // AsioTimer.cancel() would only stop the timer execution if there is an
-  // async_wait "in flight" we therefore need the Running flag and supporting
-  // logic too, to ensure that the reportMetrics call chain is definitely
-  // stopped
   Logger->trace("Stopping MetricsTimer");
-  Running = false;
-  AsioTimer.cancel();
+  IO.stop();
   MetricsThread.join();
 }
 
@@ -57,9 +54,6 @@ std::unique_lock<std::mutex> MetricsReporter::get_lock_converters() {
 }
 
 void MetricsReporter::reportMetrics() {
-  if (!Running) {
-    return;
-  }
   KafkaInstanceSet->logMetrics();
   auto m1 = g__total_msgs_to_kafka.load();
   auto m2 = m1 / 1000;
@@ -115,8 +109,11 @@ void MetricsReporter::reportMetrics() {
     CURLReporter::send(StatsBuffer, MainOptions.InfluxURI);
   }
   AsioTimer.expires_at(AsioTimer.expires_at() + Period);
-  AsioTimer.async_wait(
-      [this](std::error_code const & /*error*/) { this->reportMetrics(); });
+  AsioTimer.async_wait([this](std::error_code const &Error) {
+    if (Error != asio::error::operation_aborted) {
+      this->reportMetrics();
+    }
+  });
 }
 
 MetricsReporter::~MetricsReporter() { this->waitForStop(); }

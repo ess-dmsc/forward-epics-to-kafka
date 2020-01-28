@@ -14,9 +14,11 @@ namespace Forwarder {
 
 void StatusReporter::start() {
   Logger->trace("Starting the StatusTimer");
-  Running = true;
-  AsioTimer.async_wait(
-      [this](std::error_code const & /*error*/) { this->reportStatus(); });
+  AsioTimer.async_wait([this](std::error_code const &Error) {
+    if (Error != asio::error::operation_aborted) {
+      this->reportStatus();
+    }
+  });
   StatusThread = std::thread(&StatusReporter::run, this);
 }
 
@@ -27,7 +29,7 @@ void StatusReporter::waitForStop() {
 }
 
 void StatusReporter::reportStatus() {
-  if (!StatusProducerTopic || !Running) {
+  if (!StatusProducerTopic) {
     return;
   }
   using nlohmann::json;
@@ -48,8 +50,11 @@ void StatusReporter::reportStatus() {
   StatusProducerTopic->produce((unsigned char *)StatusString.c_str(),
                                StatusString.size());
   AsioTimer.expires_at(AsioTimer.expires_at() + Period);
-  AsioTimer.async_wait(
-      [this](std::error_code const & /*error*/) { this->reportStatus(); });
+  AsioTimer.async_wait([this](std::error_code const &Error) {
+    if (Error != asio::error::operation_aborted) {
+      this->reportStatus();
+    }
+  });
 }
 
 StatusReporter::~StatusReporter() { this->waitForStop(); }

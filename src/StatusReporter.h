@@ -22,7 +22,7 @@ public:
       std::chrono::milliseconds Interval, MainOpt &ApplicationMainOptions,
       std::unique_ptr<KafkaW::ProducerTopic> &ApplicationStatusProducerTopic,
       Streams &MainLoopStreams)
-      : IO(), Period(Interval), AsioTimer(IO, Period), Running(false),
+      : IO(), Period(Interval), AsioTimer(IO, Period),
         MainOptions(ApplicationMainOptions), streams(MainLoopStreams),
         StatusProducerTopic(std::move(ApplicationStatusProducerTopic)) {
     this->start();
@@ -38,7 +38,6 @@ private:
   asio::io_context IO;
   std::chrono::milliseconds Period;
   asio::steady_timer AsioTimer;
-  std::atomic_bool Running;
   MainOpt &MainOptions;
   std::thread StatusThread;
   SharedLogger Logger = getLogger();

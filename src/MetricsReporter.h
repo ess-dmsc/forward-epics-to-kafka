@@ -28,7 +28,7 @@ public:
   explicit MetricsReporter(
       std::chrono::milliseconds Interval, MainOpt &ApplicationMainOptions,
       std::shared_ptr<InstanceSet> &MainLoopKafkaInstanceSet)
-      : IO(), Period(Interval), AsioTimer(IO, Period), Running(false),
+      : IO(), Period(Interval), AsioTimer(IO, Period),
         MainOptions(ApplicationMainOptions),
         KafkaInstanceSet(MainLoopKafkaInstanceSet) {
     this->start();
@@ -46,7 +46,6 @@ private:
   asio::io_context IO;
   std::chrono::milliseconds Period;
   asio::steady_timer AsioTimer;
-  std::atomic_bool Running;
   std::thread MetricsThread;
   MainOpt &MainOptions;
   SharedLogger Logger = getLogger();
