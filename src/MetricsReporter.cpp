@@ -74,7 +74,7 @@ void MetricsReporter::reportMetrics() {
   if (CURLReporter::HaveCURL && !MainOptions.InfluxURI.empty()) {
     std::vector<char> Hostname = getHostname();
     int i1 = 0;
-    fmt::v5::memory_buffer StatsBuffer;
+    fmt::memory_buffer StatsBuffer;
     for (auto &s : KafkaInstanceSet->getStatsForAllProducers()) {
       format_to(StatsBuffer, "forward-epics-to-kafka,hostname={},set={}",
                 Hostname.data(), i1);
