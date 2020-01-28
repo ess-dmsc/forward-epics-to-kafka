@@ -13,7 +13,7 @@
 
 namespace Forwarder {
 
-size_t Streams::size() const {
+size_t Streams::size() {
   const std::lock_guard<std::mutex> lock(StreamsMutex);
   return StreamPointers.size();
 }

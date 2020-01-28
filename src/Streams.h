@@ -27,7 +27,7 @@ public:
   /// Gets the number of streams.
   ///
   /// \return The number of streams.
-  size_t size() const;
+  size_t size();
 
   /// Stop the specified channel and remove the stream.
   ///
@@ -62,7 +62,7 @@ public:
 
 private:
   std::vector<std::shared_ptr<Stream>> StreamPointers;
-  mutable std::mutex StreamsMutex;
+  std::mutex StreamsMutex;
   SharedLogger Logger = getLogger();
 };
 } // namespace Forwarder
