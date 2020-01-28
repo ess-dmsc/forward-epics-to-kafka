@@ -27,14 +27,9 @@ TEST(StatusReporterTest, StatusReporterCallsProduce) {
       .TIMES(AT_LEAST(1))
       .RETURN(RdKafka::ErrorCode::ERR_NO_ERROR);
 
-  // These braces ensure reporter is stopped and cleaned up before the mock
-  // expectation is, otherwise we occasionally see the test fail with an
-  // unmatched call of produce() on the mock
-  {
-    StatusReporter TestStatusReporter(Interval, MainOptions,
-                                      ApplicationStatusProducerTopic, streams);
-    std::this_thread::sleep_for(100ms);
-  }
+  StatusReporter TestStatusReporter(Interval, MainOptions,
+                                    ApplicationStatusProducerTopic, streams);
+  std::this_thread::sleep_for(100ms);
 }
 
 } // namespace Forwarder
