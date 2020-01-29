@@ -2,15 +2,9 @@ from confluent_kafka import TopicPartition
 from helpers.producerwrapper import ProducerWrapper
 from helpers.f142_logdata.Value import Value
 from time import sleep
+from helpers.flatbuffer_helpers import check_expected_value, check_multiple_expected_values
 from helpers.kafka_helpers import create_consumer, poll_for_valid_message
-from helpers.flatbuffer_helpers import check_expected_value, \
-    check_multiple_expected_values
 from helpers.epics_helpers import change_pv_value
-from helpers.kafka_helpers import create_consumer, poll_for_valid_message, poll_for_connection_status_message, \
-    get_all_available_messages
-from helpers.flatbuffer_helpers import check_expected_values, check_expected_array_values, \
-    check_multiple_expected_values, check_expected_connection_status_values
-from helpers.epics_helpers import change_pv_value, change_array_pv_value
 from helpers.PVs import PVDOUBLE, PVSTR, PVLONG, PVENUM, PVFLOATARRAY
 import json
 import numpy as np
@@ -192,34 +186,34 @@ def test_forwarder_updates_pv_when_config_change_add_two_pvs(docker_compose_no_c
     cons.close()
 
 
-def test_connection_status_messages(docker_compose_no_command):
-    """
-      GIVEN PV is configured to be forwarded
-      WHEN Connection status changes
-      THEN Forwarder publishes ep00 message with connection status
-
-      NOTE: Enums are converted to Ints in the forwarder.
-      """
-    data_topic = "TEST_forwarderData_connection_status"
-    pvs = [PVENUM]
-
-    prod = ProducerWrapper("localhost:9092", CONFIG_TOPIC, data_topic)
-    prod.add_config(pvs)
-    # Wait for config to be pushed
-    sleep(5)
-
-    cons = create_consumer()
-
-    # Update value
-    change_pv_value(PVENUM, "START")
-    # Wait for PV to be updated
-    sleep(5)
-    cons.subscribe([data_topic])
-
-    first_msg = poll_for_connection_status_message(cons)
-    check_expected_connection_status_values(first_msg, EventType.CONNECTED)
-
-    cons.close()
+# def test_connection_status_messages(docker_compose_no_command):
+#     """
+#       GIVEN PV is configured to be forwarded
+#       WHEN Connection status changes
+#       THEN Forwarder publishes ep00 message with connection status
+#
+#       NOTE: Enums are converted to Ints in the forwarder.
+#       """
+#     data_topic = "TEST_forwarderData_connection_status"
+#     pvs = [PVENUM]
+#
+#     prod = ProducerWrapper("localhost:9092", CONFIG_TOPIC, data_topic)
+#     prod.add_config(pvs)
+#     # Wait for config to be pushed
+#     sleep(5)
+#
+#     cons = create_consumer()
+#
+#     # Update value
+#     change_pv_value(PVENUM, "START")
+#     # Wait for PV to be updated
+#     sleep(5)
+#     cons.subscribe([data_topic])
+#
+#     first_msg = poll_for_connection_status_message(cons)
+#     check_expected_connection_status_values(first_msg, EventType.CONNECTED)
+#
+#     cons.close()
 
 
 def test_forwarder_can_handle_multiple_config_updates(docker_compose_no_command):
