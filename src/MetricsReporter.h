@@ -58,8 +58,6 @@ private:
   std::map<std::string, std::weak_ptr<Converter>> converters;
   std::mutex converters_mutex;
   std::shared_ptr<InstanceSet> KafkaInstanceSet;
-  /// Blocks until the timer thread has stopped
-  void waitForStop();
 };
 
 } // namespace Forwarder

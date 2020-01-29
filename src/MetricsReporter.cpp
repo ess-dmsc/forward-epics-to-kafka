@@ -33,12 +33,6 @@ std::vector<char> getHostname() {
 
 namespace Forwarder {
 
-void MetricsReporter::waitForStop() {
-  Logger->trace("Stopping MetricsTimer");
-  IO.stop();
-  MetricsThread.join();
-}
-
 std::unique_lock<std::mutex> MetricsReporter::get_lock_converters() {
   return std::unique_lock<std::mutex>(converters_mutex);
 }
@@ -106,5 +100,9 @@ void MetricsReporter::reportMetrics() {
   });
 }
 
-MetricsReporter::~MetricsReporter() { this->waitForStop(); }
+MetricsReporter::~MetricsReporter() {
+  Logger->trace("Stopping MetricsTimer");
+  IO.stop();
+  MetricsThread.join();
+}
 } // namespace Forwarder
