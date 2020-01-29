@@ -32,7 +32,6 @@ public:
       }
     });
     StatusThread = std::thread(&StatusReporter::run, this);
-    ;
   }
 
   void reportStatus();
