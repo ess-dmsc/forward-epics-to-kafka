@@ -10,7 +10,7 @@ class StatusReporterTest : public ::testing::Test {};
 
 namespace Forwarder {
 TEST(StatusReporterTest, StatusReporterCallsProduce) {
-  std::chrono::milliseconds Interval(10);
+  auto Interval = 10ms;
   MainOpt MainOptions;
   std::string TopicName = "Topic Name";
   KafkaW::BrokerSettings Settings;
