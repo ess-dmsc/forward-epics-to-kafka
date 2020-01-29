@@ -150,11 +150,6 @@ std::unique_lock<std::mutex> Forwarder::get_lock_converters() {
 /// Start conversion worker threads, poll for commands from Kafka.
 /// When stop flag raised, clear all workers and streams.
 void Forwarder::forward_epics_to_kafka() {
-  using STEADY_CLOCK = std::chrono::steady_clock;
-  using MILLISECONDS = std::chrono::milliseconds;
-  auto const Dt =
-      static_cast<MILLISECONDS>(main_opt.MainSettings.MainPollInterval);
-  auto TimeSinceLastPoll = STEADY_CLOCK::now();
   using namespace std::chrono_literals;
   ConfigCB config_cb(*this);
   {
@@ -173,7 +168,6 @@ void Forwarder::forward_epics_to_kafka() {
   }
 
   using namespace std::chrono_literals;
-  std::atomic<MILLISECONDS> IterationExecutionDuration(0ms);
   MetricsReporter MetricsTimerInstance(2000ms, main_opt, KafkaInstanceSet);
   std::unique_ptr<KafkaW::ProducerTopic> status_producer_topic;
   if (!main_opt.MainSettings.StatusReportURI.HostPort.empty()) {
@@ -184,25 +178,10 @@ void Forwarder::forward_epics_to_kafka() {
                                      streams);
 
   while (ForwardingRunFlag.load() == ForwardingRunState::RUN) {
-    auto TimeAtStartOfLoop = STEADY_CLOCK::now();
-    if (TimeAtStartOfLoop - TimeSinceLastPoll > 2000ms) {
-      if (config_listener) {
-        config_listener->poll(config_cb);
-      }
-      streams.checkStreamStatus();
-      TimeSinceLastPoll = TimeAtStartOfLoop;
+    if (config_listener) {
+      config_listener->poll(config_cb);
     }
     KafkaInstanceSet->poll();
-
-    auto TimeAfterIterationExecution = STEADY_CLOCK::now();
-    IterationExecutionDuration = std::chrono::duration_cast<MILLISECONDS>(
-        TimeAfterIterationExecution - TimeAtStartOfLoop);
-    if (IterationExecutionDuration.load() >= Dt) {
-      Logger->error("slow main loop: {}",
-                    IterationExecutionDuration.load().count());
-    } else {
-      std::this_thread::sleep_for(Dt - IterationExecutionDuration.load());
-    }
   }
   if (isStopDueToSignal(ForwardingRunFlag.load())) {
     Logger->info("Forwarder stopping due to signal.");

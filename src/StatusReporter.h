@@ -23,7 +23,7 @@ public:
       std::unique_ptr<KafkaW::ProducerTopic> &ApplicationStatusProducerTopic,
       Streams &MainLoopStreams)
       : IO(), Period(Interval), AsioTimer(IO, Period),
-        MainOptions(ApplicationMainOptions), streams(MainLoopStreams),
+        MainOptions(ApplicationMainOptions), Streamers(MainLoopStreams),
         StatusProducerTopic(std::move(ApplicationStatusProducerTopic)) {
     this->start();
   }
@@ -41,7 +41,7 @@ private:
   MainOpt &MainOptions;
   std::thread StatusThread;
   SharedLogger Logger = getLogger();
-  Streams &streams;
+  Streams &Streamers;
   std::unique_ptr<KafkaW::ProducerTopic> StatusProducerTopic;
   /// Blocks until the timer thread has stopped
   void waitForStop();

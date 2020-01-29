@@ -35,8 +35,8 @@ void StatusReporter::reportStatus() {
   using nlohmann::json;
   auto Status = json::object();
   Status["service_id"] = MainOptions.MainSettings.ServiceID;
-  auto Streams = streams.getStreamStatuses();
-  Status["streams"] = Streams;
+  auto StreamsStatuses = Streamers.getStreamStatuses();
+  Status["streams"] = StreamsStatuses;
   auto StatusString = Status.dump();
   auto StatusStringSize = StatusString.size();
   if (StatusStringSize > 1000) {
@@ -47,6 +47,8 @@ void StatusReporter::reportStatus() {
   } else {
     Logger->debug("status: {}", StatusString);
   }
+  Streamers.checkStreamStatus();
+
   StatusProducerTopic->produce((unsigned char *)StatusString.c_str(),
                                StatusString.size());
   AsioTimer.expires_at(AsioTimer.expires_at() + Period);
