@@ -31,7 +31,14 @@ public:
       : IO(), Period(Interval), AsioTimer(IO, Period),
         MainOptions(ApplicationMainOptions),
         KafkaInstanceSet(MainLoopKafkaInstanceSet) {
-    this->start();
+    Logger->trace("Starting the MetricsTimer");
+    AsioTimer.async_wait([this](std::error_code const &Error) {
+      if (Error != asio::error::operation_aborted) {
+        this->reportMetrics();
+      }
+    });
+    MetricsThread = std::thread(&MetricsReporter::run, this);
+    ;
   }
 
   std::unique_lock<std::mutex> get_lock_converters();
@@ -41,7 +48,6 @@ public:
   ~MetricsReporter();
 
 private:
-  void start();
   void run() { IO.run(); }
   asio::io_context IO;
   std::chrono::milliseconds Period;

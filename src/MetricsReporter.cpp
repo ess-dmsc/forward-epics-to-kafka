@@ -33,16 +33,6 @@ std::vector<char> getHostname() {
 
 namespace Forwarder {
 
-void MetricsReporter::start() {
-  Logger->trace("Starting the MetricsTimer");
-  AsioTimer.async_wait([this](std::error_code const &Error) {
-    if (Error != asio::error::operation_aborted) {
-      this->reportMetrics();
-    }
-  });
-  MetricsThread = std::thread(&MetricsReporter::run, this);
-}
-
 void MetricsReporter::waitForStop() {
   Logger->trace("Stopping MetricsTimer");
   IO.stop();
