@@ -18,21 +18,10 @@ namespace Forwarder {
 
 class StatusReporter {
 public:
-  explicit StatusReporter(
+  StatusReporter(
       std::chrono::milliseconds Interval, MainOpt &ApplicationMainOptions,
       std::unique_ptr<KafkaW::ProducerTopic> &ApplicationStatusProducerTopic,
-      Streams &MainLoopStreams)
-      : IO(), Period(Interval), AsioTimer(IO, Period),
-        MainOptions(ApplicationMainOptions), streams(MainLoopStreams),
-        StatusProducerTopic(std::move(ApplicationStatusProducerTopic)) {
-    Logger->trace("Starting the StatusTimer");
-    AsioTimer.async_wait([this](std::error_code const &Error) {
-      if (Error != asio::error::operation_aborted) {
-        this->reportStatus();
-      }
-    });
-    StatusThread = std::thread(&StatusReporter::run, this);
-  }
+      Streams &MainLoopStreams);
 
   void reportStatus();
 

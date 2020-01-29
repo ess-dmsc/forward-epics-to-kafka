@@ -25,20 +25,9 @@ class Converter;
 
 class MetricsReporter {
 public:
-  explicit MetricsReporter(
-      std::chrono::milliseconds Interval, MainOpt &ApplicationMainOptions,
-      std::shared_ptr<InstanceSet> &MainLoopKafkaInstanceSet)
-      : IO(), Period(Interval), AsioTimer(IO, Period),
-        MainOptions(ApplicationMainOptions),
-        KafkaInstanceSet(MainLoopKafkaInstanceSet) {
-    Logger->trace("Starting the MetricsTimer");
-    AsioTimer.async_wait([this](std::error_code const &Error) {
-      if (Error != asio::error::operation_aborted) {
-        this->reportMetrics();
-      }
-    });
-    MetricsThread = std::thread(&MetricsReporter::run, this);
-  }
+  MetricsReporter(std::chrono::milliseconds Interval,
+                  MainOpt &ApplicationMainOptions,
+                  std::shared_ptr<InstanceSet> &MainLoopKafkaInstanceSet);
 
   std::unique_lock<std::mutex> get_lock_converters();
 

@@ -33,6 +33,21 @@ std::vector<char> getHostname() {
 
 namespace Forwarder {
 
+MetricsReporter::MetricsReporter(
+    std::chrono::milliseconds Interval, MainOpt &ApplicationMainOptions,
+    std::shared_ptr<InstanceSet> &MainLoopKafkaInstanceSet)
+    : IO(), Period(Interval), AsioTimer(IO, Period),
+      MainOptions(ApplicationMainOptions),
+      KafkaInstanceSet(MainLoopKafkaInstanceSet) {
+  Logger->trace("Starting the MetricsTimer");
+  AsioTimer.async_wait([this](std::error_code const &Error) {
+    if (Error != asio::error::operation_aborted) {
+      this->reportMetrics();
+    }
+  });
+  MetricsThread = std::thread(&MetricsReporter::run, this);
+}
+
 std::unique_lock<std::mutex> MetricsReporter::get_lock_converters() {
   return std::unique_lock<std::mutex>(converters_mutex);
 }
