@@ -38,7 +38,6 @@ public:
       }
     });
     MetricsThread = std::thread(&MetricsReporter::run, this);
-    ;
   }
 
   std::unique_lock<std::mutex> get_lock_converters();

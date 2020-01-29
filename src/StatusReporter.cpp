@@ -12,22 +12,6 @@
 
 namespace Forwarder {
 
-void StatusReporter::start() {
-  Logger->trace("Starting the StatusTimer");
-  AsioTimer.async_wait([this](std::error_code const &Error) {
-    if (Error != asio::error::operation_aborted) {
-      this->reportStatus();
-    }
-  });
-  StatusThread = std::thread(&StatusReporter::run, this);
-}
-
-void StatusReporter::waitForStop() {
-  Logger->trace("Stopping StatusTimer");
-  IO.stop();
-  StatusThread.join();
-}
-
 void StatusReporter::reportStatus() {
   if (!StatusProducerTopic) {
     return;
@@ -57,5 +41,9 @@ void StatusReporter::reportStatus() {
   });
 }
 
-StatusReporter::~StatusReporter() { this->waitForStop(); }
+StatusReporter::~StatusReporter() {
+  Logger->trace("Stopping StatusTimer");
+  IO.stop();
+  StatusThread.join();
+}
 } // namespace Forwarder

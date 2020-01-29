@@ -25,7 +25,14 @@ public:
       : IO(), Period(Interval), AsioTimer(IO, Period),
         MainOptions(ApplicationMainOptions), streams(MainLoopStreams),
         StatusProducerTopic(std::move(ApplicationStatusProducerTopic)) {
-    this->start();
+    Logger->trace("Starting the StatusTimer");
+    AsioTimer.async_wait([this](std::error_code const &Error) {
+      if (Error != asio::error::operation_aborted) {
+        this->reportStatus();
+      }
+    });
+    StatusThread = std::thread(&StatusReporter::run, this);
+    ;
   }
 
   void reportStatus();
@@ -33,7 +40,6 @@ public:
   ~StatusReporter();
 
 private:
-  void start();
   void run() { IO.run(); }
   asio::io_context IO;
   std::chrono::milliseconds Period;
@@ -43,8 +49,6 @@ private:
   SharedLogger Logger = getLogger();
   Streams &streams;
   std::unique_ptr<KafkaW::ProducerTopic> StatusProducerTopic;
-  /// Blocks until the timer thread has stopped
-  void waitForStop();
 };
 
 } // namespace Forwarder
