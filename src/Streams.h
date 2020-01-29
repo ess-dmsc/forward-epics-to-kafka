@@ -58,7 +58,7 @@ public:
   /// NOT THREAD SAFE
   /// \return The last stream in the vector.
   std::shared_ptr<Stream> back();
-  std::shared_ptr<Stream> operator[](size_t s) { return StreamPointers.at(s); };
+  std::shared_ptr<Stream> operator[](size_t s) { const std::lock_guard<std::mutex> lock(StreamsMutex); return StreamPointers.at(s); };
 
 private:
   std::vector<std::shared_ptr<Stream>> StreamPointers;
