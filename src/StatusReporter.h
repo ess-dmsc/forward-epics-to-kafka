@@ -18,22 +18,16 @@ namespace Forwarder {
 
 class StatusReporter {
 public:
-  explicit StatusReporter(
+  StatusReporter(
       std::chrono::milliseconds Interval, MainOpt &ApplicationMainOptions,
       std::unique_ptr<KafkaW::ProducerTopic> &ApplicationStatusProducerTopic,
-      Streams &MainLoopStreams)
-      : IO(), Period(Interval), AsioTimer(IO, Period),
-        MainOptions(ApplicationMainOptions), Streamers(MainLoopStreams),
-        StatusProducerTopic(std::move(ApplicationStatusProducerTopic)) {
-    this->start();
-  }
+      Streams &MainLoopStreams);
 
   void reportStatus();
 
   ~StatusReporter();
 
 private:
-  void start();
   void run() { IO.run(); }
   asio::io_context IO;
   std::chrono::milliseconds Period;
@@ -43,8 +37,6 @@ private:
   SharedLogger Logger = getLogger();
   Streams &Streamers;
   std::unique_ptr<KafkaW::ProducerTopic> StatusProducerTopic;
-  /// Blocks until the timer thread has stopped
-  void waitForStop();
 };
 
 } // namespace Forwarder

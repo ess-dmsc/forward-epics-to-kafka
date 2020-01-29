@@ -12,7 +12,13 @@
 
 namespace Forwarder {
 
-void StatusReporter::start() {
+StatusReporter::StatusReporter(
+    std::chrono::milliseconds Interval, MainOpt &ApplicationMainOptions,
+    std::unique_ptr<KafkaW::ProducerTopic> &ApplicationStatusProducerTopic,
+    Streams &MainLoopStreams)
+    : IO(), Period(Interval), AsioTimer(IO, Period),
+      MainOptions(ApplicationMainOptions), Streamers(MainLoopStreams),
+      StatusProducerTopic(std::move(ApplicationStatusProducerTopic)) {
   Logger->trace("Starting the StatusTimer");
   AsioTimer.async_wait([this](std::error_code const &Error) {
     if (Error != asio::error::operation_aborted) {
@@ -20,12 +26,6 @@ void StatusReporter::start() {
     }
   });
   StatusThread = std::thread(&StatusReporter::run, this);
-}
-
-void StatusReporter::waitForStop() {
-  Logger->trace("Stopping StatusTimer");
-  IO.stop();
-  StatusThread.join();
 }
 
 void StatusReporter::reportStatus() {
@@ -59,5 +59,9 @@ void StatusReporter::reportStatus() {
   });
 }
 
-StatusReporter::~StatusReporter() { this->waitForStop(); }
+StatusReporter::~StatusReporter() {
+  Logger->trace("Stopping StatusTimer");
+  IO.stop();
+  StatusThread.join();
+}
 } // namespace Forwarder

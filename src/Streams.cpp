@@ -78,6 +78,7 @@ void Streams::add(std::shared_ptr<Stream> s) {
 }
 
 std::shared_ptr<Stream> Streams::back() {
+  const std::lock_guard<std::mutex> lock(StreamsMutex);
   return StreamPointers.empty() ? nullptr : StreamPointers.back();
 }
 

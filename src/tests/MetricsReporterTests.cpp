@@ -10,7 +10,7 @@ class MetricsReporterTest : public ::testing::Test {};
 
 namespace Forwarder {
 TEST(MetricsReporterTest, MetricsReporterLogsKafkaMetrics) {
-  std::chrono::milliseconds Interval(10);
+  auto Interval = 10ms;
   auto TestKafkaInstanceSet = std::shared_ptr<InstanceSet>(
       new MockKafkaInstanceSet(KafkaW::BrokerSettings()));
   auto KafkaInstanceSet =
