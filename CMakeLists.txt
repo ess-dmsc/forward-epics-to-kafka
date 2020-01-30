@@ -35,6 +35,15 @@ if(CMAKE_COMPILER_IS_GNUCXX AND COV)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CMAKE_CXX_FLAGS_COVERAGE}")
 endif()
 
+set(USE_TCMALLOC OFF CACHE BOOL "Link against tcmalloc (googleperftools), NB tcmalloc is not installed by Conan")
+if (USE_TCMALLOC)
+    find_library(TCMALLOC_LIB NAMES tcmalloc)
+    if (TCMALLOC_LIB)
+        message("Found TCMALLOC_LIB: ${TCMALLOC_LIB}")
+    else()
+        message(FATAL_ERROR "USE_TCMALLOC requested, but library not found on system. Not ")
+    endif()
+endif()
 
 # Conan - bring in dependencies with conan
 set(CONAN_PROFILE "default" CACHE STRING "Name of conan profile to use, uses default by default")

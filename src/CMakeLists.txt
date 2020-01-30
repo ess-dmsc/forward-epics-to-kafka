@@ -18,6 +18,10 @@ set(libraries_common
         Threads::Threads
 )
 
+if (USE_TCMALLOC)
+    list(APPEND libraries_common ${TCMALLOC_LIB})
+endif()
+
 set(path_include_common "")
 
 # Allow a system installed EPICS library to be used instead of conan package (for ISIS-STFC)
