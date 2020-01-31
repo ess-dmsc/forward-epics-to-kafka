@@ -3,7 +3,7 @@ from helpers.producerwrapper import ProducerWrapper
 from helpers.f142_logdata.Value import Value
 from time import sleep
 from helpers.flatbuffer_helpers import check_expected_value, check_multiple_expected_values
-from helpers.kafka_helpers import create_consumer, poll_for_valid_message
+from helpers.kafka_helpers import create_consumer, poll_for_valid_message, get_last_available_status_message
 from helpers.epics_helpers import change_pv_value
 from helpers.PVs import PVDOUBLE, PVSTR, PVLONG, PVENUM, PVFLOATARRAY
 import json
@@ -235,11 +235,7 @@ def test_forwarder_can_handle_multiple_config_updates(docker_compose_no_command)
     cons.assign([TopicPartition(status_topic, partition=0)])
     sleep(2)
     # Get the last available status message
-    partitions = cons.assignment()
-    _, hi = cons.get_watermark_offsets(partitions[0], cached=False, timeout=2.0)
-    last_msg_offset = hi - 1
-    cons.assign([TopicPartition(status_topic, partition=0, offset=last_msg_offset)])
-    status_msg, _ = poll_for_valid_message(cons, expected_file_identifier=None)
+    status_msg = get_last_available_status_message(cons, status_topic)
 
     streams_json = json.loads(status_msg)['streams']
     streams = []

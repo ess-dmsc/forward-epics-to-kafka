@@ -1,3 +1,4 @@
+from confluent_kafka import TopicPartition
 from confluent_kafka import Consumer
 import uuid
 from helpers.f142_logdata import LogData
@@ -23,6 +24,20 @@ def get_all_available_messages(consumer):
             continue
         messages.append(message)
     return messages
+
+def get_last_available_status_message(cons, status_topic):
+    """
+
+    :param cons:
+    :param status_topic:
+    :return: The last status message.
+    """
+    partitions = cons.assignment()
+    _, hi = cons.get_watermark_offsets(partitions[0], cached=False, timeout=2.0)
+    last_msg_offset = hi - 1
+    cons.assign([TopicPartition(status_topic, partition=0, offset=last_msg_offset)])
+    status_msg, _ = poll_for_valid_message(cons, expected_file_identifier=None)
+    return status_msg
 
 
 def poll_for_valid_message(consumer, expected_file_identifier=b"f142", timeout=15.0):
