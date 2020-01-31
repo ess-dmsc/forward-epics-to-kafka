@@ -29,7 +29,20 @@ TEST(StatusReporterTest, StatusReporterCallsProduce) {
 
   StatusReporter TestStatusReporter(Interval, MainOptions,
                                     ApplicationStatusProducerTopic, streams);
-  std::this_thread::sleep_for(100ms);
+
+  int CallCountTimeoutSeconds = 5;
+  using clock = std::chrono::high_resolution_clock;
+  using time_point = std::chrono::high_resolution_clock::time_point;
+  time_point Tic;
+  time_point Toc;
+  Tic = clock::now();
+
+  while (TestStatusReporter.getReportStatusCallCount() < 1) {
+    Toc = clock::now();
+    if (std::chrono::duration_cast<std::chrono::seconds>((Toc - Tic)).count() >=
+        CallCountTimeoutSeconds)
+      break;
+  }
 }
 
 } // namespace Forwarder
