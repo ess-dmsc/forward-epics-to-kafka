@@ -228,7 +228,6 @@ def test_forwarder_can_handle_multiple_config_updates(docker_compose_no_command)
         prod.add_config([pv])
         list_of_pvs.append(pv)
 
-    #TODO: refactor this out
     sleep(5)
     cons = create_consumer()
     sleep(2)
