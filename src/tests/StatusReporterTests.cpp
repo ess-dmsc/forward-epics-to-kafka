@@ -10,6 +10,7 @@ class StatusReporterTest : public ::testing::Test {};
 
 namespace Forwarder {
 TEST(StatusReporterTest, StatusReporterCallsProduce) {
+  const uint ExpectedCallCount = 1;
   auto Interval = 10ms;
   MainOpt MainOptions;
   std::string TopicName = "Topic Name";
@@ -24,7 +25,7 @@ TEST(StatusReporterTest, StatusReporterCallsProduce) {
       std::make_unique<KafkaW::ProducerTopic>(KafkaProducer, TopicName);
 
   REQUIRE_CALL(*MockKafkaProducer, produce(_, _, _, _, _, _, _, _))
-      .TIMES(AT_LEAST(1))
+      .TIMES(AT_LEAST(ExpectedCallCount))
       .RETURN(RdKafka::ErrorCode::ERR_NO_ERROR);
 
   StatusReporter TestStatusReporter(Interval, MainOptions,

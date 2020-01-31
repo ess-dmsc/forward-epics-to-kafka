@@ -10,6 +10,7 @@ class MetricsReporterTest : public ::testing::Test {};
 
 namespace Forwarder {
 TEST(MetricsReporterTest, MetricsReporterLogsKafkaMetrics) {
+  const uint ExpectedCallCount = 2;
   auto Interval = 10ms;
   auto TestKafkaInstanceSet = std::shared_ptr<InstanceSet>(
       new MockKafkaInstanceSet(KafkaW::BrokerSettings()));
@@ -18,7 +19,8 @@ TEST(MetricsReporterTest, MetricsReporterLogsKafkaMetrics) {
   MainOpt MainOptions;
   MetricsReporter TestMetricsTimer(Interval, MainOptions, TestKafkaInstanceSet);
 
-  REQUIRE_CALL(*KafkaInstanceSet, logMetrics()).TIMES(AT_LEAST(2));
+  REQUIRE_CALL(*KafkaInstanceSet, logMetrics())
+      .TIMES(AT_LEAST(ExpectedCallCount));
 
   int CallCountTimeoutSeconds = 5;
   using clock = std::chrono::high_resolution_clock;
@@ -27,7 +29,7 @@ TEST(MetricsReporterTest, MetricsReporterLogsKafkaMetrics) {
   time_point Toc;
   Tic = clock::now();
 
-  while (TestMetricsTimer.getReportMetricsCallCount() < 2) {
+  while (TestMetricsTimer.getReportMetricsCallCount() < ExpectedCallCount) {
     Toc = clock::now();
     if (std::chrono::duration_cast<std::chrono::seconds>((Toc - Tic)).count() >=
         CallCountTimeoutSeconds)
