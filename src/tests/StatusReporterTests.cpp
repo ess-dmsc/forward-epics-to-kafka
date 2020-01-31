@@ -38,7 +38,7 @@ TEST(StatusReporterTest, StatusReporterCallsProduce) {
   time_point Toc;
   Tic = clock::now();
 
-  while (TestStatusReporter.getReportStatusCallCount() < 1) {
+  while (TestStatusReporter.getReportStatusCallCount() < ExpectedCallCount) {
     Toc = clock::now();
     if (std::chrono::duration_cast<std::chrono::seconds>((Toc - Tic)).count() >=
         CallCountTimeoutSeconds)
