@@ -32,6 +32,7 @@ public:
   std::unique_lock<std::mutex> get_lock_converters();
 
   void reportMetrics();
+  uint64_t getReportMetricsCallCount();
 
   ~MetricsReporter();
 
@@ -46,6 +47,7 @@ private:
   std::map<std::string, std::weak_ptr<Converter>> converters;
   std::mutex converters_mutex;
   std::shared_ptr<InstanceSet> KafkaInstanceSet;
+  uint64_t ReportMetricsCallCount = 0;
 };
 
 } // namespace Forwarder

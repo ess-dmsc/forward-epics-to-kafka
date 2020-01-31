@@ -48,7 +48,7 @@ void StatusReporter::reportStatus() {
     Logger->debug("status: {}", StatusString);
   }
   Streamers.checkStreamStatus();
-
+  ReportStatusCallCount += 1;
   StatusProducerTopic->produce((unsigned char *)StatusString.c_str(),
                                StatusString.size());
   AsioTimer.expires_at(AsioTimer.expires_at() + Period);
@@ -63,5 +63,9 @@ StatusReporter::~StatusReporter() {
   Logger->trace("Stopping StatusTimer");
   IO.stop();
   StatusThread.join();
+}
+
+uint64_t StatusReporter::getReportStatusCallCount() {
+  return ReportStatusCallCount;
 }
 } // namespace Forwarder

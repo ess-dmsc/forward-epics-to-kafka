@@ -25,6 +25,8 @@ public:
 
   void reportStatus();
 
+  uint64_t getReportStatusCallCount();
+
   ~StatusReporter();
 
 private:
@@ -37,6 +39,7 @@ private:
   SharedLogger Logger = getLogger();
   Streams &Streamers;
   std::unique_ptr<KafkaW::ProducerTopic> StatusProducerTopic;
+  uint64_t ReportStatusCallCount = 0;
 };
 
 } // namespace Forwarder

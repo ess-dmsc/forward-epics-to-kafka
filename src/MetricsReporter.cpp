@@ -107,6 +107,7 @@ void MetricsReporter::reportMetrics() {
     }
     CURLReporter::send(StatsBuffer, MainOptions.InfluxURI);
   }
+  ReportMetricsCallCount += 1;
   AsioTimer.expires_at(AsioTimer.expires_at() + Period);
   AsioTimer.async_wait([this](std::error_code const &Error) {
     if (Error != asio::error::operation_aborted) {
@@ -119,5 +120,9 @@ MetricsReporter::~MetricsReporter() {
   Logger->trace("Stopping MetricsTimer");
   IO.stop();
   MetricsThread.join();
+}
+
+uint64_t MetricsReporter::getReportMetricsCallCount() {
+  return ReportMetricsCallCount;
 }
 } // namespace Forwarder
