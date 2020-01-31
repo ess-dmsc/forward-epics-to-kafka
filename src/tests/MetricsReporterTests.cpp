@@ -10,6 +10,7 @@ class MetricsReporterTest : public ::testing::Test {};
 
 namespace Forwarder {
 TEST(MetricsReporterTest, MetricsReporterLogsKafkaMetrics) {
+
   auto Interval = 10ms;
   auto TestKafkaInstanceSet = std::shared_ptr<InstanceSet>(
       new MockKafkaInstanceSet(KafkaW::BrokerSettings()));
@@ -20,7 +21,19 @@ TEST(MetricsReporterTest, MetricsReporterLogsKafkaMetrics) {
 
   REQUIRE_CALL(*KafkaInstanceSet, logMetrics()).TIMES(AT_LEAST(2));
 
-  std::this_thread::sleep_for(100ms);
+  int CallCountTimeout = 5;
+  using clock = std::chrono::high_resolution_clock;
+  using time_point = std::chrono::high_resolution_clock::time_point;
+  time_point Tic;
+  time_point Toc;
+  Tic = clock::now();
+
+  while (TestMetricsTimer.getReportMetricsCallCount() < 2) {
+    Toc = clock::now();
+    if (std::chrono::duration_cast<std::chrono::seconds>((Toc - Tic)).count() >=
+        CallCountTimeout)
+      break;
+  }
 }
 
 } // namespace Forwarder
