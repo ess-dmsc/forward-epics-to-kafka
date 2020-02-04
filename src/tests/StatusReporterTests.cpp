@@ -9,6 +9,19 @@ using trompeloeil::_;
 class StatusReporterTest : public ::testing::Test {};
 
 namespace Forwarder {
+
+void waitForReportIterations(StatusReporter &Reporter,
+                             uint32_t const NumberOfIterationsToWaitFor) {
+  auto PollInterval = 50ms;
+  auto TotalWait = 0ms;
+  auto TimeOut = 10s; // Max wait time, prevent test hanging indefinitely
+  while (Reporter.ReportIterations < NumberOfIterationsToWaitFor &&
+         TotalWait < TimeOut) {
+    std::this_thread::sleep_for(PollInterval);
+    TotalWait += PollInterval;
+  }
+}
+
 TEST(StatusReporterTest, StatusReporterCallsProduce) {
   auto Interval = 10ms;
   MainOpt MainOptions;
@@ -23,13 +36,16 @@ TEST(StatusReporterTest, StatusReporterCallsProduce) {
   ApplicationStatusProducerTopic =
       std::make_unique<KafkaW::ProducerTopic>(KafkaProducer, TopicName);
 
+  uint32_t const ReportsToWaitFor = 2;
+
   REQUIRE_CALL(*MockKafkaProducer, produce(_, _, _, _, _, _, _, _))
-      .TIMES(AT_LEAST(1))
+      .TIMES(AT_LEAST(ReportsToWaitFor))
       .RETURN(RdKafka::ErrorCode::ERR_NO_ERROR);
 
   StatusReporter TestStatusReporter(Interval, MainOptions,
                                     ApplicationStatusProducerTopic, streams);
-  std::this_thread::sleep_for(100ms);
+
+  waitForReportIterations(TestStatusReporter, ReportsToWaitFor);
 }
 
 } // namespace Forwarder
