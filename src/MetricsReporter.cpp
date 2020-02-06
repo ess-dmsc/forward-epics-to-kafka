@@ -107,6 +107,7 @@ void MetricsReporter::reportMetrics() {
     }
     CURLReporter::send(StatsBuffer, MainOptions.InfluxURI);
   }
+
   AsioTimer.expires_at(AsioTimer.expires_at() + Period);
   AsioTimer.async_wait([this](std::error_code const &Error) {
     if (Error != asio::error::operation_aborted) {
