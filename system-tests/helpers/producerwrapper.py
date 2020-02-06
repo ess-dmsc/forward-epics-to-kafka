@@ -78,11 +78,3 @@ class ProducerWrapper:
         :return: None
         """
         self.producer.produce(self.topic, value="{\"cmd\": \"stop_all\"}")
-
-    def exit(self):
-        """
-        Sends a exit command to the forwarder.
-
-        :return: None
-        """
-        self.producer.produce(self.topic, value="{\"cmd\": \"exit\"}")

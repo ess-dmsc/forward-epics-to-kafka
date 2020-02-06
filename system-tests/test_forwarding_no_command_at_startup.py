@@ -186,36 +186,6 @@ def test_forwarder_updates_pv_when_config_change_add_two_pvs(docker_compose_no_c
     cons.close()
 
 
-# def test_connection_status_messages(docker_compose_no_command):
-#     """
-#       GIVEN PV is configured to be forwarded
-#       WHEN Connection status changes
-#       THEN Forwarder publishes ep00 message with connection status
-#
-#       NOTE: Enums are converted to Ints in the forwarder.
-#       """
-#     data_topic = "TEST_forwarderData_connection_status"
-#     pvs = [PVENUM]
-#
-#     prod = ProducerWrapper("localhost:9092", CONFIG_TOPIC, data_topic)
-#     prod.add_config(pvs)
-#     # Wait for config to be pushed
-#     sleep(5)
-#
-#     cons = create_consumer()
-#
-#     # Update value
-#     change_pv_value(PVENUM, "START")
-#     # Wait for PV to be updated
-#     sleep(5)
-#     cons.subscribe([data_topic])
-#
-#     first_msg = poll_for_connection_status_message(cons)
-#     check_expected_connection_status_values(first_msg, EventType.CONNECTED)
-#
-#     cons.close()
-
-
 def test_forwarder_can_handle_multiple_config_updates(docker_compose_no_command):
     status_topic = "TEST_forwarderStatus"
     data_topic = "TEST_forwarderData_connection_status"
