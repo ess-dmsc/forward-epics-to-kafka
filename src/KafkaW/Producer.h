@@ -27,7 +27,11 @@ public:
   virtual ~ProducerInterface() = default;
   virtual void poll() = 0;
   virtual int outputQueueLength() = 0;
-  virtual RdKafka::Producer *getRdKafkaPtr() const = 0;
+
+  virtual RdKafka::ErrorCode produce(RdKafka::Topic *Topic, int32_t Partition,
+                                     int MessageFlags, void *Payload,
+                                     size_t PayloadSize, const void *Key,
+                                     size_t KeySize, void *OpaqueMessage) = 0;
   ProducerStats Stats;
 };
 
@@ -47,8 +51,6 @@ public:
   /// \return The number of messages.
   int outputQueueLength() override;
 
-  RdKafka::Producer *getRdKafkaPtr() const override;
-
   /// Send a message to Kafka.
   ///
   /// \param Topic The topic to publish to.
@@ -63,7 +65,7 @@ public:
   RdKafka::ErrorCode produce(RdKafka::Topic *Topic, int32_t Partition,
                              int MessageFlags, void *Payload,
                              size_t PayloadSize, const void *Key,
-                             size_t KeySize, void *OpaqueMessage);
+                             size_t KeySize, void *OpaqueMessage) override;
 
   std::unique_ptr<RdKafka::Topic> createTopic(const std::string &TopicString,
                                               std::string &ErrStr);

@@ -17,6 +17,8 @@
 
 namespace Forwarder {
 
+using nlohmann::json;
+
 class Stream;
 
 class Streams {
@@ -25,7 +27,7 @@ public:
   /// Gets the number of streams.
   ///
   /// \return The number of streams.
-  size_t size() const;
+  size_t size();
 
   /// Stop the specified channel and remove the stream.
   ///
@@ -37,6 +39,8 @@ public:
 
   /// Check the status of the streams and stop any that are in error.
   void checkStreamStatus();
+
+  json getStreamStatuses();
 
   /// Add a stream.
   ///
@@ -51,11 +55,13 @@ public:
   getStreamByChannelName(std::string const &channel_name);
 
   /// Get the last stream in the vector.
-  ///
+  /// NOT THREAD SAFE
   /// \return The last stream in the vector.
   std::shared_ptr<Stream> back();
-  std::shared_ptr<Stream> operator[](size_t s) { return StreamPointers.at(s); };
-  const std::vector<std::shared_ptr<Stream>> &getStreams() const;
+  std::shared_ptr<Stream> operator[](size_t s) {
+    const std::lock_guard<std::mutex> lock(StreamsMutex);
+    return StreamPointers.at(s);
+  };
 
 private:
   std::vector<std::shared_ptr<Stream>> StreamPointers;

@@ -67,10 +67,6 @@ void Producer::poll() {
   Stats.out_queue = outputQueueLength();
 }
 
-RdKafka::Producer *Producer::getRdKafkaPtr() const {
-  return dynamic_cast<RdKafka::Producer *>(ProducerPtr.get());
-}
-
 int Producer::outputQueueLength() { return ProducerPtr->outq_len(); }
 
 RdKafka::ErrorCode Producer::produce(RdKafka::Topic *Topic, int32_t Partition,
@@ -92,6 +88,7 @@ RdKafka::ErrorCode Producer::produce(RdKafka::Topic *Topic, int32_t Partition,
 std::unique_ptr<RdKafka::Topic>
 Producer::createTopic(const std::string &TopicString, std::string &ErrStr) {
   return std::unique_ptr<RdKafka::Topic>(RdKafka::Topic::create(
-      getRdKafkaPtr(), TopicString, TopicConf.get(), ErrStr));
+      dynamic_cast<RdKafka::Producer *>(ProducerPtr.get()), TopicString,
+      TopicConf.get(), ErrStr));
 }
 } // namespace KafkaW

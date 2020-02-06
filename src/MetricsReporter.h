@@ -23,33 +23,22 @@ namespace Forwarder {
 
 class Converter;
 
-class MetricsTimer {
+class MetricsReporter {
 public:
-  explicit MetricsTimer(std::chrono::milliseconds Interval,
-                        MainOpt &ApplicationMainOptions,
-                        std::shared_ptr<InstanceSet> &MainLoopKafkaInstanceSet)
-      : IO(), Period(Interval), AsioTimer(IO, Period), Running(false),
-        MainOptions(ApplicationMainOptions),
-        KafkaInstanceSet(MainLoopKafkaInstanceSet) {
-    this->start();
-  }
-
-  /// Blocks until the timer thread has stopped
-  void waitForStop();
+  MetricsReporter(std::chrono::milliseconds Interval,
+                  MainOpt &ApplicationMainOptions,
+                  std::shared_ptr<InstanceSet> &MainLoopKafkaInstanceSet);
 
   std::unique_lock<std::mutex> get_lock_converters();
 
   void reportMetrics();
-
-  ~MetricsTimer();
+  ~MetricsReporter();
 
 private:
-  void start();
   void run() { IO.run(); }
   asio::io_context IO;
   std::chrono::milliseconds Period;
   asio::steady_timer AsioTimer;
-  std::atomic_bool Running;
   std::thread MetricsThread;
   MainOpt &MainOptions;
   SharedLogger Logger = getLogger();

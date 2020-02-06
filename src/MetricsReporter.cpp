@@ -7,7 +7,7 @@
 //
 // Screaming Udder!                              https://esss.se
 
-#include "MetricsTimer.h"
+#include "MetricsReporter.h"
 #include "CURLReporter.h"
 #include "CommandHandler.h"
 #include "Converter.h"
@@ -33,33 +33,26 @@ std::vector<char> getHostname() {
 
 namespace Forwarder {
 
-void MetricsTimer::start() {
+MetricsReporter::MetricsReporter(
+    std::chrono::milliseconds Interval, MainOpt &ApplicationMainOptions,
+    std::shared_ptr<InstanceSet> &MainLoopKafkaInstanceSet)
+    : IO(), Period(Interval), AsioTimer(IO, Period),
+      MainOptions(ApplicationMainOptions),
+      KafkaInstanceSet(MainLoopKafkaInstanceSet) {
   Logger->trace("Starting the MetricsTimer");
-  Running = true;
-  AsioTimer.async_wait(
-      [this](std::error_code const & /*error*/) { this->reportMetrics(); });
-  MetricsThread = std::thread(&MetricsTimer::run, this);
+  AsioTimer.async_wait([this](std::error_code const &Error) {
+    if (Error != asio::error::operation_aborted) {
+      this->reportMetrics();
+    }
+  });
+  MetricsThread = std::thread(&MetricsReporter::run, this);
 }
 
-void MetricsTimer::waitForStop() {
-  // AsioTimer.cancel() would only stop the timer execution if there is an
-  // async_wait "in flight" we therefore need the Running flag and supporting
-  // logic too, to ensure that the reportMetrics call chain is definitely
-  // stopped
-  Logger->trace("Stopping MetricsTimer");
-  Running = false;
-  AsioTimer.cancel();
-  MetricsThread.join();
-}
-
-std::unique_lock<std::mutex> MetricsTimer::get_lock_converters() {
+std::unique_lock<std::mutex> MetricsReporter::get_lock_converters() {
   return std::unique_lock<std::mutex>(converters_mutex);
 }
 
-void MetricsTimer::reportMetrics() {
-  if (!Running) {
-    return;
-  }
+void MetricsReporter::reportMetrics() {
   KafkaInstanceSet->logMetrics();
   auto m1 = g__total_msgs_to_kafka.load();
   auto m2 = m1 / 1000;
@@ -114,10 +107,18 @@ void MetricsTimer::reportMetrics() {
     }
     CURLReporter::send(StatsBuffer, MainOptions.InfluxURI);
   }
+
   AsioTimer.expires_at(AsioTimer.expires_at() + Period);
-  AsioTimer.async_wait(
-      [this](std::error_code const & /*error*/) { this->reportMetrics(); });
+  AsioTimer.async_wait([this](std::error_code const &Error) {
+    if (Error != asio::error::operation_aborted) {
+      this->reportMetrics();
+    }
+  });
 }
 
-MetricsTimer::~MetricsTimer() { this->waitForStop(); }
+MetricsReporter::~MetricsReporter() {
+  Logger->trace("Stopping MetricsTimer");
+  IO.stop();
+  MetricsThread.join();
+}
 } // namespace Forwarder
