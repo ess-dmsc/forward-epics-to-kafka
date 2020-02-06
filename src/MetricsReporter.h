@@ -34,10 +34,6 @@ public:
   void reportMetrics();
   ~MetricsReporter();
 
-  // Used for testing, so that we can poll to see when report iterations have
-  // happened instead of relying on them happening within a short time frame
-  std::atomic_uint64_t ReportIterations{0};
-
 private:
   void run() { IO.run(); }
   asio::io_context IO;

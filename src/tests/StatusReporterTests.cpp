@@ -1,5 +1,6 @@
 #include "MockProducer.h"
-#include <StatusReporter.h>
+#include "ReporterHelpers.h"
+#include "StatusReporter.h"
 #include <gtest/gtest.h>
 #include <trompeloeil.hpp>
 
@@ -9,18 +10,6 @@ using trompeloeil::_;
 class StatusReporterTest : public ::testing::Test {};
 
 namespace Forwarder {
-
-void waitForReportIterations(StatusReporter &Reporter,
-                             uint32_t const NumberOfIterationsToWaitFor) {
-  auto PollInterval = 50ms;
-  auto TotalWait = 0ms;
-  auto TimeOut = 10s; // Max wait time, prevent test hanging indefinitely
-  while (Reporter.ReportIterations < NumberOfIterationsToWaitFor &&
-         TotalWait < TimeOut) {
-    std::this_thread::sleep_for(PollInterval);
-    TotalWait += PollInterval;
-  }
-}
 
 TEST(StatusReporterTest, StatusReporterCallsProduce) {
   auto Interval = 10ms;
@@ -37,15 +26,18 @@ TEST(StatusReporterTest, StatusReporterCallsProduce) {
       std::make_unique<KafkaW::ProducerTopic>(KafkaProducer, TopicName);
 
   uint32_t const ReportsToWaitFor = 2;
+  std::atomic<uint32_t> ReportIterations{0};
 
   REQUIRE_CALL(*MockKafkaProducer, produce(_, _, _, _, _, _, _, _))
       .TIMES(AT_LEAST(ReportsToWaitFor))
-      .RETURN(RdKafka::ErrorCode::ERR_NO_ERROR);
+      .RETURN(RdKafka::ErrorCode::ERR_NO_ERROR)
+      .LR_SIDE_EFFECT(ReportIterations++);
+  ;
 
   StatusReporter TestStatusReporter(Interval, MainOptions,
                                     ApplicationStatusProducerTopic, streams);
 
-  waitForReportIterations(TestStatusReporter, ReportsToWaitFor);
+  waitForReportIterations(ReportsToWaitFor, ReportIterations);
 }
 
 } // namespace Forwarder

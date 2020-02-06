@@ -1,5 +1,6 @@
+#include "MetricsReporter.h"
 #include "MockKafkaInstanceSet.h"
-#include <MetricsReporter.h>
+#include "ReporterHelpers.h"
 #include <gtest/gtest.h>
 #include <trompeloeil.hpp>
 
@@ -9,18 +10,6 @@ using trompeloeil::_;
 class MetricsReporterTest : public ::testing::Test {};
 
 namespace Forwarder {
-
-void waitForReportIterations(MetricsReporter &Reporter,
-                             uint32_t const NumberOfIterationsToWaitFor) {
-  auto PollInterval = 50ms;
-  auto TotalWait = 0ms;
-  auto TimeOut = 10s; // Max wait time, prevent test hanging indefinitely
-  while (Reporter.ReportIterations < NumberOfIterationsToWaitFor &&
-         TotalWait < TimeOut) {
-    std::this_thread::sleep_for(PollInterval);
-    TotalWait += PollInterval;
-  }
-}
 
 TEST(MetricsReporterTest, MetricsReporterLogsKafkaMetrics) {
   auto Interval = 10ms;
@@ -32,10 +21,12 @@ TEST(MetricsReporterTest, MetricsReporterLogsKafkaMetrics) {
   MetricsReporter TestMetricsTimer(Interval, MainOptions, TestKafkaInstanceSet);
 
   uint32_t const ReportsToWaitFor = 2;
+  std::atomic<uint32_t> ReportIterations{0};
 
   REQUIRE_CALL(*KafkaInstanceSet, logMetrics())
-      .TIMES(AT_LEAST(ReportsToWaitFor));
+      .TIMES(AT_LEAST(ReportsToWaitFor))
+      .LR_SIDE_EFFECT(ReportIterations++);
 
-  waitForReportIterations(TestMetricsTimer, ReportsToWaitFor);
+  waitForReportIterations(ReportsToWaitFor, ReportIterations);
 }
 } // namespace Forwarder
