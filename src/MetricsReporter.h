@@ -32,7 +32,6 @@ public:
   std::unique_lock<std::mutex> get_lock_converters();
 
   void reportMetrics();
-
   ~MetricsReporter();
 
 private:

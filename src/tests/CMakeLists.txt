@@ -25,7 +25,9 @@ set(tests_SRC
     MetricsReporterTests.cpp
     MockKafkaInstanceSet.h
     StatusReporterTests.cpp
-    MockProducer.h)
+    MockProducer.h
+    ReporterHelpers.h
+    ReporterHelpers.cpp)
 
 find_package(Trompeloeil REQUIRED)
 add_executable(tests ${tests_SRC})

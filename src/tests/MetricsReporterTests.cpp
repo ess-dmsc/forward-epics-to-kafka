@@ -1,5 +1,6 @@
+#include "MetricsReporter.h"
 #include "MockKafkaInstanceSet.h"
-#include <MetricsReporter.h>
+#include "ReporterHelpers.h"
 #include <gtest/gtest.h>
 #include <trompeloeil.hpp>
 
@@ -9,6 +10,7 @@ using trompeloeil::_;
 class MetricsReporterTest : public ::testing::Test {};
 
 namespace Forwarder {
+
 TEST(MetricsReporterTest, MetricsReporterLogsKafkaMetrics) {
   auto Interval = 10ms;
   auto TestKafkaInstanceSet = std::shared_ptr<InstanceSet>(
@@ -18,9 +20,13 @@ TEST(MetricsReporterTest, MetricsReporterLogsKafkaMetrics) {
   MainOpt MainOptions;
   MetricsReporter TestMetricsTimer(Interval, MainOptions, TestKafkaInstanceSet);
 
-  REQUIRE_CALL(*KafkaInstanceSet, logMetrics()).TIMES(AT_LEAST(2));
+  uint32_t const ReportsToWaitFor = 2;
+  std::atomic<uint32_t> ReportIterations{0};
 
-  std::this_thread::sleep_for(100ms);
+  REQUIRE_CALL(*KafkaInstanceSet, logMetrics())
+      .TIMES(AT_LEAST(ReportsToWaitFor))
+      .LR_SIDE_EFFECT(ReportIterations++);
+
+  waitForReportIterations(ReportsToWaitFor, ReportIterations);
 }
-
 } // namespace Forwarder

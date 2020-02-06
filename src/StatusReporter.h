@@ -24,7 +24,6 @@ public:
       Streams &MainLoopStreams);
 
   void reportStatus();
-
   ~StatusReporter();
 
 private:
