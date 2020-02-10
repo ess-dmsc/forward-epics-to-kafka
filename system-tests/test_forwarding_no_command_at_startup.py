@@ -186,17 +186,18 @@ def test_forwarder_updates_pv_when_config_change_add_two_pvs(docker_compose_no_c
     cons.close()
 
 
-def test_forwarder_can_handle_multiple_config_updates(docker_compose_no_command):
+def test_forwarder_can_handle_rapid_config_updates(docker_compose_no_command):
     status_topic = "TEST_forwarderStatus"
     data_topic = "TEST_forwarderData_connection_status"
 
     base_pv = PVDOUBLE
     prod = ProducerWrapper("localhost:9092", CONFIG_TOPIC, data_topic)
-    list_of_pvs = []
-    for i in range(100):
+    configured_list_of_pvs = []
+    number_of_config_updates = 100
+    for i in range(number_of_config_updates):
         pv = base_pv + str(i)
         prod.add_config([pv])
-        list_of_pvs.append(pv)
+        configured_list_of_pvs.append(pv)
 
     sleep(5)
     cons = create_consumer()
@@ -211,5 +212,5 @@ def test_forwarder_can_handle_multiple_config_updates(docker_compose_no_command)
     for item in streams_json:
         streams.append(item['channel_name'])
 
-    for pv in list_of_pvs:
-        assert pv in streams
+    for pv in configured_list_of_pvs:
+        assert pv in streams, "Expect configured PV to be reported as being forwarded"
