@@ -36,7 +36,7 @@ void Streams::clearStreams() {
       Stream->stop();
     }
     // Wait for Epics to cool down
-    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
     StreamPointers.clear();
   }
   Logger->trace("Main::clearStreams()  end");

@@ -2,9 +2,8 @@ from confluent_kafka import TopicPartition
 from helpers.producerwrapper import ProducerWrapper
 from helpers.f142_logdata.Value import Value
 from time import sleep
-from helpers.kafka_helpers import create_consumer, poll_for_valid_message
-from helpers.flatbuffer_helpers import check_expected_value, \
-    check_multiple_expected_values
+from helpers.flatbuffer_helpers import check_expected_value, check_multiple_expected_values
+from helpers.kafka_helpers import create_consumer, poll_for_valid_message, get_last_available_status_message
 from helpers.epics_helpers import change_pv_value
 from helpers.PVs import PVDOUBLE, PVSTR, PVLONG, PVENUM, PVFLOATARRAY
 import json
@@ -185,3 +184,33 @@ def test_forwarder_updates_pv_when_config_change_add_two_pvs(docker_compose_no_c
     messages = [poll_for_valid_message(cons)[0], poll_for_valid_message(cons)[0]]
     check_multiple_expected_values(messages, expected_values)
     cons.close()
+
+
+def test_forwarder_can_handle_rapid_config_updates(docker_compose_no_command):
+    status_topic = "TEST_forwarderStatus"
+    data_topic = "TEST_forwarderData_connection_status"
+
+    base_pv = PVDOUBLE
+    prod = ProducerWrapper("localhost:9092", CONFIG_TOPIC, data_topic)
+    configured_list_of_pvs = []
+    number_of_config_updates = 100
+    for i in range(number_of_config_updates):
+        pv = base_pv + str(i)
+        prod.add_config([pv])
+        configured_list_of_pvs.append(pv)
+
+    sleep(5)
+    cons = create_consumer()
+    sleep(2)
+    cons.assign([TopicPartition(status_topic, partition=0)])
+    sleep(2)
+    # Get the last available status message
+    status_msg = get_last_available_status_message(cons, status_topic)
+
+    streams_json = json.loads(status_msg)['streams']
+    streams = []
+    for item in streams_json:
+        streams.append(item['channel_name'])
+
+    for pv in configured_list_of_pvs:
+        assert pv in streams, "Expect configured PV to be reported as being forwarded"

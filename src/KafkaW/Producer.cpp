@@ -62,7 +62,7 @@ Producer::Producer(BrokerSettings Settings)
 }
 
 void Producer::poll() {
-  auto EventsHandled = ProducerPtr->poll(ProducerBrokerSettings.PollTimeoutMS);
+  auto EventsHandled = ProducerPtr->poll(0);
   Stats.poll_served += EventsHandled;
   Stats.out_queue = outputQueueLength();
 }

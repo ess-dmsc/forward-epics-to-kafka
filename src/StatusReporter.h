@@ -34,7 +34,7 @@ private:
   MainOpt &MainOptions;
   std::thread StatusThread;
   SharedLogger Logger = getLogger();
-  Streams &streams;
+  Streams &Streamers;
   std::unique_ptr<KafkaW::ProducerTopic> StatusProducerTopic;
 };
 
