@@ -3,7 +3,7 @@ fmt/6.1.2
 gtest/1.8.1@bincrafters/stable
 librdkafka/1.2.0@ess-dmsc/stable
 spdlog/1.4.2
-streaming-data-types/70c9a71@ess-dmsc/stable
+streaming-data-types/65e23a1@ess-dmsc/stable
 CLI11/1.8.0@cliutils/stable
 jsonformoderncpp/3.6.1@vthiery/stable
 concurrentqueue/8f7e861@ess-dmsc/stable
