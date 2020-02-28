@@ -1,4 +1,4 @@
-from confluent_kafka import TopicPartition
+from confluent_kafka import TopicPartition, Consumer
 from helpers.producerwrapper import ProducerWrapper
 from helpers.f142_logdata.Value import Value
 from time import sleep
@@ -36,91 +36,73 @@ def teardown_function(function):
     sleep(3)
 
 
-def test_forwarder_sends_pv_updates_single_pv_enum(docker_compose_no_command):
-    """
-    GIVEN PV of enum type is configured to be forwarded
-    WHEN PV value is updated
-    THEN Forwarder publishes the update to Kafka
-
-    NOTE: Enums are converted to Ints in the forwarder.
-    """
-    data_topic = "TEST_forwarderData_enum_pv_update"
-    pvs = [PVENUM]
+def test_forwarding_of_various_pv_types(docker_compose_no_command):
+    # Update forwarder configuration over Kafka
+    # (rather than providing it in a JSON file when the forwarder is launched)
+    data_topic = "TEST_forwarderData"
 
     sleep(5)
     prod = ProducerWrapper("localhost:9092", CONFIG_TOPIC, data_topic)
-    prod.add_config(pvs)
-    # Wait for config to be pushed
-    sleep(5)
-
     cons = create_consumer()
+    cons.subscribe([data_topic])
 
+    forwarding_enum(cons, prod)
+    consumer_seek_to_end_of_topic(cons, data_topic)
+    forwarding_floatarray(cons, prod)
+    consumer_seek_to_end_of_topic(cons, data_topic)
+    forwarding_string_and_long(cons, prod)
+
+    cons.close()
+
+
+def consumer_seek_to_end_of_topic(consumer: Consumer, data_topic: str):
+    consumer.unsubscribe()
+    sleep(1)
+    # Resubscribe at end of topic
+    consumer.subscribe([data_topic])
+
+
+def forwarding_enum(consumer: Consumer, producer: ProducerWrapper):
+    pvs = [PVENUM]
+    producer.add_config(pvs)
+    # Wait for config change to be picked up
+    sleep(5)
     # Update value
     change_pv_value(PVENUM, np.array(["START"]).astype(np.string_))
-    # Wait for PV to be updated
-    cons.subscribe([data_topic])
+    # Wait for forwarder to forward PV update into Kafka
     sleep(5)
-
-    first_msg, _ = poll_for_valid_message(cons)
+    first_msg, _ = poll_for_valid_message(consumer)
     check_expected_value(first_msg, Value.Int, PVENUM, 0)
-
-    second_msg, _ = poll_for_valid_message(cons)
+    second_msg, _ = poll_for_valid_message(consumer)
     check_expected_value(second_msg, Value.Int, PVENUM, 1)
-    cons.close()
+    producer.remove_config(pvs)
 
 
-def test_forwarder_sends_pv_updates_single_floatarray(docker_compose_no_command):
-    """
-    GIVEN PV of enum type is configured to be forwarded
-    WHEN PV value is updated
-    THEN Forwarder publishes the update to Kafka
-    """
-
-    data_topic = "TEST_forwarderData_floatarray_pv_update"
+def forwarding_floatarray(consumer: Consumer, producer: ProducerWrapper):
     pvs = [PVFLOATARRAY]
-
-    prod = ProducerWrapper("localhost:9092", CONFIG_TOPIC, data_topic)
-    prod.add_config(pvs)
+    producer.add_config(pvs)
     # Wait for config to be pushed
     sleep(5)
-
-    cons = create_consumer()
-
-    # Wait for PV to be updated
-    cons.subscribe([data_topic])
+    # Wait for forwarder to forward PV update into Kafka
     sleep(5)
-
-    first_msg, _ = poll_for_valid_message(cons)
+    first_msg, _ = poll_for_valid_message(consumer)
     check_expected_value(first_msg, Value.ArrayFloat, PVFLOATARRAY, INITIAL_FLOATARRAY_VALUE)
-    cons.close()
+    producer.remove_config(pvs)
 
 
-def test_forwarder_updates_multiple_pvs(docker_compose_no_command):
-    """
-    GIVEN multiple PVs (string and long types) are configured to be forwarded
-    WHEN PV value is updated
-    THEN Forwarder publishes the updates to Kafka
-    """
-    data_topic = "TEST_forwarderData_multiple"
-
+def forwarding_string_and_long(consumer: Consumer, producer: ProducerWrapper):
     pvs = [PVSTR, PVLONG]
-    prod = ProducerWrapper("localhost:9092", CONFIG_TOPIC, data_topic)
-    prod.add_config(pvs)
-
-    sleep(2)
-    cons = create_consumer()
-    sleep(2)
-    cons.subscribe([data_topic])
-    sleep(4)
-
+    producer.add_config(pvs)
+    # Wait for config to be pushed
+    sleep(5)
+    # Wait for forwarder to forward PV update into Kafka
+    sleep(5)
     expected_values = {PVSTR: (Value.String, b""), PVLONG: (Value.Int, 0)}
-
-    first_msg, _ = poll_for_valid_message(cons)
-    second_msg, _ = poll_for_valid_message(cons)
+    first_msg, _ = poll_for_valid_message(consumer)
+    second_msg, _ = poll_for_valid_message(consumer)
     messages = [first_msg, second_msg]
-
     check_multiple_expected_values(messages, expected_values)
-    cons.close()
+    producer.remove_config(pvs)
 
 
 def test_forwarder_status_shows_added_pvs(docker_compose_no_command):
@@ -156,33 +138,6 @@ def test_forwarder_status_shows_added_pvs(docker_compose_no_command):
         f"Expect these channels to be configured as forwarded: {expected_names_of_channels_being_forwarded}, " \
             f"but status message report these as forwarded: {names_of_channels_being_forwarded}"
 
-    cons.close()
-
-
-def test_forwarder_updates_pv_when_config_change_add_two_pvs(docker_compose_no_command):
-    """
-    GIVEN A PV (double type) is already being forwarded
-    WHEN A message configures two additional PV (str and long types) to be forwarded
-    THEN Forwarder publishes initial values for added PVs
-    """
-    data_topic = "TEST_forwarderData_change_config"
-    pvs = [PVSTR, PVLONG]
-    prod = ProducerWrapper("localhost:9092", CONFIG_TOPIC, data_topic)
-    prod.add_config(pvs)
-
-    sleep(2)
-    cons = create_consumer()
-    sleep(2)
-    cons.subscribe([data_topic])
-    sleep(2)
-
-    poll_for_valid_message(cons)
-    poll_for_valid_message(cons)
-
-    expected_values = {PVSTR: (Value.String, b""), PVLONG: (Value.Int, 0)}
-
-    messages = [poll_for_valid_message(cons)[0], poll_for_valid_message(cons)[0]]
-    check_multiple_expected_values(messages, expected_values)
     cons.close()
 
 

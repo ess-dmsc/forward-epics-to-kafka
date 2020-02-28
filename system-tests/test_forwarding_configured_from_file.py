@@ -10,14 +10,7 @@ from helpers.f142_logdata.AlarmStatus import AlarmStatus
 CONFIG_TOPIC = "TEST_forwarderConfig"
 
 
-def test_config_file_channel_created_correctly(docker_compose):
-    """
-    GIVEN Forwarder is started with a config file specifying a PV to forward (forwarder_config.json)
-    WHEN PV value is updated
-    THEN Forwarder publishes the update to Kafka
-
-    :param docker_compose: Test fixture (see https://docs.pytest.org/en/latest/fixture.html)
-    """
+def test_forwarding_configured_from_file(docker_compose):
     cons = create_consumer()
     cons.subscribe(['TEST_forwarderData_pv_from_config'])
     sleep(5)
