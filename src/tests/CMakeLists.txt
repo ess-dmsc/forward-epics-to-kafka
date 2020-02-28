@@ -20,7 +20,7 @@ set(tests_SRC
     ConsumerTests.cpp
     MockMessage.h
     ConvertTDCTest.cpp
-    f142DataFromPVStructTests.cpp
+    GetAlarmDetailsTests.cpp
     UnitTests.cpp
     MetricsReporterTests.cpp
     MockKafkaInstanceSet.h
