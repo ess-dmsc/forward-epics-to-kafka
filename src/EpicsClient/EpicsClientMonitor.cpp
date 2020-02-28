@@ -70,6 +70,9 @@ int EpicsClientMonitor::stop() { return Impl->stop(); }
 
 bool EpicsClientMonitor::alarmMessageChanged(
     std::shared_ptr<FlatBufs::EpicsPVUpdate> &Update) {
+  if (Update->epics_pvstr->getSubField("alarm") == nullptr) {
+    return false;
+  }
   auto CurrentAlarmString = getAlarmStringFromUpdate(Update);
   auto CachedAlarmString = getAlarmStringFromUpdate(CachedUpdate);
   return CurrentAlarmString != CachedAlarmString;

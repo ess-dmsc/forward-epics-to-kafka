@@ -15,6 +15,9 @@ std::map<epics::pvData::AlarmSeverity, AlarmSeverity>
 AlarmStatus
 getAlarmStatus(epics::pvData::PVStructurePtr const &PVStructureField) {
   auto AlarmField = PVStructureField->getSubField("alarm");
+  if (AlarmField == nullptr) {
+    return AlarmStatus::NO_ALARM;
+  }
   auto MessageField =
       (dynamic_cast<epics::pvData::PVStructure *>(AlarmField.get()))
           ->getSubField("message");
@@ -42,6 +45,9 @@ getAlarmStatus(epics::pvData::PVStructurePtr const &PVStructureField) {
 AlarmSeverity
 getAlarmSeverity(epics::pvData::PVStructurePtr const &PVStructureField) {
   auto AlarmField = PVStructureField->getSubField("alarm");
+  if (AlarmField == nullptr) {
+    return AlarmSeverity::NO_ALARM;
+  }
   auto SeverityField =
       (dynamic_cast<epics::pvData::PVStructure *>(AlarmField.get()))
           ->getSubField("severity");
