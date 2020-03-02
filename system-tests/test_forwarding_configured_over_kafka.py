@@ -48,8 +48,8 @@ def test_forwarding_of_various_pv_types(docker_compose_no_command):
 
     forwarding_enum(cons, prod)
     consumer_seek_to_end_of_topic(cons, data_topic)
-    forwarding_floatarray(cons, prod)
-    consumer_seek_to_end_of_topic(cons, data_topic)
+    # forwarding_floatarray(cons, prod)
+    # consumer_seek_to_end_of_topic(cons, data_topic)
     forwarding_string_and_long(cons, prod)
 
     cons.close()
@@ -67,7 +67,6 @@ def forwarding_enum(consumer: Consumer, producer: ProducerWrapper):
     producer.add_config(pvs)
     # Wait for config change to be picked up
     sleep(5)
-    # Update value
     change_pv_value(PVENUM, np.array(["START"]).astype(np.string_))
     # Wait for forwarder to forward PV update into Kafka
     sleep(5)
@@ -83,6 +82,7 @@ def forwarding_floatarray(consumer: Consumer, producer: ProducerWrapper):
     producer.add_config(pvs)
     # Wait for config to be pushed
     sleep(5)
+    change_pv_value(PVFLOATARRAY, np.array([0.0, 0.1, 0.2]).astype(np.string_))
     # Wait for forwarder to forward PV update into Kafka
     sleep(5)
     first_msg, _ = poll_for_valid_message(consumer)
@@ -95,9 +95,11 @@ def forwarding_string_and_long(consumer: Consumer, producer: ProducerWrapper):
     producer.add_config(pvs)
     # Wait for config to be pushed
     sleep(5)
+    initial_string_value = b"test"
+    initial_long_value = 0
     # Wait for forwarder to forward PV update into Kafka
     sleep(5)
-    expected_values = {PVSTR: (Value.String, b""), PVLONG: (Value.Int, 0)}
+    expected_values = {PVSTR: (Value.String, initial_string_value), PVLONG: (Value.Int, initial_long_value)}
     first_msg, _ = poll_for_valid_message(consumer)
     second_msg, _ = poll_for_valid_message(consumer)
     messages = [first_msg, second_msg]
