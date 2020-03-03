@@ -1,6 +1,7 @@
 from .forwarderconfig import ForwarderConfig
 from confluent_kafka import Producer, Consumer, KafkaException
 import uuid
+from typing import List
 
 
 class ProducerWrapper:
@@ -34,11 +35,11 @@ class ProducerWrapper:
                   " auto.create.topics.enable to false in broker configuration")
             quit()
 
-    def add_config(self, pvs):
+    def add_config(self, pvs: List[str]):
         """
         Create a forwarder configuration to add more pvs to be monitored.
         
-        :param pvs:(list) A list of new PVs to add to the forwarder configuration.
+        :param pvs: A list of new PVs to add to the forwarder configuration.
         :return: None
         """
         data = self.converter.create_forwarder_configuration(pvs)
@@ -59,11 +60,11 @@ class ProducerWrapper:
             return False
         return True
 
-    def remove_config(self, pvs):
+    def remove_config(self, pvs: List[str]):
         """
         Create a forwarder configuration to remove pvs that are being monitored.
         
-        :param pvs:(list) A list of PVs to remove from the forwarder configuration.
+        :param pvs: A list of PVs to remove from the forwarder configuration.
         :return: None
         """
         data = self.converter.remove_forwarder_configuration(pvs)

@@ -54,7 +54,8 @@ def poll_for_valid_message(consumer, expected_file_identifier=b"f142", timeout=1
     timer.tic()
     while timer.tocvalue() < timeout:
         msg = consumer.poll(timeout=1.0)
-        assert msg is not None
+        if msg is None:
+            continue
         if msg.error():
             raise MsgErrorException("Consumer error when polling: {}".format(msg.error()))
 
