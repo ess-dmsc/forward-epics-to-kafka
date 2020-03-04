@@ -29,3 +29,9 @@ services:
     ports:
       - "5064"
       - "5065"
+    networks:
+      - ioc_n
+
+networks:
+  ioc_n:
+    internal: false
