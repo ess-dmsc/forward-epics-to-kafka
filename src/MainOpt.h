@@ -19,8 +19,6 @@
 
 namespace Forwarder {
 
-std::vector<StreamSettings> parseStreamsJson(const std::string &filepath);
-
 struct MainOpt {
   ConfigSettings MainSettings;
   bool PrintVersion = false;
@@ -29,7 +27,6 @@ struct MainOpt {
   std::string GraylogLoggerAddress = "";
   std::string InfluxURI = "";
   std::string LogFilename;
-  std::string StreamsFile;
   uint32_t PeriodMS = 0;
   uint32_t FakePVPeriodMS = 0;
   FlatBufs::SchemaRegistry schema_registry;

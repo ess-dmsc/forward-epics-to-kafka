@@ -14,30 +14,14 @@
 #else
 #include <unistd.h>
 #endif
-#include "SchemaRegistry.h"
 #include "Version.h"
 #include "git_commit_current.h"
 #include "logger.h"
 #include <CLI/CLI.hpp>
-#include <fstream>
 #include <iostream>
 #include <streambuf>
 
 namespace Forwarder {
-
-std::vector<StreamSettings> parseStreamsJson(const std::string &filepath) {
-  std::ifstream ifs(filepath);
-  if (!ifs.is_open()) {
-    getLogger()->error("Could not open JSON file");
-  }
-
-  std::stringstream buffer;
-  buffer << ifs.rdbuf();
-
-  ConfigParser Config(buffer.str());
-
-  return Config.extractStreamInfo().StreamsInfo;
-}
 
 bool parseLogLevel(std::vector<std::string> LogLevelString,
                    spdlog::level::level_enum &LogLevelResult) {
@@ -141,9 +125,6 @@ std::pair<ParseOptRet, std::unique_ptr<MainOpt>> parse_opt(int argc,
   App.add_flag("--version", MainOptions.PrintVersion,
                "Print application version and exit");
   App.add_option("--log-file", MainOptions.LogFilename, "Log filename");
-  App.add_option("--streams-json", MainOptions.StreamsFile,
-                 "Json file for streams to add")
-      ->check(CLI::ExistingFile);
   App.add_option("--kafka-gelf", MainOptions.KafkaGELFAddress,
                  "Kafka GELF logging //broker[:port]/topic");
   App.add_option("--graylog-logger-address", MainOptions.GraylogLoggerAddress,
@@ -218,16 +199,6 @@ std::pair<ParseOptRet, std::unique_ptr<MainOpt>> parse_opt(int argc,
   if (ret.first == ParseOptRet::Error) {
     std::cout << App.help();
     return ret;
-  }
-  if (!MainOptions.StreamsFile.empty()) {
-    try {
-      MainOptions.MainSettings.StreamsInfo =
-          parseStreamsJson(MainOptions.StreamsFile);
-    } catch (std::exception const &e) {
-      Logger->warn("Can not parse configuration file: {}", e.what());
-      ret.first = ParseOptRet::Error;
-      return ret;
-    }
   }
   return ret;
 }
