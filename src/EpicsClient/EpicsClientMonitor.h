@@ -51,7 +51,6 @@ public:
 
   void setProducer(std::unique_ptr<KafkaW::ProducerTopic> Producer) override;
 
-protected:
   /// Setter method for status if there is an error in EPICS.
   void errorInEpics() override;
   
