@@ -23,16 +23,12 @@
 #include <nlohmann/json.hpp>
 #include <string>
 #include <vector>
+#include "ChannelInfo.h"
 
 namespace Forwarder {
 
 class Converter;
 struct ConversionWorkPacket;
-
-struct ChannelInfo {
-  std::string provider_type;
-  std::string channel_name;
-};
 
 /// A combination of a converter and a kafka output destination.
 class ConversionPath {

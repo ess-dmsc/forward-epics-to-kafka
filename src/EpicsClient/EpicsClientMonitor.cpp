@@ -52,12 +52,8 @@ EpicsClientMonitor::EpicsClientMonitor(
     std::shared_ptr<
         moodycamel::ConcurrentQueue<std::shared_ptr<FlatBufs::EpicsPVUpdate>>>
         Ring)
-    : EmitQueue(std::move(Ring)) {
-  Impl.reset(new EpicsClientMonitorImpl(this));
-  Logger->debug("channel_name: {}", ChannelInfo.channel_name);
-  Impl->channel_name = ChannelInfo.channel_name;
-  if (Impl->init(ChannelInfo.provider_type) != 0) {
-    Impl.reset();
+  : EmitQueue(std::move(Ring)), Impl(std::make_unique<EpicsClientMonitorImpl>(this, ChannelInfo.provider_type, ChannelInfo.channel_name)) {
+  if (Impl->valid()) {
     throw std::runtime_error("could not initialize");
   }
 }
@@ -120,7 +116,7 @@ void EpicsClientMonitor::handleConnectionStateChange(
   }
   if (ConnectionStatusProducer != nullptr) {
     flatbuffers::FlatBufferBuilder Builder;
-    auto PVName = Builder.CreateString(Impl->channel_name);
+    auto PVName = Builder.CreateString(Impl->getChannelName());
     auto ServiceIDStr = Builder.CreateString(this->ServiceID);
     auto Timestamp = static_cast<uint64_t>(
         std::chrono::duration_cast<std::chrono::nanoseconds>(
@@ -141,7 +137,7 @@ void EpicsClientMonitor::handleConnectionStateChange(
     }
     ep00::FinishEpicsConnectionInfoBuffer(Builder, InfoBuffer.Finish());
     ConnectionStatusProducer->produceAndSetKey(
-        Builder.GetBufferPointer(), Builder.GetSize(), Impl->channel_name);
+        Builder.GetBufferPointer(), Builder.GetSize(), Impl->getChannelName());
   }
 }
 

@@ -12,10 +12,15 @@
 #include "ChannelRequester.h"
 #include "FwdMonitorRequester.h"
 #include <pv/pvAccess.h>
+#include <pva/client.h>
+#include <pv/configuration.h>
 #include <pv/pvData.h>
+#include <pv/reftrack.h>
 
 namespace Forwarder {
 namespace EpicsClient {
+  namespace pva = epics::pvAccess;
+  namespace pvd = epics::pvData;
 
 using urlock = std::unique_lock<std::recursive_mutex>;
 #define RLOCK() urlock lock(mx);
@@ -23,33 +28,16 @@ using urlock = std::unique_lock<std::recursive_mutex>;
 /// Implementation for EPICS client monitor.
 class EpicsClientMonitorImpl {
 public:
-  explicit EpicsClientMonitorImpl(EpicsClientInterface *EpicsClient)
-      : EpicsClient(EpicsClient) {}
-  ~EpicsClientMonitorImpl() { Logger->trace("EpicsClientMonitor_implor_impl"); }
-
-  /// Starts the EPICS channel access provider loop and the monitor requester
-  /// loop for monitoring EPICS PVs.
-  int init(std::string const &epics_channel_provider_type) {
-    factory_init = EpicsClientFactoryInit::factory_init();
-    {
-      RLOCK();
-      provider = ::epics::pvAccess::getChannelProviderRegistry()->getProvider(
-          epics_channel_provider_type);
-      if (!provider) {
-        Logger->error("Can not initialize provider");
-        return 1;
+  explicit EpicsClientMonitorImpl(EpicsClientInterface *EpicsClient, std::string ProviderType, std::string ChannelName)
+  : EpicsClient(EpicsClient), EpicsConf(pva::ConfigurationBuilder().push_env().build()), Provider(ProviderType, EpicsConf), Channel(Provider.connect(ChannelName)), channel_name(ChannelName)  {
       }
-      channel_requester.reset(new ChannelRequester(EpicsClient));
-      channel = provider->createChannel(channel_name, channel_requester);
-    }
-    return 0;
-  }
+  ~EpicsClientMonitorImpl() { Logger->trace("EpicsClientMonitor_implor_impl"); }
 
   /// Creates a new monitor requester instance and starts the epics monitoring
   /// loop.
   int monitoringStart() {
     RLOCK();
-    if (!channel) {
+    if (!Channel.valid()) {
       Logger->debug("monitoringStart:  want to start but we have no channel");
       return -1;
     }
@@ -59,14 +47,14 @@ public:
     // Can also specify subfields, e.g. "value, timeStamp"  or also
     // "field(value)"
     // We need to be more explicit here for compatibility with channel access.
-    std::string request = "field(value,timeStamp,alarm)";
-    epics::pvData::PVStructure::shared_pointer pvreq =
-        epics::pvData::CreateRequest::create()->createRequest(request);
+//    std::string RequestStr = "field(value,timeStamp,alarm)";
+    std::string RequestStr = "";
+    epics::pvData::PVStructure::shared_pointer pvReq(pvd::createRequest(RequestStr));
     if (monitor) {
       monitoringStop();
     }
     monitor_requester.reset(new FwdMonitorRequester(EpicsClient, channel_name));
-    monitor = channel->createMonitor(monitor_requester, pvreq);
+    monitor = channel->createMonitor(monitor_requester, pvReq);
     if (!monitor) {
       Logger->warn("could not create EPICS monitor instance");
       return -2;
@@ -113,17 +101,23 @@ public:
   void emit(std::shared_ptr<FlatBufs::EpicsPVUpdate> const &Update) {
     EpicsClient->emit(Update);
   }
-
+  std::string getChannelName() {return channel_name;}
+  bool valid() {
+    return Channel.valid();
+  }
+protected:
+  static EpicsClientFactoryInit Initializer; //Must be located before all other members
   epics::pvData::MonitorRequester::shared_pointer monitor_requester;
-  epics::pvAccess::ChannelProvider::shared_pointer provider;
   epics::pvAccess::ChannelRequester::shared_pointer channel_requester;
   epics::pvAccess::Channel::shared_pointer channel;
-  epics::pvData::Monitor::shared_pointer monitor;
+  EpicsClientInterface *EpicsClient{nullptr};
+  epics::pvAccess::ChannelProvider::shared_pointer provider;
+  pva::Configuration::shared_pointer EpicsConf;
+  pvac::ClientProvider Provider;
+  pvac::ClientChannel Channel;
+  pva::Monitor::shared_pointer monitor;
   std::recursive_mutex mx;
   std::string channel_name;
-  EpicsClientInterface *EpicsClient = nullptr;
-  std::unique_ptr<EpicsClientFactoryInit> factory_init;
-
 private:
   SharedLogger Logger = getLogger();
 };

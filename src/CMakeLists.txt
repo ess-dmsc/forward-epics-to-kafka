@@ -5,6 +5,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ../bin)
 find_package(CURL)
 find_package(Threads)
 find_package(GitCommitExtract)
+find_package(EPICS REQUIRED)
 
 set(libraries_common
         CONAN_PKG::librdkafka
@@ -16,23 +17,12 @@ set(libraries_common
         CONAN_PKG::flatbuffers
         CONAN_PKG::asio
         Threads::Threads
+        ${EPICS_LIBRARIES}
 )
 
 set(path_include_common "")
 
-# Allow a system installed EPICS library to be used instead of conan package (for ISIS-STFC)
-set(USE_EXTERNAL_EPICS FALSE CACHE BOOL "Look for system installed EPICS instead of using Conan package")
-if (USE_EXTERNAL_EPICS)
-    find_package(EPICSV4)
-    list(APPEND libraries_common
-            ${path_library_epics_ca}
-            ${path_library_epics_pvData}
-            ${path_library_epics_pvAccess}
-            ${path_library_epics_NT})
-    list(APPEND path_include_common ${EPICSV4_INCLUDE_DIRS})
-else()
-    list(APPEND libraries_common CONAN_PKG::epics)
-endif(USE_EXTERNAL_EPICS)
+list(APPEND path_include_common ${EPICS_INCLUDE_DIR})
 
 set(compile_defs_common "")
 

@@ -30,8 +30,10 @@ set(tests_SRC
     ReporterHelpers.cpp)
 
 find_package(Trompeloeil REQUIRED)
+find_package(EPICS REQUIRED)
 add_executable(tests ${tests_SRC})
 target_include_directories(tests PRIVATE ${Trompeloeil_INCLUDE_DIR})
+target_include_directories(tests SYSTEM PRIVATE ${EPICS_INCLUDE_DIR})
 target_link_libraries(tests
         forwarder-library
         CONAN_PKG::gtest)

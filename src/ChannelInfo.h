@@ -8,18 +8,13 @@
 // Screaming Udder!                              https://esss.se
 
 #pragma once
-#include "../logger.h"
-#include <atomic>
-#include <memory>
-#include <mutex>
+
+#include <string>
 
 namespace Forwarder {
-namespace EpicsClient {
-class EpicsClientFactoryInit {
-public:
-  EpicsClientFactoryInit();
-private:
-  SharedLogger Logger = getLogger();
+
+struct ChannelInfo {
+  std::string provider_type;
+  std::string channel_name;
 };
-} // namespace EpicsClient
 } // namespace Forwarder

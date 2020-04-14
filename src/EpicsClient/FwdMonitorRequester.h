@@ -13,6 +13,7 @@
 #include "EpicsClientInterface.h"
 #include <atomic>
 #include <pv/monitor.h>
+#include <pv/pvAccess.h>
 
 namespace Forwarder {
 namespace EpicsClient {
@@ -20,7 +21,7 @@ namespace EpicsClient {
 /// An implementation of an internal epics monitor loop.
 /// Owned by the epics client monitor, responsible for starting the monitor
 /// and creating callbacks.
-class FwdMonitorRequester : public ::epics::pvData::MonitorRequester {
+class FwdMonitorRequester : public epics::pvAccess::MonitorRequester {
 public:
   /// The constructor.
   ///
