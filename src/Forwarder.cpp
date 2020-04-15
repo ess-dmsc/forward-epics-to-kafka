@@ -310,7 +310,8 @@ void Forwarder::addMapping(StreamSettings const &StreamInfo) {
 
       pushConverterToStream(Converter, Stream);
     }
-  } catch (std::runtime_error &) {
+  } catch (std::runtime_error &E) {
+      Logger->error("Got exception when adding stream: \"{}\"", E.what());
     std::throw_with_nested(MappingAddException("Cannot add stream"));
   }
 }

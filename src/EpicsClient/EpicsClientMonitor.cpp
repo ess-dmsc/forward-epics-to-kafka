@@ -53,7 +53,7 @@ EpicsClientMonitor::EpicsClientMonitor(
         moodycamel::ConcurrentQueue<std::shared_ptr<FlatBufs::EpicsPVUpdate>>>
         Ring)
   : EmitQueue(std::move(Ring)), Impl(std::make_unique<EpicsClientMonitorImpl>(this, ChannelInfo.provider_type, ChannelInfo.channel_name)) {
-  if (Impl->valid()) {
+  if (not Impl->valid()) {
     throw std::runtime_error("could not initialize");
   }
 }
