@@ -106,7 +106,7 @@ public:
     return Channel.valid();
   }
 protected:
-  static EpicsClientFactoryInit Initializer; //Must be located before all other members
+  Forwarder::EpicsClient::EpicsClientFactoryInit Initializer; //Must be located before all other members
   epics::pvData::MonitorRequester::shared_pointer monitor_requester;
   epics::pvAccess::ChannelRequester::shared_pointer channel_requester;
   epics::pvAccess::Channel::shared_pointer channel;

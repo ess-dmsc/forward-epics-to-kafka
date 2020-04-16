@@ -15,10 +15,15 @@
 
 namespace Forwarder {
 namespace EpicsClient {
+
+bool EpicsClientFactoryInit::HasBeenStarted{false};
   
 EpicsClientFactoryInit::EpicsClientFactoryInit() {
   Logger->debug("START  Epics factories");
-  ::epics::pvAccess::ca::CAClientFactory::start();
+  if (not HasBeenStarted) {
+    ::epics::pvAccess::ca::CAClientFactory::start();
+    HasBeenStarted = true;
+  }
 }
 } // namespace EpicsClient
 } // namespace Forwarder
