@@ -38,8 +38,6 @@ def test_forwarding_configured_from_file(docker_compose_config_from_json):
 
     # Check the new value is forwarded
     second_msg, _ = poll_for_valid_message(cons)
-    check_expected_value(
-        second_msg, PVDOUBLE, updated_value
-    )
+    check_expected_value(second_msg, PVDOUBLE, updated_value)
 
     cons.close()
