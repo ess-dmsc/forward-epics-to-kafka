@@ -123,7 +123,7 @@ def run_containers(cmd, options):
     print("\nFinished docker-compose up\n", flush=True)
 
 
-def build_and_run(options, request, config_file=None, log_file=None):
+def build_and_run(options, request, config_file=None, log_file=None, json_file=None):
     local_path = request.config.getoption(LOCAL_BUILD)
     wait_for_debugger = request.config.getoption(WAIT_FOR_DEBUGGER_ATTACH)
     if wait_for_debugger and local_path is None:
@@ -148,6 +148,10 @@ def build_and_run(options, request, config_file=None, log_file=None):
             "--log-file",
             f"{log_file}",
         ]
+        if json_file is not None:
+            command_options.extend(
+                ["--streams-json", f"./config-files/{json_file}",]
+            )
         proc = Popen(command_options)
         if wait_for_debugger:
             input(
@@ -205,6 +209,27 @@ def start_kafka(request):
         cmd.down(options)
 
     request.addfinalizer(fin)
+
+
+@pytest.fixture(scope="module")
+def docker_compose_config_from_json(request):
+    """
+    :type request: _pytest.python.FixtureRequest
+    """
+    print("Started preparing test environment...", flush=True)
+
+    # Options must be given as long form
+    options = common_options
+    options["--project-name"] = "forwarder"
+    options["--file"] = ["compose/docker-compose-config-from-json.yml"]
+
+    build_and_run(
+        options,
+        request,
+        "forwarder_config_from_json.ini",
+        "forwarder_tests.log",
+        "forwarder_config.json",
+    )
 
 
 @pytest.fixture(scope="module")
