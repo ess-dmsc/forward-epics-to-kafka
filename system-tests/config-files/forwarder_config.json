@@ -1,7 +1,7 @@
 {
   "streams": [
     {
-      "channel": "SIMPLE:DOUBLE3",
+      "channel": "SIMPLE:DOUBLE",
       "channel_provider_type": "ca",
       "converter": { "schema": "f142", "topic": "//localhost:9092/TEST_forwarderData_pv_from_config" }
     }

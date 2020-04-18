@@ -44,6 +44,7 @@ def teardown_function(function):
         PVSTR: "",
         PVLONG: 0,
         PVENUM: np.array(["INIT"]).astype(np.string_),
+        PVDOUBLE_WITH_ALARM_THRESHOLDS: 0.0,
     }
 
     for key, value in defaults.items():
