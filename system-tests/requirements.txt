@@ -6,3 +6,5 @@ docker
 pytictoc
 caproto
 numpy
+ess-streaming-data-types
+black

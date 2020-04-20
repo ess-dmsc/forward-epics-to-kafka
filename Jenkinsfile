@@ -151,20 +151,44 @@ builders = pipeline_builder.createBuilders { container ->
                 git add -u
                 git commit -m 'GO FORMAT YOURSELF'
                 """
-                withCredentials([
-                usernamePassword(
-                credentialsId: 'cow-bot-username',
-                usernameVariable: 'USERNAME',
-                passwordVariable: 'PASSWORD'
-                )
-                ]) {
-                container.sh """
-                    cd ${pipeline_builder.project}
-                    git push https://${USERNAME}:${PASSWORD}@github.com/ess-dmsc/forward-epics-to-kafka.git HEAD:${CHANGE_BRANCH}
-                """
-                } // withCredentials
             } catch (e) {
             // Okay to fail as there could be no badly formatted files to commit
+            } finally {
+                // Clean up
+            }
+
+            try {
+                // Do black format of python scripts
+                container.sh """
+                  python3.6 -m pip install --user black
+                  /home/jenkins/.local/bin/black --version
+                  cd ${project}
+                  /home/jenkins/.local/bin/black system-tests
+                  git status -s
+                  git add -u
+                  git commit -m 'GO FORMAT YOURSELF (black)'
+                """
+            } catch (e) {
+                // Okay to fail as there could be no badly formatted files to commit
+            } finally {
+                // Clean up
+            }
+
+            try {
+                withCredentials([
+                    usernamePassword(
+                    credentialsId: 'cow-bot-username',
+                    usernameVariable: 'USERNAME',
+                    passwordVariable: 'PASSWORD'
+                    )
+                ]) {
+                    container.sh """
+                        cd ${pipeline_builder.project}
+                        git push https://${USERNAME}:${PASSWORD}@github.com/ess-dmsc/forward-epics-to-kafka.git HEAD:${CHANGE_BRANCH}
+                    """
+                } // withCredentials
+            } catch (e) {
+                // Okay to fail; there may be nothing to push
             } finally {
                 // Clean up
             }

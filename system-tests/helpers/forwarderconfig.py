@@ -29,7 +29,7 @@ class ForwarderConfig:
         return {
             "channel": blk,
             "converter": self._get_converter(),
-            "channel_provider_type": "pva" if self.using_v4 else "ca"
+            "channel_provider_type": "pva" if self.using_v4 else "ca",
         }
 
     def create_forwarder_configuration(self, pvs):
@@ -39,10 +39,7 @@ class ForwarderConfig:
         :param pvs:(list) The PVs in all blocks.
         :return: (string) The JSON configuration string.
         """
-        output_dict = {
-            "cmd": "add",
-            "streams": [self._create_stream(pv) for pv in pvs]
-        }
+        output_dict = {"cmd": "add", "streams": [self._create_stream(pv) for pv in pvs]}
         return json.dumps(output_dict)
 
     def remove_forwarder_configuration(self, pvs):
@@ -54,9 +51,6 @@ class ForwarderConfig:
         """
         output_list = []
         for pv in pvs:
-            out_dict = {
-                "cmd": "stop_channel",
-                "channel": pv
-            }
+            out_dict = {"cmd": "stop_channel", "channel": pv}
             output_list.append(json.dumps(out_dict))
         return output_list

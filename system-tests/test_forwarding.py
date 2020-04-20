@@ -1,13 +1,29 @@
 from confluent_kafka import TopicPartition, Consumer
 from helpers.producerwrapper import ProducerWrapper
-from helpers.f142_logdata.Value import Value
 from time import sleep
-from helpers.flatbuffer_helpers import check_expected_value, check_multiple_expected_values
-from helpers.kafka_helpers import create_consumer, poll_for_valid_message, get_last_available_status_message
+from helpers.flatbuffer_helpers import (
+    check_expected_value,
+    check_multiple_expected_values,
+    check_expected_alarm_status,
+)
+from helpers.kafka_helpers import (
+    create_consumer,
+    poll_for_valid_message,
+    get_last_available_status_message,
+)
 from helpers.epics_helpers import change_pv_value
-from helpers.PVs import PVDOUBLE, PVSTR, PVLONG, PVENUM, PVFLOATARRAY
+from helpers.PVs import (
+    PVDOUBLE,
+    PVSTR,
+    PVLONG,
+    PVENUM,
+    PVFLOATARRAY,
+    PVDOUBLE_WITH_ALARM_THRESHOLDS,
+)
 import json
 import numpy as np
+from helpers.f142_logdata.AlarmSeverity import AlarmSeverity
+from helpers.f142_logdata.AlarmStatus import AlarmStatus
 
 CONFIG_TOPIC = "TEST_forwarderConfig"
 INITIAL_FLOATARRAY_VALUE = (1.1, 2.2, 3.3)
@@ -27,7 +43,8 @@ def teardown_function(function):
         # the PV
         PVSTR: "",
         PVLONG: 0,
-        PVENUM: np.array(["INIT"]).astype(np.string_)
+        PVENUM: np.array(["INIT"]).astype(np.string_),
+        PVDOUBLE_WITH_ALARM_THRESHOLDS: 0.0,
     }
 
     for key, value in defaults.items():
@@ -36,7 +53,7 @@ def teardown_function(function):
     sleep(3)
 
 
-def test_forwarding_of_various_pv_types(docker_compose_no_command):
+def test_forwarding_of_various_pv_types(docker_compose_forwarding):
     # Update forwarder configuration over Kafka
     # (rather than providing it in a JSON file when the forwarder is launched)
     data_topic = "TEST_forwarderData"
@@ -51,6 +68,8 @@ def test_forwarding_of_various_pv_types(docker_compose_no_command):
     # forwarding_floatarray(cons, prod)
     # consumer_seek_to_end_of_topic(cons, data_topic)
     forwarding_string_and_long(cons, prod)
+    consumer_seek_to_end_of_topic(cons, data_topic)
+    forwarding_double_with_alarm(cons, prod)
 
     cons.close()
 
@@ -62,6 +81,53 @@ def consumer_seek_to_end_of_topic(consumer: Consumer, data_topic: str):
     consumer.subscribe([data_topic])
 
 
+def forwarding_double_with_alarm(consumer: Consumer, producer: ProducerWrapper):
+    pvs = [PVDOUBLE_WITH_ALARM_THRESHOLDS]
+    producer.add_config(pvs)
+    # Wait for config change to be picked up
+    sleep(5)
+
+    initial_value = 0
+
+    # Change the PV value, so something is forwarded
+    # New value is between the HIGH and HIHI alarm thresholds
+    first_updated_value = 17
+    change_pv_value(PVDOUBLE_WITH_ALARM_THRESHOLDS, first_updated_value)
+
+    # Change the PV value, so something is forwarded
+    # New value is still between the HIGH and HIHI alarm thresholds
+    second_updated_value = 18
+    change_pv_value(PVDOUBLE_WITH_ALARM_THRESHOLDS, second_updated_value)
+
+    # Wait for PV to be updated
+    sleep(5)
+    # Check the initial value is forwarded
+    first_msg, msg_key = poll_for_valid_message(consumer)
+    check_expected_value(first_msg, PVDOUBLE_WITH_ALARM_THRESHOLDS, initial_value)
+    check_expected_alarm_status(first_msg, AlarmStatus.UDF, AlarmSeverity.NO_ALARM)
+    assert msg_key == PVDOUBLE_WITH_ALARM_THRESHOLDS.encode(
+        "utf-8"
+    ), "Message key expected to be the same as the PV name"
+    # We set the message key to be the PV name so that all messages from the same PV are sent to
+    # the same partition by Kafka. This ensures that the order of these messages is maintained to the consumer.
+
+    # Check the new value is forwarded
+    second_msg, _ = poll_for_valid_message(consumer)
+    check_expected_value(
+        second_msg, PVDOUBLE_WITH_ALARM_THRESHOLDS, first_updated_value
+    )
+    check_expected_alarm_status(second_msg, AlarmStatus.HIGH, AlarmSeverity.MINOR)
+
+    # Check the new value is forwarded, but alarm status should be unchanged
+    third_msg, _ = poll_for_valid_message(consumer)
+    check_expected_value(
+        third_msg, PVDOUBLE_WITH_ALARM_THRESHOLDS, second_updated_value
+    )
+    check_expected_alarm_status(
+        third_msg, AlarmStatus.NO_CHANGE, AlarmSeverity.NO_CHANGE
+    )
+
+
 def forwarding_enum(consumer: Consumer, producer: ProducerWrapper):
     pvs = [PVENUM]
     producer.add_config(pvs)
@@ -71,9 +137,9 @@ def forwarding_enum(consumer: Consumer, producer: ProducerWrapper):
     # Wait for forwarder to forward PV update into Kafka
     sleep(5)
     first_msg, _ = poll_for_valid_message(consumer)
-    check_expected_value(first_msg, Value.Int, PVENUM, 0)
+    check_expected_value(first_msg, PVENUM, 0)
     second_msg, _ = poll_for_valid_message(consumer)
-    check_expected_value(second_msg, Value.Int, PVENUM, 1)
+    check_expected_value(second_msg, PVENUM, 1)
     producer.remove_config(pvs)
 
 
@@ -86,7 +152,7 @@ def forwarding_floatarray(consumer: Consumer, producer: ProducerWrapper):
     # Wait for forwarder to forward PV update into Kafka
     sleep(5)
     first_msg, _ = poll_for_valid_message(consumer)
-    check_expected_value(first_msg, Value.ArrayFloat, PVFLOATARRAY, INITIAL_FLOATARRAY_VALUE)
+    check_expected_value(first_msg, PVFLOATARRAY, INITIAL_FLOATARRAY_VALUE)
     producer.remove_config(pvs)
 
 
@@ -95,11 +161,14 @@ def forwarding_string_and_long(consumer: Consumer, producer: ProducerWrapper):
     producer.add_config(pvs)
     # Wait for config to be pushed
     sleep(5)
-    initial_string_value = b"test"
+    initial_string_value = "test"
     initial_long_value = 0
     # Wait for forwarder to forward PV update into Kafka
     sleep(5)
-    expected_values = {PVSTR: (Value.String, initial_string_value), PVLONG: (Value.Int, initial_long_value)}
+    expected_values = {
+        PVSTR: initial_string_value,
+        PVLONG: initial_long_value,
+    }
     first_msg, _ = poll_for_valid_message(consumer)
     second_msg, _ = poll_for_valid_message(consumer)
     messages = [first_msg, second_msg]
@@ -107,7 +176,7 @@ def forwarding_string_and_long(consumer: Consumer, producer: ProducerWrapper):
     producer.remove_config(pvs)
 
 
-def test_forwarder_status_shows_added_pvs(docker_compose_no_command):
+def test_forwarder_status_shows_added_pvs(docker_compose_forwarding):
     """
     GIVEN A PV (double type) is already being forwarded
     WHEN A message configures two additional PV (str and long types) to be forwarded
@@ -133,26 +202,30 @@ def test_forwarder_status_shows_added_pvs(docker_compose_no_command):
     status_msg, _ = poll_for_valid_message(cons, expected_file_identifier=None)
 
     status_json = json.loads(status_msg)
-    names_of_channels_being_forwarded = {stream['channel_name'] for stream in status_json['streams']}
+    names_of_channels_being_forwarded = {
+        stream["channel_name"] for stream in status_json["streams"]
+    }
     expected_names_of_channels_being_forwarded = {PVSTR, PVLONG}
 
-    assert expected_names_of_channels_being_forwarded == names_of_channels_being_forwarded, \
-        f"Expect these channels to be configured as forwarded: {expected_names_of_channels_being_forwarded}, " \
-            f"but status message report these as forwarded: {names_of_channels_being_forwarded}"
+    assert (
+        expected_names_of_channels_being_forwarded == names_of_channels_being_forwarded
+    ), (
+        f"Expect these channels to be configured as forwarded: {expected_names_of_channels_being_forwarded}, "
+        f"but status message report these as forwarded: {names_of_channels_being_forwarded}"
+    )
 
     cons.close()
 
 
-def test_forwarder_can_handle_rapid_config_updates(docker_compose_no_command):
+def test_forwarder_can_handle_rapid_config_updates(docker_compose_forwarding):
     status_topic = "TEST_forwarderStatus"
     data_topic = "TEST_forwarderData_connection_status"
 
-    base_pv = PVDOUBLE
     prod = ProducerWrapper("localhost:9092", CONFIG_TOPIC, data_topic)
     configured_list_of_pvs = []
     number_of_config_updates = 100
     for i in range(number_of_config_updates):
-        pv = base_pv + str(i)
+        pv = f"{PVDOUBLE}{i}"
         prod.add_config([pv])
         configured_list_of_pvs.append(pv)
 
@@ -164,10 +237,10 @@ def test_forwarder_can_handle_rapid_config_updates(docker_compose_no_command):
     # Get the last available status message
     status_msg = get_last_available_status_message(cons, status_topic)
 
-    streams_json = json.loads(status_msg)['streams']
+    streams_json = json.loads(status_msg)["streams"]
     streams = []
     for item in streams_json:
-        streams.append(item['channel_name'])
+        streams.append(item["channel_name"])
 
     for pv in configured_list_of_pvs:
         assert pv in streams, "Expect configured PV to be reported as being forwarded"
