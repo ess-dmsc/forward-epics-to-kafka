@@ -1,5 +1,6 @@
 from confluent_kafka import TopicPartition, Consumer
 from helpers.producerwrapper import ProducerWrapper
+from helpers.forwarderconfig import EpicsProtocol
 from time import sleep
 from helpers.flatbuffer_helpers import (
     check_expected_value,
@@ -24,6 +25,7 @@ import json
 import numpy as np
 from helpers.f142_logdata.AlarmSeverity import AlarmSeverity
 from helpers.f142_logdata.AlarmStatus import AlarmStatus
+import pytest
 
 CONFIG_TOPIC = "TEST_forwarderConfig"
 INITIAL_FLOATARRAY_VALUE = (1.1, 2.2, 3.3)
@@ -53,13 +55,16 @@ def teardown_function(function):
     sleep(3)
 
 
-def test_forwarding_of_various_pv_types(docker_compose_forwarding):
+@pytest.mark.parametrize("epics_protocol", [EpicsProtocol.PVA, EpicsProtocol.CA])
+def test_forwarding_of_various_pv_types(epics_protocol, docker_compose_forwarding):
     # Update forwarder configuration over Kafka
-    # (rather than providing it in a JSON file when the forwarder is launched)
+    # The SoftIOC makes our test PVs available over CA and PVA, so we can test both here
     data_topic = "TEST_forwarderData"
 
     sleep(5)
-    prod = ProducerWrapper("localhost:9092", CONFIG_TOPIC, data_topic)
+    prod = ProducerWrapper(
+        "localhost:9092", CONFIG_TOPIC, data_topic, epics_protocol=epics_protocol
+    )
     cons = create_consumer()
     cons.subscribe([data_topic])
 
