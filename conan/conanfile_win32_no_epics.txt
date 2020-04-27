@@ -16,6 +16,7 @@ virtualrunenv
 
 [options]
 gtest:shared=True
+gtest:no_main=True
 librdkafka:shared=True
 
 [imports]
