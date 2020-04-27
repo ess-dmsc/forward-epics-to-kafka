@@ -11,6 +11,7 @@
 #include <fstream>
 #include <gtest/gtest.h>
 #include <logger.h>
+#include <sys/syslimits.h>
 
 bool fileExists(std::string const &FullPath) {
   std::fstream InFile(FullPath);
