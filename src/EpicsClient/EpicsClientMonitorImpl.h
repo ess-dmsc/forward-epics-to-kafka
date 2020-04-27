@@ -11,16 +11,16 @@
 #include "../logger.h"
 #include "ChannelRequester.h"
 #include "FwdMonitorRequester.h"
-#include <pv/pvAccess.h>
-#include <pva/client.h>
 #include <pv/configuration.h>
+#include <pv/pvAccess.h>
 #include <pv/pvData.h>
 #include <pv/reftrack.h>
+#include <pva/client.h>
 
 namespace Forwarder {
 namespace EpicsClient {
-  namespace pva = epics::pvAccess;
-  namespace pvd = epics::pvData;
+namespace pva = epics::pvAccess;
+namespace pvd = epics::pvData;
 
 using urlock = std::unique_lock<std::recursive_mutex>;
 #define RLOCK() urlock lock(mx);
@@ -28,13 +28,18 @@ using urlock = std::unique_lock<std::recursive_mutex>;
 /// Implementation for EPICS client monitor.
 class EpicsClientMonitorImpl {
 public:
-  explicit EpicsClientMonitorImpl(EpicsClientInterface *EpicsClient, std::string ProviderType, std::string ChannelName)
-  : EpicsClient(EpicsClient), Channel(EpicsClientMonitorImpl::getClientProvider(ProviderType)->connect(ChannelName)), channel_name(ChannelName)  {
-      }
+  explicit EpicsClientMonitorImpl(EpicsClientInterface *EpicsClient,
+                                  std::string ProviderType,
+                                  std::string ChannelName)
+      : EpicsClient(EpicsClient),
+        Channel(EpicsClientMonitorImpl::getClientProvider(ProviderType)
+                    ->connect(ChannelName)),
+        channel_name(ChannelName) {}
   ~EpicsClientMonitorImpl() {
     monitoringStop();
     Channel.reset();
-    Logger->trace("EpicsClientMonitor_implor_impl"); }
+    Logger->trace("EpicsClientMonitor_implor_impl");
+  }
 
   /// Creates a new monitor requester instance and starts the epics monitoring
   /// loop.
@@ -50,9 +55,10 @@ public:
     // Can also specify subfields, e.g. "value, timeStamp"  or also
     // "field(value)"
     // We need to be more explicit here for compatibility with channel access.
-//    std::string RequestStr = "field(value,timeStamp,alarm)";
+    //    std::string RequestStr = "field(value,timeStamp,alarm)";
     std::string RequestStr = "";
-    epics::pvData::PVStructure::shared_pointer pvReq(pvd::createRequest(RequestStr));
+    epics::pvData::PVStructure::shared_pointer pvReq(
+        pvd::createRequest(RequestStr));
     if (monitor) {
       monitoringStop();
     }
@@ -104,12 +110,12 @@ public:
   void emit(std::shared_ptr<FlatBufs::EpicsPVUpdate> const &Update) {
     EpicsClient->emit(Update);
   }
-  std::string getChannelName() {return channel_name;}
-  bool valid() {
-    return Channel.valid();
-  }
+  std::string getChannelName() { return channel_name; }
+  bool valid() { return Channel.valid(); }
+
 protected:
-  Forwarder::EpicsClient::EpicsClientFactoryInit Initializer; //Must be located before all other members
+  Forwarder::EpicsClient::EpicsClientFactoryInit
+      Initializer; // Must be located before all other members
   epics::pvData::MonitorRequester::shared_pointer monitor_requester;
   epics::pvAccess::ChannelRequester::shared_pointer channel_requester;
   epics::pvAccess::Channel::shared_pointer channel;
@@ -119,12 +125,17 @@ protected:
   pva::Monitor::shared_pointer monitor;
   std::recursive_mutex mx;
   std::string channel_name;
+
 private:
-  static std::shared_ptr<pvac::ClientProvider> getClientProvider(std::string ProviderType) {
-    static std::map<std::string, std::shared_ptr<pvac::ClientProvider>> ClientProviderMap;
+  static std::shared_ptr<pvac::ClientProvider>
+  getClientProvider(std::string ProviderType) {
+    static std::map<std::string, std::shared_ptr<pvac::ClientProvider>>
+        ClientProviderMap;
     if (ClientProviderMap.find(ProviderType) == ClientProviderMap.end()) {
-      pva::Configuration::shared_pointer EpicsConf(pva::ConfigurationBuilder().push_env().build());
-      ClientProviderMap[ProviderType] = std::make_shared<pvac::ClientProvider>(ProviderType, EpicsConf);
+      pva::Configuration::shared_pointer EpicsConf(
+          pva::ConfigurationBuilder().push_env().build());
+      ClientProviderMap[ProviderType] =
+          std::make_shared<pvac::ClientProvider>(ProviderType, EpicsConf);
     }
     return ClientProviderMap.at(ProviderType);
   }

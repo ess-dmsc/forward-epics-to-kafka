@@ -18,11 +18,11 @@
 #include <cstdlib>
 #include <cstring>
 #include <fmt/format.h>
+#include <fstream>
 #include <mutex>
 #include <string>
 #include <thread>
 #include <vector>
-#include <fstream>
 
 namespace Forwarder {}
 

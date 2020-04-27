@@ -35,7 +35,7 @@ getAlarmStringFromUpdate(std::shared_ptr<FlatBufs::EpicsPVUpdate> &Update) {
                          ->get();
   return AlarmString;
 }
-}
+} // namespace
 
 namespace Forwarder {
 namespace EpicsClient {
@@ -52,7 +52,9 @@ EpicsClientMonitor::EpicsClientMonitor(
     std::shared_ptr<
         moodycamel::ConcurrentQueue<std::shared_ptr<FlatBufs::EpicsPVUpdate>>>
         Ring)
-  : EmitQueue(std::move(Ring)), Impl(std::make_unique<EpicsClientMonitorImpl>(this, ChannelInfo.provider_type, ChannelInfo.channel_name)) {
+    : EmitQueue(std::move(Ring)),
+      Impl(std::make_unique<EpicsClientMonitorImpl>(
+          this, ChannelInfo.provider_type, ChannelInfo.channel_name)) {
   if (not Impl->valid()) {
     throw std::runtime_error("could not initialize");
   }

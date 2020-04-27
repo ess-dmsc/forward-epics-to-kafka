@@ -20,5 +20,5 @@ getAlarmStatus(epics::pvData::PVStructurePtr const &PVStructureField);
 
 AlarmSeverity
 getAlarmSeverity(epics::pvData::PVStructurePtr const &PVStructureField);
-}
-}
+} // namespace f142
+} // namespace FlatBufs

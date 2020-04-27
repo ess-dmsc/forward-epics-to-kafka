@@ -9,11 +9,11 @@
 
 #pragma once
 #include "../ChannelInfo.h"
-#include <concurrentqueue/concurrentqueue.h>
 #include "EpicsClientFactory.h"
 #include "EpicsClientInterface.h"
 #include <array>
 #include <atomic>
+#include <concurrentqueue/concurrentqueue.h>
 #include <string>
 #include <vector>
 
@@ -53,19 +53,19 @@ public:
 
   /// Setter method for status if there is an error in EPICS.
   void errorInEpics() override;
-  
+
   /// Calls stop on the client implementation.
   int stop() override;
-  
+
   /// Pushes the PV update onto the emit_queue ring buffer.
   ///
   /// \param Update An epics PV update holding the pv structure.
   void emit(std::shared_ptr<FlatBufs::EpicsPVUpdate> Update) override;
-  
-   void emitWithoutCaching(std::shared_ptr<FlatBufs::EpicsPVUpdate> Update);
+
+  void emitWithoutCaching(std::shared_ptr<FlatBufs::EpicsPVUpdate> Update);
   void handleChannelRequesterError(std::string const &) override;
   void handleConnectionStateChange(
-                                   ChannelConnectionState NewConnectionState) override;
+      ChannelConnectionState NewConnectionState) override;
 
 private:
   bool alarmMessageChanged(std::shared_ptr<FlatBufs::EpicsPVUpdate> &Update);

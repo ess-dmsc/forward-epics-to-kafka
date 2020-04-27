@@ -7,10 +7,10 @@
 //
 // Screaming Udder!                              https://esss.se
 
-#include <gtest/gtest.h>
-#include <logger.h>
 #include <cstdlib>
 #include <fstream>
+#include <gtest/gtest.h>
+#include <logger.h>
 
 bool fileExists(std::string const &FullPath) {
   std::fstream InFile(FullPath);

@@ -40,5 +40,5 @@ public:
 private:
   SharedLogger Logger = getLogger();
 };
-}
-}
+} // namespace f142
+} // namespace FlatBufs

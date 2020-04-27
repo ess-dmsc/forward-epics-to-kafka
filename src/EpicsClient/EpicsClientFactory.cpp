@@ -17,7 +17,7 @@ namespace Forwarder {
 namespace EpicsClient {
 
 bool EpicsClientFactoryInit::HasBeenStarted{false};
-  
+
 EpicsClientFactoryInit::EpicsClientFactoryInit() {
   Logger->debug("START  Epics factories");
   if (not HasBeenStarted) {

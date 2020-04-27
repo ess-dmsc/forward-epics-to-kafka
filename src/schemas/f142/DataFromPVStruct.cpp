@@ -58,5 +58,5 @@ getAlarmSeverity(epics::pvData::PVStructurePtr const &PVStructureField) {
 
   return EpicsSeverityToFlatbufferSeverity[Severity];
 }
-}
-}
+} // namespace f142
+} // namespace FlatBufs

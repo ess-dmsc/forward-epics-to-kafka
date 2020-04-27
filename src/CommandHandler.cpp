@@ -25,7 +25,8 @@ void ConfigCB::operator()(std::string const &msg) {
     Logger->error("Could not parse command. Command was {}. Exception was: {}",
                   msg, e.what());
   } catch (std::exception const &E) {
-      Logger->error("Got exception (msg: \"{}\") when handling the command: {}", E.what(), msg);
+    Logger->error("Got exception (msg: \"{}\") when handling the command: {}",
+                  E.what(), msg);
   }
 }
 

@@ -18,6 +18,7 @@ namespace EpicsClient {
 class EpicsClientFactoryInit {
 public:
   EpicsClientFactoryInit();
+
 private:
   static bool HasBeenStarted;
   SharedLogger Logger = getLogger();

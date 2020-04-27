@@ -9,6 +9,7 @@
 
 #pragma once
 
+#include "ChannelInfo.h"
 #include "ConversionWorker.h"
 #include "EpicsClient/EpicsClientInterface.h"
 #include "Kafka.h"
@@ -23,7 +24,6 @@
 #include <nlohmann/json.hpp>
 #include <string>
 #include <vector>
-#include "ChannelInfo.h"
 
 namespace Forwarder {
 
