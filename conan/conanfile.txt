@@ -21,6 +21,7 @@ gtest:shared=False
 librdkafka:shared=True
 
 [imports]
+bin, caRepeater -> ./bin
 bin, *.dll -> ./bin
 lib, *.dll -> ./bin
 lib, *.dylib* -> ./lib
