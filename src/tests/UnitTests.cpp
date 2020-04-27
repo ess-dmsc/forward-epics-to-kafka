@@ -11,7 +11,6 @@
 #include <fstream>
 #include <gtest/gtest.h>
 #include <logger.h>
-#include <sys/syslimits.h>
 
 bool fileExists(std::string const &FullPath) {
   std::fstream InFile(FullPath);
@@ -25,7 +24,7 @@ void addToPath(std::string const &Path) {
 }
 
 void setPathToCaRepeater(std::string ExecPath) {
-  size_t const BufferSize{PATH_MAX};
+  size_t const BufferSize{2048};
   char Buffer[BufferSize];
   if (ExecPath[0] != '/') {
     auto ReturnBuffer = getcwd(Buffer, BufferSize);
