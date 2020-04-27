@@ -29,9 +29,12 @@ using urlock = std::unique_lock<std::recursive_mutex>;
 class EpicsClientMonitorImpl {
 public:
   explicit EpicsClientMonitorImpl(EpicsClientInterface *EpicsClient, std::string ProviderType, std::string ChannelName)
-  : EpicsClient(EpicsClient), EpicsConf(pva::ConfigurationBuilder().push_env().build()), Provider(ProviderType, EpicsConf), Channel(Provider.connect(ChannelName)), channel_name(ChannelName)  {
+  : EpicsClient(EpicsClient), Channel(EpicsClientMonitorImpl::getClientProvider(ProviderType)->connect(ChannelName)), channel_name(ChannelName)  {
       }
-  ~EpicsClientMonitorImpl() { Logger->trace("EpicsClientMonitor_implor_impl"); }
+  ~EpicsClientMonitorImpl() {
+    monitoringStop();
+    Channel.reset();
+    Logger->trace("EpicsClientMonitor_implor_impl"); }
 
   /// Creates a new monitor requester instance and starts the epics monitoring
   /// loop.
@@ -112,13 +115,19 @@ protected:
   epics::pvAccess::Channel::shared_pointer channel;
   EpicsClientInterface *EpicsClient{nullptr};
   epics::pvAccess::ChannelProvider::shared_pointer provider;
-  pva::Configuration::shared_pointer EpicsConf;
-  pvac::ClientProvider Provider;
   pvac::ClientChannel Channel;
   pva::Monitor::shared_pointer monitor;
   std::recursive_mutex mx;
   std::string channel_name;
 private:
+  static std::shared_ptr<pvac::ClientProvider> getClientProvider(std::string ProviderType) {
+    static std::map<std::string, std::shared_ptr<pvac::ClientProvider>> ClientProviderMap;
+    if (ClientProviderMap.find(ProviderType) == ClientProviderMap.end()) {
+      pva::Configuration::shared_pointer EpicsConf(pva::ConfigurationBuilder().push_env().build());
+      ClientProviderMap[ProviderType] = std::make_shared<pvac::ClientProvider>(ProviderType, EpicsConf);
+    }
+    return ClientProviderMap.at(ProviderType);
+  }
   SharedLogger Logger = getLogger();
 };
 
