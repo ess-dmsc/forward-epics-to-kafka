@@ -1,3 +1,4 @@
 /build/
 /forward-epics-to-kafka.xcodeproj/
 /docs/
+/system-tests/logs/*.log

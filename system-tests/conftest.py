@@ -26,13 +26,16 @@ def pytest_addoption(parser):
         action="store",
         default=False,
         help=f"Use this flag when using the {LOCAL_BUILD} option to cause the system "
-             f"tests to prompt you to attach a debugger to the file writer process",
+        f"tests to prompt you to attach a debugger to the file writer process",
     )
 
 
 def wait_until_kafka_ready(docker_cmd, docker_options):
-    print('Waiting for Kafka broker to be ready for system tests...', flush=True)
-    conf = {'bootstrap.servers': 'localhost:9092', "metadata.request.timeout.ms": '10000'}
+    print("Waiting for Kafka broker to be ready for system tests...", flush=True)
+    conf = {
+        "bootstrap.servers": "localhost:9092",
+        "metadata.request.timeout.ms": "10000",
+    }
     producer = Producer(**conf)
 
     kafka_ready = False
@@ -41,18 +44,20 @@ def wait_until_kafka_ready(docker_cmd, docker_options):
         nonlocal n_polls
         nonlocal kafka_ready
         if not err:
-            print('Kafka is ready!')
+            print("Kafka is ready!")
             kafka_ready = True
 
     n_polls = 0
     while n_polls < 10 and not kafka_ready:
-        producer.produce('waitUntilUp', value='Test message', on_delivery=delivery_callback)
+        producer.produce(
+            "waitUntilUp", value="Test message", on_delivery=delivery_callback
+        )
         producer.poll(10)
         n_polls += 1
 
     if not kafka_ready:
         docker_cmd.down(docker_options)  # Bring down containers cleanly
-        raise Exception('Kafka broker was not ready after 100 seconds, aborting tests.')
+        raise Exception("Kafka broker was not ready after 100 seconds, aborting tests.")
 
     client = AdminClient(conf)
     topic_ready = False
@@ -68,27 +73,28 @@ def wait_until_kafka_ready(docker_cmd, docker_options):
 
     if not topic_ready:
         docker_cmd.down(docker_options)  # Bring down containers cleanly
-        raise Exception('Kafka topic was not ready after 60 seconds, aborting tests.')
+        raise Exception("Kafka topic was not ready after 60 seconds, aborting tests.")
 
 
-common_options = {"--no-deps": False,
-                  "--always-recreate-deps": False,
-                  "--scale": "",
-                  "--abort-on-container-exit": False,
-                  "SERVICE": "",
-                  "--remove-orphans": False,
-                  "--no-recreate": True,
-                  "--force-recreate": False,
-                  '--no-build': False,
-                  '--no-color': False,
-                  "--rmi": "none",
-                  "--volumes": True,  # Remove volumes when docker-compose down (don't persist kafka and zk data)
-                  "--follow": False,
-                  "--timestamps": False,
-                  "--tail": "all",
-                  "--detach": True,
-                  "--build": False
-                  }
+common_options = {
+    "--no-deps": False,
+    "--always-recreate-deps": False,
+    "--scale": "",
+    "--abort-on-container-exit": False,
+    "SERVICE": "",
+    "--remove-orphans": False,
+    "--no-recreate": True,
+    "--force-recreate": False,
+    "--no-build": False,
+    "--no-color": False,
+    "--rmi": "none",
+    "--volumes": True,  # Remove volumes when docker-compose down (don't persist kafka and zk data)
+    "--follow": False,
+    "--timestamps": False,
+    "--tail": "all",
+    "--detach": True,
+    "--build": False,
+}
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -104,7 +110,9 @@ def build_forwarder_image(request):
             build_args["https_proxy"] = os.environ["https_proxy"]
         if "local_conan_server" in os.environ:
             build_args["local_conan_server"] = os.environ["local_conan_server"]
-        image, logs = client.images.build(path="../", tag="forwarder:latest", rm=False, buildargs=build_args)
+        image, logs = client.images.build(
+            path="../", tag="forwarder:latest", rm=False, buildargs=build_args
+        )
         for item in logs:
             print(item, flush=True)
 
@@ -130,7 +138,9 @@ def build_and_run(options, request, config_file=None, log_file=None, json_file=N
         run_containers(cmd, options)
     else:
         # Launch local build of forwarder
-        full_path_of_forwarder_exe = os.path.join(local_path, "bin", "forward-epics-to-kafka")
+        full_path_of_forwarder_exe = os.path.join(
+            local_path, "bin", "forward-epics-to-kafka"
+        )
         command_options = [
             full_path_of_forwarder_exe,
             "-c",
@@ -139,10 +149,9 @@ def build_and_run(options, request, config_file=None, log_file=None, json_file=N
             f"{log_file}",
         ]
         if json_file is not None:
-            command_options.extend([
-                "--streams-json",
-                f"./config-files/{json_file}",
-            ])
+            command_options.extend(
+                ["--streams-json", f"./config-files/{json_file}",]
+            )
         proc = Popen(command_options)
         if wait_for_debugger:
             input(
@@ -198,11 +207,12 @@ def start_kafka(request):
         options["--project-name"] = "kafka"
         options["--file"] = ["compose/docker-compose-kafka.yml"]
         cmd.down(options)
+
     request.addfinalizer(fin)
 
 
 @pytest.fixture(scope="module")
-def docker_compose(request):
+def docker_compose_config_from_json(request):
     """
     :type request: _pytest.python.FixtureRequest
     """
@@ -211,16 +221,19 @@ def docker_compose(request):
     # Options must be given as long form
     options = common_options
     options["--project-name"] = "forwarder"
-    options["--file"] = ["compose/docker-compose.yml"]
+    options["--file"] = ["compose/docker-compose-config-from-json.yml"]
 
-    build_and_run(options, request,
-                  "forwarder_config.ini",
-                  "forwarder_tests.log",
-                  "forwarder_config.json",)
+    build_and_run(
+        options,
+        request,
+        "forwarder_config_from_json.ini",
+        "forwarder_tests.log",
+        "forwarder_config.json",
+    )
 
 
 @pytest.fixture(scope="module")
-def docker_compose_no_command(request):
+def docker_compose_forwarding(request):
     """
     :type request: _pytest.python.FixtureRequest
     """
@@ -229,11 +242,11 @@ def docker_compose_no_command(request):
     # Options must be given as long form
     options = common_options
     options["--project-name"] = "forwarderNoCommand"
-    options["--file"] = ["compose/docker-compose-no-command.yml"]
+    options["--file"] = ["compose/docker-compose-forwarding.yml"]
 
-    build_and_run(options, request,
-                  "forwarder_config_no_command.ini",
-                  "forwarder_tests.log",)
+    build_and_run(
+        options, request, "forwarder_config_forwarding.ini", "forwarder_tests.log",
+    )
 
 
 @pytest.fixture(scope="module")
@@ -248,10 +261,9 @@ def docker_compose_fake_epics(request):
     options["--project-name"] = "fake"
     options["--file"] = ["compose/docker-compose-fake-epics.yml"]
 
-    build_and_run(options, request,
-                  "forwarder_config_fake_epics.ini",
-                  "forwarder_tests.log",
-                  "forwarder_config_fake_epics.json",)
+    build_and_run(
+        options, request, "forwarder_config_fake_epics.ini", "forwarder_tests.log",
+    )
 
 
 @pytest.fixture(scope="module")
@@ -266,28 +278,9 @@ def docker_compose_idle_updates(request):
     options["--project-name"] = "idle"
     options["--file"] = ["compose/docker-compose-idle-updates.yml"]
 
-    build_and_run(options, request,
-                  "forwarder_config_idle_updates.ini",
-                  "forwarder_tests.log",
-                  "forwarder_config_idle_updates.json",)
-
-
-@pytest.fixture(scope="module")
-def docker_compose_idle_updates_long_period(request):
-    """
-    :type request: _pytest.python.FixtureRequest
-    """
-    print("Started preparing test environment...", flush=True)
-
-    # Options must be given as long form
-    options = common_options
-    options["--project-name"] = "longi"
-    options["--file"] = ["compose/docker-compose-idle-updates-long-period.yml"]
-
-    build_and_run(options, request,
-                  "forwarder_config_idle_updates_long.ini",
-                  "forwarder_tests.log",
-                  "forwarder_config_idle_updates_long.json",)
+    build_and_run(
+        options, request, "forwarder_config_idle_updates.ini", "forwarder_tests.log",
+    )
 
 
 @pytest.fixture(scope="module", autouse=False)
@@ -302,7 +295,6 @@ def docker_compose_lr(request):
     options["--project-name"] = "lr"
     options["--file"] = ["compose/docker-compose-long-running.yml"]
 
-    build_and_run(options, request,
-                  "forwarder_config_lr.ini",
-                  "forwarder_tests.log",
-                  "forwarder_config_lr.json",)
+    build_and_run(
+        options, request, "forwarder_config_lr.ini", "forwarder_tests.log",
+    )

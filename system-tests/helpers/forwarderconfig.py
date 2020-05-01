@@ -1,4 +1,10 @@
 import json
+from enum import Enum
+
+
+class EpicsProtocol(Enum):
+    PVA = "pva"
+    CA = "ca"
 
 
 class ForwarderConfig:
@@ -6,10 +12,12 @@ class ForwarderConfig:
     Class that converts the pv information to a forwarder config.
     """
 
-    def __init__(self, topic, using_v4=False, schema="f142"):
+    def __init__(
+        self, topic, epics_protocol: EpicsProtocol = EpicsProtocol.CA, schema="f142"
+    ):
         self.schema = schema
         self.topic = topic
-        self.using_v4 = using_v4
+        self.epics_protocol = epics_protocol
 
     def _get_converter(self):
         """
@@ -29,7 +37,7 @@ class ForwarderConfig:
         return {
             "channel": blk,
             "converter": self._get_converter(),
-            "channel_provider_type": "pva" if self.using_v4 else "ca"
+            "channel_provider_type": self.epics_protocol.value,
         }
 
     def create_forwarder_configuration(self, pvs):
@@ -39,10 +47,7 @@ class ForwarderConfig:
         :param pvs:(list) The PVs in all blocks.
         :return: (string) The JSON configuration string.
         """
-        output_dict = {
-            "cmd": "add",
-            "streams": [self._create_stream(pv) for pv in pvs]
-        }
+        output_dict = {"cmd": "add", "streams": [self._create_stream(pv) for pv in pvs]}
         return json.dumps(output_dict)
 
     def remove_forwarder_configuration(self, pvs):
@@ -54,9 +59,6 @@ class ForwarderConfig:
         """
         output_list = []
         for pv in pvs:
-            out_dict = {
-                "cmd": "stop_channel",
-                "channel": pv
-            }
+            out_dict = {"cmd": "stop_channel", "channel": pv}
             output_list.append(json.dumps(out_dict))
         return output_list
