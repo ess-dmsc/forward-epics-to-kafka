@@ -29,12 +29,11 @@ set(tests_SRC
     ReporterHelpers.h
     ReporterHelpers.cpp)
 
-find_package(Trompeloeil REQUIRED)
 add_executable(tests ${tests_SRC})
-target_include_directories(tests PRIVATE ${Trompeloeil_INCLUDE_DIR})
 target_link_libraries(tests
         forwarder-library
-        CONAN_PKG::gtest)
+        CONAN_PKG::gtest
+        CONAN_PKG::trompeloeil)
 
 if (WIN32)
     target_compile_options(tests PRIVATE /wd4996)
