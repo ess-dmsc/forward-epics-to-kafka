@@ -12,6 +12,7 @@
 // For epics::pvAccess::ClientFactory::start()
 #include <pv/caProvider.h>
 #include <pv/clientFactory.h>
+#include <ciso646>
 
 namespace Forwarder {
 namespace EpicsClient {
