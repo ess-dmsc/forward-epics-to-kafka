@@ -50,6 +50,10 @@ builders = pipeline_builder.createBuilders { container ->
     }  // stage
 
     pipeline_builder.stage("${container.key}: configure") {
+        def cxx11abi = ""
+        if (container.key == release_os OR container.key == test_and_coverage_os) {
+            cxx11abi = "-DCMAKE_CXX_FLAGS:=\"-D_GLIBCXX_USE_CXX11_ABI=1\""
+        }
         if (container.key != release_os) {
             def coverage_on
             if (container.key == test_and_coverage_os) {
@@ -60,12 +64,12 @@ builders = pipeline_builder.createBuilders { container ->
 
             container.sh """
                 cd build
-                cmake -DCMAKE_BUILD_TYPE=Debug ../${pipeline_builder.project} ${coverage_on}
+                cmake ${cxx11abi} -DCMAKE_BUILD_TYPE=Debug ../${pipeline_builder.project} ${coverage_on}
             """
         } else {
             container.sh """
                 cd build
-                cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo ../${pipeline_builder.project}
+                cmake ${cxx11abi} -DCMAKE_BUILD_TYPE=RelWithDebInfo ../${pipeline_builder.project}
             """
         }  // if/else
     }  // stage
