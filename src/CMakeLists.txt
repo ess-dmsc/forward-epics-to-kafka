@@ -96,7 +96,7 @@ set(forwarder-library_INC
     URI.h
     schemas/tdc_time/TdcTime.h
     MetricsReporter.h
-    StatusReporter.h)
+    StatusReporter.h CAPathSetup.h)
 
 set(forwarder-library_SRC
     MainOpt.cpp
@@ -132,7 +132,7 @@ set(forwarder-library_SRC
     ${CMAKE_CURRENT_BINARY_DIR}/git_commit_current.cpp
     schemas/tdc_time/TdcTime.cpp
     MetricsReporter.cpp
-    StatusReporter.cpp)
+    StatusReporter.cpp CAPathSetup.cpp)
 
 add_library(forwarder-library ${forwarder-library_SRC} ${forwarder-library_INC})
 target_compile_definitions(forwarder-library PRIVATE ${compile_defs_common})

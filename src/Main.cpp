@@ -16,8 +16,8 @@
 #include <csignal>
 #include <cstdio>
 #include <cstdlib>
-#include <fstream>
 #include <string>
+#include "CAPathSetup.h"
 
 namespace Forwarder {}
 
@@ -55,48 +55,16 @@ static void handleSignal(int Signal) {
   }
 }
 
-bool fileExists(std::string const &FullPath) {
-  std::fstream InFile(FullPath);
-  return InFile.good();
-}
-
-void addToPath(std::string const &Path) {
-  std::string CurrentPATH{std::getenv("PATH")};
-  auto NewPATH = Path + ":" + CurrentPATH;
-  setenv("PATH", NewPATH.c_str(), 1);
-}
-
-void setPathToCaRepeater(std::string ExecPath) {
-  size_t const BufferSize{2048};
-  char Buffer[BufferSize];
-  if (ExecPath[0] != '/') {
-    auto ReturnBuffer = getcwd(Buffer, BufferSize);
-    if (ReturnBuffer == nullptr) {
-      std::cout << "Unable to set PATH to caRepeater.\n";
-      return;
-    }
-    std::string WorkingDirectory{ReturnBuffer};
-    ExecPath = WorkingDirectory + "/" + ExecPath;
-  }
-  auto SlashLoc = ExecPath.rfind("/");
-  auto ExecDir = ExecPath.substr(0, SlashLoc);
-  if (fileExists(ExecDir + "/caRepeater")) {
-    addToPath(ExecDir);
-    return;
-  }
-  SlashLoc = ExecDir.rfind("/");
-  auto ExecParentDir = ExecDir.substr(0, SlashLoc);
-  if (fileExists(ExecParentDir + "/bin/caRepeater")) {
-    addToPath(ExecParentDir + "/bin");
-    return;
-  }
-  std::cout << "Unable to set PATH to caRepeater.\n";
-}
-
 int main(int argc, char **argv) {
-  setPathToCaRepeater(argv[0]);
   auto op = Forwarder::parse_opt(argc, argv);
   auto &opt = *op.second;
+
+  try {
+    setPathToCaRepeater(argv[0]);
+  } catch (std::runtime_error &E) {
+    LOG_ERROR("Unable to setup path to caRepeater. The error was: {}", E.what());
+    LOG_ERROR("Execution of the forward-epics-to-kafka application will continue but channel access support will be disabled.");
+  }
 
   if (op.first == Forwarder::ParseOptRet::VersionRequested) {
     return 0;
