@@ -52,7 +52,7 @@ builders = pipeline_builder.createBuilders { container ->
     pipeline_builder.stage("${container.key}: configure") {
         def cxx11abi = ""
         if (container.key == release_os || container.key == test_and_coverage_os) {
-            cxx11abi = "-DCMAKE_CXX_FLAGS:=\"-D_GLIBCXX_USE_CXX11_ABI=1\""
+            cxx11abi = "-DCMAKE_CXX_FLAGS:=\"-D_GLIBCXX_USE_CXX11_ABI=0\""
         }
         if (container.key != release_os) {
             def coverage_on
