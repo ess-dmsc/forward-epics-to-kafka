@@ -9,6 +9,7 @@
 
 #include "EpicsClientRandom.h"
 #define SHARED_FROM_MANUAL
+#include <memory>
 namespace std {
 namespace tr1 {
 using ::std::shared_ptr;

@@ -8,13 +8,6 @@
 // Screaming Udder!                              https://esss.se
 
 #pragma once
-#define SHARED_FROM_MANUAL
-#include <memory>
-namespace std {
-namespace tr1 {
-using ::std::shared_ptr;
-}
-}
 #include "../Stream.h"
 #include "EpicsClientInterface.h"
 #include <concurrentqueue/concurrentqueue.h>
