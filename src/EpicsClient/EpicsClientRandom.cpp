@@ -9,7 +9,6 @@
 
 #include "EpicsClientRandom.h"
 #include <pv/pvData.h>
-#include <memory>
 
 namespace Forwarder {
 namespace EpicsClient {
