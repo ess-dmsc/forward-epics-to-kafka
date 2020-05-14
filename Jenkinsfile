@@ -21,8 +21,8 @@ properties([[
 ]]);
 
 container_build_nodes = [
-  'centos7': ContainerBuildNode.getDefaultContainerBuildNode('centos7'),
-  'centos7-release': ContainerBuildNode.getDefaultContainerBuildNode('centos7'),
+  'centos7': ContainerBuildNode.getDefaultContainerBuildNode('centos7-gcc8'),
+  'centos7-release': ContainerBuildNode.getDefaultContainerBuildNode('centos7-gcc8'),
   'debian9': ContainerBuildNode.getDefaultContainerBuildNode('debian9'),
   'ubuntu1804': ContainerBuildNode.getDefaultContainerBuildNode('ubuntu1804')
 ]
@@ -50,10 +50,6 @@ builders = pipeline_builder.createBuilders { container ->
     }  // stage
 
     pipeline_builder.stage("${container.key}: configure") {
-        def cxx11abi = ""
-        if (container.key == release_os || container.key == test_and_coverage_os) {
-            cxx11abi = "-DCMAKE_CXX_FLAGS:=\"-D_GLIBCXX_USE_CXX11_ABI=0\""
-        }
         if (container.key != release_os) {
             def coverage_on
             if (container.key == test_and_coverage_os) {
@@ -64,12 +60,12 @@ builders = pipeline_builder.createBuilders { container ->
 
             container.sh """
                 cd build
-                cmake ${cxx11abi} -DCMAKE_BUILD_TYPE=Debug ../${pipeline_builder.project} ${coverage_on}
+                cmake -DCMAKE_BUILD_TYPE=Debug ../${pipeline_builder.project} ${coverage_on}
             """
         } else {
             container.sh """
                 cd build
-                cmake ${cxx11abi} -DCMAKE_BUILD_TYPE=RelWithDebInfo ../${pipeline_builder.project}
+                cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo ../${pipeline_builder.project}
             """
         }  // if/else
     }  // stage
