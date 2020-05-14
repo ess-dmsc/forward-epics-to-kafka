@@ -8,6 +8,12 @@
 // Screaming Udder!                              https://esss.se
 
 #include "EpicsClientRandom.h"
+#define SHARED_FROM_MANUAL
+namespace std {
+namespace tr1 {
+using ::std::shared_ptr;
+}
+}
 #include <pv/pvData.h>
 
 namespace Forwarder {
