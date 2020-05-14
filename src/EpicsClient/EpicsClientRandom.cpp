@@ -8,8 +8,8 @@
 // Screaming Udder!                              https://esss.se
 
 #include "EpicsClientRandom.h"
-#include <memory>
 #include <pv/pvData.h>
+#include <memory>
 
 namespace Forwarder {
 namespace EpicsClient {
