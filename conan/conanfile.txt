@@ -3,7 +3,7 @@ fmt/6.1.2
 gtest/1.8.1@bincrafters/stable
 librdkafka/1.2.0@ess-dmsc/stable
 spdlog-graylog/1.5.0-dm1@ess-dmsc/stable
-epics/7.0.3.1-dm2@ess-dmsc/test
+epics/7.0.3.1-dm3@ess-dmsc/test
 streaming-data-types/65e23a1@ess-dmsc/stable
 CLI11/1.8.0@cliutils/stable
 jsonformoderncpp/3.6.1@vthiery/stable
