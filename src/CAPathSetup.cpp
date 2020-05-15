@@ -7,10 +7,9 @@
 //
 // Screaming Udder!                              https://esss.se
 
-
 #include "CAPathSetup.h"
-#include <fstream>
 #include <cstdlib>
+#include <fstream>
 
 #ifdef _WIN32
 #include <direct.h>
@@ -27,21 +26,20 @@ bool fileExists(std::string const &FullPath) {
 #ifdef _WIN32
 static const std::string caRepeaterName{"caRepeater.exe"};
 static const std::string Separator{";"};
-int setenv(const char *name, const char *value, int overwrite)
-{
-    int errcode = 0;
-    if(!overwrite) {
-        size_t envsize = 0;
-        errcode = getenv_s(&envsize, NULL, 0, name);
-        if(errcode || envsize) return errcode;
-    }
-    return _putenv_s(name, value);
+int setenv(const char *name, const char *value, int overwrite) {
+  int errcode = 0;
+  if (!overwrite) {
+    size_t envsize = 0;
+    errcode = getenv_s(&envsize, NULL, 0, name);
+    if (errcode || envsize)
+      return errcode;
+  }
+  return _putenv_s(name, value);
 }
 #else
 static const std::string Separator{":"};
 static const std::string caRepeaterName{"caRepeater"};
 #endif
-
 
 void addToPath(std::string const &Path) {
   std::string CurrentPATH{std::getenv("PATH")};
@@ -59,7 +57,8 @@ void setPathToCaRepeater(std::string ExecPath) {
     auto ReturnBuffer = getcwd(Buffer, BufferSize);
 #endif
     if (ReturnBuffer == nullptr) {
-      throw std::runtime_error("Unable to set PATH to caRepeater. Unable to get current working directory.");
+      throw std::runtime_error("Unable to set PATH to caRepeater. Unable to "
+                               "get current working directory.");
     }
     std::string WorkingDirectory{ReturnBuffer};
     ExecPath = WorkingDirectory + "/" + ExecPath;
@@ -76,5 +75,6 @@ void setPathToCaRepeater(std::string ExecPath) {
     addToPath(ExecParentDir + "/bin");
     return;
   }
-  throw std::runtime_error("Unable to set PATH to caRepeater. Unable to find the executable.");
+  throw std::runtime_error(
+      "Unable to set PATH to caRepeater. Unable to find the executable.");
 }

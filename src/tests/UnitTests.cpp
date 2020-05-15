@@ -7,16 +7,17 @@
 //
 // Screaming Udder!                              https://esss.se
 
+#include "CAPathSetup.h"
 #include <gtest/gtest.h>
 #include <logger.h>
-#include "CAPathSetup.h"
 
 int main(int argc, char **argv) {
   // Set up environment
   try {
     setPathToCaRepeater(argv[0]);
   } catch (std::runtime_error &E) {
-    std::cout << "Unable to setup path to caRepeater. The error was: " << E.what() << "\n";
+    std::cout << "Unable to setup path to caRepeater. The error was: "
+              << E.what() << "\n";
     std::cout << "Attempting to continue anyway.\n";
   }
 

@@ -7,6 +7,7 @@
 //
 // Screaming Udder!                              https://esss.se
 
+#include "CAPathSetup.h"
 #include "ConfigParser.h"
 #include "Forwarder.h"
 #include "MainOpt.h"
@@ -17,7 +18,6 @@
 #include <cstdio>
 #include <cstdlib>
 #include <string>
-#include "CAPathSetup.h"
 
 namespace Forwarder {}
 
@@ -62,8 +62,10 @@ int main(int argc, char **argv) {
   try {
     setPathToCaRepeater(argv[0]);
   } catch (std::runtime_error &E) {
-    LOG_ERROR("Unable to setup path to caRepeater. The error was: {}", E.what());
-    LOG_ERROR("Execution of the forward-epics-to-kafka application will continue but channel access support will be disabled.");
+    LOG_ERROR("Unable to setup path to caRepeater. The error was: {}",
+              E.what());
+    LOG_ERROR("Execution of the forward-epics-to-kafka application will "
+              "continue but channel access support will be disabled.");
   }
 
   if (op.first == Forwarder::ParseOptRet::VersionRequested) {

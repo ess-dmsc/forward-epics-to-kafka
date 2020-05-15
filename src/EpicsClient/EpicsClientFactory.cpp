@@ -10,9 +10,9 @@
 #include "EpicsClientFactory.h"
 #include "../logger.h"
 // For epics::pvAccess::ClientFactory::start()
+#include <ciso646>
 #include <pv/caProvider.h>
 #include <pv/clientFactory.h>
-#include <ciso646>
 
 namespace Forwarder {
 namespace EpicsClient {
