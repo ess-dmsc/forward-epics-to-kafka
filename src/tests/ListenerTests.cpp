@@ -7,8 +7,9 @@
 //
 // Screaming Udder!                              https://esss.se
 
-#include <CommandHandler.h>
-#include <Config.h>
+#include "CommandHandler.h"
+#include "Config.h"
+#include "Forwarder.h"
 #include <KafkaW/Consumer.h>
 #include <gtest/gtest.h>
 
@@ -33,6 +34,6 @@ TEST(ListenerTest, successfully_create_listener_and_poll) {
   Forwarder::Config::Listener listener(uri, std::move(FakeConsumer));
   Forwarder::MainOpt Options;
   Forwarder::Forwarder ForwarderInstance(Options);
-  Forwarder::ConfigCB config_cb(ForwarderInstance);
+  Forwarder::ConfigCallback config_cb(ForwarderInstance);
   ASSERT_NO_THROW(listener.poll(config_cb));
 }

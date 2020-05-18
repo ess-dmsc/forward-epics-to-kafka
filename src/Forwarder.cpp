@@ -144,7 +144,7 @@ std::unique_lock<std::mutex> Forwarder::get_lock_converters() {
 /// When stop flag raised, clear all workers and streams.
 void Forwarder::forward_epics_to_kafka() {
   using namespace std::chrono_literals;
-  ConfigCB config_cb(*this);
+  ConfigCallback config_cb(*this);
   {
     std::lock_guard<std::mutex> lock(conversion_workers_mx);
     for (auto &x : conversion_workers) {

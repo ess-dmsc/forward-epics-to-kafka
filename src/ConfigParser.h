@@ -19,6 +19,8 @@
 
 namespace Forwarder {
 
+enum class CommandType { add, stop_channel, stop_all, exit, unknown };
+
 /// Holder for the converter settings defined in the streams configuration file.
 struct ConverterSettings {
   std::string Schema;
@@ -65,6 +67,12 @@ public:
   /// \param Brokers The raw brokers information, e.g. "localhost:9092"
   /// \param Settings The settings to write the brokers to.
   static void setBrokers(std::string const &Brokers, ConfigSettings &Settings);
+
+  /// Extract the command type from the message.
+  ///
+  /// \param Document The JSON message.
+  /// \return The command name.
+  static CommandType findCommand(nlohmann::json const &Document);
 
 private:
   nlohmann::json Json;
