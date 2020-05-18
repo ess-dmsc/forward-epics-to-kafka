@@ -60,23 +60,7 @@ Forwarder::Forwarder(MainOpt &Opt)
         static_cast<uint32_t>(Opt.MainSettings.ConversionWorkerQueueSize)));
   }
 
-  bool use_config = true;
-  if (main_opt.MainSettings.BrokerConfig.Topic.empty()) {
-    Logger->error("Name for configuration topic is empty");
-    use_config = false;
-  }
-  if (main_opt.MainSettings.BrokerConfig.HostPort.empty()) {
-    Logger->error("Host for configuration topic broker is empty");
-    use_config = false;
-  }
-  if (use_config) {
-    KafkaW::BrokerSettings ConsumerSettings;
-    ConsumerSettings.Address = main_opt.MainSettings.BrokerConfig.HostPort;
-    ConsumerSettings.PollTimeoutMS = 0;
-    auto NewConsumer = std::make_unique<KafkaW::Consumer>(ConsumerSettings);
-    config_listener.reset(new Config::Listener{
-        main_opt.MainSettings.BrokerConfig, std::move(NewConsumer)});
-  }
+  createConfigListener();
   createPVUpdateTimerIfRequired();
   createFakePVUpdateTimerIfRequired();
 
@@ -93,6 +77,15 @@ Forwarder::Forwarder(MainOpt &Opt)
     BrokerSettings.Address = main_opt.MainSettings.StatusReportURI.HostPort;
     status_producer = std::make_shared<KafkaW::Producer>(BrokerSettings);
   }
+}
+
+void Forwarder::createConfigListener() {
+  KafkaW::BrokerSettings ConsumerSettings;
+  ConsumerSettings.Address = main_opt.MainSettings.BrokerConfig.HostPort;
+  ConsumerSettings.PollTimeoutMS = 0;
+  auto NewConsumer = std::make_unique<KafkaW::Consumer>(ConsumerSettings);
+  config_listener = std::make_unique<Config::Listener>(
+      main_opt.MainSettings.BrokerConfig, std::move(NewConsumer));
 }
 
 Forwarder::~Forwarder() {
