@@ -84,7 +84,8 @@ void Forwarder::createConfigListener() {
   ConsumerSettings.Address = main_opt.MainSettings.BrokerConfig.HostPort;
   ConsumerSettings.PollTimeoutMS = 0;
   auto NewConsumer = std::make_unique<KafkaW::Consumer>(ConsumerSettings);
-  config_listener = std::make_unique<Config::Listener>(main_opt.MainSettings.BrokerConfig, std::move(NewConsumer));
+  config_listener = std::make_unique<Config::Listener>(
+      main_opt.MainSettings.BrokerConfig, std::move(NewConsumer));
 }
 
 Forwarder::~Forwarder() {
