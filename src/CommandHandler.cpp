@@ -53,7 +53,7 @@ void ConfigCallback::handleCommand(std::string const &Msg) {
   using nlohmann::json;
   auto Document = json::parse(Msg);
 
-  std::string Command = findCommand(Document);
+  std::string Command = ConfigParser::findCommand(Document);
 
   if (Command == "add") {
     handleCommandAdd(Document);
@@ -66,14 +66,6 @@ void ConfigCallback::handleCommand(std::string const &Msg) {
   } else {
     Logger->info("Cannot understand command: {}", Command);
   }
-}
-
-std::string ConfigCallback::findCommand(nlohmann::json const &Document) {
-  if (auto CommandMaybe = find<std::string>("cmd", Document)) {
-    return CommandMaybe.inner();
-  }
-
-  return std::string();
 }
 
 } // namespace Forwarder

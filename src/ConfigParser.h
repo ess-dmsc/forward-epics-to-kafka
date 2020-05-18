@@ -66,6 +66,12 @@ public:
   /// \param Settings The settings to write the brokers to.
   static void setBrokers(std::string const &Brokers, ConfigSettings &Settings);
 
+  /// Extract the command type from the message.
+  ///
+  /// \param Document The JSON message.
+  /// \return The command name.
+  static std::string findCommand(nlohmann::json const &Document);
+
 private:
   nlohmann::json Json;
   static void extractMappingInfo(nlohmann::json const &Mapping,

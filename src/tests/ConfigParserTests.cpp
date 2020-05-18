@@ -331,3 +331,30 @@ TEST(ConfigParserTest,
   ASSERT_EQ(fourth.HostPort, Settings.Brokers.at(3).HostPort);
   ASSERT_EQ(fifth.HostPort, Settings.Brokers.at(4).HostPort);
 }
+
+class ExtractCommandsTest : public ::testing::TestWithParam<const char *> {
+  // cppcheck-suppress unusedFunction
+  void SetUp() override { command = (*GetParam()); }
+
+protected:
+  std::string command;
+};
+
+TEST_P(ExtractCommandsTest, extracting_command_gets_command_name) {
+  std::ostringstream os;
+  os << "{"
+     << R"(  "cmd": ")" << command << "\""
+     << "}";
+
+  std::string RawJson = os.str();
+
+  nlohmann::json Json = nlohmann::json::parse(RawJson);
+
+  auto Cmd = Forwarder::ConfigParser::findCommand(Json);
+
+  ASSERT_EQ(command, Cmd);
+}
+
+INSTANTIATE_TEST_CASE_P(InstantiationName, ExtractCommandsTest,
+                        ::testing::Values("add", "stop_channel", "stop_all",
+                                          "exit", "unknown_command"));

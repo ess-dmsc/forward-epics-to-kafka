@@ -29,12 +29,6 @@ public:
   /// \param msg The message to handle.
   void operator()(std::string const &msg);
 
-  /// Extract the command type from the message.
-  ///
-  /// \param Document The JSON message.
-  /// \return The command name.
-  static std::string findCommand(nlohmann::json const &Document);
-
 private:
   Forwarder &main;
   void handleCommand(std::string const &Msg);

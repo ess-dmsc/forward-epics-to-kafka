@@ -130,4 +130,12 @@ ConfigParser::extractConverterSettings(nlohmann::json const &Mapping) {
   return Settings;
 }
 
+std::string ConfigParser::findCommand(nlohmann::json const &Document) {
+  if (auto CommandMaybe = find<std::string>("cmd", Document)) {
+    return CommandMaybe.inner();
+  }
+
+  return std::string();
+}
+
 } // namespace Forwarder
