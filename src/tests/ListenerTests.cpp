@@ -7,8 +7,9 @@
 //
 // Screaming Udder!                              https://esss.se
 
-#include <CommandHandler.h>
-#include <Config.h>
+#include "CommandHandler.h"
+#include "Config.h"
+#include "Forwarder.h"
 #include <KafkaW/Consumer.h>
 #include <gtest/gtest.h>
 

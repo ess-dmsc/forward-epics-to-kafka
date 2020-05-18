@@ -9,28 +9,27 @@
 
 #include "CommandHandler.h"
 #include "ConfigParser.h"
+#include "Forwarder.h"
 #include "json.h"
-#include "logger.h"
-#include <nlohmann/json.hpp>
 
 namespace Forwarder {
 
 ConfigCallback::ConfigCallback(Forwarder &main) : main(main) {}
 
-void ConfigCallback::operator()(std::string const &msg) {
-  Logger->debug("Command received: {}", msg);
+void ConfigCallback::operator()(std::string const &RawMsg) {
+  Logger->debug("Command received: {}", RawMsg);
   try {
-    handleCommand(msg);
-  } catch (nlohmann::json::parse_error const &e) {
+    auto Msg = nlohmann::json::parse(RawMsg);
+    handleCommand(Msg);
+  } catch (nlohmann::json::parse_error const &Error) {
     Logger->error("Could not parse command. Command was {}. Exception was: {}",
-                  msg, e.what());
-  } catch (...) {
-    Logger->error("Could not handle command: {}", msg);
+                  RawMsg, Error.what());
+  } catch (std::exception const &Error) {
+    Logger->error("Could not handle command. Command was {}. Exception was: {}", RawMsg, Error.what());
   }
 }
 
 void ConfigCallback::handleCommandAdd(nlohmann::json const &Document) {
-  // Use instance of ConfigParser to extract stream info.
   ConfigParser Config(Document.dump());
   auto Settings = Config.extractStreamInfo();
 
@@ -49,22 +48,19 @@ void ConfigCallback::handleCommandStopAll() { main.streams.clearStreams(); }
 
 void ConfigCallback::handleCommandExit() { main.stopForwarding(); }
 
-void ConfigCallback::handleCommand(std::string const &Msg) {
-  using nlohmann::json;
-  auto Document = json::parse(Msg);
+void ConfigCallback::handleCommand(nlohmann::json const &Msg) {
+  CommandType Command = ConfigParser::findCommand(Msg);
 
-  std::string Command = ConfigParser::findCommand(Document);
-
-  if (Command == "add") {
-    handleCommandAdd(Document);
-  } else if (Command == "stop_channel") {
-    handleCommandStopChannel(Document);
-  } else if (Command == "stop_all") {
+  if (Command == CommandType::add) {
+    handleCommandAdd(Msg);
+  } else if (Command == CommandType::stop_channel) {
+    handleCommandStopChannel(Msg);
+  } else if (Command == CommandType::stop_all) {
     handleCommandStopAll();
-  } else if (Command == "exit") {
+  } else if (Command == CommandType::exit) {
     handleCommandExit();
   } else {
-    Logger->info("Cannot understand command: {}", Command);
+    throw std::runtime_error("Unknown command type received");
   }
 }
 

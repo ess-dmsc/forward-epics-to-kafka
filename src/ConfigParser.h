@@ -19,6 +19,14 @@
 
 namespace Forwarder {
 
+enum class CommandType {
+add,
+  stop_channel,
+  stop_all,
+  exit,
+  unknown
+};
+
 /// Holder for the converter settings defined in the streams configuration file.
 struct ConverterSettings {
   std::string Schema;
@@ -70,7 +78,7 @@ public:
   ///
   /// \param Document The JSON message.
   /// \return The command name.
-  static std::string findCommand(nlohmann::json const &Document);
+  static CommandType findCommand(nlohmann::json const &Document);
 
 private:
   nlohmann::json Json;

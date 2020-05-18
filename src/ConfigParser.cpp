@@ -130,12 +130,18 @@ ConfigParser::extractConverterSettings(nlohmann::json const &Mapping) {
   return Settings;
 }
 
-std::string ConfigParser::findCommand(nlohmann::json const &Document) {
+CommandType ConfigParser::findCommand(nlohmann::json const &Document) {
   if (auto CommandMaybe = find<std::string>("cmd", Document)) {
-    return CommandMaybe.inner();
+    if (CommandMaybe.inner() == "add") {
+      return CommandType::add;
+    } else if (CommandMaybe.inner() == "stop_channel") {
+      return CommandType::stop_channel;
+    } else if (CommandMaybe.inner() == "stop_all") {
+      return CommandType::stop_all;
+    } else if (CommandMaybe.inner() == "exit") {
+      return CommandType::exit;
+    }
   }
-
-  return std::string();
+  return CommandType::unknown;
 }
-
 } // namespace Forwarder

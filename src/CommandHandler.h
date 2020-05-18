@@ -8,11 +8,10 @@
 // Screaming Udder!                              https://esss.se
 
 #pragma once
-#include "Config.h"
-#include "Forwarder.h"
 #include "logger.h"
 #include "nlohmann/json.hpp"
 #include <string>
+
 namespace Forwarder {
 class Forwarder;
 
@@ -26,12 +25,12 @@ public:
 
   /// The callback entry-point.
   ///
-  /// \param msg The message to handle.
-  void operator()(std::string const &msg);
+  /// \param RawMsg The message to handle.
+  void operator()(std::string const &RawMsg);
 
 private:
   Forwarder &main;
-  void handleCommand(std::string const &Msg);
+  void handleCommand(nlohmann::json const &Msg);
   void handleCommandAdd(nlohmann::json const &Document);
   void handleCommandStopChannel(nlohmann::json const &Document);
   void handleCommandStopAll();

@@ -9,8 +9,8 @@
 
 #include "MetricsReporter.h"
 #include "CURLReporter.h"
-#include "CommandHandler.h"
 #include "Converter.h"
+#include "Forwarder.h"
 
 #ifdef _MSC_VER
 std::vector<char> getHostname() {
