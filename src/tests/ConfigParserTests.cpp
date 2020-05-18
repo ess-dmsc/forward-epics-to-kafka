@@ -314,8 +314,8 @@ TEST(
 TEST(ConfigParserTest,
      setBrokers_adds_multiple_words_before_and_after_characters) {
   ConfigSettings Settings;
-  ConfigParser::setBrokers(
-      ",//some,//longer,//thing,//for,//testing", Settings);
+  ConfigParser::setBrokers(",//some,//longer,//thing,//for,//testing",
+                           Settings);
   URI first("//some");
   URI second("//longer");
   URI third("//thing");
@@ -329,7 +329,8 @@ TEST(ConfigParserTest,
   ASSERT_EQ(fifth.HostPort, Settings.Brokers.at(4).HostPort);
 }
 
-class ExtractCommandsTest : public ::testing::TestWithParam<std::tuple<const char *, CommandType>> {
+class ExtractCommandsTest
+    : public ::testing::TestWithParam<std::tuple<const char *, CommandType>> {
   // cppcheck-suppress unusedFunction
   void SetUp() override {
     Command = std::get<0>(GetParam());
@@ -356,9 +357,11 @@ TEST_P(ExtractCommandsTest, extracting_command_gets_command_name) {
   ASSERT_EQ(Type, Cmd);
 }
 
-INSTANTIATE_TEST_CASE_P(InstantiationName, ExtractCommandsTest,
-                        ::testing::Values(std::make_tuple("add", CommandType::add),
-                            std::make_tuple("stop_channel", CommandType::stop_channel),
-                            std::make_tuple("stop_all", CommandType::stop_all),
-                            std::make_tuple("exit", CommandType::exit),
-                            std::make_tuple("unknown_command", CommandType::unknown)));
+INSTANTIATE_TEST_CASE_P(
+    InstantiationName, ExtractCommandsTest,
+    ::testing::Values(
+        std::make_tuple("add", CommandType::add),
+        std::make_tuple("stop_channel", CommandType::stop_channel),
+        std::make_tuple("stop_all", CommandType::stop_all),
+        std::make_tuple("exit", CommandType::exit),
+        std::make_tuple("unknown_command", CommandType::unknown)));

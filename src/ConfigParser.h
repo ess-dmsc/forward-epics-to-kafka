@@ -19,13 +19,7 @@
 
 namespace Forwarder {
 
-enum class CommandType {
-add,
-  stop_channel,
-  stop_all,
-  exit,
-  unknown
-};
+enum class CommandType { add, stop_channel, stop_all, exit, unknown };
 
 /// Holder for the converter settings defined in the streams configuration file.
 struct ConverterSettings {

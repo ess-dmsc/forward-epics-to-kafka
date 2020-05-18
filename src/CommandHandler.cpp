@@ -25,7 +25,8 @@ void ConfigCallback::operator()(std::string const &RawMsg) {
     Logger->error("Could not parse command. Command was {}. Exception was: {}",
                   RawMsg, Error.what());
   } catch (std::exception const &Error) {
-    Logger->error("Could not handle command. Command was {}. Exception was: {}", RawMsg, Error.what());
+    Logger->error("Could not handle command. Command was {}. Exception was: {}",
+                  RawMsg, Error.what());
   }
 }
 
