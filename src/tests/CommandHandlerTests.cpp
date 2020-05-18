@@ -18,7 +18,7 @@ class CommandHandlerTest : public ::testing::Test {
 protected:
   Forwarder::MainOpt MainOpt;
   Forwarder::Forwarder Main{MainOpt};
-  Forwarder::ConfigCB Config{Main};
+  Forwarder::ConfigCallback Config{Main};
 };
 
 TEST_F(CommandHandlerTest, add_command_adds_stream_correctly) {
@@ -161,7 +161,7 @@ TEST_P(ExtractCommandsTest, extracting_command_gets_command_name) {
 
   nlohmann::json Json = nlohmann::json::parse(RawJson);
 
-  auto Cmd = Forwarder::ConfigCB::findCommand(Json);
+  auto Cmd = Forwarder::ConfigCallback::findCommand(Json);
 
   ASSERT_EQ(command, Cmd);
 }

@@ -15,9 +15,9 @@
 
 namespace Forwarder {
 
-ConfigCB::ConfigCB(Forwarder &main) : main(main) {}
+ConfigCallback::ConfigCallback(Forwarder &main) : main(main) {}
 
-void ConfigCB::operator()(std::string const &msg) {
+void ConfigCallback::operator()(std::string const &msg) {
   Logger->debug("Command received: {}", msg);
   try {
     handleCommand(msg);
@@ -29,7 +29,7 @@ void ConfigCB::operator()(std::string const &msg) {
   }
 }
 
-void ConfigCB::handleCommandAdd(nlohmann::json const &Document) {
+void ConfigCallback::handleCommandAdd(nlohmann::json const &Document) {
   // Use instance of ConfigParser to extract stream info.
   ConfigParser Config(Document.dump());
   auto Settings = Config.extractStreamInfo();
@@ -39,17 +39,17 @@ void ConfigCB::handleCommandAdd(nlohmann::json const &Document) {
   }
 }
 
-void ConfigCB::handleCommandStopChannel(nlohmann::json const &Document) {
+void ConfigCallback::handleCommandStopChannel(nlohmann::json const &Document) {
   if (auto ChannelMaybe = find<std::string>("channel", Document)) {
     main.streams.stopChannel(ChannelMaybe.inner());
   }
 }
 
-void ConfigCB::handleCommandStopAll() { main.streams.clearStreams(); }
+void ConfigCallback::handleCommandStopAll() { main.streams.clearStreams(); }
 
-void ConfigCB::handleCommandExit() { main.stopForwarding(); }
+void ConfigCallback::handleCommandExit() { main.stopForwarding(); }
 
-void ConfigCB::handleCommand(std::string const &Msg) {
+void ConfigCallback::handleCommand(std::string const &Msg) {
   using nlohmann::json;
   auto Document = json::parse(Msg);
 
@@ -68,7 +68,7 @@ void ConfigCB::handleCommand(std::string const &Msg) {
   }
 }
 
-std::string ConfigCB::findCommand(nlohmann::json const &Document) {
+std::string ConfigCallback::findCommand(nlohmann::json const &Document) {
   if (auto CommandMaybe = find<std::string>("cmd", Document)) {
     return CommandMaybe.inner();
   }

@@ -17,12 +17,12 @@ namespace Forwarder {
 class Forwarder;
 
 /// Helper class to provide a callback for the Kafka command listener.
-class ConfigCB {
+class ConfigCallback {
 public:
   /// Constructor.
   ///
   /// \param main The owning class which is manipulated from the callback.
-  explicit ConfigCB(Forwarder &main);
+  explicit ConfigCallback(Forwarder &main);
 
   /// The callback entry-point.
   ///
