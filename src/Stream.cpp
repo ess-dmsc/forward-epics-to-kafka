@@ -46,7 +46,9 @@ int ConversionPath::emit(std::shared_ptr<FlatBufs::EpicsPVUpdate> up) {
 }
 
 ConversionPathStatus ConversionPath::GetStatus() const {
-  return ConversionPathStatus(converter->schema_name(), kafka_output->Output.brokerAddress(), kafka_output->topicName());
+  return ConversionPathStatus(converter->schema_name(),
+                              kafka_output->Output.brokerAddress(),
+                              kafka_output->topicName());
 }
 
 std::string ConversionPath::getKafkaTopicName() const {
@@ -156,15 +158,15 @@ size_t Stream::getQueueSize() { return OutputQueue->size_approx(); }
 
 StreamStatus Stream::getStatus() {
   auto const &ChannelInfo = getChannelInfo();
-  StreamStatus CurrentStatus(ChannelInfo.channel_name, Client->getConnectionState());
+  StreamStatus CurrentStatus(ChannelInfo.channel_name,
+                             Client->getConnectionState());
 
-    std::transform(ConversionPaths.begin(), ConversionPaths.end(),
-                 std::back_inserter(CurrentStatus.Converters),
-                 [](std::unique_ptr<ConversionPath> &Path) {
-                   return Path->GetStatus();
-                 });
+  std::transform(
+      ConversionPaths.begin(), ConversionPaths.end(),
+      std::back_inserter(CurrentStatus.Converters),
+      [](std::unique_ptr<ConversionPath> &Path) { return Path->GetStatus(); });
 
-    return CurrentStatus;
+  return CurrentStatus;
 }
 
 std::shared_ptr<EpicsClient::EpicsClientInterface> Stream::getEpicsClient() {

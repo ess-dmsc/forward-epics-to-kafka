@@ -12,8 +12,8 @@
 #include "MainOpt.h"
 #include "Streams.h"
 #include "logger.h"
-#include <nlohmann/json.hpp>
 #include <asio.hpp>
+#include <nlohmann/json.hpp>
 
 namespace Forwarder {
 
