@@ -42,7 +42,7 @@ public:
   virtual ~ConversionPath();
   int emit(std::shared_ptr<FlatBufs::EpicsPVUpdate> up);
   std::atomic<uint32_t> transit{0};
-  ConversionPathStatus status_json() const;
+  ConversionPathStatus GetStatus() const;
   virtual std::string getKafkaTopicName() const;
   virtual std::string getSchemaName() const;
 

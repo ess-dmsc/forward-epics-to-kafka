@@ -45,7 +45,7 @@ int ConversionPath::emit(std::shared_ptr<FlatBufs::EpicsPVUpdate> up) {
   return 0;
 }
 
-ConversionPathStatus ConversionPath::status_json() const {
+ConversionPathStatus ConversionPath::GetStatus() const {
   return ConversionPathStatus(converter->schema_name(), kafka_output->Output.brokerAddress(), kafka_output->topicName());
 }
 
@@ -161,7 +161,7 @@ StreamStatus Stream::getStatus() {
     std::transform(ConversionPaths.begin(), ConversionPaths.end(),
                  std::back_inserter(CurrentStatus.Converters),
                  [](std::unique_ptr<ConversionPath> &Path) {
-                   return Path->status_json();
+                   return Path->GetStatus();
                  });
 
     return CurrentStatus;
