@@ -12,6 +12,7 @@
 #include "MainOpt.h"
 #include "Streams.h"
 #include "logger.h"
+#include <nlohmann/json.hpp>
 #include <asio.hpp>
 
 namespace Forwarder {
@@ -28,6 +29,7 @@ public:
 
 private:
   void run() { IO.run(); }
+  nlohmann::json GetStreamStatuses();
   asio::io_context IO;
   std::chrono::milliseconds Period;
   asio::steady_timer AsioTimer;

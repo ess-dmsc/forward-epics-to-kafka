@@ -9,6 +9,7 @@
 
 #include "Streams.h"
 #include "Stream.h"
+#include "StreamStatus.h"
 #include <algorithm>
 
 namespace Forwarder {
@@ -59,17 +60,17 @@ void Streams::checkStreamStatus() {
                        StreamPointers.end());
 }
 
-json Streams::getStreamStatuses() {
+std::vector<StreamStatus> Streams::getStreamStatuses() {
   const std::lock_guard<std::mutex> lock(StreamsMutex);
 
-  auto StreamsArray = json::array();
+  std::vector<StreamStatus> StreamsStatus;
   std::transform(StreamPointers.cbegin(), StreamPointers.cend(),
-                 std::back_inserter(StreamsArray),
+                 std::back_inserter(StreamsStatus),
                  [](const std::shared_ptr<Stream> &CStream) {
-                   return CStream->getStatusJson();
+                   return CStream->getStatus();
                  });
 
-  return StreamsArray;
+  return StreamsStatus;
 }
 
 void Streams::add(std::shared_ptr<Stream> s) {
@@ -95,4 +96,5 @@ Streams::getStreamByChannelName(std::string const &channel_name) {
   }
   return *FoundChannel;
 }
+
 } // namespace Forwarder

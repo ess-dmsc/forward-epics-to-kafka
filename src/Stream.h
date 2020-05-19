@@ -15,12 +15,12 @@
 #include "KafkaOutput.h"
 #include "RangeSet.h"
 #include "SchemaRegistry.h"
+#include "StreamStatus.h"
 #include "URI.h"
 #include <array>
 #include <atomic>
 #include <concurrentqueue/concurrentqueue.h>
 #include <memory>
-#include <nlohmann/json.hpp>
 #include <string>
 #include <vector>
 
@@ -42,7 +42,7 @@ public:
   virtual ~ConversionPath();
   int emit(std::shared_ptr<FlatBufs::EpicsPVUpdate> up);
   std::atomic<uint32_t> transit{0};
-  nlohmann::json status_json() const;
+  ConversionPathStatus status_json() const;
   virtual std::string getKafkaTopicName() const;
   virtual std::string getSchemaName() const;
 
@@ -73,7 +73,7 @@ public:
   ChannelInfo const &getChannelInfo() const;
   std::shared_ptr<EpicsClient::EpicsClientInterface> getEpicsClient();
   size_t getQueueSize();
-  nlohmann::json getStatusJson();
+  StreamStatus getStatus();
 
 private:
   /// Each Epics update is converted by each Converter in the list

@@ -45,13 +45,8 @@ int ConversionPath::emit(std::shared_ptr<FlatBufs::EpicsPVUpdate> up) {
   return 0;
 }
 
-nlohmann::json ConversionPath::status_json() const {
-  using nlohmann::json;
-  auto Document = json::object();
-  Document["schema"] = converter->schema_name();
-  Document["broker"] = kafka_output->Output.brokerAddress();
-  Document["topic"] = kafka_output->topicName();
-  return Document;
+ConversionPathStatus ConversionPath::status_json() const {
+  return ConversionPathStatus(converter->schema_name(), kafka_output->Output.brokerAddress(), kafka_output->topicName());
 }
 
 std::string ConversionPath::getKafkaTopicName() const {
@@ -159,30 +154,17 @@ ChannelInfo const &Stream::getChannelInfo() const { return ChannelInfo_; }
 
 size_t Stream::getQueueSize() { return OutputQueue->size_approx(); }
 
-nlohmann::json Stream::getStatusJson() {
-  using nlohmann::json;
-  auto Document = json::object();
+StreamStatus Stream::getStatus() {
   auto const &ChannelInfo = getChannelInfo();
-  Document["channel_name"] = ChannelInfo.channel_name;
-  Document["epics_connection_status"] = Client->getConnectionState();
-  Document["queue_size"] = getQueueSize();
-  {
-    std::lock_guard<std::mutex> lock(SeqDataEmitted.Mutex);
-    auto const &Set = SeqDataEmitted.set;
-    auto Last = Set.rbegin();
-    if (Last != Set.rend()) {
-      Document["emitted_max"] = Last->second;
-    }
-  }
-  auto Converters = json::array();
-  std::transform(ConversionPaths.begin(), ConversionPaths.end(),
-                 std::back_inserter(Converters),
+  StreamStatus CurrentStatus(ChannelInfo.channel_name, Client->getConnectionState());
+
+    std::transform(ConversionPaths.begin(), ConversionPaths.end(),
+                 std::back_inserter(CurrentStatus.Converters),
                  [](std::unique_ptr<ConversionPath> &Path) {
                    return Path->status_json();
                  });
 
-  Document["converters"] = Converters;
-  return Document;
+    return CurrentStatus;
 }
 
 std::shared_ptr<EpicsClient::EpicsClientInterface> Stream::getEpicsClient() {

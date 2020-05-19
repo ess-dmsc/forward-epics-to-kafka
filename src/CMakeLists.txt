@@ -106,7 +106,8 @@ set(forwarder-library_INC
     URI.h
     schemas/tdc_time/TdcTime.h
     MetricsReporter.h
-    StatusReporter.h)
+    StatusReporter.h
+    StreamStatus.h)
 
 set(forwarder-library_SRC
     MainOpt.cpp

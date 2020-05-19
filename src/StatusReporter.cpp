@@ -35,8 +35,7 @@ void StatusReporter::reportStatus() {
   using nlohmann::json;
   auto Status = json::object();
   Status["service_id"] = MainOptions.MainSettings.ServiceID;
-  auto StreamsStatuses = Streamers.getStreamStatuses();
-  Status["streams"] = StreamsStatuses;
+  Status["streams"] = GetStreamStatuses();
   auto StatusString = Status.dump();
   auto StatusStringSize = StatusString.size();
   if (StatusStringSize > 1000) {
@@ -58,6 +57,34 @@ void StatusReporter::reportStatus() {
       this->reportStatus();
     }
   });
+}
+
+nlohmann::json StatusReporter::GetStreamStatuses() {
+  auto StreamsStatuses = Streamers.getStreamStatuses();
+  auto StreamsJson = nlohmann::json::array();
+  std::transform(
+      StreamsStatuses.cbegin(), StreamsStatuses.cend(),
+      std::back_inserter(StreamsJson), [](StreamStatus const &Stream) {
+        auto StreamJson = nlohmann::json::object();
+        StreamJson["channel_name"] = Stream.ChannelName;
+        StreamJson["epics_connection_status"] = Stream.ConnectionStatus;
+
+        auto Converters = nlohmann::json::array();
+        std::transform(Stream.Converters.cbegin(), Stream.Converters.cend(),
+                       std::back_inserter(Converters),
+                       [](ConversionPathStatus const &Path) {
+                         auto PathJson = nlohmann::json::object();
+                         PathJson["schema"] = Path.Schema;
+                         PathJson["broker"] = Path.Broker;
+                         PathJson["topic"] = Path.Topic;
+                         return PathJson;
+                       });
+
+        StreamJson["converters"] = Converters;
+        return StreamJson;
+      });
+
+  return StreamsJson;
 }
 
 StatusReporter::~StatusReporter() {
