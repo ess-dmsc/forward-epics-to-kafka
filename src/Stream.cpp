@@ -71,7 +71,6 @@ Stream::~Stream() {
   Logger->trace("~Stream");
   stop();
   Logger->trace("~Stop DONE");
-  Logger->info("SeqDataEmitted: {}", SeqDataEmitted.to_string());
 }
 
 int Stream::addConverter(std::unique_ptr<ConversionPath> Path) {
