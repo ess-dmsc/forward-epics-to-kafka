@@ -157,8 +157,7 @@ ChannelInfo const &Stream::getChannelInfo() const { return ChannelInfo_; }
 size_t Stream::getQueueSize() { return OutputQueue->size_approx(); }
 
 StreamStatus Stream::getStatus() {
-  auto const &ChannelInfo = getChannelInfo();
-  StreamStatus CurrentStatus(ChannelInfo.channel_name,
+  StreamStatus CurrentStatus(ChannelInfo_.channel_name,
                              Client->getConnectionState());
 
   std::transform(
