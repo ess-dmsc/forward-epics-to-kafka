@@ -149,7 +149,7 @@ int Stream::stop() {
   return 0;
 }
 
-int Stream::status() { return Client->status(); }
+int Stream::getEpicsError() { return Client->status(); }
 
 ChannelInfo const &Stream::getChannelInfo() const { return ChannelInfo_; }
 

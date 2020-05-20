@@ -69,7 +69,7 @@ public:
       uint32_t max);
   int stop();
   void setEpicsError();
-  int status();
+  int getEpicsError();
   ChannelInfo const &getChannelInfo() const;
   std::shared_ptr<EpicsClient::EpicsClientInterface> getEpicsClient();
   size_t getQueueSize();

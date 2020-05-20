@@ -76,13 +76,13 @@ void clearQueue(ConcurrentQueue<std::unique_ptr<ConversionWorkPacket>> &queue) {
 
 TEST(StreamTest, when_status_is_okay_getting_status_returns_okay) {
   auto Stream = createStream("provider", "channel1");
-  ASSERT_EQ(Stream->status(), 0);
+  ASSERT_EQ(Stream->getEpicsError(), 0);
 }
 
 TEST(StreamTest, when_error_set_getting_status_returns_error) {
   auto Stream = createStream("provider", "channel1");
   Stream->setEpicsError();
-  ASSERT_EQ(Stream->status(), -1);
+  ASSERT_EQ(Stream->getEpicsError(), -1);
 }
 
 TEST(StreamTest, requesting_stop_stops_epics_client) {

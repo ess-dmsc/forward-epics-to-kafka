@@ -51,7 +51,7 @@ void Streams::checkStreamStatus() {
   StreamPointers.erase(std::remove_if(StreamPointers.begin(),
                                       StreamPointers.end(),
                                       [&](std::shared_ptr<Stream> s) {
-                                        if (s->status() < 0) {
+                                        if (s->getEpicsError() < 0) {
                                           s->stop();
                                           return true;
                                         }
