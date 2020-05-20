@@ -86,7 +86,7 @@ builders = pipeline_builder.createBuilders { container ->
                 cd build
                 . ./activate_run.sh
                 ./bin/tests -- --gtest_output=xml:${test_output}
-                ninja coverage
+                make coverage
                 pkill caRepeater || true
             """
             container.copyFrom('build', '.')
