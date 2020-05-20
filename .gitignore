@@ -2,3 +2,4 @@
 /forward-epics-to-kafka.xcodeproj/
 /docs/
 /system-tests/logs/*.log
+__pycache__

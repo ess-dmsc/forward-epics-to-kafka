@@ -28,6 +28,25 @@ else()
     endif()
 endif(WIN32)
 
+set(HTML_COVERAGE_REPORT OFF CACHE BOOL "Generate test coverage report as html, find in <BUILD_DIR>/coverage/index.html")
+if(CMAKE_COMPILER_IS_GNUCXX AND COV OR HTML_COVERAGE_REPORT)
+    include(CodeCoverage)
+    append_coverage_compiler_flags()
+    # Exclude tests from test coverage
+    set(COVERAGE_EXCLUDE src/tests)
+    if (HTML_COVERAGE_REPORT)
+        setup_target_for_coverage_gcovr_html(NAME coverage
+                EXECUTABLE tests
+                EXCLUDE ${COVERAGE_EXCLUDE}
+                DEPENDENCIES tests)
+    else()
+        setup_target_for_coverage_gcovr_xml(NAME coverage
+                EXECUTABLE tests
+                EXCLUDE ${COVERAGE_EXCLUDE}
+                DEPENDENCIES tests)
+    endif()
+endif()
+
 # Use gold linker if available on system (it is faster than default GNU linker)
 if (UNIX AND NOT APPLE)
   execute_process(COMMAND ${CMAKE_C_COMPILER} -fuse-ld=gold -Wl,--version ERROR_QUIET OUTPUT_VARIABLE ld_version)
