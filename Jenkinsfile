@@ -91,14 +91,36 @@ builders = pipeline_builder.createBuilders { container ->
                 lcov --remove coverage.info '*_generated.h' '*/src/date/*' '*/.conan/data/*' '*/usr/*' --output-file coverage.info
                 pkill caRepeater || true
             """
-
             container.copyFrom('build', '.')
             junit "build/${test_output}"
 
-            withCredentials([string(credentialsId: 'forward-epics-to-kafka-codecov-token', variable: 'TOKEN')]) {
-                sh "cp ${pipeline_builder.project}/codecov.yml codecov.yml"
-                sh "curl -s https://codecov.io/bash | bash -s - -f build/coverage.info -t ${TOKEN} -C ${scm_vars.GIT_COMMIT}"
-            }  // withCredentials
+            step([
+                  $class: 'CoberturaPublisher',
+                  autoUpdateHealth: true,
+                  autoUpdateStability: true,
+                  coberturaReportFile: 'build/coverage.xml',
+                  failUnhealthy: false,
+                  failUnstable: false,
+                  maxNumberOfBuilds: 0,
+                  onlyStable: false,
+                  sourceEncoding: 'ASCII',
+                  zoomCoverageChart: true
+            ])
+
+            if (env.CHANGE_ID) {
+                coverage_summary = sh (
+                  script: "sed -n -e '/^TOTAL/p' build/coverage.txt",
+                  returnStdout: true
+                ).trim()
+
+                def repository_url = scm.userRemoteConfigs[0].url
+                def repository_name = repository_url.replace("git@github.com:","").replace(".git","").replace("https://github.com/","")
+                def comment_text = "**Code Coverage**\\n*(Lines    Exec  Cover)*\\n${coverage_summary}\\n*For more detail see Cobertura report in Jenkins interface*"
+
+                withCredentials([string(credentialsId: 'cow-bot-token', variable: 'GITHUB_TOKEN')]) {
+                    sh "curl -s -H \"Authorization: token ${GITHUB_TOKEN}\" -X POST -d '{\"body\": \"${comment_text}\"}' \"https://api.github.com/repos/${repository_name}/issues/${env.CHANGE_ID}/comments\""
+                }
+            }
         } else if (container.key != release_os) {
             // Run tests.
             container.sh """
