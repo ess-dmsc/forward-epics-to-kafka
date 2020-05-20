@@ -83,7 +83,7 @@ public:
     monitor.reset();
     return 0;
   }
-  
+
   /// Stops the EPICS monitor loop.
   int stop() {
     RLOCK();
