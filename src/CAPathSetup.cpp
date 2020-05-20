@@ -27,10 +27,9 @@ bool fileExists(std::string const &FullPath) {
 static const std::string caRepeaterName{"caRepeater.exe"};
 static const std::string Separator{";"};
 int setenv(const char *name, const char *value, int overwrite) {
-  int errcode = 0;
   if (!overwrite) {
     size_t envsize = 0;
-    errcode = getenv_s(&envsize, NULL, 0, name);
+    int errcode = getenv_s(&envsize, NULL, 0, name);
     if (errcode || envsize)
       return errcode;
   }
@@ -48,9 +47,9 @@ void addToPath(std::string const &Path) {
 }
 
 void setPathToCaRepeater(std::string ExecPath) {
-  size_t const BufferSize{2048};
-  char Buffer[BufferSize];
   if (ExecPath[0] != '/') {
+    size_t const BufferSize{2048};
+    char Buffer[BufferSize];
 #ifdef _WIN32
     auto ReturnBuffer = _getcwd(Buffer, BufferSize);
 #else

@@ -29,8 +29,8 @@ using urlock = std::unique_lock<std::recursive_mutex>;
 class EpicsClientMonitorImpl {
 public:
   explicit EpicsClientMonitorImpl(EpicsClientInterface *EpicsClient,
-                                  std::string ProviderType,
-                                  std::string ChannelName)
+                                  std::string const &ProviderType,
+                                  std::string const &ChannelName)
       : EpicsClient(EpicsClient),
         Channel(EpicsClientMonitorImpl::getClientProvider(ProviderType)
                     ->connect(ChannelName)),
@@ -83,14 +83,7 @@ public:
     monitor.reset();
     return 0;
   }
-
-  /// Logs that the channel has been destroyed and stops monitoring.
-  int channelDestroyed() {
-    Logger->warn("channelDestroyed()");
-    monitoringStop();
-    return 0;
-  }
-
+  
   /// Stops the EPICS monitor loop.
   int stop() {
     RLOCK();
@@ -110,7 +103,7 @@ public:
   void emit(std::shared_ptr<FlatBufs::EpicsPVUpdate> const &Update) {
     EpicsClient->emit(Update);
   }
-  std::string getChannelName() { return channel_name; }
+  std::string getChannelName() const { return channel_name; }
   bool valid() { return Channel.valid(); }
 
 protected:
