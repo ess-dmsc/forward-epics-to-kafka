@@ -57,14 +57,6 @@ if (UNIX AND NOT APPLE)
   endif()
 endif()
 
-# Test Coverage - with gcc only and enable with -DCOV
-if(CMAKE_COMPILER_IS_GNUCXX AND COV)
-    include(CodeCoverage)
-    setup_target_for_coverage(coverage tests coverage})
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CMAKE_CXX_FLAGS_COVERAGE}")
-endif()
-
-
 # Conan - bring in dependencies with conan
 set(CONAN_PROFILE "default" CACHE STRING "Name of conan profile to use, uses default by default")
 set(CONAN "AUTO" CACHE STRING "conan options AUTO (conan must be in path), MANUAL (expects conanbuildinfo.cmake in build directory) or DISABLE")
