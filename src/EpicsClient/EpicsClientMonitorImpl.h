@@ -117,10 +117,8 @@ protected:
   Forwarder::EpicsClient::EpicsClientFactoryInit
       Initializer; // Must be located before all other members
   epics::pvData::MonitorRequester::shared_pointer monitor_requester;
-  epics::pvAccess::ChannelRequester::shared_pointer channel_requester;
   epics::pvAccess::Channel::shared_pointer channel;
   EpicsClientInterface *EpicsClient{nullptr};
-  epics::pvAccess::ChannelProvider::shared_pointer provider;
   pvac::ClientChannel Channel;
   pva::Monitor::shared_pointer monitor;
   std::recursive_mutex mx;
