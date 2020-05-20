@@ -23,7 +23,7 @@ class ConsumerInterface;
 }
 
 namespace Forwarder {
-class ConfigCB;
+class ConfigCallback;
 namespace Config {
 
 class Listener {
@@ -31,7 +31,7 @@ public:
   Listener(URI uri, std::unique_ptr<KafkaW::ConsumerInterface> NewConsumer);
   Listener(Listener const &) = delete;
   ~Listener() = default;
-  void poll(::Forwarder::ConfigCB &cb);
+  void poll(::Forwarder::ConfigCallback &cb);
 
 private:
   std::unique_ptr<KafkaW::ConsumerInterface> Consumer;

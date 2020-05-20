@@ -28,7 +28,7 @@ Listener::Listener(URI uri,
   }
 }
 
-void Listener::poll(::Forwarder::ConfigCB &cb) {
+void Listener::poll(::Forwarder::ConfigCallback &cb) {
   auto Message = Consumer->poll();
   if (Message->getStatus() == KafkaW::PollStatus::Message) {
     cb(Message->getData());

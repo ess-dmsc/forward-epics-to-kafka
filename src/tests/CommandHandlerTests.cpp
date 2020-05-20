@@ -18,7 +18,7 @@ class CommandHandlerTest : public ::testing::Test {
 protected:
   Forwarder::MainOpt MainOpt;
   Forwarder::Forwarder Main{MainOpt};
-  Forwarder::ConfigCB Config{Main};
+  Forwarder::ConfigCallback Config{Main};
 };
 
 TEST_F(CommandHandlerTest, add_command_adds_stream_correctly) {
@@ -142,30 +142,3 @@ TEST_F(CommandHandlerTest, stop_command_removes_stream_correctly) {
 
   ASSERT_EQ(0u, Main.streams.size());
 }
-
-class ExtractCommandsTest : public ::testing::TestWithParam<const char *> {
-  // cppcheck-suppress unusedFunction
-  void SetUp() override { command = (*GetParam()); }
-
-protected:
-  std::string command;
-};
-
-TEST_P(ExtractCommandsTest, extracting_command_gets_command_name) {
-  std::ostringstream os;
-  os << "{"
-     << R"(  "cmd": ")" << command << "\""
-     << "}";
-
-  std::string RawJson = os.str();
-
-  nlohmann::json Json = nlohmann::json::parse(RawJson);
-
-  auto Cmd = Forwarder::ConfigCB::findCommand(Json);
-
-  ASSERT_EQ(command, Cmd);
-}
-
-INSTANTIATE_TEST_CASE_P(InstantiationName, ExtractCommandsTest,
-                        ::testing::Values("add", "stop_channel", "stop_all",
-                                          "exit", "unknown_command"));

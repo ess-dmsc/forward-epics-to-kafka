@@ -86,6 +86,7 @@ private:
   void raiseForwardingFlag(ForwardingRunState ToBeRaised);
   void pushConverterToStream(ConverterSettings const &ConverterInfo,
                              std::shared_ptr<Stream> &Stream);
+  void createConfigListener();
   SharedLogger Logger = getLogger();
 };
 

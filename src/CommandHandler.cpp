@@ -9,29 +9,28 @@
 
 #include "CommandHandler.h"
 #include "ConfigParser.h"
+#include "Forwarder.h"
 #include "json.h"
-#include "logger.h"
-#include <nlohmann/json.hpp>
 
 namespace Forwarder {
 
-ConfigCB::ConfigCB(Forwarder &main) : main(main) {}
+ConfigCallback::ConfigCallback(Forwarder &main) : main(main) {}
 
-void ConfigCB::operator()(std::string const &msg) {
-  Logger->debug("Command received: {}", msg);
+void ConfigCallback::operator()(std::string const &RawMsg) {
+  Logger->debug("Command received: {}", RawMsg);
   try {
-    handleCommand(msg);
-  } catch (nlohmann::json::parse_error const &e) {
+    auto Msg = nlohmann::json::parse(RawMsg);
+    handleCommand(Msg);
+  } catch (nlohmann::json::parse_error const &Error) {
     Logger->error("Could not parse command. Command was {}. Exception was: {}",
-                  msg, e.what());
-  } catch (std::exception const &E) {
-    Logger->error("Got exception (msg: \"{}\") when handling the command: {}",
-                  E.what(), msg);
+                  RawMsg, Error.what());
+  } catch (std::exception const &Error) {
+    Logger->error("Could not handle command. Command was {}. Exception was: {}",
+                  RawMsg, Error.what());
   }
 }
 
-void ConfigCB::handleCommandAdd(nlohmann::json const &Document) {
-  // Use instance of ConfigParser to extract stream info.
+void ConfigCallback::handleCommandAdd(nlohmann::json const &Document) {
   ConfigParser Config(Document.dump());
   auto Settings = Config.extractStreamInfo();
 
@@ -40,41 +39,30 @@ void ConfigCB::handleCommandAdd(nlohmann::json const &Document) {
   }
 }
 
-void ConfigCB::handleCommandStopChannel(nlohmann::json const &Document) {
+void ConfigCallback::handleCommandStopChannel(nlohmann::json const &Document) {
   if (auto ChannelMaybe = find<std::string>("channel", Document)) {
     main.streams.stopChannel(ChannelMaybe.inner());
   }
 }
 
-void ConfigCB::handleCommandStopAll() { main.streams.clearStreams(); }
+void ConfigCallback::handleCommandStopAll() { main.streams.clearStreams(); }
 
-void ConfigCB::handleCommandExit() { main.stopForwarding(); }
+void ConfigCallback::handleCommandExit() { main.stopForwarding(); }
 
-void ConfigCB::handleCommand(std::string const &Msg) {
-  using nlohmann::json;
-  auto Document = json::parse(Msg);
+void ConfigCallback::handleCommand(nlohmann::json const &Msg) {
+  CommandType Command = ConfigParser::findCommand(Msg);
 
-  std::string Command = findCommand(Document);
-
-  if (Command == "add") {
-    handleCommandAdd(Document);
-  } else if (Command == "stop_channel") {
-    handleCommandStopChannel(Document);
-  } else if (Command == "stop_all") {
+  if (Command == CommandType::add) {
+    handleCommandAdd(Msg);
+  } else if (Command == CommandType::stop_channel) {
+    handleCommandStopChannel(Msg);
+  } else if (Command == CommandType::stop_all) {
     handleCommandStopAll();
-  } else if (Command == "exit") {
+  } else if (Command == CommandType::exit) {
     handleCommandExit();
   } else {
-    Logger->info("Cannot understand command: {}", Command);
+    throw std::runtime_error("Unknown command type received");
   }
-}
-
-std::string ConfigCB::findCommand(nlohmann::json const &Document) {
-  if (auto CommandMaybe = find<std::string>("cmd", Document)) {
-    return CommandMaybe.inner();
-  }
-
-  return std::string();
 }
 
 } // namespace Forwarder
