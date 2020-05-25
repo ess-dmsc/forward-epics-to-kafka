@@ -19,7 +19,7 @@
 #endif
 
 bool fileExists(std::string const &FullPath) {
-  std::fstream InFile(FullPath);
+  std::ifstream InFile(FullPath);
   return InFile.good();
 }
 
